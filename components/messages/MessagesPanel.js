@@ -153,6 +153,37 @@ function releaseVoicePlayback(audioEl) {
   if (currentVoicePlayer === audioEl) currentVoicePlayer = null;
 }
 
+// In-memory LRU cache of decoded waveform peaks keyed by attachment URL.
+// Decoding the same audio file every time a bubble re-mounts (e.g. while
+// scrolling a long thread, or after toggling another panel) is wasteful —
+// the source bytes don't change, so the resulting peak array doesn't either.
+// We cap the cache so very long sessions don't grow unbounded; the oldest
+// entry is dropped when we exceed the cap. JS Maps preserve insertion order,
+// which gives us O(1) LRU updates by deleting + re-setting on access.
+const WAVEFORM_PEAK_CACHE = new Map();
+const WAVEFORM_PEAK_CACHE_MAX = 128;
+
+function getCachedWaveformPeaks(key) {
+  if (!key) return null;
+  if (!WAVEFORM_PEAK_CACHE.has(key)) return null;
+  const peaks = WAVEFORM_PEAK_CACHE.get(key);
+  // Refresh recency: delete + re-insert so this key becomes the newest.
+  WAVEFORM_PEAK_CACHE.delete(key);
+  WAVEFORM_PEAK_CACHE.set(key, peaks);
+  return peaks;
+}
+
+function setCachedWaveformPeaks(key, peaks) {
+  if (!key || !peaks) return;
+  if (WAVEFORM_PEAK_CACHE.has(key)) WAVEFORM_PEAK_CACHE.delete(key);
+  WAVEFORM_PEAK_CACHE.set(key, peaks);
+  while (WAVEFORM_PEAK_CACHE.size > WAVEFORM_PEAK_CACHE_MAX) {
+    const oldest = WAVEFORM_PEAK_CACHE.keys().next().value;
+    if (oldest === undefined) break;
+    WAVEFORM_PEAK_CACHE.delete(oldest);
+  }
+}
+
 // Custom waveform-style scrubber shared by the recorded-voice preview row
 // and the sent/received chat bubbles. We decode the source audio in an
 // AudioContext to extract per-bar peaks, then render the same kind of
@@ -206,8 +237,21 @@ function VoiceWaveform({
   // and otherwise fetch the URL (sent/received bubbles). If decoding fails
   // (unsupported codec on Safari, fetch error for a remote URL, etc.) we
   // fall back to a flat baseline so the UI still renders something.
+  //
+  // For URL-backed bubbles we consult an in-memory LRU cache first so the
+  // same attachment doesn't re-fetch + re-decode every time the bubble
+  // re-mounts (e.g. while scrolling a long thread). Composer-blob previews
+  // are skipped intentionally — they're one-off recordings whose bytes
+  // change on each take, so caching by blob identity wouldn't help.
   useEffect(() => {
     if (!blob && !url) { setPeaks(null); return undefined; }
+    if (!blob && url) {
+      const cached = getCachedWaveformPeaks(url);
+      if (cached) {
+        setPeaks(cached);
+        return undefined;
+      }
+    }
     let cancelled = false;
     let ctx = null;
     (async () => {
@@ -244,6 +288,13 @@ function VoiceWaveform({
           if (peak > max) max = peak;
         }
         const norm = max > 0 ? out.map((v) => Math.min(1, (v / max) * 1.1)) : out;
+        // Cache successful URL decodes even if this instance was cancelled
+        // mid-flight — the bytes are deterministic, and the next mount of
+        // the same bubble can then pick up the result instantly. Fallback
+        // baselines (the catch branch) and composer blobs are deliberately
+        // skipped: failures shouldn't poison retries, and composer blobs
+        // aren't stable across re-records.
+        if (!blob && url) setCachedWaveformPeaks(url, norm);
         if (!cancelled) setPeaks(norm);
       } catch {
         if (!cancelled) setPeaks(new Array(WAVEFORM_BAR_COUNT).fill(0.4));
