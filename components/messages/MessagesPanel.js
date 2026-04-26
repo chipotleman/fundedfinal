@@ -279,6 +279,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const LEVEL_BAR_COUNT = 18;
   const [audioLevels, setAudioLevels] = useState(() => new Array(LEVEL_BAR_COUNT).fill(0));
   const [voicePreview, setVoicePreview] = useState(null);
+  // True when the preview is backed by a still-alive (paused) MediaRecorder so
+  // the user can tap "Continue" to resume the same take instead of starting
+  // over. False when the take was finalized via a full stop (no resume path).
+  const [resumableTake, setResumableTake] = useState(false);
   const recorderRef = useRef(null);
   const recordChunksRef = useRef([]);
   const recordStartRef = useRef(0);
@@ -727,10 +731,117 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     }
   };
 
+  // Build a preview blob from the chunks captured so far (after a flushing
+  // requestData) and surface it via voicePreview. The recorder/stream stay
+  // alive in the paused state so a subsequent "Continue" can resume the same
+  // continuous take. durationMs is the elapsed time captured at pause.
+  const finalizePreviewFromChunks = (durationMs) => {
+    const chunks = recordChunksRef.current;
+    if (!chunks.length) {
+      setVoiceError('Recording was empty. Try again.');
+      tearDownLingeringRecorder();
+      return;
+    }
+    const mime = recordMimeRef.current || 'audio/webm';
+    const blob = new Blob(chunks, { type: mime });
+    let url = '';
+    try {
+      if (typeof URL !== 'undefined' && URL.createObjectURL) {
+        url = URL.createObjectURL(blob);
+      }
+    } catch {}
+    setVoicePreview({ blob, url, durationMs, mime });
+    setRecording(false);
+    // Only enable Continue if there's still recording budget; otherwise the
+    // user has already maxed out and resuming would just immediately stop.
+    setResumableTake(durationMs < MAX_VOICE_MS - 200);
+  };
+
+  // Pause the live recorder and capture a preview blob from the data flushed
+  // by requestData(). Throws if the underlying calls fail; the caller should
+  // fall back to a full stop in that case so the take isn't lost.
+  const pauseForPreview = (rec) => {
+    const wasRecording = rec.state === 'recording';
+    if (wasRecording) {
+      // Same accounting handlePauseRecording does — snapshot the in-flight
+      // segment into the accumulator so durationMs is accurate.
+      recordAccumRef.current += Math.max(0, Date.now() - recordStartRef.current);
+    }
+    recordPausedRef.current = true;
+    const elapsedAtPause = recordAccumRef.current;
+    const onceData = () => {
+      rec.removeEventListener('dataavailable', onceData);
+      // Defer one task so the property ondataavailable handler also gets to
+      // push the flushed chunk into recordChunksRef before we read it.
+      setTimeout(() => finalizePreviewFromChunks(elapsedAtPause), 0);
+    };
+    rec.addEventListener('dataavailable', onceData);
+    try {
+      rec.requestData();
+    } catch (e) {
+      rec.removeEventListener('dataavailable', onceData);
+      throw e;
+    }
+    if (wasRecording) {
+      try {
+        rec.pause();
+      } catch (e) {
+        rec.removeEventListener('dataavailable', onceData);
+        throw e;
+      }
+    }
+    stopRecordingTimer();
+    setPaused(true);
+    setRecordElapsed(elapsedAtPause);
+  };
+
+  // Synchronously dispose of the lingering paused recorder. We detach
+  // handlers and refs first so the async onstop can't clobber state from a
+  // freshly-started take (e.g. when the user immediately taps Re-record).
+  const tearDownLingeringRecorder = () => {
+    const rec = recorderRef.current;
+    if (!rec) return;
+    recorderRef.current = null;
+    try { rec.ondataavailable = null; } catch {}
+    try { rec.onstop = null; } catch {}
+    try { stopRecordingTimer(); } catch {}
+    try { stopAudioMeter(); } catch {}
+    try { if (rec.state !== 'inactive') rec.stop(); } catch {}
+    if (rec.stream) {
+      try { rec.stream.getTracks().forEach((t) => t.stop()); } catch {}
+    }
+    recordChunksRef.current = [];
+    recordAccumRef.current = 0;
+    recordPausedRef.current = false;
+    recordCancelledRef.current = false;
+    setRecording(false);
+    setPaused(false);
+    setRecordElapsed(0);
+    setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
+  };
+
   const handleStopRecording = () => {
     const rec = recorderRef.current;
     if (!rec || rec.state === 'inactive') return;
     recordCancelledRef.current = false;
+    // Prefer keeping the recorder alive (paused) so the preview row can offer
+    // "Continue" — appending more audio to the same take instead of starting
+    // a new one. Requires browser support for pause + requestData. Otherwise
+    // we fall back to fully stopping, matching the original behavior.
+    if (
+      pauseSupported &&
+      (rec.state === 'recording' || rec.state === 'paused') &&
+      typeof rec.requestData === 'function' &&
+      typeof rec.pause === 'function'
+    ) {
+      try {
+        pauseForPreview(rec);
+        return;
+      } catch {
+        // Pause/flush failed — fall through to the plain stop path below so
+        // the user still gets their preview.
+      }
+    }
     try { rec.stop(); } catch {}
   };
 
@@ -784,13 +895,57 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     if (sending) return;
     setVoiceError(null);
     setSendError(null);
+    tearDownLingeringRecorder();
+    setResumableTake(false);
     clearVoicePreview();
   };
 
   const handleRerecordPreview = () => {
     if (sending || recording) return;
+    tearDownLingeringRecorder();
+    setResumableTake(false);
     clearVoicePreview();
     handleStartRecording();
+  };
+
+  // Resume the same take from the preview row — appends new audio onto the
+  // existing recorder/chunks so the final blob is one continuous clip rather
+  // than two separately-encoded segments stitched together.
+  const handleContinueRecording = () => {
+    if (sending || recording) return;
+    const rec = recorderRef.current;
+    if (!rec || rec.state !== 'paused') return;
+    // Drop the preview blob (revoke its URL) without touching the recorder
+    // or chunks — the existing chunks are the prefix of the final clip.
+    setVoicePreview((prev) => {
+      if (prev?.url) {
+        try { URL.revokeObjectURL(prev.url); } catch {}
+      }
+      return null;
+    });
+    setVoiceError(null);
+    setSendError(null);
+    setResumableTake(false);
+    try {
+      rec.resume();
+    } catch {
+      // Couldn't resume — fall back to a clean slate so the user isn't stuck.
+      tearDownLingeringRecorder();
+      return;
+    }
+    recordStartRef.current = Date.now();
+    recordPausedRef.current = false;
+    setPaused(false);
+    setRecording(true);
+    // Restart the visible elapsed timer (we cleared it during pauseForPreview)
+    // so the running counter and MAX_VOICE_MS auto-stop continue working.
+    recordTimerRef.current = setInterval(() => {
+      const elapsed = computeElapsedMs();
+      setRecordElapsed(elapsed);
+      if (elapsed >= MAX_VOICE_MS) {
+        try { rec.stop(); } catch {}
+      }
+    }, 100);
   };
 
   const handleSendPreview = async () => {
@@ -798,7 +953,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     if (!voicePreview?.blob) return;
     const { blob, durationMs } = voicePreview;
     const ok = await sendVoiceBlob(blob, durationMs);
-    if (ok) clearVoicePreview();
+    if (ok) {
+      tearDownLingeringRecorder();
+      setResumableTake(false);
+      clearVoicePreview();
+    }
   };
 
   useEffect(() => {
@@ -864,8 +1023,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   // Switching to a different conversation should drop any pending preview so
   // the recorded blob isn't accidentally sent to the wrong friend.
   useEffect(() => {
+    tearDownLingeringRecorder();
+    setResumableTake(false);
     clearVoicePreview();
     setVoiceError(null);
+    // tearDownLingeringRecorder is intentionally not in deps — it's defined
+    // inline each render and only needs to fire when the active friend
+    // changes (same intent as the existing clearVoicePreview behavior).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [friend?.id, clearVoicePreview]);
 
   const handleSend = async (e) => {
@@ -1155,6 +1320,23 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 >
                   Re-record
                 </button>
+                {resumableTake && (
+                  <button
+                    type="button"
+                    onClick={handleContinueRecording}
+                    disabled={sending}
+                    aria-label="Continue recording from where you left off"
+                    title="Add more to this recording"
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
+                    style={{
+                      backgroundColor: '#0f1622',
+                      color: '#bfdbfe',
+                      border: '1px solid rgba(59,130,246,0.45)',
+                    }}
+                  >
+                    Continue
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleSendPreview}
