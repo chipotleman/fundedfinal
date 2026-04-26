@@ -8,6 +8,7 @@ import CoinRain from '../components/CoinRain';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { formatMoney } from '../utils/formatMoney';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 export default function DemoDashboard() {
   const { formatOdds: formatOddsPref } = useUserPreferences();
@@ -159,30 +160,10 @@ export default function DemoDashboard() {
   }, [selectedSport, selectedTab, apiGames, categorizedGames]);
 
 
-  // Lock body scroll when bet slip is open
-  useEffect(() => {
-    if (showBetSlip) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = `-${window.scrollY}px`;
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-    };
-  }, [showBetSlip]);
+  // Lock body scroll when bet slip is open. Routed through the shared
+  // hook so we participate in the stacked-modal counter and route-change
+  // cleanup the rest of the app relies on.
+  useModalScrollLock(showBetSlip, { restoreScroll: true });
 
   const formatOdds = (odds) => formatOddsPref(odds);
 
