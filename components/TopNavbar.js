@@ -963,12 +963,11 @@ export default function TopNavbar({
               className="flex items-center flex-shrink-0"
               aria-label="Piks home"
             >
-              <span
-                className="font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
-                style={{ fontSize: 22, letterSpacing: '-0.02em' }}
-              >
-                piks
-              </span>
+              <img
+                src="/pikslogotransparent.png"
+                alt="Piks"
+                className="h-8 sm:h-9 w-auto flex-shrink-0"
+              />
             </a>
 
             {/* Sport pills (rendered by parent so selection stays in sync) */}
