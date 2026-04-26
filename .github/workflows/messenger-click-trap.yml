@@ -121,6 +121,13 @@ jobs:
             browser: chromium
           - project: firefox-mobile
             browser: firefox
+          # Build-time smoke for /, /battle, and the balance / withdrawal
+          # page. Runs on the same prebuilt `.next/` artifact, so it
+          # adds little extra wall-clock time.
+          - project: page-smoke-desktop
+            browser: chromium
+          - project: page-smoke-mobile
+            browser: chromium
 
     env:
       CI: 'true'

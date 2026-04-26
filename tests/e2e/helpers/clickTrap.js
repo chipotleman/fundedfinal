@@ -149,10 +149,140 @@ async function scrollPage(page, distance = 600) {
 
 const TARGET_PAGES = ['/messenger', '/notifications'];
 
+/**
+ * Superset of `setupStubs` for the broader page-smoke suite. The
+ * messenger / notifications click-trap suite only needs a logged-in
+ * shell with empty notifications, so it can leave `/api/auth/session`
+ * returning `{}`. The page-smoke suite, on the other hand, mounts
+ * routes like `/withdrawal` that gate their entire render on
+ * `useSession()`'s `session` being non-null — without a real session
+ * payload they redirect straight back to `/` and the smoke check
+ * silently degrades. We also pre-stub the additional GET endpoints
+ * those pages fetch on mount (games, promo slots, payment methods,
+ * withdrawals, has-deposited, …) so the production build has nothing
+ * left to log a network error about.
+ */
+async function setupSmokeStubs(page) {
+  await setupStubs(page);
+
+  const json = (body, status = 200) => ({
+    status,
+    contentType: 'application/json',
+    body: JSON.stringify(body),
+  });
+
+  // Re-stub the session endpoint with a real-looking NextAuth payload so
+  // pages that read `useSession()` (e.g. /withdrawal, /battle) treat the
+  // visitor as authenticated and render their authenticated content
+  // instead of redirecting to `/`.
+  await page.unroute('**/api/auth/session');
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill(
+      json({
+        user: {
+          id: FAKE_USER.id,
+          email: FAKE_USER.email,
+          name: FAKE_USER.name,
+          image: null,
+        },
+        expires: '2099-12-31T23:59:59.999Z',
+      }),
+    ),
+  );
+
+  // Home page reads /api/games via GamesContext and /api/promo-slots
+  // for its rotating promo carousel.
+  await page.route('**/api/games', (route) =>
+    route.fulfill(json({ games: [], inplayEvents: [], lastUpdated: null })),
+  );
+  await page.route('**/api/promo-slots', (route) => route.fulfill(json({ slots: [] })));
+
+  // Withdrawal page reads these on mount.
+  await page.route('**/api/payment-methods', (route) => route.fulfill(json([])));
+  await page.route('**/api/withdrawals', (route) => route.fulfill(json([])));
+  await page.route('**/api/withdrawals/**', (route) => route.fulfill(json({ ok: true })));
+  await page.route('**/api/user/has-deposited', (route) =>
+    route.fulfill(json({ hasDeposited: false, matchGranted: false })),
+  );
+  await page.route('**/api/user/**', (route) => route.fulfill(json({ ok: true })));
+
+  // Live-battles section + admin avatar lookups + pools the dashboard
+  // touches. These already partially overlap with `setupStubs` but we
+  // pin them explicitly so a future GET that's added doesn't slip
+  // through with an unhandled 500.
+  await page.route('**/api/admin/battle-avatars', (route) => route.fulfill(json([])));
+  await page.route('**/api/pools/**', (route) => route.fulfill(json({ ok: true })));
+  await page.route('**/api/promos/**', (route) => route.fulfill(json({ ok: true })));
+}
+
+/**
+ * Attaches console-error / pageerror / response-failure listeners to
+ * `page` and returns:
+ *   - `errors`  — accumulating list of console.error messages
+ *   - `pageErrors` — accumulating list of uncaught JS errors
+ *   - `failedRequests` — accumulating list of 5xx HTTP responses
+ *
+ * `console.warn` is intentionally NOT captured — Next.js production
+ * builds are noisy with hydration warnings that are out of scope for a
+ * page-loads-without-crashing smoke check.
+ *
+ * Some console messages are part of normal operation under the smoke
+ * stubs (e.g. an unauthenticated `/api/auth/session` 401 on the very
+ * first frame before our stub takes effect); pass them via
+ * `ignorePatterns` to suppress.
+ */
+function attachConsoleErrorWatcher(page, { ignorePatterns = [] } = {}) {
+  const isIgnored = (text) =>
+    ignorePatterns.some((p) => (p instanceof RegExp ? p.test(text) : text.includes(p)));
+
+  const errors = [];
+  const pageErrors = [];
+  const failedRequests = [];
+
+  page.on('console', (msg) => {
+    if (msg.type() !== 'error') return;
+    const text = msg.text();
+    if (isIgnored(text)) return;
+    errors.push(text);
+  });
+
+  page.on('pageerror', (err) => {
+    const text = err && err.message ? err.message : String(err);
+    if (isIgnored(text)) return;
+    pageErrors.push(text);
+  });
+
+  page.on('response', (resp) => {
+    const status = resp.status();
+    if (status < 500) return;
+    const url = resp.url();
+    // Ignore 5xx from the document's own asset fetches off the test
+    // origin (e.g. external image CDNs the page links to) — we only
+    // care about app-served endpoints.
+    if (isIgnored(url)) return;
+    failedRequests.push(`${status} ${url}`);
+  });
+
+  return { errors, pageErrors, failedRequests };
+}
+
+/**
+ * Asserts the watcher has captured no console errors, no uncaught
+ * page errors, and no 5xx responses since it was attached.
+ */
+function expectNoConsoleErrors({ errors, pageErrors, failedRequests }) {
+  expect(pageErrors, 'page should not throw any uncaught JS errors').toEqual([]);
+  expect(errors, 'page should not log any console.error messages').toEqual([]);
+  expect(failedRequests, 'page should not produce any 5xx HTTP responses').toEqual([]);
+}
+
 module.exports = {
   FAKE_USER,
   EMPTY_NOTIFICATIONS,
   setupStubs,
+  setupSmokeStubs,
+  attachConsoleErrorWatcher,
+  expectNoConsoleErrors,
   getBodyLockStyles,
   expectBodyUnlocked,
   expectNoFullscreenOverlay,

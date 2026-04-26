@@ -69,6 +69,24 @@ module.exports = defineConfig({
         viewport: { width: 390, height: 844 },
       },
     },
+    {
+      // Build-time smoke for /, /battle, /withdrawal at desktop width.
+      // We run this on Chromium because the smoke check is engine-agnostic
+      // (it asserts pages render and don't throw) and Chromium binaries
+      // are already cached for the matching matrix entry, so adding this
+      // project costs almost nothing.
+      name: 'page-smoke-desktop',
+      testMatch: /page-smoke\.spec\.js$/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+    },
+    {
+      // Same smoke spec at a phone viewport so we also catch the
+      // mobile-only render branches (TopNavbar hamburger path,
+      // mobile-only scroll-lock interactions on the dashboard).
+      name: 'page-smoke-mobile',
+      testMatch: /page-smoke\.spec\.js$/,
+      use: { ...devices['Pixel 7'] },
+    },
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined

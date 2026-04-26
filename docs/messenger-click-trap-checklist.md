@@ -30,9 +30,12 @@ install on the next run.
 
 The workflow itself is split into two jobs. A single **`build`** job
 runs `next build` once and uploads the resulting `.next/` directory as
-a workflow artifact; the six matrix **`e2e`** jobs (`needs: build`)
+a workflow artifact; the matrix **`e2e`** jobs (`needs: build`)
 download that artifact and boot it with `next start` via Playwright's
-`webServer`. This means:
+`webServer`. The matrix currently has eight entries — six for the
+click-trap suite (one per browser × desktop/mobile) plus two for the
+broader page-smoke suite (Chromium desktop + Chromium mobile). This
+means:
 
 - The smoke test runs against the same production bundle real users
   load — so a `getStaticProps` failure, a missing dependency that only
@@ -43,9 +46,9 @@ download that artifact and boot it with `next start` via Playwright's
   pass on first hit to `/messenger` and `/notifications`. `next start`
   serves the prebuilt output immediately, so the long Playwright
   `webServer` warm-up window collapses from minutes to seconds.
-- We build exactly once per workflow run instead of six times in
-  parallel — the matrix jobs share the artifact rather than each
-  racing to populate the same build cache.
+- We build exactly once per workflow run instead of once per matrix
+  job — every e2e entry shares the artifact rather than each racing
+  to populate the same build cache.
 
 The `build` job also enforces a bundle-size budget after `next build`
 finishes. It runs `scripts/measure-bundle.js` to record the size of
@@ -98,17 +101,34 @@ The suite lives in `tests/e2e/`:
   the hamburger drawer + body scroll-lock, drawer-link navigation between
   `/messenger` and `/notifications` (both directions), and a scrolled-state
   pass with the same overlay check.
-- `helpers/clickTrap.js` — shared API stubs, `<body>` style assertions,
-  the full-screen overlay check, and a `scrollPage()` helper that pads
-  the page with a spacer and scrolls down so the dropdown checks run in
-  a scrolled state.
+- `page-smoke.spec.js` — broader build-time smoke for the highest-traffic
+  authenticated routes. Mounts `/` (dashboard / home), `/battle`, and
+  `/withdrawal` (the balance flow) in both a desktop and a mobile
+  Chromium project, and fails the PR if any of them returns a 4xx/5xx,
+  throws an uncaught JS error, logs a `console.error`, or fails to
+  render a stable page-specific marker. Runs in the same workflow off
+  the same prebuilt `.next/` artifact as the click-trap suite, so the
+  added wall-clock cost is roughly two more `next start` page mounts.
+  - **Pages currently covered:** `/messenger`, `/notifications` (full
+    click-trap suite), plus `/`, `/battle`, and `/withdrawal` (smoke
+    only — mount + no-error assertion). When you add a new top-level
+    route that's hit on app open, please extend `SMOKE_PAGES` in
+    `page-smoke.spec.js` and update this list.
+- `helpers/clickTrap.js` — shared API stubs (`setupStubs`,
+  `setupSmokeStubs`), the console-error / pageerror / 5xx watcher
+  (`attachConsoleErrorWatcher` + `expectNoConsoleErrors`), `<body>`
+  style assertions, the full-screen overlay check, and a `scrollPage()`
+  helper that pads the page with a spacer and scrolls down so the
+  dropdown checks run in a scrolled state.
 
-Both specs open `/messenger` and `/notifications` in WebKit, open and
-dismiss each top-bar dropdown / the mobile nav drawer, then assert that
-the next icon tap registers, that `document.body` has no leftover
-scroll-lock styles, and that no fixed-position element covering the
-viewport is left in the DOM. If any spec fails, the regression is back
-— fix it before shipping and before bothering with the manual checklist.
+The click-trap specs open `/messenger` and `/notifications` in WebKit,
+open and dismiss each top-bar dropdown / the mobile nav drawer, then
+assert that the next icon tap registers, that `document.body` has no
+leftover scroll-lock styles, and that no fixed-position element covering
+the viewport is left in the DOM. The page-smoke spec runs in parallel
+on Chromium against `/`, `/battle`, and `/withdrawal`. If any spec
+fails, the regression is back — fix it before shipping and before
+bothering with the manual checklist.
 
 The automated test is configured to start a Next.js server on port 3100
 via Playwright's `webServer`. By default that's `npm run dev`, but with
