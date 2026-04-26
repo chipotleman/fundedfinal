@@ -265,6 +265,37 @@ A few operational notes:
   auto-refresh is a convenience for tracking real, reviewed growth,
   not a way to silently absorb regressions that skipped review.
 
+### Opting out of the auto-refresh on a given PR
+
+The auto-refresh is a convenience, not a requirement. If you would
+rather the baseline change ship under your name (e.g. an intentional
+growth that you want auditable on the same commit as the code that
+caused it, or a sensitive change you want a human reviewer to eyeball
+the byte diff on), **hand-edit the baseline in the same PR** using the
+"intentional, justified growth" recipe in [When the check
+fails](#when-the-check-fails) — the same script the bot uses,
+runnable locally:
+
+```bash
+npm run build
+node scripts/measure-bundle.js --out /tmp/bundle.json
+node scripts/refresh-bundle-baseline.js \
+  --current /tmp/bundle.json \
+  --baseline docs/bundle-baseline.json
+```
+
+Commit the resulting `docs/bundle-baseline.json` (and, if the
+per-module breakdown materially shifted, regenerate
+`docs/bundle-baseline-modules.json` with the inline-`node` recipe in
+[When the check fails](#when-the-check-fails)) along with the change
+that caused the growth. After the PR merges, the post-merge refresh
+job will re-measure the same build, see that the committed baseline
+already matches byte-for-byte, log `no change`, and exit without
+pushing. There is no flag to disable the job entirely on a per-PR
+basis — pre-stamping the baseline is the supported opt-out, and it
+also makes the byte delta visible during code review instead of
+landing as a follow-up bot commit.
+
 ## Running the check locally
 
 ```bash
