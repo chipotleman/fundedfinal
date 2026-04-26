@@ -109,30 +109,91 @@ There are three reasonable responses, in order of preference:
    shared chunk grew. Common causes: a heavy library got pulled into a
    shared component, an `import` was made eager that should have been
    `dynamic()`, or a polyfill landed in `_app.js`.
-2. **It's an intentional, justified growth.** Refresh the baseline:
+2. **It's an intentional, justified growth.** Refresh the baseline
+   locally and commit it alongside the change that caused the growth:
    ```bash
    npm run build
    node scripts/measure-bundle.js --out /tmp/bundle.json
-   node -e "
-     const fs = require('fs');
-     const baseline = JSON.parse(fs.readFileSync('docs/bundle-baseline.json','utf8'));
-     const current  = JSON.parse(fs.readFileSync('/tmp/bundle.json','utf8'));
-     baseline.generatedFrom    = current.measuredAt;
-     baseline.totalStaticBytes = current.totalStaticBytes;
-     baseline.totalJsBytes     = current.totalJsBytes;
-     baseline.largestPageRoute = current.largestPage.route;
-     baseline.perPage          = Object.fromEntries(
-       Object.entries(current.perPage).map(([k, v]) => [k, v.totalBytes])
-     );
-     fs.writeFileSync('docs/bundle-baseline.json', JSON.stringify(baseline, null, 2) + '\n');
-   "
+   node scripts/refresh-bundle-baseline.js \
+     --current /tmp/bundle.json \
+     --baseline docs/bundle-baseline.json
    ```
+   `refresh-bundle-baseline.js` preserves the `thresholds` block and
+   only overwrites the measured numbers (`generatedFrom`,
+   `totalStaticBytes`, `totalJsBytes`, `largestPageRoute`, `perPage`).
    Commit `docs/bundle-baseline.json` along with the change that caused
    the growth and call it out in the PR description.
 3. **It's noise from a chunk-hash rename you can't pin down.** This
    should be very rare given the 5 KB absolute floor on the per-page
    rule and the 50 KB total cap, but if it happens, refresh the
    baseline as in (2) and note it in the PR.
+
+## Auto-refresh on push to the default branch
+
+To keep the committed baseline honest without relying on a maintainer
+remembering to regenerate it, the `Messenger click-trap E2E` workflow
+runs an extra `refresh-baseline` job after every successful build on a
+**push to the default branch** (`main`). That job:
+
+1. Downloads the `bundle-size` artifact uploaded by the `build` job.
+2. Runs `node scripts/refresh-bundle-baseline.js --current
+   bundle-current.json --baseline docs/bundle-baseline.json`, which
+   preserves the `thresholds` block and overwrites the measured
+   numbers from the build that just shipped.
+3. If `docs/bundle-baseline.json` actually changed, commits the diff
+   as `github-actions[bot]` with a `[skip ci]` marker and pushes it
+   directly back to the default branch.
+
+This means **`docs/bundle-baseline.json` may show up in `git log`
+authored by `github-actions[bot]`** with no human author. That is
+expected — the bot is just stamping in the new numbers from the build
+that shipped on the previous merge so the next PR gets compared
+against an up-to-date baseline. PR runs themselves are unchanged: they
+still compare the PR's measurement against the committed baseline and
+fail loudly if it busts the budget. The auto-refresh job only runs on
+`push` events targeting the default branch, never on pull-request
+runs, forks, or pushes to other branches.
+
+A few operational notes:
+
+- The job uses the workflow's default `GITHUB_TOKEN` with
+  `permissions: contents: write`. GitHub Actions disables recursive
+  workflow triggers from `GITHUB_TOKEN`, so the bot's commit does not
+  re-trigger CI; the `[skip ci]` marker in the commit message is
+  belt-and-suspenders.
+- The job uses a `concurrency: bundle-baseline-refresh` group with
+  `cancel-in-progress: false`, so two near-simultaneous merges to the
+  default branch are processed one at a time instead of racing the
+  same `git push`.
+- Before committing, the job runs a **freshness guard**: it fetches
+  the default branch and walks `git log` looking for the most recent
+  *non-bot* commit. If that commit is not the SHA this workflow ran
+  on, the job exits cleanly with a `::notice::` and lets the newer
+  push's own refresh job produce the canonical baseline. This
+  prevents a slow build for an older commit from racing in after a
+  faster build for a newer commit and stamping a stale measurement
+  on top.
+- If the push is rejected anyway (because something else landed on the
+  default branch in between), the job re-runs the freshness guard. If
+  a newer code commit has appeared, it defers; otherwise it lost the
+  race to a parallel bot refresh and retries: reset onto the new tip,
+  re-apply the refresh script on top of the freshly-fetched baseline
+  (our measurement is still the truth for the SHA this workflow ran
+  on), re-commit, push. Up to three attempts before failing loudly.
+- If the freshly-measured numbers happen to match the committed
+  baseline byte-for-byte, the script reports `no change` and the
+  commit step exits cleanly without pushing.
+- The refresh job depends on the `build` job succeeding, which
+  includes the budget check itself. In the normal merge flow this is
+  exactly what we want — every PR is checked against the (recent)
+  committed baseline before merge, so the post-merge build comes in
+  within budget and the refresh fires. If someone bypasses PR review
+  and pushes a bundle-busting commit directly to the default branch,
+  the build (and therefore the refresh) will fail, and a maintainer
+  has to either revert the offending change or refresh the baseline
+  manually using the recipe above. That is intentional: the
+  auto-refresh is a convenience for tracking real, reviewed growth,
+  not a way to silently absorb regressions that skipped review.
 
 ## Running the check locally
 
