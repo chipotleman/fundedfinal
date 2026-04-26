@@ -62,7 +62,7 @@ function SkeletonRow() {
   );
 }
 
-export default function MessagesDropdown({ open, onClose, anchorRef }) {
+export default function MessagesDropdown({ open, onClose, anchorRef, onSelectConversation }) {
   const router = useRouter();
   const ctx = useNotifications();
   const ref = useRef(null);
@@ -194,7 +194,11 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
               type="button"
               onClick={() => {
                 onClose?.();
-                router.push(`/messenger?chat=${f.id}`);
+                if (onSelectConversation) {
+                  onSelectConversation(f);
+                } else {
+                  router.push(`/messenger?chat=${f.id}`);
+                }
               }}
               className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-blue-400/5 relative"
               style={{

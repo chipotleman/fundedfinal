@@ -11,6 +11,7 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import NotificationsDropdown from './notifications/NotificationsDropdown';
 import MessagesDropdown from './notifications/MessagesDropdown';
+import MessagePopup from './messages/MessagePopup';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
@@ -32,7 +33,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { hasActiveMatchup, myBalance: matchupBalance, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
-  const { counts: notifCounts } = useNotifications();
+  const notificationsCtx = useNotifications();
+  const { counts: notifCounts } = notificationsCtx;
   const notifAlerts = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0) + (notifCounts?.gameResults || 0);
   const notifMessages = notifCounts?.unreadMessages || 0;
   const notifTotal = notifAlerts;
@@ -40,6 +42,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const notifBellRef = useRef(null);
   const [showMsgDropdown, setShowMsgDropdown] = useState(false);
   const msgBtnRef = useRef(null);
+  const [messageFriend, setMessageFriend] = useState(null);
   
   // Prefetch dashboard for instant navigation
   useEffect(() => {
@@ -58,6 +61,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
       setShowNotifDropdown(false);
       setShowMsgDropdown(false);
       setShowUserMenu(false);
+      setMessageFriend(null);
     };
     router.events.on('routeChangeStart', closeAll);
     return () => {
@@ -671,6 +675,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     open={showMsgDropdown}
                     onClose={() => setShowMsgDropdown(false)}
                     anchorRef={msgBtnRef}
+                    onSelectConversation={(friend) => setMessageFriend(friend)}
                   />
                 </div>
               )}
@@ -952,6 +957,13 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
           100% { transform: rotate(360deg); }
         }
       `}</style>
+      <MessagePopup
+        isOpen={!!messageFriend}
+        friend={messageFriend}
+        ctx={notificationsCtx}
+        myId={session?.user?.id}
+        onClose={() => setMessageFriend(null)}
+      />
     </>
   );
 } 
