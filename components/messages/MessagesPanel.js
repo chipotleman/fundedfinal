@@ -113,6 +113,58 @@ function extractPeaksFromAudioBuffer(decoded, barCount = WAVEFORM_BAR_COUNT) {
   return max > 0 ? out.map((v) => Math.min(1, (v / max) * 1.1)) : out;
 }
 
+// Decode every segment in `segments` (in order) and stitch their PCM
+// samples into a single WAV blob. Used by the Safari/iOS fallback "Continue"
+// path: when MediaRecorder can't pause+requestData to keep one take alive
+// across a preview, we instead stop the recorder, start a fresh one when
+// the user taps Continue, and then concatenate the resulting blobs into one
+// playable clip on send. Returns null if the environment can't decode
+// audio (e.g. AudioContext is unavailable) so callers can fall back to the
+// most-recent segment.
+//
+// We assume segments share a sample rate (true in practice — they're from
+// successive getUserMedia calls on the same device, with no constraints
+// changes between them). Channel counts are reconciled by mixing each
+// segment up to the widest count via channel duplication, which is correct
+// for mono→stereo and good enough for the rare reverse case.
+async function concatVoiceSegmentsToWav(segments) {
+  if (typeof window === 'undefined') return null;
+  if (!segments || !segments.length) return null;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  const ctx = new Ctx();
+  try {
+    const decoded = [];
+    for (const seg of segments) {
+      const arrBuf = await seg.blob.arrayBuffer();
+      // decodeAudioData consumes the buffer, so slice() per-segment so a
+      // failure in segment N doesn't poison segments 0..N-1.
+      const buf = await ctx.decodeAudioData(arrBuf.slice(0));
+      decoded.push(buf);
+    }
+    const sampleRate = decoded[0].sampleRate;
+    const numChannels = decoded.reduce(
+      (m, b) => Math.max(m, b.numberOfChannels),
+      1,
+    );
+    const totalLength = decoded.reduce((s, b) => s + b.length, 0);
+    if (totalLength <= 0) return null;
+    const out = ctx.createBuffer(numChannels, totalLength, sampleRate);
+    for (let c = 0; c < numChannels; c++) {
+      const dest = out.getChannelData(c);
+      let offset = 0;
+      for (const b of decoded) {
+        const srcChan = c < b.numberOfChannels ? c : 0;
+        dest.set(b.getChannelData(srcChan), offset);
+        offset += b.length;
+      }
+    }
+    return audioBufferToWavBlob(out);
+  } finally {
+    try { await ctx.close(); } catch {}
+  }
+}
+
 // Decode `blob`, slice the [startMs, endMs] window, and re-encode it as a
 // new WAV blob. Also returns the same kind of waveform peaks the preview
 // captured so the trimmed bubble can render its visualizer instantly on
@@ -918,23 +970,37 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const LEVEL_BAR_COUNT = 18;
   const [audioLevels, setAudioLevels] = useState(() => new Array(LEVEL_BAR_COUNT).fill(0));
   const [voicePreview, setVoicePreview] = useState(null);
-  // True when the preview is backed by a still-alive (paused) MediaRecorder so
-  // the user can tap "Continue" to resume the same take instead of starting
-  // over. False when the take was finalized via a full stop (no resume path).
+  // True when, after the current preview, the user can tap "Continue" to add
+  // more audio to the same take instead of starting over. On browsers with
+  // pause+requestData this is backed by a still-alive (paused) MediaRecorder;
+  // on Safari/iOS where those APIs aren't usable we instead spin up a fresh
+  // recorder and stitch the resulting segments together on send. False only
+  // when the take is finalized for good (max duration hit, send completed,
+  // re-record tapped, friend switched, etc.).
   const [resumableTake, setResumableTake] = useState(false);
-  // True when the current browser supports the pause + requestData flow that
-  // powers "Continue". Some Safari/iOS versions ship MediaRecorder without
-  // these methods (or throw at runtime), in which case we surface a disabled
-  // Continue button with an explanation rather than silently hiding it so
-  // users know why it's not available.
-  const [continueSupported, setContinueSupported] = useState(true);
+  // True between tapping "Done" on a multi-segment take and the
+  // concatenated-WAV preview being ready, so the composer can show a brief
+  // "Processing…" pill instead of flickering back to the text input. Only
+  // ever flipped on the segment-stitching fallback path.
+  const [processingPreview, setProcessingPreview] = useState(false);
   const recorderRef = useRef(null);
   const recordChunksRef = useRef([]);
   const recordStartRef = useRef(0);
   // Accumulated elapsed ms from previously-completed segments (i.e. the time
-  // captured before the current pause/resume cycle). The visible elapsed time
-  // is this plus the current segment's running time.
+  // captured before the current pause/resume cycle, plus — on the segment
+  // fallback — the duration of all earlier finalized segments). The visible
+  // elapsed time is this plus the current segment's running time.
   const recordAccumRef = useRef(0);
+  // Previously-finalized segment blobs (and their MIME) for the Safari/iOS
+  // fallback. Empty on the alive-recorder path. Concatenated into the
+  // playable WAV preview/upload blob whenever there are 2+ entries.
+  const segmentsRef = useRef([]);
+  // Set by handleStopRecording before calling rec.stop() to tell the onstop
+  // handler that the user is finalizing a *segment* (and expects a preview
+  // they can still Continue from), as opposed to a real end-of-take stop
+  // (cancel, max-duration auto-stop, friend switch). Read-and-cleared inside
+  // onstop so the state doesn't leak across recorder lifecycles.
+  const stopReasonRef = useRef(null);
   const recordPausedRef = useRef(false);
   // Set to true immediately before we ourselves call rec.pause() (manual
   // tap, auto-pause-on-hidden, pause-for-preview). The MediaRecorder
@@ -1275,10 +1341,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     return { attachmentUrl: objectPath, attachmentDurationMs: durationMs };
   };
 
-  const handleStartRecording = async () => {
+  const handleStartRecording = async ({ continuingSegment = false } = {}) => {
     if (recording || sending) return;
     setVoiceError(null);
-    setSendError(null);
+    if (!continuingSegment) setSendError(null);
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       setVoiceError('Recording not supported on this device.');
       return;
@@ -1303,21 +1369,20 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recordMimeRef.current = recorder.mimeType || mimeType || 'audio/webm';
       recordChunksRef.current = [];
       recordCancelledRef.current = false;
-      recordAccumRef.current = 0;
+      // Preserve cumulative duration + previously finalized segments when
+      // appending another segment to the same take. For a fresh take, wipe
+      // the slate clean.
+      if (!continuingSegment) {
+        recordAccumRef.current = 0;
+        segmentsRef.current = [];
+      }
+      stopReasonRef.current = null;
       recordPausedRef.current = false;
       selfPauseExpectedRef.current = false;
       setPaused(false);
       setPauseReason(null);
       setPauseSupported(
         typeof recorder.pause === 'function' && typeof recorder.resume === 'function'
-      );
-      // Continue needs all three: pause + resume to keep the take alive, and
-      // requestData to flush a preview blob without finalizing it. Older
-      // Safari/iOS builds expose MediaRecorder but omit one or more of these.
-      setContinueSupported(
-        typeof recorder.pause === 'function' &&
-        typeof recorder.resume === 'function' &&
-        typeof recorder.requestData === 'function'
       );
       recorder.ondataavailable = (ev) => {
         if (ev.data && ev.data.size > 0) recordChunksRef.current.push(ev.data);
@@ -1380,43 +1445,133 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         const elapsed = computeElapsedMs();
         const chunks = recordChunksRef.current;
         recordChunksRef.current = [];
-        recordAccumRef.current = 0;
         recordPausedRef.current = false;
         selfPauseExpectedRef.current = false;
+        // 'preview-segment' means the user tapped Done on the segment-mode
+        // (Safari/iOS) fallback path; the take should remain Continue-able.
+        // Anything else is a final stop and we wipe segment state below.
+        const reason = stopReasonRef.current;
+        stopReasonRef.current = null;
+        const isSegmentStop = reason === 'preview-segment';
         try { cleanupRecorderStream(); } catch {}
         setRecording(false);
         setPaused(false);
         setPauseReason(null);
-        setRecordElapsed(0);
         setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
         if (recordCancelledRef.current) {
           recordCancelledRef.current = false;
-          return;
-        }
-        if (!chunks.length) {
-          setVoiceError('Recording was empty. Try again.');
+          recordAccumRef.current = 0;
+          segmentsRef.current = [];
+          setRecordElapsed(0);
           return;
         }
         const mime = recordMimeRef.current || 'audio/webm';
-        const blob = new Blob(chunks, { type: mime });
-        let url = '';
-        try {
-          if (typeof URL !== 'undefined' && URL.createObjectURL) {
-            url = URL.createObjectURL(blob);
+        // Append the just-finalized chunks as the next segment (if any).
+        // For segment-mode stops we'll concat all segments below; for the
+        // legacy single-stop path the array holds a single entry which we
+        // still treat as the preview blob.
+        if (chunks.length) {
+          const segBlob = new Blob(chunks, { type: mime });
+          segmentsRef.current.push({ blob: segBlob, mime });
+        }
+        if (!segmentsRef.current.length) {
+          setVoiceError('Recording was empty. Try again.');
+          recordAccumRef.current = 0;
+          setRecordElapsed(0);
+          return;
+        }
+        // Single-segment fast path: avoid an unnecessary decode/re-encode
+        // round-trip and surface the original blob just like the pre-fallback
+        // behavior did. This also keeps the existing e2e expectations
+        // (audio/webm, audio/mp4 → m4a) intact for one-shot recordings.
+        if (segmentsRef.current.length === 1) {
+          const only = segmentsRef.current[0];
+          let url = '';
+          try {
+            if (typeof URL !== 'undefined' && URL.createObjectURL) {
+              url = URL.createObjectURL(only.blob);
+            }
+          } catch {}
+          setVoicePreview({
+            blob: only.blob,
+            url,
+            durationMs: elapsed,
+            mime: only.mime,
+            trimStartMs: 0,
+            trimEndMs: elapsed,
+          });
+          if (isSegmentStop) {
+            // Keep the cumulative time alive so a subsequent Continue tap
+            // appends to the right place on the timer + max-duration check.
+            recordAccumRef.current = elapsed;
+            setResumableTake(elapsed < MAX_VOICE_MS - 200);
+          } else {
+            recordAccumRef.current = 0;
+            segmentsRef.current = [];
+            setResumableTake(false);
+            setRecordElapsed(0);
           }
-        } catch {}
-        setVoicePreview({
-          blob,
-          url,
-          durationMs: elapsed,
-          mime,
-          trimStartMs: 0,
-          trimEndMs: elapsed,
-        });
+          return;
+        }
+        // Multi-segment: decode every segment and stitch them into one
+        // playable WAV blob. Async, so we flip a brief "Processing…" state
+        // to keep the composer from snapping back to the text input mid-build.
+        setProcessingPreview(true);
+        (async () => {
+          let previewBlob = null;
+          let previewMime = 'audio/wav';
+          try {
+            previewBlob = await concatVoiceSegmentsToWav(segmentsRef.current);
+          } catch {
+            previewBlob = null;
+          }
+          if (!previewBlob) {
+            // Decoding failed (rare on Safari with its own audio/mp4, but
+            // possible if a segment came through corrupted). Fall back to
+            // just the latest segment so the user isn't stuck with nothing —
+            // they lose earlier audio but can still send something. Surface
+            // a clear error so they know to re-record if they want it all.
+            const last = segmentsRef.current[segmentsRef.current.length - 1];
+            segmentsRef.current = [last];
+            previewBlob = last.blob;
+            previewMime = last.mime;
+            setVoiceError("Couldn't combine takes — only the latest segment is shown.");
+          }
+          let url = '';
+          try {
+            if (typeof URL !== 'undefined' && URL.createObjectURL) {
+              url = URL.createObjectURL(previewBlob);
+            }
+          } catch {}
+          setProcessingPreview(false);
+          setVoicePreview({
+            blob: previewBlob,
+            url,
+            durationMs: elapsed,
+            mime: previewMime,
+            trimStartMs: 0,
+            trimEndMs: elapsed,
+          });
+          if (isSegmentStop) {
+            recordAccumRef.current = elapsed;
+            setResumableTake(elapsed < MAX_VOICE_MS - 200);
+          } else {
+            recordAccumRef.current = 0;
+            // Replace the now-stitched segments with a single WAV entry so a
+            // hypothetical future Continue would only have one segment to
+            // re-decode. Practically not reached because isSegmentStop=false
+            // means resumable=false too, but keeps state coherent.
+            segmentsRef.current = [{ blob: previewBlob, mime: previewMime }];
+            setResumableTake(false);
+            setRecordElapsed(0);
+          }
+        })();
       };
       recorderRef.current = recorder;
       recordStartRef.current = Date.now();
-      setRecordElapsed(0);
+      // On a continue-segment start the visible counter should pick up from
+      // the cumulative time so far; on a fresh take it starts at 0.
+      setRecordElapsed(continuingSegment ? recordAccumRef.current : 0);
       setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
       recorder.start();
       setRecording(true);
@@ -1437,7 +1592,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recorderRef.current = null;
       recordChunksRef.current = [];
       recordCancelledRef.current = false;
+      // Wipe cumulative state on any failed start. On the continue-segment
+      // path the preview was already cleared by handleContinueRecording, so
+      // keeping segments around without a way to resurface them as a preview
+      // would just confuse the user — better to fall back to a clean slate
+      // and let them try again from scratch.
       recordAccumRef.current = 0;
+      segmentsRef.current = [];
+      stopReasonRef.current = null;
       recordPausedRef.current = false;
       selfPauseExpectedRef.current = false;
       setRecording(false);
@@ -1536,7 +1698,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   // freshly-started take (e.g. when the user immediately taps Re-record).
   const tearDownLingeringRecorder = () => {
     const rec = recorderRef.current;
-    if (!rec) return;
+    if (!rec) {
+      // Even with no live recorder we may still be holding onto stitched
+      // segments from a Safari/iOS take that was previewed but not sent —
+      // wipe them so a fresh take or friend switch starts clean.
+      segmentsRef.current = [];
+      stopReasonRef.current = null;
+      return;
+    }
     recorderRef.current = null;
     try { rec.ondataavailable = null; } catch {}
     try { rec.onstop = null; } catch {}
@@ -1549,6 +1718,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     }
     recordChunksRef.current = [];
     recordAccumRef.current = 0;
+    segmentsRef.current = [];
+    stopReasonRef.current = null;
     recordPausedRef.current = false;
     selfPauseExpectedRef.current = false;
     recordCancelledRef.current = false;
@@ -1556,6 +1727,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     setPaused(false);
     setPauseReason(null);
     setRecordElapsed(0);
+    setProcessingPreview(false);
     setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
   };
 
@@ -1565,8 +1737,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     recordCancelledRef.current = false;
     // Prefer keeping the recorder alive (paused) so the preview row can offer
     // "Continue" — appending more audio to the same take instead of starting
-    // a new one. Requires browser support for pause + requestData. Otherwise
-    // we fall back to fully stopping, matching the original behavior.
+    // a new one. Requires browser support for pause + requestData.
     if (
       pauseSupported &&
       (rec.state === 'recording' || rec.state === 'paused') &&
@@ -1578,14 +1749,20 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         return;
       } catch {
         // Pause/flush failed at runtime even though the methods exist (some
-        // Safari/iOS builds throw here). Mark Continue unsupported so the
-        // preview row can render a disabled, explanatory button instead of
-        // silently hiding the option, then fall through to the plain stop
-        // path so the user still gets their preview.
-        setContinueSupported(false);
+        // Safari/iOS builds throw here). Fall through to the segment-stitch
+        // fallback below so Continue is still available — onstop will push
+        // the chunks as a segment and a subsequent Continue tap spins up a
+        // fresh recorder for the appended audio.
       }
     }
-    try { rec.stop(); } catch {}
+    // Segment-stitch fallback (Safari/iOS path): finalize the recorder fully
+    // and tell onstop this is a *segment* stop so the preview still allows
+    // Continue. The new segment is concatenated with any prior segments into
+    // a single playable WAV blob inside onstop.
+    stopReasonRef.current = 'preview-segment';
+    try { rec.stop(); } catch {
+      stopReasonRef.current = null;
+    }
   };
 
   const handlePauseRecording = () => {
@@ -1678,15 +1855,21 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     handleStartRecording();
   };
 
-  // Resume the same take from the preview row — appends new audio onto the
-  // existing recorder/chunks so the final blob is one continuous clip rather
-  // than two separately-encoded segments stitched together.
+  // Resume the same take from the preview row. Two paths:
+  //   1. Alive-recorder path (Chrome/Firefox/etc): the existing MediaRecorder
+  //      is still in the 'paused' state from pauseForPreview — just resume it
+  //      so the new audio appends to the existing chunks as one clip.
+  //   2. Segment-stitch path (Safari/iOS where pause+requestData isn't
+  //      usable): the prior recorder was fully stopped after Done; the
+  //      preview blob is the latest segment (or the WAV concat of all so
+  //      far). Spin up a fresh MediaRecorder while preserving recordAccumRef
+  //      and segmentsRef so the timer continues from the cumulative time
+  //      and onstop concatenates the new chunk onto the rest on next stop.
   const handleContinueRecording = () => {
     if (sending || recording) return;
     const rec = recorderRef.current;
-    if (!rec || rec.state !== 'paused') return;
-    // Drop the preview blob (revoke its URL) without touching the recorder
-    // or chunks — the existing chunks are the prefix of the final clip.
+    // Drop the preview blob (revoke its URL) without touching segmentsRef —
+    // those segment blobs are the prefix of the final clip.
     setVoicePreview((prev) => {
       if (prev?.url) {
         try { URL.revokeObjectURL(prev.url); } catch {}
@@ -1696,30 +1879,43 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     setVoiceError(null);
     setSendError(null);
     setResumableTake(false);
-    try {
-      rec.resume();
-    } catch {
-      // Couldn't resume — fall back to a clean slate so the user isn't stuck.
-      tearDownLingeringRecorder();
+
+    if (rec && rec.state === 'paused') {
+      try {
+        rec.resume();
+      } catch {
+        // Couldn't resume — fall back to a clean slate so the user isn't stuck.
+        tearDownLingeringRecorder();
+        return;
+      }
+      recordStartRef.current = Date.now();
+      recordPausedRef.current = false;
+      setPaused(false);
+      // Clear any stale pause hint (e.g. the take was system-paused before
+      // the user previewed it) so a later manual pause doesn't accidentally
+      // re-show a system/tab hint that no longer applies.
+      setPauseReason(null);
+      setRecording(true);
+      // Restart the visible elapsed timer (we cleared it during
+      // pauseForPreview) so the running counter and MAX_VOICE_MS auto-stop
+      // continue working.
+      recordTimerRef.current = setInterval(() => {
+        const elapsed = computeElapsedMs();
+        setRecordElapsed(elapsed);
+        if (elapsed >= MAX_VOICE_MS) {
+          try { rec.stop(); } catch {}
+        }
+      }, 100);
       return;
     }
-    recordStartRef.current = Date.now();
-    recordPausedRef.current = false;
-    setPaused(false);
-    // Clear any stale pause hint (e.g. the take was system-paused before
-    // the user previewed it) so a later manual pause doesn't accidentally
-    // re-show a system/tab hint that no longer applies.
-    setPauseReason(null);
-    setRecording(true);
-    // Restart the visible elapsed timer (we cleared it during pauseForPreview)
-    // so the running counter and MAX_VOICE_MS auto-stop continue working.
-    recordTimerRef.current = setInterval(() => {
-      const elapsed = computeElapsedMs();
-      setRecordElapsed(elapsed);
-      if (elapsed >= MAX_VOICE_MS) {
-        try { rec.stop(); } catch {}
-      }
-    }, 100);
+
+    // Segment-stitch fallback: previous recorder was finalized at the last
+    // Done tap, so segmentsRef holds the prior take(s) and recordAccumRef
+    // holds the cumulative duration. Open a fresh recorder; its onstop will
+    // push the new chunk onto segmentsRef and rebuild the concat preview.
+    if (segmentsRef.current.length > 0) {
+      handleStartRecording({ continuingSegment: true });
+    }
   };
 
   const handleSendPreview = async () => {
@@ -1772,6 +1968,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         try { rec.stop(); } catch {}
       }
       recordAccumRef.current = 0;
+      segmentsRef.current = [];
+      stopReasonRef.current = null;
       recordPausedRef.current = false;
       cleanupRecorderStream();
       setVoicePreview((prev) => {
@@ -2087,7 +2285,6 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       {!loadError && (
         <form onSubmit={handleSend} className="p-3 flex-shrink-0" style={{ borderTop: `1px solid ${cardBorder}` }}>
           {voicePreview && !recording ? (
-            <>
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-lg flex-wrap"
               style={{
@@ -2121,7 +2318,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 >
                   Re-record
                 </button>
-                {resumableTake ? (
+                {resumableTake && (
                   <button
                     type="button"
                     onClick={handleContinueRecording}
@@ -2137,29 +2334,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                   >
                     Continue
                   </button>
-                ) : !continueSupported ? (
-                  // The browser (typically older Safari/iOS) doesn't support
-                  // pause + requestData on MediaRecorder, so we can't keep the
-                  // take alive across a preview. Show the option in a clearly
-                  // disabled state with an explanation so users understand why
-                  // it isn't actionable instead of just not seeing it at all.
-                  <button
-                    type="button"
-                    disabled
-                    aria-disabled="true"
-                    aria-label="Continue isn't supported in this browser. Re-record to capture a longer voice note."
-                    title="Continue isn't supported in this browser. Re-record to capture a longer voice note."
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-not-allowed"
-                    style={{
-                      backgroundColor: '#0f1622',
-                      color: '#bfdbfe',
-                      border: '1px dashed rgba(148,163,184,0.45)',
-                      opacity: 0.5,
-                    }}
-                  >
-                    Continue
-                  </button>
-                ) : null}
+                )}
                 <button
                   type="button"
                   onClick={handleSendPreview}
@@ -2171,19 +2346,27 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 </button>
               </div>
             </div>
-            {!resumableTake && !continueSupported && (
-              // Mobile Safari (the main browser this affects) doesn't show
-              // `title` tooltips on tap, so put the explanation inline as
-              // well so users actually see why Continue is greyed out.
-              <p
-                className="mt-1 text-[11px] flex items-start gap-1.5"
-                style={{ color: textSecondary }}
-              >
-                <span aria-hidden="true">ⓘ</span>
-                <span>Continue isn't supported in this browser — re-record to capture a longer voice note.</span>
-              </p>
-            )}
-            </>
+          ) : processingPreview ? (
+            // Brief bridge state on the segment-stitch (Safari/iOS) path
+            // between tapping Done and the concatenated WAV preview being
+            // ready. Without this the composer would snap back to the text
+            // input mid-decode, which would look like the take got dropped.
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg"
+              style={{
+                backgroundColor: inputBg,
+                border: '1px solid rgba(59,130,246,0.4)',
+                color: textSecondary,
+              }}
+              aria-live="polite"
+            >
+              <span
+                className="inline-block w-2 h-2 rounded-full bg-blue-400"
+                style={{ animation: 'piksRecPulse 1s ease-in-out infinite' }}
+              />
+              <span className="text-xs font-medium">Processing…</span>
+              <style>{`@keyframes piksRecPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
+            </div>
           ) : recording ? (
             <>
             <div
