@@ -5,6 +5,27 @@ import AchievementDetailModal from '../AchievementDetailModal';
 
 const AUTO_DISMISS_MS = 4500;
 const ENTRANCE_LOCKOUT_MS = 350;
+const UNLOCK_VIBRATION_PATTERN = [30, 40, 60];
+
+function prefersReducedMotion() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
+
+function buzzForUnlock() {
+  if (typeof navigator === 'undefined') return;
+  if (typeof navigator.vibrate !== 'function') return;
+  if (prefersReducedMotion()) return;
+  try {
+    navigator.vibrate(UNLOCK_VIBRATION_PATTERN);
+  } catch {
+    // Some browsers throw on certain patterns or in iframes — stay silent.
+  }
+}
 
 export default function AchievementUnlockOverlay() {
   const ctx = useNotifications();
@@ -33,10 +54,14 @@ function Celebration({ achievement, onDismiss }) {
   const openedAtRef = useRef(Date.now());
 
   // Reset entrance state whenever a new achievement takes the head of the
-  // queue so back-to-back unlocks each get a fresh celebration.
+  // queue so back-to-back unlocks each get a fresh celebration. Also fire
+  // a short haptic buzz so hitting a milestone feels tactile on mobile —
+  // gracefully no-ops on devices without the Vibration API and is
+  // suppressed when the user prefers reduced motion.
   useEffect(() => {
     dismissedRef.current = false;
     openedAtRef.current = Date.now();
+    buzzForUnlock();
   }, [achievement.id]);
 
   // Auto-dismiss after a few seconds — gives the user time to read the
