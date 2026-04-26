@@ -4,7 +4,15 @@ import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 const NotificationsContext = createContext(null);
 const SEEN_KEY = 'piks_notif_seen_v1';
+// Persistent (localStorage) cache of achievement ids whose unlock celebration
+// has already been shown in this browser FOR A SPECIFIC USER. Scoped by
+// userId so a second account on the same device still gets to celebrate
+// badges they personally just earned. Survives reloads and works in tandem
+// with the server-side `celebratedAt` flag so a celebration is never
+// replayed across refreshes / SSE reconnects / multiple tabs.
+const ACHV_CELEBRATED_KEY_PREFIX = 'piks_achv_celebrated_v1:';
 const MAX_SEEN = 250;
+const MAX_CELEBRATED = 100;
 const POLL_MS = 25000;
 const TOAST_DURATION_MS = 9000;
 
@@ -17,6 +25,29 @@ function writeSeen(set) {
   try {
     const arr = [...set].slice(-MAX_SEEN);
     sessionStorage.setItem(SEEN_KEY, JSON.stringify(arr));
+  } catch {}
+}
+
+function celebratedKey(userId) {
+  return userId ? `${ACHV_CELEBRATED_KEY_PREFIX}${userId}` : null;
+}
+function readCelebrated(userId) {
+  if (typeof window === 'undefined') return new Set();
+  const key = celebratedKey(userId);
+  if (!key) return new Set();
+  try {
+    return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+function writeCelebrated(userId, set) {
+  if (typeof window === 'undefined') return;
+  const key = celebratedKey(userId);
+  if (!key) return;
+  try {
+    const arr = [...set].slice(-MAX_CELEBRATED);
+    localStorage.setItem(key, JSON.stringify(arr));
   } catch {}
 }
 
@@ -50,8 +81,13 @@ export function NotificationsProvider({ children }) {
   const [achievementUnlocks, setAchievementUnlocks] = useState([]);
   // In-memory set of achievement ids already queued for the overlay this
   // session so a duplicate SSE event doesn't celebrate the same unlock
-  // twice (e.g. reconnect catch-up).
+  // twice (e.g. reconnect catch-up). Seeded (and re-seeded) per-user from
+  // localStorage in the auth-state effect below — left empty here because
+  // the user id isn't known at construction time.
   const achievementUnlockSeenRef = useRef(new Set());
+  // Tracks which userId the current achievementUnlockSeenRef belongs to so
+  // we can detect account switches and reload the per-user cache.
+  const achievementUnlockUserIdRef = useRef(null);
   const [typingSenderIds, setTypingSenderIds] = useState(() => new Set());
   const [conversations, setConversations] = useState([]);
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
@@ -185,15 +221,31 @@ export function NotificationsProvider({ children }) {
       });
       return next.length === prev.length ? prev : next;
     });
+    if (!dismissed) return;
+    // Persist client-side so a hard refresh during the same session won't
+    // re-celebrate the same badge while the server flag is in-flight.
+    // Scoped by userId so dismissals on this account don't suppress
+    // celebrations for a different account on the same browser.
+    achievementUnlockSeenRef.current.add(id);
+    writeCelebrated(achievementUnlockUserIdRef.current, achievementUnlockSeenRef.current);
+    // Server flag — flips profile.achievements[].celebratedAt so the catch-up
+    // path in /api/notifications stops returning this id, even on another
+    // device or after a long gap.
+    if (typeof window !== 'undefined') {
+      fetch('/api/me/achievements/celebrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ achievementIds: [id] }),
+      }).catch(() => {});
+    }
     // Promote the celebrated unlock to a quieter toast confirmation so users
     // who looked away still have a persistent reminder of what they earned.
-    if (dismissed) {
-      enqueueToast({
-        id: `achievement:${dismissed.id}`,
-        type: 'achievement',
-        payload: dismissed,
-      });
-    }
+    enqueueToast({
+      id: `achievement:${dismissed.id}`,
+      type: 'achievement',
+      payload: dismissed,
+    });
   }, [enqueueToast]);
 
   const refreshConversations = useCallback(async () => {
@@ -232,6 +284,9 @@ export function NotificationsProvider({ children }) {
       const unreadMessages = json.unreadMessages || [];
       const gameResults = json.gameResults || [];
       const pendingRematches = json.pendingRematches || [];
+      const pendingAchievementUnlocks = Array.isArray(json.pendingAchievementUnlocks)
+        ? json.pendingAchievementUnlocks
+        : [];
       const counts = {
         battleInvites: battleInvites.length,
         friendRequests: friendRequests.length,
@@ -354,8 +409,18 @@ export function NotificationsProvider({ children }) {
           });
         }
       }
+
+      // Surface any uncelebrated achievement unlocks the server is still
+      // tracking. Runs on both initial load and subsequent refreshes so a
+      // brand-new badge earned mid-session via a direct page action (e.g.
+      // /api/profiles GET retroactive grant) doesn't get missed if the SSE
+      // event was lost. enqueueAchievementUnlock dedupes by id and ignores
+      // any badge already in the localStorage seen-set.
+      for (const ach of pendingAchievementUnlocks) {
+        if (ach && ach.id) enqueueAchievementUnlock(ach);
+      }
     } catch {}
-  }, [isAuthed, enqueueToast, addIncomingInvite]);
+  }, [isAuthed, enqueueToast, addIncomingInvite, enqueueAchievementUnlock]);
 
   useEffect(() => {
     if (!isAuthed) {
@@ -373,14 +438,26 @@ export function NotificationsProvider({ children }) {
       setIncomingInvites([]);
       incomingInviteSeenRef.current = new Set();
       setAchievementUnlocks([]);
+      // Drop the in-memory cache when signed out. Per-user localStorage
+      // entries are preserved (each keyed by userId) so a re-login on the
+      // same browser still recognises previously celebrated badges for
+      // THAT account, while a different account starts with a fresh set.
       achievementUnlockSeenRef.current = new Set();
+      achievementUnlockUserIdRef.current = null;
       return;
+    }
+    // Re-seed the celebration cache from the per-user localStorage entry
+    // whenever the authenticated userId changes (login, account switch).
+    const currentUserId = session?.user?.id || null;
+    if (achievementUnlockUserIdRef.current !== currentUserId) {
+      achievementUnlockSeenRef.current = readCelebrated(currentUserId);
+      achievementUnlockUserIdRef.current = currentUserId;
     }
     refresh();
     refreshConversations();
     const interval = setInterval(refresh, POLL_MS);
     return () => clearInterval(interval);
-  }, [isAuthed, refresh, refreshConversations]);
+  }, [isAuthed, refresh, refreshConversations, session?.user?.id]);
 
   // Refresh conversation cache whenever the unread-message set changes so the
   // dropdown always has fresh previews ready before the user opens it.

@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useNotifications } from '../../contexts/NotificationsContext';
-import AchievementBadge from '../AchievementBadge';
+import AchievementDetailModal from '../AchievementDetailModal';
 
-const AUTO_DISMISS_MS = 3200;
+const AUTO_DISMISS_MS = 4500;
 const ENTRANCE_LOCKOUT_MS = 350;
 
 export default function AchievementUnlockOverlay() {
@@ -19,22 +19,28 @@ export default function AchievementUnlockOverlay() {
   if (!mounted || !current || typeof document === 'undefined') return null;
 
   return ReactDOM.createPortal(
-    <Overlay achievement={current} onDismiss={dismissAchievementUnlock} />,
+    <Celebration achievement={current} onDismiss={dismissAchievementUnlock} />,
     document.body
   );
 }
 
-function Overlay({ achievement, onDismiss }) {
+// Wraps the existing AchievementDetailModal in a celebratory layer of
+// confetti, sparkles, and a radial glow burst — so the moment of *earning*
+// a badge feels rewarding while still reusing the same detail card the user
+// gets when tapping a badge in their profile (task #368).
+function Celebration({ achievement, onDismiss }) {
   const dismissedRef = useRef(false);
   const openedAtRef = useRef(Date.now());
 
-  // Reset entrance timestamp whenever a new achievement takes the head of
-  // the queue so back-to-back unlocks each get a clean entrance animation.
+  // Reset entrance state whenever a new achievement takes the head of the
+  // queue so back-to-back unlocks each get a fresh celebration.
   useEffect(() => {
     dismissedRef.current = false;
     openedAtRef.current = Date.now();
   }, [achievement.id]);
 
+  // Auto-dismiss after a few seconds — gives the user time to read the
+  // detail card without trapping them.
   useEffect(() => {
     const id = achievement.id;
     const timer = setTimeout(() => {
@@ -45,58 +51,53 @@ function Overlay({ achievement, onDismiss }) {
     return () => clearTimeout(timer);
   }, [achievement.id, onDismiss]);
 
-  const handleDismiss = () => {
+  const handleClose = () => {
     if (dismissedRef.current) return;
     // Ignore taps that arrive during the entrance — protects against an
-    // accidental tap-through immediately as the overlay appears.
+    // accidental tap-through immediately as the celebration appears.
     if (Date.now() - openedAtRef.current < ENTRANCE_LOCKOUT_MS) return;
     dismissedRef.current = true;
     onDismiss?.(achievement.id);
   };
 
-  const sparkles = SPARKLE_POSITIONS;
-  const confetti = CONFETTI_PIECES;
+  // Map the SSE/catch-up payload onto the shape AchievementDetailModal
+  // expects. The modal already looks up rarity + badge art via the
+  // achievement id, so we only need the human-readable bits + earned
+  // metadata.
+  const modalAchievement = {
+    achievementId: achievement.id,
+    name: achievement.name || null,
+    description: achievement.description || null,
+    earned: true,
+    earnedAt: achievement.earnedAt || new Date().toISOString(),
+    progressPercent: 100,
+    progressText: null,
+    progressLabel: null,
+  };
 
   return (
     <>
       <style>{`
-        @keyframes achv-overlay-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        @keyframes achv-unlock-banner-in {
+          0% { opacity: 0; transform: translate(-50%, -16px); }
+          100% { opacity: 1; transform: translate(-50%, 0); }
         }
-        @keyframes achv-burst {
+        @keyframes achv-unlock-burst {
           0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
-          40% { opacity: 0.9; }
+          40% { opacity: 0.85; }
           100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
         }
-        @keyframes achv-ring {
+        @keyframes achv-unlock-ring {
           0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0.9; }
           100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; }
         }
-        @keyframes achv-badge-pop {
-          0% { transform: scale(0.2) rotate(-12deg); opacity: 0; }
-          55% { transform: scale(1.18) rotate(4deg); opacity: 1; }
-          75% { transform: scale(0.96) rotate(-2deg); }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-        @keyframes achv-banner-up {
-          0% { transform: translateY(28px); opacity: 0; }
-          100% { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes achv-line-in {
-          0% { transform: translateY(14px); opacity: 0; }
-          100% { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes achv-spark {
+        @keyframes achv-unlock-spark {
           0%, 100% { opacity: 0; transform: scale(0.4); }
           50% { opacity: 1; transform: scale(1); }
         }
-        @keyframes achv-confetti {
-          0% {
-            transform: translate(0, 0) rotate(0deg);
-            opacity: 0;
-          }
-          10% { opacity: 1; }
+        @keyframes achv-unlock-confetti {
+          0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+          10%  { opacity: 1; }
           100% {
             transform:
               translate(var(--cx, 0px), var(--cy, -260px))
@@ -105,81 +106,103 @@ function Overlay({ achievement, onDismiss }) {
           }
         }
         @media (prefers-reduced-motion: reduce) {
-          .achv-overlay-root,
-          .achv-overlay-root * {
+          .achv-unlock-fx,
+          .achv-unlock-fx * {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             animation-delay: 0ms !important;
           }
-          .achv-overlay-root .achv-particles { display: none !important; }
-          .achv-overlay-root .achv-burst,
-          .achv-overlay-root .achv-ring { display: none !important; }
+          .achv-unlock-fx .achv-unlock-particles { display: none !important; }
+          .achv-unlock-fx .achv-unlock-burst,
+          .achv-unlock-fx .achv-unlock-ring,
+          .achv-unlock-fx .achv-unlock-banner { animation: none !important; }
         }
       `}</style>
+
+      {/* Reuse the same detail card the badge tap-to-inspect surface uses,
+          so the celebrated badge looks identical to its detail view. The
+          modal handles its own backdrop, scroll lock, focus trap, and
+          Escape-to-close. */}
+      <AchievementDetailModal
+        achievement={modalAchievement}
+        isOpen
+        onClose={handleClose}
+      />
+
+      {/* Celebratory FX layer — sits above the modal backdrop (z=60) so the
+          glow / confetti read as bursting outward from the centered card.
+          pointer-events:none lets taps fall through to the modal so the
+          backdrop dismiss still works. */}
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Achievement unlocked: ${achievement.name || 'New badge'}`}
+        className="achv-unlock-fx fixed inset-0 z-[80] pointer-events-none"
+        aria-hidden="true"
         data-allow-fixed-overlay="true"
-        className="achv-overlay-root fixed inset-0 z-[110] flex items-center justify-center px-4"
-        style={{
-          background:
-            'radial-gradient(circle at center, rgba(20, 14, 0, 0.78) 0%, rgba(0, 0, 0, 0.88) 70%)',
-          backdropFilter: 'blur(6px)',
-          WebkitBackdropFilter: 'blur(6px)',
-          animation: 'achv-overlay-in 0.25s ease-out',
-          cursor: 'pointer',
-        }}
-        onClick={handleDismiss}
       >
-        {/* Radial glow burst behind badge */}
+        {/* Soft golden halo behind the card */}
         <div
-          className="achv-burst pointer-events-none absolute"
+          className="achv-unlock-burst absolute"
           style={{
             top: '50%',
             left: '50%',
-            width: 360,
-            height: 360,
+            width: 420,
+            height: 420,
             transform: 'translate(-50%, -50%) scale(0.2)',
             background:
-              'radial-gradient(circle, rgba(253, 224, 71, 0.55) 0%, rgba(245, 158, 11, 0.35) 35%, transparent 70%)',
-            filter: 'blur(8px)',
-            animation: 'achv-burst 1.4s ease-out forwards',
+              'radial-gradient(circle, rgba(253, 224, 71, 0.45) 0%, rgba(245, 158, 11, 0.28) 35%, transparent 70%)',
+            filter: 'blur(10px)',
+            animation: 'achv-unlock-burst 1.6s ease-out forwards',
           }}
         />
         <div
-          className="achv-ring pointer-events-none absolute"
+          className="achv-unlock-ring absolute"
           style={{
             top: '50%',
             left: '50%',
-            width: 220,
-            height: 220,
+            width: 260,
+            height: 260,
             borderRadius: '9999px',
-            border: '2px solid rgba(253, 224, 71, 0.8)',
+            border: '2px solid rgba(253, 224, 71, 0.7)',
             transform: 'translate(-50%, -50%) scale(0.4)',
-            animation: 'achv-ring 1.1s ease-out 0.05s forwards',
+            animation: 'achv-unlock-ring 1.2s ease-out 0.05s forwards',
           }}
         />
         <div
-          className="achv-ring pointer-events-none absolute"
+          className="achv-unlock-ring absolute"
           style={{
             top: '50%',
             left: '50%',
-            width: 220,
-            height: 220,
+            width: 260,
+            height: 260,
             borderRadius: '9999px',
-            border: '2px solid rgba(250, 204, 21, 0.55)',
+            border: '2px solid rgba(250, 204, 21, 0.45)',
             transform: 'translate(-50%, -50%) scale(0.4)',
-            animation: 'achv-ring 1.4s ease-out 0.25s forwards',
+            animation: 'achv-unlock-ring 1.5s ease-out 0.25s forwards',
           }}
         />
 
-        {/* Confetti pieces shooting outward from the badge */}
+        {/* "Achievement Unlocked" gold banner above the card */}
         <div
-          className="achv-particles pointer-events-none absolute inset-0 overflow-hidden"
-          aria-hidden="true"
+          className="achv-unlock-banner absolute text-[11px] font-black uppercase tracking-[0.32em] px-3 py-1.5 rounded-full"
+          style={{
+            top: 'calc(50% - 230px)',
+            left: '50%',
+            transform: 'translate(-50%, 0)',
+            color: '#fde68a',
+            background: 'rgba(15, 10, 0, 0.7)',
+            border: '1px solid rgba(253, 224, 71, 0.5)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.45), 0 0 18px rgba(253, 224, 71, 0.35)',
+            textShadow: '0 1px 4px rgba(0,0,0,0.7)',
+            animation: 'achv-unlock-banner-in 0.45s ease-out 0.1s both',
+            whiteSpace: 'nowrap',
+          }}
         >
-          {confetti.map((piece, i) => (
+          Achievement Unlocked
+        </div>
+
+        {/* Confetti + sparkles. Pre-computed positions so the entrance
+            animations don't restart on parent re-renders. */}
+        <div className="achv-unlock-particles absolute inset-0 overflow-hidden">
+          {CONFETTI_PIECES.map((piece, i) => (
             <div
               key={`confetti-${i}`}
               className="absolute"
@@ -191,15 +214,15 @@ function Overlay({ achievement, onDismiss }) {
                 background: piece.color,
                 borderRadius: piece.round ? '9999px' : '2px',
                 transform: 'translate(-50%, -50%)',
-                animation: `achv-confetti ${piece.dur}s cubic-bezier(0.2, 0.7, 0.4, 1) ${piece.delay}s forwards`,
-                boxShadow: '0 0 6px rgba(253, 224, 71, 0.55)',
+                animation: `achv-unlock-confetti ${piece.dur}s cubic-bezier(0.2, 0.7, 0.4, 1) ${piece.delay}s forwards`,
+                boxShadow: '0 0 6px rgba(253, 224, 71, 0.5)',
                 ['--cx']: `${piece.x}px`,
                 ['--cy']: `${piece.y}px`,
                 ['--cr']: `${piece.r}deg`,
               }}
             />
           ))}
-          {sparkles.map((s, i) => (
+          {SPARKLE_POSITIONS.map((s, i) => (
             <div
               key={`spark-${i}`}
               className="absolute"
@@ -211,85 +234,10 @@ function Overlay({ achievement, onDismiss }) {
                 borderRadius: '9999px',
                 background: '#fef9c3',
                 boxShadow: '0 0 8px #fde68a, 0 0 16px #facc15',
-                animation: `achv-spark ${1.4 + (i % 4) * 0.3}s ease-in-out ${0.2 + i * 0.08}s infinite`,
+                animation: `achv-unlock-spark ${1.4 + (i % 4) * 0.3}s ease-in-out ${0.2 + i * 0.08}s infinite`,
               }}
             />
           ))}
-        </div>
-
-        <div
-          className="relative z-10 flex flex-col items-center text-center select-none"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDismiss();
-          }}
-          style={{ maxWidth: 420 }}
-        >
-          <div
-            className="text-[11px] font-black uppercase tracking-[0.32em] mb-4"
-            style={{
-              color: '#fde68a',
-              textShadow: '0 1px 4px rgba(0,0,0,0.7)',
-              animation: 'achv-banner-up 0.5s ease-out 0.1s both',
-            }}
-          >
-            Achievement Unlocked
-          </div>
-
-          <div
-            style={{
-              animation:
-                'achv-badge-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-              filter:
-                'drop-shadow(0 12px 28px rgba(250, 204, 21, 0.55)) drop-shadow(0 0 20px rgba(253, 224, 71, 0.45))',
-            }}
-          >
-            <AchievementBadge
-              achievementId={achievement.id}
-              earned
-              size={184}
-            />
-          </div>
-
-          <div
-            className="mt-6 text-2xl sm:text-3xl font-black"
-            style={{
-              backgroundImage:
-                'linear-gradient(180deg, #fff7d6 0%, #fde68a 35%, #facc15 70%, #b45309 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
-              letterSpacing: '0.01em',
-              animation: 'achv-line-in 0.5s ease-out 0.35s both',
-            }}
-          >
-            {achievement.name || 'New badge'}
-          </div>
-
-          {achievement.description ? (
-            <div
-              className="mt-2 text-sm sm:text-base font-medium px-4"
-              style={{
-                color: '#fef3c7',
-                textShadow: '0 1px 3px rgba(0,0,0,0.7)',
-                animation: 'achv-line-in 0.5s ease-out 0.5s both',
-                maxWidth: 360,
-              }}
-            >
-              {achievement.description}
-            </div>
-          ) : null}
-
-          <div
-            className="mt-6 text-[11px] font-semibold uppercase tracking-widest"
-            style={{
-              color: 'rgba(253, 230, 138, 0.7)',
-              animation: 'achv-line-in 0.5s ease-out 0.7s both',
-            }}
-          >
-            Tap to dismiss
-          </div>
         </div>
       </div>
     </>
@@ -312,7 +260,7 @@ const CONFETTI_PIECES = (() => {
   const count = 28;
   for (let i = 0; i < count; i += 1) {
     const angle = (Math.PI * 2 * i) / count + (i % 2 ? 0.12 : -0.12);
-    const distance = 220 + (i % 5) * 30;
+    const distance = 240 + (i % 5) * 30;
     pieces.push({
       x: Math.cos(angle) * distance,
       y: Math.sin(angle) * distance - 40,

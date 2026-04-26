@@ -5,6 +5,7 @@ import { messages, friendships, battleInvites, profiles, users, matchups, fakeOp
 import { eq, and, or, desc, lt, inArray, gte, isNotNull, isNull } from 'drizzle-orm';
 const { sendPushToUsers } = require('../../../lib/web-push');
 const { publishBattleEvent } = require('../../../lib/battle-events');
+import { getUncelebratedAchievements } from '../../../lib/achievements';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -484,6 +485,16 @@ export default async function handler(req, res) {
       });
     } catch (_e) {}
 
+    // Catch-up: surface any newly earned achievement whose celebration popup
+    // hasn't been shown yet (e.g. SSE event missed during a reconnect, or
+    // user has multiple tabs and one already dismissed it). Backed by the
+    // persistent profile.achievements[].celebratedAt flag so it never
+    // replays for badges already celebrated.
+    let pendingAchievementUnlocks = [];
+    try {
+      pendingAchievementUnlocks = await getUncelebratedAchievements(userId);
+    } catch (_e) {}
+
     return res.status(200).json({
       battleInvites: battleInvitesOut,
       outgoingBattleInvites: outgoingPendingInvites,
@@ -491,6 +502,7 @@ export default async function handler(req, res) {
       unreadMessages: messagesOut,
       gameResults,
       pendingRematches,
+      pendingAchievementUnlocks,
       counts: { ...counts, gameResults: gameResults.length, pendingRematches: pendingRematches.length, total: counts.total + gameResults.length + pendingRematches.length },
       recentForfeitWin,
       // Backwards-compat fields kept for any older callers.
