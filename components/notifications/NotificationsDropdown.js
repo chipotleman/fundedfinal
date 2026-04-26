@@ -59,11 +59,23 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
       onClose?.();
     };
     const handleKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    // Close on window scroll. Internal dropdown scrolling lives in an
+    // overflow-y container, so it does not bubble to the window — only
+    // the page scrolling underneath fires this listener. We snapshot the
+    // open scrollY so the listener that attaches *because* of the open
+    // tap doesn't immediately fire if a render-time scroll adjustment
+    // happens.
+    const startY = typeof window !== 'undefined' ? window.scrollY : 0;
+    const handleScroll = () => {
+      if (Math.abs((window.scrollY || 0) - startY) > 4) onClose?.();
+    };
     document.addEventListener('click', handleClick);
     document.addEventListener('keydown', handleKey);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       document.removeEventListener('click', handleClick);
       document.removeEventListener('keydown', handleKey);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [open, onClose, anchorRef]);
 

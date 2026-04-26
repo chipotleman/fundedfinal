@@ -58,8 +58,10 @@ export default function TopNavbar({
   const hasUnviewedAchievements = (unviewedAchievementCount || 0) > 0;
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const notifBellRef = useRef(null);
+  const condensedNotifBellRef = useRef(null);
   const [showMsgDropdown, setShowMsgDropdown] = useState(false);
   const msgBtnRef = useRef(null);
+  const condensedMsgBtnRef = useRef(null);
   const [messageFriend, setMessageFriend] = useState(null);
   
   // Prefetch all top-nav destinations so the next-page bundle is cached
@@ -92,6 +94,16 @@ export default function TopNavbar({
       router.events.off('routeChangeStart', closeAll);
     };
   }, [router]);
+
+  // When the condensed bar engages or disengages, close any open notifications
+  // / messages dropdown. Two reasons:
+  //   1. Dropdowns are anchored to whichever bar opened them — the other
+  //      bar's mounted instance would otherwise render at a stale anchor.
+  //   2. Avoids a "stuck" dropdown that lingers across the bar transition.
+  useEffect(() => {
+    setShowNotifDropdown(false);
+    setShowMsgDropdown(false);
+  }, [showCondensedBar]);
   
   // Measure and expose navbar height as CSS variable for sticky elements below.
   // The variable must reflect WHICHEVER bar is currently pinned at the top of
@@ -647,7 +659,7 @@ export default function TopNavbar({
                     )}
                   </button>
                   <NotificationsDropdown
-                    open={showNotifDropdown}
+                    open={showNotifDropdown && !showCondensedBar}
                     onClose={() => setShowNotifDropdown(false)}
                     anchorRef={notifBellRef}
                   />
@@ -685,7 +697,7 @@ export default function TopNavbar({
                     )}
                   </button>
                   <MessagesDropdown
-                    open={showMsgDropdown}
+                    open={showMsgDropdown && !showCondensedBar}
                     onClose={() => setShowMsgDropdown(false)}
                     anchorRef={msgBtnRef}
                     onSelectConversation={(friend) => setMessageFriend(friend)}
@@ -991,51 +1003,76 @@ export default function TopNavbar({
               </button>
             )}
 
-            {/* Notifications + messages affordances — kept as plain links to
-                the dedicated pages so they work on mobile (where the main
-                nav hides them behind the hamburger) and avoid dropdown
-                anchoring conflicts with the main nav versions that are
-                still mounted underneath. Badges mirror the main nav. */}
+            {/* Notifications + messages affordances — open the lightweight
+                dropdowns in place (same dropdowns as the full top bar) so
+                the user can peek without leaving the page. Anchored to the
+                condensed bar's own buttons. The full bar's dropdown
+                instances stay mounted but receive `open=false` whenever
+                the condensed bar is engaged (and vice versa) so only one
+                instance has document/scroll listeners attached at a time —
+                clicks inside the visible dropdown can't be misread as
+                "outside" by a hidden twin instance. */}
             {isLoggedIn && (
-              <Link
-                href="/notifications"
-                title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
-                aria-label={notifTotal > 0 ? `${notifTotal} new notifications` : 'Notifications'}
-                className="relative flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
-              >
-                <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                {notifTotal > 0 && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
-                    style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
-                  >
-                    {notifTotal > 9 ? '9+' : notifTotal}
-                  </span>
-                )}
-              </Link>
+              <div className="relative flex-shrink-0">
+                <button
+                  ref={condensedNotifBellRef}
+                  onClick={() => { setShowMsgDropdown(false); setShowNotifDropdown(v => !v); }}
+                  title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
+                  aria-label={notifTotal > 0 ? `${notifTotal} new notifications` : 'Notifications'}
+                  aria-haspopup="true"
+                  aria-expanded={showNotifDropdown}
+                  className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
+                >
+                  <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {notifTotal > 0 && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                      style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
+                    >
+                      {notifTotal > 9 ? '9+' : notifTotal}
+                    </span>
+                  )}
+                </button>
+                <NotificationsDropdown
+                  open={showNotifDropdown && showCondensedBar}
+                  onClose={() => setShowNotifDropdown(false)}
+                  anchorRef={condensedNotifBellRef}
+                />
+              </div>
             )}
 
             {isLoggedIn && (
-              <Link
-                href="/messenger"
-                title={notifMessages > 0 ? `${notifMessages} unread message${notifMessages > 1 ? 's' : ''}` : 'Messages'}
-                aria-label={notifMessages > 0 ? `${notifMessages} unread messages` : 'Messages'}
-                className="relative flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
-              >
-                <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
-                </svg>
-                {notifMessages > 0 && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
-                    style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
-                  >
-                    {notifMessages > 9 ? '9+' : notifMessages}
-                  </span>
-                )}
-              </Link>
+              <div className="relative flex-shrink-0">
+                <button
+                  ref={condensedMsgBtnRef}
+                  onClick={() => { setShowNotifDropdown(false); setShowMsgDropdown(v => !v); }}
+                  title={notifMessages > 0 ? `${notifMessages} unread message${notifMessages > 1 ? 's' : ''}` : 'Messages'}
+                  aria-label={notifMessages > 0 ? `${notifMessages} unread messages` : 'Messages'}
+                  aria-haspopup="true"
+                  aria-expanded={showMsgDropdown}
+                  className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
+                >
+                  <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                  </svg>
+                  {notifMessages > 0 && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                      style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
+                    >
+                      {notifMessages > 9 ? '9+' : notifMessages}
+                    </span>
+                  )}
+                </button>
+                <MessagesDropdown
+                  open={showMsgDropdown && showCondensedBar}
+                  onClose={() => setShowMsgDropdown(false)}
+                  anchorRef={condensedMsgBtnRef}
+                  onSelectConversation={(friend) => setMessageFriend(friend)}
+                />
+              </div>
             )}
 
             {/* Pik Slip mirror — sized to match the condensed sport pills */}

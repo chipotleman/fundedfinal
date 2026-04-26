@@ -102,11 +102,21 @@ export default function MessagesDropdown({ open, onClose, anchorRef, onSelectCon
       onClose?.();
     };
     const handleKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    // Close on window scroll. Internal dropdown scrolling lives in an
+    // overflow-y container so it doesn't bubble to the window. The startY
+    // snapshot avoids closing on the same scroll position the dropdown
+    // opened at.
+    const startY = typeof window !== 'undefined' ? window.scrollY : 0;
+    const handleScroll = () => {
+      if (Math.abs((window.scrollY || 0) - startY) > 4) onClose?.();
+    };
     document.addEventListener('click', handleClick);
     document.addEventListener('keydown', handleKey);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       document.removeEventListener('click', handleClick);
       document.removeEventListener('keydown', handleKey);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [open, onClose, anchorRef]);
 
