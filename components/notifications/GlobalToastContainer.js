@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import UserAvatar from '../UserAvatar';
+import FriendRequestCard from './FriendRequestCard';
 
 export default function GlobalToastContainer() {
   const ctx = useNotifications();
@@ -97,38 +98,21 @@ function Toast({ toast, ctx, router }) {
 
   if (toast.type === 'friend_request') {
     return (
-      <div
-        className="bg-gradient-to-r from-purple-900/95 to-purple-800/95 border border-purple-500/50 rounded-xl p-3"
-        style={baseStyle}
-      >
-        <div className="flex items-center gap-3">
-          <Avatar sender={sender} />
-          <div className="flex-1 min-w-0">
-            <div className="text-white text-sm font-bold truncate">
-              {sender.username || 'Someone'} wants to be friends
-            </div>
-            <div className="text-gray-300 text-xs">Friend request</div>
-          </div>
-          <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
-        </div>
-        <div className="flex gap-2 mt-2">
-          <button
-            disabled={!!busy}
-            onClick={() => wrap('accept', async () => {
-              await ctx.acceptFriend(toast.payload.id);
-              ctx.dismissToast(toast.id);
-            })}
-            className="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-          >{busy === 'accept' ? '...' : 'Accept'}</button>
-          <button
-            disabled={!!busy}
-            onClick={() => wrap('decline', async () => {
-              await ctx.declineFriend(toast.payload.id);
-              ctx.dismissToast(toast.id);
-            })}
-            className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
-          >{busy === 'decline' ? '...' : 'Decline'}</button>
-        </div>
+      <div style={baseStyle}>
+        <FriendRequestCard
+          sender={sender}
+          busy={!!busy}
+          compact
+          onAccept={() => wrap('accept', async () => {
+            await ctx.acceptFriend(toast.payload.id);
+            ctx.dismissToast(toast.id);
+          })}
+          onDecline={() => wrap('decline', async () => {
+            await ctx.declineFriend(toast.payload.id);
+            ctx.dismissToast(toast.id);
+          })}
+          onDismiss={() => ctx.dismissToast(toast.id)}
+        />
       </div>
     );
   }

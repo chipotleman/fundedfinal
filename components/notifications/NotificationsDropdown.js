@@ -5,6 +5,7 @@ import UserAvatar from '../UserAvatar';
 import { formatMoney } from '../../utils/formatMoney';
 import { cacheBattleResult } from '../../utils/battleResultCache';
 import { NOTIF_TYPES, NotifIcon, getResultStyle } from './notificationTypeStyles';
+import FriendRequestCard from './FriendRequestCard';
 
 function Avatar({ sender, size = 36 }) {
   return (
@@ -242,26 +243,19 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
 
         {friendRequests.length > 0 && (
           <Section type="friend_request" title="Friend Requests">
-            {friendRequests.map((fr) => (
-              <Row key={fr.id} type="friend_request" sender={fr.sender} time={fr.createdAt}>
-                <div className="text-white text-sm font-semibold truncate">
-                  {fr.sender?.username || 'Someone'} wants to be friends
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <button
-                    disabled={busyId === fr.id}
-                    onClick={() => wrap(fr.id, async () => { await ctx.acceptFriend(fr.id); })}
-                    className="flex-1 bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                    style={{ boxShadow: '0 0 12px rgba(168,85,247,0.45)' }}
-                  >Accept</button>
-                  <button
-                    disabled={busyId === fr.id}
-                    onClick={() => wrap(fr.id, async () => { await ctx.declineFriend(fr.id); })}
-                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
-                  >Decline</button>
-                </div>
-              </Row>
-            ))}
+            <div className="px-3 pb-2 pt-1 flex flex-col gap-2">
+              {friendRequests.map((fr) => (
+                <FriendRequestCard
+                  key={fr.id}
+                  sender={fr.sender}
+                  time={timeAgo(fr.createdAt)}
+                  busy={busyId === fr.id}
+                  compact
+                  onAccept={() => wrap(fr.id, async () => { await ctx.acceptFriend(fr.id); })}
+                  onDecline={() => wrap(fr.id, async () => { await ctx.declineFriend(fr.id); })}
+                />
+              ))}
+            </div>
           </Section>
         )}
       </div>

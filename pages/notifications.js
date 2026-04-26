@@ -7,6 +7,7 @@ import { isUserOnline } from '../components/ActiveStatus';
 import UserAvatar, { UserNameLink } from '../components/UserAvatar';
 import { formatMoney } from '../utils/formatMoney';
 import { NOTIF_TYPES, TypeChip, getResultStyle } from '../components/notifications/notificationTypeStyles';
+import FriendRequestCard from '../components/notifications/FriendRequestCard';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -474,40 +475,21 @@ function NotificationsFeed({ ctx, router, filter }) {
       {friendRequests.length > 0 && (
         <div>
           <SectionHeader type="friend_request" title="Friend Requests" />
-          {friendRequests.map((fr) => (
-            <TypedRow
-              key={fr.id}
-              type="friend_request"
-              time={timeAgo(fr.createdAt)}
-              avatar={
-                <Avatar
-                  user={fr.sender}
-                  isOnline={fr.sender?.isOnline ?? isUserOnline(fr.sender?.lastSeenAt)}
-                  onlineDotBorderColor={cardBg}
-                />
-              }
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <TypeChip type="friend_request" />
-              </div>
-              <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
-                <UserNameLink user={fr.sender} fallback="Someone" /> wants to be friends
-              </div>
-              <div className="flex gap-2 mt-2">
-                <button
-                  disabled={busyId === fr.id}
-                  onClick={() => wrap(fr.id, () => ctx.acceptFriend(fr.id))}
-                  className="bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
-                  style={{ boxShadow: '0 0 12px rgba(168,85,247,0.45)' }}
-                >Accept</button>
-                <button
-                  disabled={busyId === fr.id}
-                  onClick={() => wrap(fr.id, () => ctx.declineFriend(fr.id))}
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
-                >Decline</button>
-              </div>
-            </TypedRow>
-          ))}
+          <div
+            className="px-3 sm:px-4 pt-1 pb-3 flex flex-col gap-2.5"
+            style={{ borderTop: `1px solid ${cardBorder}` }}
+          >
+            {friendRequests.map((fr) => (
+              <FriendRequestCard
+                key={fr.id}
+                sender={fr.sender}
+                time={timeAgo(fr.createdAt)}
+                busy={busyId === fr.id}
+                onAccept={() => wrap(fr.id, () => ctx.acceptFriend(fr.id))}
+                onDecline={() => wrap(fr.id, () => ctx.declineFriend(fr.id))}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
