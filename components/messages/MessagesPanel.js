@@ -2934,6 +2934,117 @@ export default function MessagesPanel({
     return () => window.removeEventListener('piks:message:new', handler);
   }, [fetchConversations]);
 
+  // Background backfill of waveform peaks for legacy voice notes whose row
+  // would otherwise render the "🎤 Voice message" text placeholder. The
+  // bubble-side `VoiceWaveform` already decodes + persists peaks when a
+  // thread is opened, but threads the user never taps would keep the
+  // placeholder forever. To make the inbox look uniform we walk the
+  // conversation list, fetch + decode the latest voice attachment in any
+  // such thread, POST the result so the persistence is durable across page
+  // loads, and patch local state so the row swaps to the static waveform
+  // immediately. Each message id is attempted at most once per session.
+  const inboxBackfillAttemptedRef = useRef(new Set());
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return undefined;
+
+    const candidates = conversations.filter((c) => {
+      const last = c.lastMessage;
+      if (!last || last.messageType !== 'voice') return false;
+      if (!last.id || !last.attachmentUrl) return false;
+      if (Array.isArray(last.attachmentPeaks) && last.attachmentPeaks.length > 0) return false;
+      if (inboxBackfillAttemptedRef.current.has(last.id)) return false;
+      return true;
+    });
+    if (candidates.length === 0) return undefined;
+
+    let cancelled = false;
+    // Decode candidates one at a time so we don't kick off N parallel audio
+    // fetches the moment the inbox loads — the work is best-effort and the
+    // bubble's own decode path remains the user-visible fast path when a
+    // thread is opened. Wait for browser idle so the inbox itself paints
+    // first.
+    const idle = scheduleIdle(async () => {
+      for (const c of candidates) {
+        if (cancelled) return;
+        const last = c.lastMessage;
+        if (!last) continue;
+        const messageId = last.id;
+        const url = last.attachmentUrl;
+        if (inboxBackfillAttemptedRef.current.has(messageId)) continue;
+        // Mark up-front so a re-render mid-decode doesn't re-queue this
+        // message. The set persists for the lifetime of the panel mount.
+        inboxBackfillAttemptedRef.current.add(messageId);
+
+        // Patch the matching conversation row with freshly decoded peaks.
+        // Returns `prev` unchanged when the target row already carries
+        // peaks — important because this effect depends on `conversations`,
+        // and an unchanged reference makes React bail out of the re-render
+        // (and the resulting effect cleanup/restart) so the loop can keep
+        // draining sequentially instead of being torn down per success.
+        const patchPeaks = (peaksArr) => {
+          if (cancelled) return;
+          setConversations((prev) => {
+            let changed = false;
+            const next = prev.map((conv) => {
+              if (!conv.lastMessage || conv.lastMessage.id !== messageId) return conv;
+              const existing = conv.lastMessage.attachmentPeaks;
+              if (Array.isArray(existing) && existing.length > 0) return conv;
+              changed = true;
+              return {
+                ...conv,
+                lastMessage: { ...conv.lastMessage, attachmentPeaks: peaksArr },
+              };
+            });
+            return changed ? next : prev;
+          });
+        };
+
+        // If a sibling decode (e.g. opening this thread earlier in the
+        // session) already populated the URL-keyed cache we can skip the
+        // fetch entirely and just patch the row + persist.
+        const cached = getCachedWaveformPeaks(url);
+        if (Array.isArray(cached) && cached.length > 0) {
+          patchPeaks(cached);
+          backfillPeaksToServer(messageId, cached);
+          continue;
+        }
+
+        let audioCtx = null;
+        try {
+          const res = await fetch(url, { credentials: 'include' });
+          if (!res.ok) continue;
+          const arrBuf = await res.arrayBuffer();
+          if (cancelled) return;
+          audioCtx = new Ctx();
+          const decoded = await audioCtx.decodeAudioData(arrBuf.slice(0));
+          if (cancelled) return;
+          const norm = extractPeaksFromAudioBuffer(decoded);
+          if (!Array.isArray(norm) || norm.length === 0) continue;
+          // Cache so a subsequent thread open renders the bubble instantly
+          // from memory instead of repeating the decode.
+          setCachedWaveformPeaks(url, norm);
+          // Fire-and-forget the persistence POST (the endpoint refuses to
+          // overwrite a row that already has peaks, so a last-write-wins
+          // race with the bubble path is harmless).
+          backfillPeaksToServer(messageId, norm);
+          patchPeaks(norm);
+        } catch {
+          // Failures are silent — the row keeps its text placeholder and
+          // we won't retry this id again until the next session, matching
+          // how the bubble's own decode path treats unsupported codecs.
+        } finally {
+          if (audioCtx) { try { await audioCtx.close(); } catch {} }
+        }
+      }
+    });
+    return () => {
+      cancelled = true;
+      idle.cancel();
+    };
+  }, [conversations]);
+
   const sorted = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = q
