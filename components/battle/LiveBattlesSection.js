@@ -269,6 +269,91 @@ function PnlBadge({ pnlPercent, size = 'normal' }) {
   );
 }
 
+// Shared cartoon-style info chip used by every Featured Battles card so
+// the live cards and the "Your Battle" card visibly belong to one
+// family. Chunky rounded shape, thick dark outline, optional bounce /
+// wobble micro-animation. The animation classes are emitted globally
+// from the LiveBattlesSection container (so they're available even
+// when no live battles render) and the keyframes are gated by
+// prefers-reduced-motion to stay accessible.
+function CartoonChip({
+  icon = null,
+  label,
+  color = 'blue',
+  animate = 'none',
+  ariaLabel,
+  onClick,
+  selected = true,
+  role,
+  ariaChecked,
+  asButton = false,
+  size = 'sm',
+}) {
+  const palettes = {
+    blue:    { bg: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)', text: '#0d1024', glow: 'rgba(59,130,246,0.55)' },
+    cyan:    { bg: 'linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)', text: '#04212a', glow: 'rgba(6,182,212,0.55)' },
+    emerald: { bg: 'linear-gradient(135deg, #34d399 0%, #059669 100%)', text: '#022c1f', glow: 'rgba(16,185,129,0.55)' },
+    orange:  { bg: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)', text: '#2a1404', glow: 'rgba(249,115,22,0.55)' },
+  };
+  const p = palettes[color] || palettes.blue;
+  const animClass = animate === 'bounce'
+    ? 'cartoon-chip-bounce'
+    : animate === 'wobble'
+    ? 'cartoon-chip-wobble'
+    : '';
+  const Tag = asButton ? 'button' : 'span';
+  const padding = size === 'lg' ? '4px 10px 4px 9px' : '3px 9px 3px 8px';
+  const fontSize = size === 'lg' ? 11 : 10;
+  return (
+    <Tag
+      type={asButton ? 'button' : undefined}
+      onClick={onClick}
+      role={role}
+      aria-checked={ariaChecked}
+      aria-label={ariaLabel}
+      className={`cartoon-chip ${animClass}`.trim()}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        padding,
+        borderRadius: 999,
+        background: selected ? p.bg : 'rgba(20,20,20,0.85)',
+        border: '1.5px solid #0d0d0d',
+        color: selected ? p.text : 'rgba(229,231,235,0.7)',
+        fontSize,
+        fontWeight: 800,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap',
+        boxShadow: selected
+          ? `0 2px 0 rgba(0,0,0,0.55), 0 0 10px ${p.glow}`
+          : '0 2px 0 rgba(0,0,0,0.55)',
+        cursor: asButton ? 'pointer' : 'default',
+        transformOrigin: 'center',
+        flexShrink: 0,
+        lineHeight: 1.1,
+      }}
+    >
+      {icon ? (
+        <span aria-hidden="true" style={{ fontSize: fontSize + 1, lineHeight: 1 }}>
+          {icon}
+        </span>
+      ) : null}
+      <span style={{ lineHeight: 1.1 }}>{label}</span>
+    </Tag>
+  );
+}
+
+// Mode metadata shared between the live battle chips (which read
+// `battle.challengeType`) and the "Your Battle" mode chooser. Keys
+// match the lower-cased identifiers used elsewhere in this file.
+const CARTOON_MODE_META = {
+  rush:       { label: 'Rush',       icon: '⚡', color: 'orange'  },
+  original:   { label: 'Original',   icon: '🏆', color: 'cyan'    },
+  tournament: { label: 'Tournament', icon: '👑', color: 'emerald' },
+};
+
 function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = null }) {
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
@@ -411,6 +496,65 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
               <span className="text-[9px] text-gray-500">Awaiting picks...</span>
             </div>
           )}
+
+          {(() => {
+            // Cartoon info chip row — fills the previously-empty band
+            // between the picks pills and the progress bar with the
+            // glanceable, animated chips that share their visual
+            // language with the YouVsCard. Each chip is rendered only
+            // when its underlying data is real, so cards with missing
+            // optional fields stay balanced instead of showing
+            // placeholder values.
+            const chips = [];
+            const modeKey = (battle.challengeType || '').toLowerCase();
+            const modeMeta = CARTOON_MODE_META[modeKey];
+            if (modeMeta) {
+              chips.push(
+                <CartoonChip
+                  key="mode"
+                  icon={modeMeta.icon}
+                  label={modeMeta.label}
+                  color={modeMeta.color}
+                  animate="bounce"
+                  ariaLabel={`Game mode ${modeMeta.label}`}
+                />
+              );
+            }
+            const u1Picks = picks?.user1?.length || 0;
+            const u2Picks = picks?.user2?.length || 0;
+            if (picks && (u1Picks > 0 || u2Picks > 0)) {
+              chips.push(
+                <CartoonChip
+                  key="piks"
+                  icon="🎯"
+                  label={`${u1Picks} vs ${u2Picks} piks`}
+                  color="blue"
+                  animate="bounce"
+                  ariaLabel={`${u1Picks} piks for ${user1.username || 'Player 1'} versus ${u2Picks} piks for ${user2.username || 'Player 2'}`}
+                />
+              );
+            }
+            if (user1OnFire || user2OnFire) {
+              const fireUser = user1OnFire ? user1 : user2;
+              const fireName = fireUser.username || (user1OnFire ? 'Player 1' : 'Player 2');
+              chips.push(
+                <CartoonChip
+                  key="fire"
+                  icon="🔥"
+                  label={`${fireName} hot`}
+                  color="orange"
+                  animate="wobble"
+                  ariaLabel={`${fireName} is on fire`}
+                />
+              );
+            }
+            if (chips.length === 0) return null;
+            return (
+              <div className="flex items-center gap-1.5 flex-wrap mb-2" style={{ minHeight: 22 }}>
+                {chips}
+              </div>
+            );
+          })()}
 
           <div className="mt-auto">
             <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
@@ -783,10 +927,10 @@ function formatElapsed(ms) {
 
 const ANONYMOUS_OPPONENTS = [
   { gradient: 'linear-gradient(135deg, #10b981, #06b6d4)' },
-  { gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)' },
-  { gradient: 'linear-gradient(135deg, #f59e0b, #ec4899)' },
+  { gradient: 'linear-gradient(135deg, #3b82f6, #06b6d4)' },
+  { gradient: 'linear-gradient(135deg, #f59e0b, #f97316)' },
   { gradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)' },
-  { gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)' },
+  { gradient: 'linear-gradient(135deg, #10b981, #f97316)' },
 ];
 
 function SilhouetteAvatar({ gradient, size = 40 }) {
@@ -1535,22 +1679,18 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
       aria-expanded={isIdle ? undefined : isExpanded}
       style={{
         background:
-          'linear-gradient(180deg, rgba(139,92,246,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
+          'linear-gradient(180deg, rgba(16,185,129,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
         border: isExpanded
-          ? '1.5px solid rgba(167, 139, 250, 0.85)'
-          : '1.5px solid rgba(139, 92, 246, 0.65)',
+          ? '1.5px solid rgba(52, 211, 153, 0.85)'
+          : '1.5px solid rgba(16, 185, 129, 0.6)',
         boxShadow:
-          '0 0 0 1px rgba(139,92,246,0.15) inset, 0 0 18px rgba(139,92,246,0.28), 0 0 32px rgba(6,182,212,0.12)',
+          '0 0 0 1px rgba(16,185,129,0.15) inset, 0 0 18px rgba(16,185,129,0.28), 0 0 32px rgba(6,182,212,0.12)',
         transition: 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease-out, border-color 180ms ease-out',
         outline: 'none',
         willChange: 'transform',
       }}
     >
       <style jsx>{`
-        @keyframes youvsAccentSlide {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 200% 50%; }
-        }
         @keyframes youvsAnonFade {
           0% { opacity: 0; transform: scale(0.9); }
           100% { opacity: 1; transform: scale(1); }
@@ -1660,20 +1800,20 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
           }
         }
         .youvs-card:focus-visible {
-          border-color: rgba(167, 139, 250, 0.95) !important;
+          border-color: rgba(52, 211, 153, 0.95) !important;
           box-shadow:
-            0 0 0 3px rgba(139, 92, 246, 0.55),
+            0 0 0 3px rgba(16, 185, 129, 0.55),
             0 0 0 5px rgba(6, 182, 212, 0.45),
-            0 0 24px rgba(139, 92, 246, 0.45),
+            0 0 24px rgba(16, 185, 129, 0.45),
             0 0 40px rgba(6, 182, 212, 0.28) !important;
         }
         @media (hover: hover) {
           .youvs-card:hover {
             transform: translateY(-3px);
-            border-color: rgba(167, 139, 250, 0.95) !important;
+            border-color: rgba(52, 211, 153, 0.95) !important;
             box-shadow:
-              0 0 0 1px rgba(139, 92, 246, 0.3) inset,
-              0 0 28px rgba(139, 92, 246, 0.55),
+              0 0 0 1px rgba(16, 185, 129, 0.3) inset,
+              0 0 28px rgba(16, 185, 129, 0.55),
               0 0 48px rgba(6, 182, 212, 0.32),
               0 10px 28px rgba(0, 0, 0, 0.45) !important;
           }
@@ -1685,10 +1825,10 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
         @media (hover: none) {
           .youvs-card:active {
             transform: scale(0.97);
-            border-color: rgba(167, 139, 250, 0.95) !important;
+            border-color: rgba(52, 211, 153, 0.95) !important;
             box-shadow:
-              0 0 0 1px rgba(139, 92, 246, 0.3) inset,
-              0 0 24px rgba(139, 92, 246, 0.5),
+              0 0 0 1px rgba(16, 185, 129, 0.3) inset,
+              0 0 24px rgba(16, 185, 129, 0.5),
               0 0 40px rgba(6, 182, 212, 0.28) !important;
             transition-duration: 80ms;
           }
@@ -1703,28 +1843,16 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
           }
         }
       `}</style>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: 'linear-gradient(90deg, #8b5cf6, #06b6d4, #8b5cf6)',
-          backgroundSize: '200% 100%',
-          animation: 'youvsAccentSlide 3.5s linear infinite',
-        }}
-      />
       <div className="p-3.5 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
               className="text-[9px] font-extrabold uppercase tracking-[0.18em] px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
               style={{
-                background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)',
-                color: '#fff',
-                boxShadow: '0 0 10px rgba(139,92,246,0.45)',
+                background: 'linear-gradient(135deg, #34d399, #10b981)',
+                color: '#022c1f',
+                border: '1.5px solid #0d0d0d',
+                boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(16,185,129,0.45)',
               }}
             >
               <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -1771,7 +1899,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                   width: 96,
                   height: 96,
                   borderRadius: '50%',
-                  border: '1.5px solid rgba(139,92,246,0.45)',
+                  border: '1.5px solid rgba(16,185,129,0.45)',
                   animationDelay: '0.6s',
                 }}
               />
@@ -1790,7 +1918,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                 style={{
                   borderRadius: '50%',
                   padding: 2,
-                  background: 'linear-gradient(135deg, rgba(6,182,212,0.65), rgba(139,92,246,0.65))',
+                  background: 'linear-gradient(135deg, rgba(6,182,212,0.65), rgba(16,185,129,0.65))',
                 }}
               >
                 <SilhouetteAvatar
@@ -1806,7 +1934,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                   key={i}
                   className="youvs-dot inline-block w-1.5 h-1.5 rounded-full"
                   style={{
-                    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+                    background: 'linear-gradient(135deg, #06b6d4, #10b981)',
                     animationDelay: `${i * 0.18}s`,
                   }}
                 />
@@ -1940,7 +2068,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                   onClick={(e) => { e.stopPropagation(); confirmAndStartSearch(); }}
                   className="play-now-confirm-btn px-4 py-2 rounded-lg text-[12px] font-extrabold text-white uppercase tracking-wider"
                   style={{
-                    background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ec4899 100%)',
+                    background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ea580c 100%)',
                     border: '2px solid #0d0d0d',
                     boxShadow: '0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(251,146,60,0.5)',
                   }}
@@ -2007,7 +2135,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
               <div
                 className="youvs-play-sticker relative inline-flex items-center justify-center px-5 py-2 rounded-2xl"
                 style={{
-                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ec4899 100%)',
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ea580c 100%)',
                   border: '3px solid #0d0d0d',
                   boxShadow: '0 5px 0 rgba(0,0,0,0.55), 0 0 22px rgba(251,146,60,0.55)',
                 }}
@@ -2055,7 +2183,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
               </span>
               <span
                 className="youvs-spark absolute text-base"
-                style={{ bottom: -6, right: 4, animationDelay: '0.6s', filter: 'drop-shadow(0 0 4px rgba(236,72,153,0.7))' }}
+                style={{ bottom: -6, right: 4, animationDelay: '0.6s', filter: 'drop-shadow(0 0 4px rgba(34,211,238,0.7))' }}
                 aria-hidden="true"
               >
                 ✦
@@ -2075,7 +2203,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                 selection is persisted to localStorage so the next
                 visit's tap goes straight to their preferred default. */}
             <div
-              className="flex items-center justify-center gap-1.5 mt-2"
+              className="flex items-center justify-center gap-1.5 mt-2 flex-wrap"
               role="radiogroup"
               aria-label="Buy-in"
               onClick={(e) => e.stopPropagation()}
@@ -2083,83 +2211,73 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
               {ONE_TAP_BUY_IN_OPTIONS.map((amount) => {
                 const selected = amount === buyIn;
                 return (
-                  <button
+                  <CartoonChip
                     key={amount}
-                    type="button"
+                    asButton
                     role="radio"
-                    aria-checked={selected}
+                    ariaChecked={selected}
+                    ariaLabel={`Buy-in $${amount}`}
+                    icon="💰"
+                    label={`$${amount}`}
+                    color="orange"
+                    selected={selected}
+                    animate={selected ? 'bounce' : 'none'}
                     onClick={(e) => { e.stopPropagation(); handleSelectBuyIn(amount); }}
-                    className="text-[11px] font-bold rounded-full transition-colors"
-                    style={{
-                      padding: '3px 10px',
-                      color: selected ? '#0d0d0d' : 'rgba(229,231,235,0.85)',
-                      background: selected
-                        ? 'linear-gradient(135deg, #fbbf24, #f97316)'
-                        : 'rgba(255,255,255,0.06)',
-                      border: selected
-                        ? '1px solid rgba(251,191,36,0.85)'
-                        : '1px solid rgba(255,255,255,0.12)',
-                      boxShadow: selected
-                        ? '0 0 10px rgba(251,146,60,0.45)'
-                        : 'none',
-                    }}
-                  >
-                    ${amount}
-                  </button>
+                  />
                 );
               })}
             </div>
             <div
-              className="flex items-center justify-center gap-1 mt-1.5"
+              className="flex items-center justify-center gap-1.5 mt-1.5 flex-wrap"
               role="radiogroup"
               aria-label="Game mode"
               onClick={(e) => e.stopPropagation()}
             >
               {ONE_TAP_GAME_MODE_OPTIONS.map((mode) => {
                 const selected = mode.id === gameMode;
+                const meta = CARTOON_MODE_META[mode.id] || { color: 'blue' };
                 return (
-                  <button
+                  <CartoonChip
                     key={mode.id}
-                    type="button"
+                    asButton
                     role="radio"
-                    aria-checked={selected}
+                    ariaChecked={selected}
+                    ariaLabel={`Game mode ${mode.label}`}
+                    icon={mode.icon}
+                    label={mode.label}
+                    color={meta.color}
+                    selected={selected}
+                    animate={selected ? 'bounce' : 'none'}
                     onClick={(e) => { e.stopPropagation(); handleSelectGameMode(mode.id); }}
-                    className="text-[10px] font-semibold rounded-full transition-colors inline-flex items-center gap-1"
-                    style={{
-                      padding: '3px 9px',
-                      color: selected ? '#fff' : 'rgba(229,231,235,0.8)',
-                      background: selected
-                        ? 'linear-gradient(135deg, #8b5cf6, #06b6d4)'
-                        : 'rgba(255,255,255,0.05)',
-                      border: selected
-                        ? '1px solid rgba(167,139,250,0.85)'
-                        : '1px solid rgba(255,255,255,0.1)',
-                      boxShadow: selected
-                        ? '0 0 8px rgba(139,92,246,0.4)'
-                        : 'none',
-                    }}
-                  >
-                    <span aria-hidden="true">{mode.icon}</span>
-                    {mode.label}
-                  </button>
+                  />
                 );
               })}
             </div>
 
             {/* Live summary of what the current chip selection gets
                 you: the resulting pot (buy-in × 2) and the starting
-                coin bankroll for the chosen mode. Updates instantly
-                as chips toggle so power users can dial in without
-                opening the QuickMatchModal config screen. */}
-            <p
-              className="text-[11px] font-semibold text-gray-300 mt-2"
+                coin bankroll for the chosen mode. Rendered as cartoon
+                chips so the whole row reads as one cartoon family
+                with the live battle cards. */}
+            <div
+              className="flex items-center justify-center gap-1.5 mt-2 flex-wrap"
               aria-live="polite"
             >
-              <span className="text-emerald-400">${buyIn * 2}</span>
-              <span className="text-gray-500 font-normal"> pot · </span>
-              <span className="text-white">{selectedGameMode.coins.toLocaleString()}</span>
-              <span className="text-gray-500 font-normal"> coins to start</span>
-            </p>
+              <CartoonChip
+                icon="💎"
+                label={`$${buyIn * 2} pot`}
+                color="emerald"
+                animate="bounce"
+                ariaLabel={`Total pot of $${buyIn * 2}`}
+              />
+              <CartoonChip
+                icon="🪙"
+                label={`${selectedGameMode.coins.toLocaleString()} coins`}
+                color="cyan"
+                animate="bounce"
+                ariaLabel={`Starts with ${selectedGameMode.coins.toLocaleString()} coins`}
+              />
+            </div>
 
             {searchError && (
               <p
@@ -2192,7 +2310,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
               <div className="px-3 flex flex-col items-center">
                 <span
                   className="text-xl font-black text-transparent bg-clip-text"
-                  style={{ backgroundImage: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }}
+                  style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
                 >
                   VS
                 </span>
@@ -2255,7 +2373,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                 className="h-full rounded-full transition-all duration-1000"
                 style={{
                   width: `${progressPercent}%`,
-                  background: 'linear-gradient(90deg, #8b5cf6, #06b6d4)',
+                  background: 'linear-gradient(90deg, #10b981, #06b6d4)',
                 }}
               ></div>
             </div>
@@ -2276,7 +2394,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                 )}
                 <span
                   className="text-[11px] font-semibold flex items-center gap-1"
-                  style={{ color: '#a78bfa' }}
+                  style={{ color: '#34d399' }}
                 >
                   {isExpanded ? 'Hide' : 'Preview'}
                   <svg
@@ -2624,6 +2742,38 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
     const featuredCount = compactBattles.length + (youVsState && youVsState.status !== 'idle' ? 1 : 0);
     return (
       <div className="mb-4">
+        {/* Global keyframes / classes for the shared cartoon info chip
+            primitive used by both the live battle cards and the
+            "Your Battle" card. Defined here (rather than inside
+            either card's scoped style block) so every chip animates
+            consistently and the styles are available even when only
+            one card type renders. Reduced-motion users get static
+            chips per the homepage-wide pattern. */}
+        <style>{`
+          @keyframes cartoonChipBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-1.5px); }
+          }
+          @keyframes cartoonChipWobble {
+            0%, 100% { transform: rotate(-1.5deg); }
+            50% { transform: rotate(1.5deg); }
+          }
+          .cartoon-chip {
+            font-family: inherit;
+          }
+          .cartoon-chip-bounce {
+            animation: cartoonChipBounce 2.4s ease-in-out infinite;
+          }
+          .cartoon-chip-wobble {
+            animation: cartoonChipWobble 2s ease-in-out infinite;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .cartoon-chip-bounce,
+            .cartoon-chip-wobble {
+              animation: none !important;
+            }
+          }
+        `}</style>
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Featured Battles</span>
