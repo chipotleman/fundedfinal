@@ -450,18 +450,56 @@ export default function Dashboard() {
     return [...liveGamesFromInplay, ...upcomingGamesFromApi];
   }, [liveGamesFromInplay, upcomingGamesFromApi]);
 
-  const simulatedLiveGames = useMemo(() => {
-    if (!isDemoMode) return [];
-    return apiGames.filter(g => g.isLive && g.isSimulated);
+  // Pool of simulated demo games split into live vs starting-soon buckets.
+  // Real Goalserve inplay data always takes precedence over this pool.
+  const simulatedDemoPool = useMemo(() => {
+    if (!isDemoMode) return { live: [], startingSoon: [] };
+    const now = Date.now();
+    const live = [];
+    const startingSoon = [];
+    apiGames.forEach(g => {
+      if (!g.isSimulated || g.isCompleted) return;
+      if (g.isLive) {
+        live.push(g);
+        return;
+      }
+      const startMs = g.startTime ? new Date(g.startTime).getTime() : 0;
+      const minutesUntilStart = (startMs - now) / (60 * 1000);
+      if (minutesUntilStart > 0 && minutesUntilStart < 240) {
+        startingSoon.push(g);
+      }
+    });
+    startingSoon.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    return { live, startingSoon };
   }, [apiGames, isDemoMode]);
 
-  const categorizedGames = useMemo(() => ({
-    liveGames: isDemoMode && liveGamesFromInplay.length === 0
-      ? simulatedLiveGames
-      : liveGamesFromInplay,
-    upcomingGames: upcomingGamesFromApi,
-    recentlyCompletedGames: []
-  }), [liveGamesFromInplay, upcomingGamesFromApi, isDemoMode, simulatedLiveGames]);
+  const categorizedGames = useMemo(() => {
+    // Real-data path: real inplay games take precedence; demo top-up does not kick in.
+    if (!isDemoMode || liveGamesFromInplay.length > 0) {
+      return {
+        liveGames: liveGamesFromInplay,
+        upcomingGames: upcomingGamesFromApi,
+        recentlyCompletedGames: []
+      };
+    }
+
+    // Demo mode without real inplay data: top up the live list with starting-soon
+    // games so the Live pill, FEATURED carousel, and LIVE NOW section are never empty.
+    const TARGET_MIN_LIVE = 8;
+    const liveIds = new Set(simulatedDemoPool.live.map(g => g.id));
+    const promoted = [];
+    for (const g of simulatedDemoPool.startingSoon) {
+      if (simulatedDemoPool.live.length + promoted.length >= TARGET_MIN_LIVE) break;
+      if (!liveIds.has(g.id)) promoted.push(g);
+    }
+    const promotedIds = new Set(promoted.map(g => g.id));
+
+    return {
+      liveGames: [...simulatedDemoPool.live, ...promoted],
+      upcomingGames: upcomingGamesFromApi.filter(g => !promotedIds.has(g.id)),
+      recentlyCompletedGames: []
+    };
+  }, [liveGamesFromInplay, upcomingGamesFromApi, isDemoMode, simulatedDemoPool]);
 
   const closeGames = useMemo(() => {
     const closeThresholds = {
