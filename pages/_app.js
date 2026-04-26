@@ -27,6 +27,7 @@ import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
 import PublicBattlePreview from '../components/PublicBattlePreview';
 import { useEventTracking } from '../hooks/useEventTracking';
+import useGlobalScrollLockRecovery, { releaseBodyScrollLock } from '../hooks/useGlobalScrollLockRecovery';
 import { useRouter } from 'next/router';
 
 function AnalyticsTracker() {
@@ -147,21 +148,24 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   // per-component fix for the mobile nav menu.
   useEffect(() => {
     if (!router?.events) return undefined;
-    const release = () => {
-      if (typeof document === 'undefined') return;
-      const b = document.body.style;
-      b.overflow = '';
-      b.position = '';
-      b.top = '';
-      b.left = '';
-      b.right = '';
-      b.width = '';
-      b.height = '';
-      document.documentElement.style.overflow = '';
-    };
+    const release = () => releaseBodyScrollLock(null);
     router.events.on('routeChangeStart', release);
-    return () => router.events.off('routeChangeStart', release);
+    router.events.on('routeChangeComplete', release);
+    // Also clean up if a navigation is cancelled or fails — without this,
+    // a back-button cancel mid-navigation could leave a stale lock in
+    // place since neither Start nor Complete fires for aborted routes.
+    router.events.on('routeChangeError', release);
+    return () => {
+      router.events.off('routeChangeStart', release);
+      router.events.off('routeChangeComplete', release);
+      router.events.off('routeChangeError', release);
+    };
   }, [router]);
+
+  // Mount-time release + watchdog so any page automatically recovers from
+  // a click trap left behind by a torn-down modal — the same safety net
+  // /messenger has had since task #158 / #237, now applied globally.
+  useGlobalScrollLockRecovery();
 
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);

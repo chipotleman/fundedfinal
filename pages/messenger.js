@@ -7,6 +7,7 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import MessagesPanel from '../components/messages/MessagesPanel';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
+import useGlobalScrollLockRecovery from '../hooks/useGlobalScrollLockRecovery';
 
 export default function MessengerPage() {
   const router = useRouter();
@@ -29,51 +30,13 @@ export default function MessengerPage() {
     setBattleFriend(null);
   }, []);
 
-  // Defensive: messenger and notifications have historically suffered an iOS
-  // Safari "click trap" where leftover body locks, pointer captures, or the
-  // sticky TopNavbar's --top-nav-height being momentarily 0 cause subsequent
-  // top-nav taps to no-op until refresh. On every mount of this page we
-  // proactively release any body / html scroll locks left behind by a modal
-  // that did not fully tear down before navigation, and re-publish the
-  // navbar height in case TopNavbar's resize observer hadn't fired yet.
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const releaseLocks = (reason) => {
-      const b = document.body.style;
-      b.overflow = '';
-      b.position = '';
-      b.top = '';
-      b.left = '';
-      b.right = '';
-      b.width = '';
-      b.height = '';
-      b.overscrollBehavior = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-      if (reason) {
-        try { console.warn('[messenger] released stale body scroll lock:', reason); } catch {}
-      }
-    };
-    releaseLocks(null);
-
-    // Periodic watchdog: if the body has been left in a scroll-locked state
-    // (position:fixed or overflow:hidden) but no real modal is currently
-    // mounted, clear the lock so the page is interactive again. Detects the
-    // top-bar click trap that previously stranded users on /messenger.
-    const interval = setInterval(() => {
-      if (typeof document === 'undefined') return;
-      const b = document.body.style;
-      const isLocked = b.position === 'fixed' || b.overflow === 'hidden';
-      if (!isLocked) return;
-      const hasOpenModal = !!document.querySelector(
-        '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"]'
-      );
-      if (!hasOpenModal) {
-        releaseLocks('no open modal but body lock present');
-      }
-    }, 1500);
-    return () => clearInterval(interval);
-  }, []);
+  // Click-trap recovery: messenger and notifications have historically
+  // suffered an iOS Safari issue where leftover body locks left over from
+  // a torn-down modal would swallow every subsequent tap on the top nav.
+  // The shared hook is also wired into _app so it runs everywhere now,
+  // but we keep it on this page as a deliberate redundant safety net since
+  // /messenger is the page where the original click trap lived.
+  useGlobalScrollLockRecovery();
 
   // Pre-select a conversation from ?chat=<id>.
   useEffect(() => {

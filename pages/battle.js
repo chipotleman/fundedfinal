@@ -127,6 +127,21 @@ export default function BattlePage() {
     };
   }, [setSuppress]);
 
+  // Bound each initial fetch with a sane timeout so a slow or hung
+  // endpoint can never strand the user on a non-interactive shell. The
+  // page UI does not actually gate on `loading` — it always renders the
+  // top nav, lobby entry points, and close affordances — so the worst a
+  // failed/timed-out fetch can do is leave one section empty, which the
+  // user can retry by navigating back.
+  const fetchWithTimeout = useCallback((url, ms = 8000) => {
+    if (typeof AbortController === 'undefined') return fetch(url);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      try { controller.abort(); } catch (_e) {}
+    }, ms);
+    return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+  }, []);
+
   const fetchData = useCallback(async () => {
     if (!userId) {
       setLoading(false);
@@ -134,47 +149,59 @@ export default function BattlePage() {
     }
     try {
       const [profileRes, friendsRes, invitesRes, historyRes, matchupRes, requestsRes] = await Promise.allSettled([
-        fetch(`/api/profiles/${userId}`),
-        fetch('/api/friends'),
-        fetch('/api/battles/invite'),
-        fetch('/api/battles/history?limit=5'),
-        fetch('/api/matchups/current'),
-        fetch('/api/friends/requests'),
+        fetchWithTimeout(`/api/profiles/${userId}`),
+        fetchWithTimeout('/api/friends'),
+        fetchWithTimeout('/api/battles/invite'),
+        fetchWithTimeout('/api/battles/history?limit=5'),
+        fetchWithTimeout('/api/matchups/current'),
+        fetchWithTimeout('/api/friends/requests'),
       ]);
 
       if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
-        const data = await profileRes.value.json();
-        setProfile(data.profile || data);
+        try {
+          const data = await profileRes.value.json();
+          setProfile(data.profile || data);
+        } catch (_e) {}
       }
       if (friendsRes.status === 'fulfilled' && friendsRes.value.ok) {
-        const data = await friendsRes.value.json();
-        setFriends(data.friends || []);
+        try {
+          const data = await friendsRes.value.json();
+          setFriends(data.friends || []);
+        } catch (_e) {}
       }
       if (invitesRes.status === 'fulfilled' && invitesRes.value.ok) {
-        const data = await invitesRes.value.json();
-        setInvites(data);
+        try {
+          const data = await invitesRes.value.json();
+          setInvites(data);
+        } catch (_e) {}
       }
       if (historyRes.status === 'fulfilled' && historyRes.value.ok) {
-        const data = await historyRes.value.json();
-        setRecentMatches(data.matches || []);
+        try {
+          const data = await historyRes.value.json();
+          setRecentMatches(data.matches || []);
+        } catch (_e) {}
       }
       if (matchupRes.status === 'fulfilled' && matchupRes.value.ok) {
-        const data = await matchupRes.value.json();
-        if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched' || data.matchup.status === 'waiting')) {
-          setActiveMatchup(data.matchup);
-          setMatchupData(data);
-        }
+        try {
+          const data = await matchupRes.value.json();
+          if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched' || data.matchup.status === 'waiting')) {
+            setActiveMatchup(data.matchup);
+            setMatchupData(data);
+          }
+        } catch (_e) {}
       }
       if (requestsRes.status === 'fulfilled' && requestsRes.value.ok) {
-        const data = await requestsRes.value.json();
-        setFriendRequests(data.requests || []);
+        try {
+          const data = await requestsRes.value.json();
+          setFriendRequests(data.requests || []);
+        } catch (_e) {}
       }
     } catch (err) {
       console.error('Error fetching battle data:', err);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, fetchWithTimeout]);
 
   useEffect(() => {
     fetchData();
@@ -220,6 +247,23 @@ export default function BattlePage() {
     }
   }, [globalMatchup, globalHasAny, globalIsWaiting, globalMatchupData]);
 
+  // Polling: read the latest invites / activeMatchup via refs so the
+  // interval only depends on userId. Previously this effect re-created its
+  // setInterval every time invites or activeMatchup changed, which on a
+  // slow device meant the recreated timer could race with the previous
+  // one's in-flight fetch and contribute to the "feels frozen" perception.
+  // External behavior is unchanged: still polls every 5s, still detects
+  // accepted invites, still detects completed matchups.
+  const invitesRef = useRef(invites);
+  const activeMatchupRef = useRef(activeMatchup);
+  const refreshGlobalMatchupRef = useRef(refreshGlobalMatchup);
+  const loadResultDetailsRef = useRef(null);
+  const fetchDataRef = useRef(fetchData);
+  useEffect(() => { invitesRef.current = invites; }, [invites]);
+  useEffect(() => { activeMatchupRef.current = activeMatchup; }, [activeMatchup]);
+  useEffect(() => { refreshGlobalMatchupRef.current = refreshGlobalMatchup; }, [refreshGlobalMatchup]);
+  useEffect(() => { fetchDataRef.current = fetchData; }, [fetchData]);
+
   useEffect(() => {
     if (!userId) return;
     const interval = setInterval(async () => {
@@ -234,7 +278,8 @@ export default function BattlePage() {
 
         if (inviteRes.ok) {
           const data = await inviteRes.json();
-          const hadPendingSent = invites.sent?.length > 0;
+          const prevInvites = invitesRef.current;
+          const hadPendingSent = prevInvites?.sent?.length > 0;
           const hasPendingSent = data.sent?.length > 0;
           setInvites(data);
 
@@ -243,7 +288,7 @@ export default function BattlePage() {
               setActiveMatchup(matchData.matchup);
               setMatchupData(matchData);
               setShowLobby(matchData.matchup);
-              refreshGlobalMatchup();
+              refreshGlobalMatchupRef.current && refreshGlobalMatchupRef.current();
               setTimeout(() => router.push('/?battleStarted=true'), 2500);
             }
           }
@@ -252,28 +297,29 @@ export default function BattlePage() {
         if (matchData?.matchup && (matchData.matchup.status === 'active' || matchData.matchup.status === 'matched')) {
           setMatchupData(matchData);
           setActiveMatchup(matchData.matchup);
-          refreshGlobalMatchup();
+          refreshGlobalMatchupRef.current && refreshGlobalMatchupRef.current();
         }
 
-        if (activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched')) {
+        const currentActive = activeMatchupRef.current;
+        if (currentActive && (currentActive.status === 'active' || currentActive.status === 'matched')) {
           if (matchData && (!matchData.matchup || matchData.status === 'none')) {
             const histRes = await fetch('/api/battles/history?limit=1');
             if (histRes.ok) {
               const histData = await histRes.json();
               const lastMatch = histData.matches?.[0];
-              if (lastMatch && lastMatch.id === activeMatchup.id) {
+              if (lastMatch && lastMatch.id === currentActive.id) {
                 setActiveMatchup(null);
                 setShowResult({
-                  ...activeMatchup,
+                  ...currentActive,
                   ...lastMatch,
                   status: 'completed',
                   winnerId: lastMatch.winnerId || lastMatch.winner_id,
-                  user1FinalBalance: lastMatch.user1FinalBalance || lastMatch.user1_final_balance || activeMatchup.user1Balance,
-                  user2FinalBalance: lastMatch.user2FinalBalance || lastMatch.user2_final_balance || activeMatchup.user2Balance,
+                  user1FinalBalance: lastMatch.user1FinalBalance || lastMatch.user1_final_balance || currentActive.user1Balance,
+                  user2FinalBalance: lastMatch.user2FinalBalance || lastMatch.user2_final_balance || currentActive.user2Balance,
                 });
                 // Pull authoritative data (cash P&L, rematch state, opponent profile)
-                loadResultDetails(lastMatch.id);
-                fetchData();
+                loadResultDetailsRef.current && loadResultDetailsRef.current(lastMatch.id);
+                fetchDataRef.current && fetchDataRef.current();
               }
             }
           }
@@ -281,7 +327,7 @@ export default function BattlePage() {
       } catch {}
     }, 5000);
     return () => clearInterval(interval);
-  }, [userId, invites.sent?.length, activeMatchup?.id, activeMatchup?.status, refreshGlobalMatchup]);
+  }, [userId, router]);
 
   useEffect(() => {
     if (!userId || !activeMatchup || activeMatchup.status !== 'waiting') return;
@@ -295,7 +341,7 @@ export default function BattlePage() {
               setActiveMatchup(data.matchup);
               setMatchupData(data);
               setShowLobby(data.matchup);
-              refreshGlobalMatchup();
+              refreshGlobalMatchupRef.current && refreshGlobalMatchupRef.current();
               clearInterval(interval);
               setTimeout(() => router.push('/?battleStarted=true'), 2500);
             }
@@ -307,7 +353,7 @@ export default function BattlePage() {
       } catch {}
     }, 5000);
     return () => clearInterval(interval);
-  }, [userId, activeMatchup?.status]);
+  }, [userId, activeMatchup?.status, router]);
 
   // ?play=<friendId> opens the PlayFriendModal with that friend pre-selected.
   useEffect(() => {
@@ -409,6 +455,11 @@ export default function BattlePage() {
       if (data.rematchState) setRematchState(data.rematchState);
     } catch {}
   }, [profile]);
+
+  // Keep the polling effect's loadResultDetails ref in sync with the
+  // latest callback so it picks up profile changes without re-creating
+  // the interval. See the polling refactor above.
+  useEffect(() => { loadResultDetailsRef.current = loadResultDetails; }, [loadResultDetails]);
 
   const callRematch = useCallback(async (resultId, action) => {
     if (!resultId) return null;
@@ -530,8 +581,9 @@ export default function BattlePage() {
   // auto-show the lobby" transition here. If we only refreshed invites,
   // the polling loop would re-mount with sent.length already 0 and miss
   // the pending → matched transition entirely.
-  const invitesRef = useRef(invites);
-  useEffect(() => { invitesRef.current = invites; }, [invites]);
+  // (invitesRef is declared once earlier, near the polling refactor —
+  // both this SSE refresh path and the 5s polling loop share the same
+  // ref to read the previous invites snapshot.)
   useEffect(() => {
     if (!userId || isGuest || typeof window === 'undefined') return;
     const client = getBattleStreamClient();

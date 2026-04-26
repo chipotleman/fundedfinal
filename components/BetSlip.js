@@ -13,6 +13,7 @@ import haptic from '../utils/haptics';
 import { formatMoney } from '../utils/formatMoney';
 import { calculatePayout } from '../utils/odds';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
+import { releaseBodyScrollLock } from '../hooks/useGlobalScrollLockRecovery';
 
 // Capitalize league identifiers like (w) -> (W), (m) -> (M)
 const capitalizeLeagueId = (text) => {
@@ -1255,7 +1256,27 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                       type="button"
                       className="no-hover-effect"
                       onClick={() => {
+                        // Tear down the bet slip's overlay state in the same
+                        // tick as the route push so the next page mounts onto
+                        // a clean document. Previously, leaving the slip's
+                        // backdrop / a stale body lock in place caused the
+                        // battle page to look frozen for 5–10 seconds while
+                        // the click trap blocked every tap. We:
+                        //   1. Close the slip via context (hides backdrop).
+                        //   2. Release any body/html scroll locks left over
+                        //      from sibling modals.
+                        //   3. Restore window scroll position (the slip
+                        //      effect at line 364 normally does this on the
+                        //      next render, but navigation may unmount us
+                        //      before that effect fires).
+                        //   4. Push the route — do NOT await any network.
                         setShowBetSlip(false);
+                        try { releaseBodyScrollLock(null); } catch (_e) {}
+                        try {
+                          if (savedScrollRef.current > 0 && typeof window !== 'undefined') {
+                            window.scrollTo(0, savedScrollRef.current);
+                          }
+                        } catch (_e) {}
                         router.push('/battle');
                       }}
                       style={{

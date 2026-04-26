@@ -46,6 +46,19 @@ export default function useModalScrollLock(
       html.style.overscrollBehavior = 'none';
     }
 
+    // Deterministic ownership marker so the global click-trap watchdog
+    // (hooks/useGlobalScrollLockRecovery) can tell whether a real modal
+    // currently owns the body lock vs. it being stranded by a torn-down
+    // modal. We use a counter on body.dataset so stacked modals
+    // (e.g. AuthPopup + BalanceModal) compose correctly: each lock
+    // increments on mount and decrements on cleanup; the attribute is
+    // removed when the count reaches 0.
+    try {
+      const current = parseInt(body.dataset.scrollLockCount || '0', 10) || 0;
+      body.dataset.scrollLockCount = String(current + 1);
+      body.dataset.scrollLockOwner = 'true';
+    } catch (_e) {}
+
     const isInsideAllowed = (target) => {
       const el = allowScrollRef && allowScrollRef.current;
       if (!el || !target) return false;
@@ -93,6 +106,20 @@ export default function useModalScrollLock(
       body.style.overscrollBehavior = prev.overscrollBehavior;
       html.style.overflow = prev.htmlOverflow;
       html.style.overscrollBehavior = prev.htmlOverscrollBehavior;
+
+      // Mirror the increment on mount: decrement the lock counter and
+      // clear the owner attribute when the last lock releases. The
+      // global watchdog uses this to distinguish a legitimate active
+      // modal lock from a stranded one.
+      try {
+        const next = (parseInt(body.dataset.scrollLockCount || '0', 10) || 0) - 1;
+        if (next <= 0) {
+          delete body.dataset.scrollLockCount;
+          delete body.dataset.scrollLockOwner;
+        } else {
+          body.dataset.scrollLockCount = String(next);
+        }
+      } catch (_e) {}
 
       if (restoreScroll) {
         const prevHtmlBehavior = html.style.scrollBehavior;
