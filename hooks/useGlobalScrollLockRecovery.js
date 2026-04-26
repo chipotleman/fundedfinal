@@ -14,6 +14,7 @@ export function releaseBodyScrollLock(reason) {
   try {
     delete document.body.dataset.scrollLockCount;
     delete document.body.dataset.scrollLockOwner;
+    delete document.documentElement.dataset.modalOpen;
   } catch (_e) {}
   if (reason && typeof console !== 'undefined') {
     try { console.warn('[scroll-lock] released stale body scroll lock:', reason); } catch (_e) {}

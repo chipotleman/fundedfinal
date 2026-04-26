@@ -3,6 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* While any modal locked via useModalScrollLock is open, prevent the
+   root <html> element from rubber-banding on iOS Safari when the user
+   pans on the dim backdrop. Pure CSS — no preventDefault listeners. */
+html[data-modal-open] {
+  overscroll-behavior: contain;
+}
+
 /* GLOBAL BUTTON RESET - Remove all tap/active highlights from every button */
 button,
 [role="button"],

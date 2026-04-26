@@ -45,6 +45,11 @@ export default function useModalScrollLock(
       const current = parseInt(body.dataset.scrollLockCount || '0', 10) || 0;
       body.dataset.scrollLockCount = String(current + 1);
       body.dataset.scrollLockOwner = 'true';
+      // Mirror the lock state onto <html> so a CSS-only rule can apply
+      // `overscroll-behavior: contain` to the root element. This blocks
+      // iOS Safari rubber-band on touches that land on a modal backdrop
+      // without installing any preventDefault listeners.
+      document.documentElement.dataset.modalOpen = 'true';
     } catch (_e) {}
 
     return () => {
@@ -60,6 +65,7 @@ export default function useModalScrollLock(
         if (next <= 0) {
           delete body.dataset.scrollLockCount;
           delete body.dataset.scrollLockOwner;
+          delete document.documentElement.dataset.modalOpen;
         } else {
           body.dataset.scrollLockCount = String(next);
         }
