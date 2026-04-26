@@ -3,7 +3,7 @@ import { authOptions } from '../../../../lib/auth';
 import { db } from '../../../../lib/db';
 import { battleInvites, matchups, profiles } from '../../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
-const { publishBattleEvent } = require('../../../../lib/battle-events');
+const { publishBattleEvent, publishMatchupStart } = require('../../../../lib/battle-events');
 const { sendPushToUsers, getAcceptedFriendIds } = require('../../../../lib/web-push');
 
 export default async function handler(req, res) {
@@ -217,6 +217,13 @@ export default async function handler(req, res) {
 
         try {
           publishBattleEvent([battleInvite.senderId, battleInvite.receiverId], { type: 'notification:refresh' });
+        } catch (_e) {}
+
+        // Push the dedicated `matchup:start` event so /battle can swap the
+        // sender's pending-invite UI for the lobby within ~1s instead of
+        // waiting up to 5s for the safety poll.
+        try {
+          publishMatchupStart(newMatchup, { reason: 'invite_accepted', inviteId: battleInvite.id });
         } catch (_e) {}
 
         // Friends going live: tell each participant's friends a new battle started.

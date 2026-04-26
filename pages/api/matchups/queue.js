@@ -4,6 +4,7 @@ import { db } from '../../../lib/db';
 import { matchups, matchupQueue, fakeOpponents, profiles, userChallenges, poolParticipants, pikPools } from '../../../shared/schema';
 import { eq, and, ne, or, inArray } from 'drizzle-orm';
 const { sendPushToUsers, getAcceptedFriendIds } = require('../../../lib/web-push');
+const { publishMatchupStart } = require('../../../lib/battle-events');
 
 const DURATION_CONFIGS = {
   '30_min': { minutes: 30, label: '30 Minutes' },
@@ -148,6 +149,14 @@ export default async function handler(req, res) {
           .update(matchupQueue)
           .set({ status: 'matched', matchupId: newMatchup.id, matchedAt: now })
           .where(eq(matchupQueue.id, potentialMatch.id));
+
+        // Push the dedicated `matchup:start` event so the user who was
+        // already waiting in the queue (and therefore stuck on /battle's
+        // "looking for opponent" view) flips into the lobby within ~1s
+        // instead of waiting for the safety poll.
+        try {
+          publishMatchupStart(newMatchup, { reason: 'queue_matched' });
+        } catch (_e) {}
 
         const [matchedProfile] = await db
           .select()

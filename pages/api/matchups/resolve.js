@@ -1,7 +1,7 @@
 import { db } from '../../../lib/db';
 import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, userChallenges } from '../../../shared/schema';
 import { eq, and, or, lt, gte, lte } from 'drizzle-orm';
-import { publishBattleEvent } from '../../../lib/battle-events';
+import { publishBattleEvent, publishMatchupEnd } from '../../../lib/battle-events';
 import { sendPushToUsers } from '../../../lib/web-push';
 const CASHOUT_FEE_RATIO = 0.2;
 import { evaluateAndAwardAchievements } from '../../../lib/achievements';
@@ -290,6 +290,19 @@ export default async function handler(req, res) {
             winnerPayout: winnerType !== 'tie' ? winnerPayout : null,
             pendingCountUser1,
             pendingCountUser2,
+          });
+          // Generic `matchup:end` mirror so the /battle page result-popup
+          // listener can react to any termination reason without needing to
+          // know about every specific event shape (completed/forfeit/etc).
+          publishMatchupEnd(matchup, {
+            reason: 'completed',
+            winnerId,
+            winnerType,
+            user1FinalBalance,
+            user2FinalBalance,
+            totalPot,
+            platformFee,
+            winnerPayout: winnerType !== 'tie' ? winnerPayout : null,
           });
           // Independent push for the bell-dropdown "Results" section so
           // NotificationsContext refreshes immediately instead of waiting

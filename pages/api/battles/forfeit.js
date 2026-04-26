@@ -3,7 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, profiles, userChallenges } from '../../../shared/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
-const { publishBattleEvent } = require('../../../lib/battle-events');
+const { publishBattleEvent, publishMatchupEnd } = require('../../../lib/battle-events');
 const { sendPushToUsers } = require('../../../lib/web-push');
 
 export default async function handler(req, res) {
@@ -106,6 +106,10 @@ export default async function handler(req, res) {
       if (opponentId && !matchup.isFakeOpponent) recipients.push(opponentId);
 
       publishBattleEvent(recipients, { type: 'matchup:forfeit', ...forfeitPayload });
+
+      // Generic `matchup:end` mirror so the /battle page result-popup
+      // listener can react without needing to special-case forfeit events.
+      publishMatchupEnd(matchup, { reason: 'forfeit', ...forfeitPayload });
 
       // Also push a notification:forfeit directly to the winner so the global
       // notifications listener has a second independent delivery channel.
