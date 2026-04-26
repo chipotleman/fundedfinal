@@ -154,26 +154,66 @@ export default function PromoCarousel({ slides }) {
 
   // Measure the width of one full set of slides (distance from first slide of
   // set 0 to first slide of set 1). This is the wrap distance for seamless
-  // looping.
-  const measureSetWidth = useCallback(() => {
+  // looping. Returns true if a non-zero measurement was captured.
+  const tryMeasureSetWidth = useCallback(() => {
     const el = set1FirstRef.current;
-    if (el && el.offsetLeft > 0) {
-      setWidthRef.current = el.offsetLeft;
+    if (!el) return false;
+    const left = el.offsetLeft;
+    if (left > 0) {
+      setWidthRef.current = left;
+      return true;
     }
+    return false;
   }, []);
 
   useLayoutEffect(() => {
-    measureSetWidth();
-  }, [measureSetWidth, count, showLoop, emptyKeys]);
+    tryMeasureSetWidth();
+  }, [tryMeasureSetWidth, count, showLoop, emptyKeys]);
 
-  useLayoutEffect(() => {
-    if (typeof window === 'undefined') return;
-    const onResize = () => measureSetWidth();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [measureSetWidth]);
+  // Re-measure on viewport resize, container/slide resize (image/font load,
+  // layout shift), font readiness, and image load events. Without these the
+  // initial measurement can stick at 0 and auto-scroll appears stalled.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !showLoop) return;
+    const handle = () => tryMeasureSetWidth();
+    window.addEventListener('resize', handle);
+
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(handle);
+      if (containerRef.current) ro.observe(containerRef.current);
+      slideRefs.current.forEach((el) => {
+        if (el) ro.observe(el);
+      });
+      if (set1FirstRef.current) ro.observe(set1FirstRef.current);
+    }
+
+    let fontsCancelled = false;
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+      document.fonts.ready
+        .then(() => {
+          if (!fontsCancelled) handle();
+        })
+        .catch(() => {});
+    }
+
+    const container = containerRef.current;
+    const imgs = container ? Array.from(container.querySelectorAll('img')) : [];
+    imgs.forEach((img) => {
+      if (!img.complete) img.addEventListener('load', handle);
+    });
+
+    return () => {
+      window.removeEventListener('resize', handle);
+      if (ro) ro.disconnect();
+      fontsCancelled = true;
+      imgs.forEach((img) => img.removeEventListener('load', handle));
+    };
+  }, [tryMeasureSetWidth, showLoop, count, emptyKeys]);
 
   // Continuous slow horizontal scroll using rAF, with seamless wraparound.
+  // The tick also retries measurement if setWidth is still 0, so the loop
+  // self-heals once slides settle into their final size (post image/font load).
   useEffect(() => {
     if (reducedMotion || !showLoop) return;
     let raf;
@@ -182,7 +222,14 @@ export default function PromoCarousel({ slides }) {
       const dt = Math.min((time - lastTimeRef.current) / 1000, 0.1);
       lastTimeRef.current = time;
       const container = containerRef.current;
-      const setWidth = setWidthRef.current;
+      let setWidth = setWidthRef.current;
+      if (setWidth <= 0) {
+        const el = set1FirstRef.current;
+        if (el && el.offsetLeft > 0) {
+          setWidth = el.offsetLeft;
+          setWidthRef.current = setWidth;
+        }
+      }
       if (container && setWidth > 0) {
         let next = container.scrollLeft + SCROLL_SPEED_PX_PER_SEC * dt;
         if (next >= setWidth) next -= setWidth;
@@ -304,7 +351,7 @@ export default function PromoCarousel({ slides }) {
       </div>
 
       {count > 1 && (
-        <div className="flex justify-center items-center gap-0 sm:gap-1.5 mt-3">
+        <div className="flex justify-center items-center gap-0 sm:gap-1.5 mt-1 sm:mt-3">
           {visible.map((_, i) => (
             <button
               key={i}
@@ -312,9 +359,19 @@ export default function PromoCarousel({ slides }) {
               aria-label={`Go to slide ${i + 1}`}
               aria-current={i === activeIndex ? 'true' : 'false'}
               onClick={() => handleDotClick(i)}
-              className="flex items-center justify-center cursor-pointer p-2 sm:p-0 bg-transparent"
+              className="relative flex items-center justify-center cursor-pointer bg-transparent p-0"
               style={{ border: 0 }}
             >
+              {/* Extends the tap target without contributing to layout height.
+                  Horizontal extension intentionally large enough to keep dots
+                  comfortably tappable on small phones; adjacent hit areas may
+                  overlap, which is fine — the topmost (later in DOM) button
+                  receives the tap. */}
+              <span
+                aria-hidden="true"
+                className="absolute"
+                style={{ top: -11, bottom: -11, left: -10, right: -10 }}
+              />
               <span
                 className={`rounded-full block transition-all duration-300 ${
                   i === activeIndex
