@@ -120,7 +120,12 @@ In the `build` job:
    `bundle-size-report` header so subsequent runs update the existing
    comment instead of spamming a new one. Skipped on `push` events.
    Runs with `if: always()` so a regression that fails the check still
-   gets commented.
+   gets commented. Skipped on PRs opened from forks
+   (`github.event.pull_request.head.repo.full_name != github.repository`)
+   because the workflow's `GITHUB_TOKEN` is read-only for fork PRs and
+   the comment API call would otherwise fail; the report is still
+   visible in `$GITHUB_STEP_SUMMARY` (the Checks tab) and the budget
+   itself still passes/fails the build exactly the same way.
 5. `bundle-current.json` is uploaded as a workflow artifact
    (`bundle-size`) regardless of pass/fail, so you can download the raw
    numbers — including the full per-page module table — from any run.

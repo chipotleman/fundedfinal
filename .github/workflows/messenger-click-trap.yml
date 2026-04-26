@@ -119,13 +119,23 @@ jobs:
       # so this is what actually surfaces a regression — or a healthy
       # shrink — in front of them.
       #
-      # Runs only on `pull_request` events: pushes to a branch outside
-      # a PR have nowhere to comment, and pushes to `main` would just
-      # spam an unrelated PR. `if: always()` is important because the
-      # check step above exits non-zero on a budget regression, and
-      # that regression is exactly the case we most want commented.
+      # Runs only on `pull_request` events whose head ref lives in this
+      # same repo. Pushes to a branch outside a PR have nowhere to
+      # comment, pushes to `main` would just spam an unrelated PR, and
+      # PRs opened from forks get a read-only GITHUB_TOKEN regardless of
+      # the `permissions:` block above — so the comment step would fail
+      # on a fork PR. Skipping it on forks degrades gracefully: the
+      # report is still in $GITHUB_STEP_SUMMARY and the build itself
+      # still passes/fails on the budget exactly the same way.
+      #
+      # `if: always()` is important because the check step above exits
+      # non-zero on a budget regression, and that regression is exactly
+      # the case we most want commented.
       - name: Comment bundle-size report on PR
-        if: always() && github.event_name == 'pull_request'
+        if: >-
+          always() &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: bundle-size-report
