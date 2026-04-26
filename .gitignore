@@ -21,3 +21,4 @@ public/fallback-*.js.map
 
 # Bundle-size measurement output (committed baseline lives in docs/)
 /bundle-current.json
+.github/workflows/
