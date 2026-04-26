@@ -75,6 +75,19 @@ export default function PublicProfile() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { data: session } = useSession();
 
+  // Look up an outgoing pending battle invite to this profile so we can
+  // mirror the friend-row / search-row "Invite pending" UX and avoid letting
+  // the user fire a duplicate invite the server would reject. The
+  // notifications context already fetches sent invites for the bell, so we
+  // reuse that data here.
+  const outgoingBattleInvites = notificationsCtx.outgoingBattleInvites || [];
+  const pendingOutgoingInvite = id
+    ? outgoingBattleInvites.find((inv) => {
+        const rid = inv.receiver?.id || inv.receiverId;
+        return rid != null && String(rid) === String(id);
+      }) || null
+    : null;
+
   // Sync local state from cache whenever the id changes or the cache updates.
   useEffect(() => {
     if (!id) return;
@@ -209,6 +222,9 @@ export default function PublicProfile() {
       });
       if (res.ok) {
         setShowBattleInvite(false);
+        // Refresh notifications so the CTA flips to "Invite Pending"
+        // immediately instead of waiting on the next polling tick.
+        try { notificationsCtx.refresh?.(); } catch {}
         alert('Battle invite sent!');
       } else {
         const data = await res.json();
@@ -890,15 +906,32 @@ export default function PublicProfile() {
                         
                         {friendStatus === 'friends' && (
                           <>
-                            <button
-                              onClick={() => setShowBattleInvite(true)}
-                              className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
-                              Challenge to Battle
-                            </button>
+                            {pendingOutgoingInvite ? (
+                              /* When an invite to this user is already pending,
+                                 mirror the friend-row / search-row UX: surface
+                                 an "Invite pending" pill that jumps to the
+                                 Invites tab on /battle and highlights the
+                                 existing invite, instead of letting the user
+                                 fire a duplicate the server would reject. */
+                              <button
+                                onClick={() => router.push(`/battle?invite=${pendingOutgoingInvite.id}`)}
+                                className="inline-flex items-center gap-2 bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+                                title="View pending invite"
+                              >
+                                <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                                Invite Pending
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setShowBattleInvite(true)}
+                                className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                Challenge to Battle
+                              </button>
+                            )}
                             <button
                               onClick={handleRemoveFriend}
                               disabled={friendActionLoading}

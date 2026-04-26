@@ -22,6 +22,7 @@ function writeSeen(set) {
 
 const EMPTY = {
   battleInvites: [],
+  outgoingBattleInvites: [],
   friendRequests: [],
   unreadMessages: [],
   gameResults: [],
@@ -196,7 +197,7 @@ export function NotificationsProvider({ children }) {
         pendingRematches: pendingRematches.length,
         total: battleInvites.length + friendRequests.length + unreadMessages.length + gameResults.length + pendingRematches.length,
       };
-      setData({ battleInvites, friendRequests, unreadMessages, gameResults, pendingRematches, counts });
+      setData({ battleInvites, outgoingBattleInvites, friendRequests, unreadMessages, gameResults, pendingRematches, counts });
 
       // Catch-up path: if the API found a recent forfeit win that the SSE push
       // may have missed, dispatch it so MatchupContext can surface the modal.
