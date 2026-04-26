@@ -4,7 +4,7 @@ import { db } from '../../../../lib/db';
 import { battleInvites, matchups, profiles } from '../../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 const { publishBattleEvent, publishMatchupStart } = require('../../../../lib/battle-events');
-const { sendPushToUsers, getAcceptedFriendIds } = require('../../../../lib/web-push');
+const { sendPushToUsers, sendFriendLivePush } = require('../../../../lib/web-push');
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -227,36 +227,11 @@ export default async function handler(req, res) {
         } catch (_e) {}
 
         // Friends going live: tell each participant's friends a new battle started.
-        try {
-          const senderName = senderProfile?.username || 'Your friend';
-          const receiverName = receiverProfile?.username || 'Your friend';
-          const [senderFriends, receiverFriends] = await Promise.all([
-            getAcceptedFriendIds(battleInvite.senderId),
-            getAcceptedFriendIds(battleInvite.receiverId),
-          ]);
-          const targetsForSender = senderFriends.filter(id => id !== battleInvite.senderId && id !== battleInvite.receiverId);
-          const targetsForReceiver = receiverFriends.filter(id => id !== battleInvite.senderId && id !== battleInvite.receiverId);
-          if (targetsForSender.length > 0) {
-            sendPushToUsers(targetsForSender, {
-              category: 'friend_live',
-              title: `${senderName} just started a battle`,
-              body: 'Tap to spectate or jump into your own.',
-              url: `/battle?live=${newMatchup.id}`,
-              tag: `friend_live:${battleInvite.senderId}:${newMatchup.id}`,
-              data: { matchupId: newMatchup.id, type: 'friend_live', friendId: battleInvite.senderId },
-            }).catch(() => {});
-          }
-          if (targetsForReceiver.length > 0) {
-            sendPushToUsers(targetsForReceiver, {
-              category: 'friend_live',
-              title: `${receiverName} just started a battle`,
-              body: 'Tap to spectate or jump into your own.',
-              url: `/battle?live=${newMatchup.id}`,
-              tag: `friend_live:${battleInvite.receiverId}:${newMatchup.id}`,
-              data: { matchupId: newMatchup.id, type: 'friend_live', friendId: battleInvite.receiverId },
-            }).catch(() => {});
-          }
-        } catch (e) { console.error('[friend_live push]', e.message); }
+        sendFriendLivePush({
+          matchupId: newMatchup.id,
+          user1Id: battleInvite.senderId,
+          user2Id: battleInvite.receiverId,
+        });
 
         return res.status(200).json({ 
           message: 'Battle started!',
