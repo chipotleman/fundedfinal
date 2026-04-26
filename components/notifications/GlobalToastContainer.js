@@ -115,6 +115,7 @@ function Toast({ toast, ctx, router }) {
             ctx.dismissToast(toast.id);
           })}
           onDismiss={() => ctx.dismissToast(toast.id)}
+          onProfileNavigate={() => ctx.dismissToast(toast.id)}
         />
       </div>
     );

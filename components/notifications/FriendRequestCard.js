@@ -4,16 +4,21 @@ import { NotifIcon } from './notificationTypeStyles';
 
 const PURPLE = '#a855f7';
 
-function PurpleNameLink({ user, className = '', style, fallback = 'Someone' }) {
+function PurpleNameLink({ user, className = '', style, fallback = 'Someone', onClick }) {
   const name = user?.username || user?.name || fallback;
   const prefetch = useProfilePrefetchHandlers(user);
   if (user?.id) {
+    const mergedClick = (e) => {
+      prefetch.onClick?.(e);
+      onClick?.(e);
+    };
     return (
       <Link
         href={`/profile/${user.id}`}
         className={`hover:underline hover:text-purple-200 transition-colors ${className}`}
         style={style}
         {...prefetch}
+        onClick={mergedClick}
       >
         {name}
       </Link>
@@ -99,6 +104,13 @@ export default function FriendRequestCard({
   // has its own background/border (e.g. inside a list section). We drop the
   // outer rounded card chrome so adjacent rows don't get extra spacing.
   inset = false,
+  // Optional callback fired when the user taps the avatar or username to
+  // navigate to the requester's profile. Surfaces that overlay the page
+  // (bell dropdown, global toast) wire this to their own close/dismiss
+  // handler so the surface gets out of the way once the user has committed
+  // to viewing the profile. Not wired on the full /notifications page,
+  // where a normal client-side navigation is the expected behavior.
+  onProfileNavigate,
 }) {
   const contextLine = pickContextLine(context);
   const avatarSize = compact ? 52 : 60;
@@ -160,11 +172,16 @@ export default function FriendRequestCard({
             frameId={sender?.equippedFrame}
             size={avatarSize}
             link
+            onLinkClick={onProfileNavigate}
           />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-white text-base sm:text-lg font-extrabold truncate leading-tight">
-            <PurpleNameLink user={sender} fallback="Someone" />
+            <PurpleNameLink
+              user={sender}
+              fallback="Someone"
+              onClick={onProfileNavigate}
+            />
           </div>
           <div className="text-purple-100/80 text-xs sm:text-sm mt-0.5">
             wants to be your friend

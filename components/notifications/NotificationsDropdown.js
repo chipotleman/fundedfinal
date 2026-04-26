@@ -254,6 +254,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                   compact
                   onAccept={() => wrap(fr.id, async () => { await ctx.acceptFriend(fr.id); })}
                   onDecline={() => wrap(fr.id, async () => { await ctx.declineFriend(fr.id); })}
+                  onProfileNavigate={onClose}
                 />
               ))}
             </div>

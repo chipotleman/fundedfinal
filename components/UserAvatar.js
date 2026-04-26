@@ -90,6 +90,11 @@ export default function UserAvatar({
   isOnline = false,
   onlineDotBorderColor = '#0a0a0a',
   link = false,
+  // Optional callback fired when the link wrapper is clicked. Useful for
+  // closing a dropdown / dismissing a toast in the same gesture that
+  // navigates to the profile so the surface that hosts the avatar gets
+  // out of the way once the user has committed to viewing the profile.
+  onLinkClick,
 }) {
   const resolvedAvatar = avatar !== undefined ? avatar : user?.avatar;
   const resolvedUsername = username !== undefined ? username : (user?.username || user?.name);
@@ -197,12 +202,17 @@ export default function UserAvatar({
   );
 
   if (link && user?.id) {
+    const mergedClick = (e) => {
+      prefetchHandlers.onClick?.(e);
+      onLinkClick?.(e);
+    };
     return (
       <Link
         href={`/profile/${user.id}`}
         aria-label={`View ${resolvedUsername || 'profile'}`}
         className="inline-block"
         {...prefetchHandlers}
+        onClick={mergedClick}
       >
         {node}
       </Link>
