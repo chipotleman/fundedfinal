@@ -102,20 +102,29 @@ The suite lives in `tests/e2e/`:
   `/messenger` and `/notifications` (both directions), and a scrolled-state
   pass with the same overlay check.
 - `page-smoke.spec.js` — broader build-time smoke for the highest-traffic
-  authenticated routes. Mounts `/` (dashboard / home), `/battle`, and
-  `/withdrawal` (the balance flow) in both a desktop and a mobile
-  Chromium project, and fails the PR if any of them returns a 4xx/5xx,
-  throws an uncaught JS error, logs a `console.error`, or fails to
-  render a stable page-specific marker. Runs in the same workflow off
-  the same prebuilt `.next/` artifact as the click-trap suite, so the
-  added wall-clock cost is roughly two more `next start` page mounts.
+  authenticated routes AND the public-facing marketing pages a brand-new
+  visitor lands on before signing in. Mounts `/` (dashboard / home),
+  `/battle`, and `/withdrawal` (the balance flow) with a fake
+  `current_user` + NextAuth session via `setupSmokeStubs`, then
+  separately mounts `/login`, `/how-it-works`, and `/pricing` with NO
+  fake session via `setupSignedOutStubs` so a regression that only
+  crashes for unauthenticated visitors still blocks the PR. Runs in
+  both a desktop and a mobile Chromium project off the same prebuilt
+  `.next/` artifact as the click-trap suite, so the added wall-clock
+  cost is roughly five more `next start` page mounts per matrix entry.
+  Each page fails the PR if it returns a 4xx/5xx, throws an uncaught
+  JS error, logs a `console.error`, or fails to render a stable
+  page-specific marker.
   - **Pages currently covered:** `/messenger`, `/notifications` (full
-    click-trap suite), plus `/`, `/battle`, and `/withdrawal` (smoke
-    only — mount + no-error assertion). When you add a new top-level
-    route that's hit on app open, please extend `SMOKE_PAGES` in
+    click-trap suite), `/`, `/battle`, and `/withdrawal` (signed-in
+    smoke — mount + no-error assertion), plus `/login`,
+    `/how-it-works`, and `/pricing` (signed-out smoke — mount + no-error
+    assertion with no fake session). When you add a new top-level
+    route that's hit on app open, please extend `SMOKE_PAGES` (or
+    `SIGNED_OUT_PAGES` if it's a marketing / pre-auth route) in
     `page-smoke.spec.js` and update this list.
 - `helpers/clickTrap.js` — shared API stubs (`setupStubs`,
-  `setupSmokeStubs`), the console-error / pageerror / 5xx watcher
+  `setupSmokeStubs`, `setupSignedOutStubs`), the console-error / pageerror / 5xx watcher
   (`attachConsoleErrorWatcher` + `expectNoConsoleErrors`), `<body>`
   style assertions, the full-screen overlay check, and a `scrollPage()`
   helper that pads the page with a spacer and scrolls down so the
@@ -126,9 +135,10 @@ open and dismiss each top-bar dropdown / the mobile nav drawer, then
 assert that the next icon tap registers, that `document.body` has no
 leftover scroll-lock styles, and that no fixed-position element covering
 the viewport is left in the DOM. The page-smoke spec runs in parallel
-on Chromium against `/`, `/battle`, and `/withdrawal`. If any spec
-fails, the regression is back — fix it before shipping and before
-bothering with the manual checklist.
+on Chromium against the signed-in routes (`/`, `/battle`, `/withdrawal`)
+and the signed-out marketing routes (`/login`, `/how-it-works`,
+`/pricing`). If any spec fails, the regression is back — fix it before
+shipping and before bothering with the manual checklist.
 
 The automated test is configured to start a Next.js server on port 3100
 via Playwright's `webServer`. By default that's `npm run dev`, but with

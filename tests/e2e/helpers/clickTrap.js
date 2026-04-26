@@ -216,6 +216,70 @@ async function setupSmokeStubs(page) {
 }
 
 /**
+ * Sibling of `setupSmokeStubs` for the signed-out marketing pages
+ * (`/login`, `/how-it-works`, `/pricing`, `/pikking-101`, `/auth`).
+ *
+ * Deliberately does NOT seed `current_user` in `localStorage` and
+ * does NOT pretend `/api/auth/session` returned a populated NextAuth
+ * payload — those pages need to render in their genuine signed-out
+ * shell, which is what brand-new visitors actually hit before they
+ * click "Sign Up" / "Sign In". If we accidentally smoke-tested them
+ * with a fake session, a regression that only shows up for
+ * unauthenticated visitors (e.g. a navbar branch that crashes when
+ * `useSession()` returns `null`) would slip straight through.
+ *
+ * We still stub the broad set of GET endpoints that contexts mounted
+ * by `_app.js` (NotificationsContext, GamesContext, …) might fire on
+ * mount even in the signed-out shell, so the production build has
+ * nothing left to log a 5xx / network error about.
+ */
+async function setupSignedOutStubs(page) {
+  // Bypass the private-beta access gate that wraps every page in
+  // `_app.js` — without this, `_app.js` short-circuits straight to
+  // `<BetaLanding />` and we'd be smoke-testing the access-code
+  // prompt instead of the actual marketing page. This is the same
+  // bypass the messenger-voice-note suite uses; we deliberately
+  // do NOT seed `current_user` so the visitor still arrives at the
+  // marketing page in its true signed-out state.
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem('beta_access', 'true');
+    } catch (_e) {}
+  });
+
+  const json = (body, status = 200) => ({
+    status,
+    contentType: 'application/json',
+    body: JSON.stringify(body),
+  });
+
+  // Genuine signed-out NextAuth response. Returning `{}` is what the
+  // real `/api/auth/session` endpoint serves for an anonymous visitor,
+  // and what `useSession()` reads as "no session". Critically we do
+  // NOT seed `current_user` in localStorage either.
+  await page.route('**/api/auth/session', (route) => route.fulfill(json({})));
+
+  // Any context that DOES still fire a fetch on mount even when
+  // signed out (or that races the auth-gate check) gets a benign
+  // empty response so the smoke build sees zero 5xx noise.
+  await page.route('**/api/notifications', (route) => route.fulfill(json(EMPTY_NOTIFICATIONS)));
+  await page.route('**/api/notifications/**', (route) => route.fulfill(json({ ok: true })));
+  await page.route('**/api/messages/conversations', (route) => route.fulfill(json([])));
+  await page.route('**/api/messages/**', (route) => route.fulfill(json({ ok: true })));
+  await page.route('**/api/profiles/**', (route) => route.fulfill(json({})));
+  await page.route('**/api/friends/**', (route) => route.fulfill(json([])));
+  await page.route('**/api/games', (route) =>
+    route.fulfill(json({ games: [], inplayEvents: [], lastUpdated: null })),
+  );
+  await page.route('**/api/promo-slots', (route) => route.fulfill(json({ slots: [] })));
+  await page.route('**/api/promos/**', (route) => route.fulfill(json({ ok: true })));
+  await page.route('**/api/user/**', (route) => route.fulfill(json({ ok: true })));
+  await page.route('**/api/me/**', (route) => route.fulfill(json({ ok: true })));
+  await page.route('**/api/battles/**', (route) => route.fulfill(json({ ok: true })));
+  await page.route('**/api/matchups/**', (route) => route.fulfill(json({ ok: true })));
+}
+
+/**
  * Attaches console-error / pageerror / response-failure listeners to
  * `page` and returns:
  *   - `errors`  — accumulating list of console.error messages
@@ -281,6 +345,7 @@ module.exports = {
   EMPTY_NOTIFICATIONS,
   setupStubs,
   setupSmokeStubs,
+  setupSignedOutStubs,
   attachConsoleErrorWatcher,
   expectNoConsoleErrors,
   getBodyLockStyles,
