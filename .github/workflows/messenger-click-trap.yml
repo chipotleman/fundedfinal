@@ -192,6 +192,18 @@ jobs:
             browser: chromium
           - project: page-smoke-mobile
             browser: chromium
+          # Regression test for task #393 — locks in the owner-vs-admin
+          # allow-list split in pages/api/profiles/[id].ts so a future
+          # refactor can't silently re-let users reset their own
+          # bankroll / pnl / win rate. The spec carries both behavioural
+          # tests (real PATCH + read-back from Postgres) and source-level
+          # guardrails. Behavioural tests skip when DATABASE_URL is
+          # unset, which is the case for this matrix job — only the
+          # supplemental source-level guardrails run here. Wiring a
+          # Postgres service so the behavioural suite also runs in CI
+          # is filed as a follow-up.
+          - project: profile-bankroll-owner-lockout
+            browser: chromium
 
     env:
       CI: 'true'

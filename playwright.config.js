@@ -87,6 +87,22 @@ module.exports = defineConfig({
       testMatch: /page-smoke\.spec\.js$/,
       use: { ...devices['Pixel 7'] },
     },
+    {
+      // Regression suite for task #393 — proves a signed-in regular
+      // user can't reset their own bankroll / pnl / win rate / etc by
+      // PATCHing /api/profiles/{me}. Carries a primary behavioural
+      // suite (mints a real NextAuth JWT cookie, PATCHes the live
+      // endpoint, then reads the row back from Postgres directly to
+      // assert each financial field is unchanged) plus supplemental
+      // source-level guardrails on the owner-vs-admin allow-list
+      // split in pages/api/profiles/[id].ts. The behavioural tests
+      // skip when DATABASE_URL or NEXTAUTH_SECRET is missing
+      // (e.g. the messenger-click-trap CI matrix), so the source-
+      // level guardrails remain useful coverage there.
+      name: 'profile-bankroll-owner-lockout',
+      testMatch: /profile-bankroll-owner-lockout\.spec\.js$/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+    },
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined
