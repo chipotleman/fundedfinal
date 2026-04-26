@@ -3,7 +3,7 @@ import { userBets, profiles, fakeOpponents, fakeOpponentBets, matchups, poolPart
 import { eq, and, or, inArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
-import { calculatePayout } from '../../../utils/odds';
+import { calculatePayout, americanToDecimal } from '../../../utils/odds';
 const { publishBattleEvent, publishMatchupPnlUpdate } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
@@ -129,11 +129,19 @@ export default async function handler(req, res) {
     const insertedBets = [];
 
     if (betType === 'parlay' && parlayStake > 0) {
+      let invalidLegOdds = false;
       const parlayDecimal = bets.reduce((acc, bet) => {
         const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : parseInt(bet.odds);
-        const decimal = oddsValue > 0 ? (oddsValue/100 + 1) : (100/Math.abs(oddsValue) + 1);
+        const decimal = americanToDecimal(oddsValue);
+        if (decimal === null) {
+          invalidLegOdds = true;
+          return acc;
+        }
         return acc * decimal;
       }, 1);
+      if (invalidLegOdds) {
+        return res.status(400).json({ error: 'Invalid odds on parlay leg' });
+      }
       const americanOdds = parlayDecimal >= 2 ? Math.round((parlayDecimal - 1) * 100) : Math.round(-100 / (parlayDecimal - 1));
       const potentialPayout = parlayStake * parlayDecimal;
 
