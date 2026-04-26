@@ -269,126 +269,24 @@ export default function BattlePage() {
     }
   }, [globalMatchup, globalHasAny, globalIsWaiting, globalMatchupData]);
 
-  // Polling refs: read the latest invites / activeMatchup via refs so the
-  // interval only depends on userId. Previously this effect re-created its
-  // setInterval every time invites or activeMatchup changed, which on a
-  // slow device meant the recreated timer could race with the previous
-  // one's in-flight fetch and contribute to the "feels frozen" perception.
-  // These refs are also reused below by the SSE lifecycle listener for
-  // `matchup:start` / `matchup:end` (see the second usage further down).
+  // Refs used by the SSE lifecycle subscribers below. Reading the latest
+  // invites and active matchup via refs keeps those subscribe effects from
+  // re-binding on every state change.
+  //   - `invitesRef`        : consumed by the SSE invite-refresh listener
+  //                           to detect a sent→accepted transition.
+  //   - `activeMatchupRef`  : consumed by the SSE `matchup:end` handler to
+  //                           confirm the ending matchup is the one this
+  //                           page currently shows as active.
+  // The previous fixed-cadence safety-net polls (invites/matchup-current
+  // and waiting-status) were removed in favour of the existing SSE pushes
+  // (`matchup:start`, `matchup:end`, `notification:invite/refresh`). The
+  // shared SSE singleton's `piks:disconnected` lifecycle event drives the
+  // fallback poll inside MatchupContext, which keeps state fresh while
+  // the stream is unhealthy.
   const invitesRef = useRef(invites);
   const activeMatchupRef = useRef(activeMatchup);
-  const refreshGlobalMatchupRef = useRef(refreshGlobalMatchup);
-  const loadResultDetailsRef = useRef(null);
-  const fetchDataRef = useRef(fetchData);
   useEffect(() => { invitesRef.current = invites; }, [invites]);
   useEffect(() => { activeMatchupRef.current = activeMatchup; }, [activeMatchup]);
-  useEffect(() => { refreshGlobalMatchupRef.current = refreshGlobalMatchup; }, [refreshGlobalMatchup]);
-  useEffect(() => { fetchDataRef.current = fetchData; }, [fetchData]);
-
-  // Long-interval safety-net poll. The primary delivery path for
-  // pending→matched and active→ended transitions is now SSE:
-  //   - `matchup:start` fires from the invite-accept and queue-match paths
-  //     and is handled below to flip into the lobby within ~1s.
-  //   - `matchup:end` fires from the resolve and forfeit paths and is
-  //     handled below to surface the result popup within ~1s.
-  // This poll only exists to recover from the rare case where SSE drops
-  // both events (server restart mid-flight, unhealthy stream, etc), so a
-  // 60s cadence is plenty — the user-visible lag without it would still
-  // be at most one round-trip on the next manual interaction.
-  useEffect(() => {
-    if (!userId) return;
-    const interval = setInterval(async () => {
-      try {
-        const [inviteRes, matchupRes] = await Promise.all([
-          fetch('/api/battles/invite'),
-          fetch('/api/matchups/current'),
-        ]);
-
-        let matchData = null;
-        if (matchupRes.ok) matchData = await matchupRes.json();
-
-        if (inviteRes.ok) {
-          const data = await inviteRes.json();
-          const prevInvites = invitesRef.current;
-          const hadPendingSent = prevInvites?.sent?.length > 0;
-          const hasPendingSent = data.sent?.length > 0;
-          setInvites(data);
-
-          if (hadPendingSent && !hasPendingSent && matchData?.matchup) {
-            if (matchData.matchup.status === 'active' || matchData.matchup.status === 'matched') {
-              setActiveMatchup(matchData.matchup);
-              setMatchupData(matchData);
-              setShowLobby(matchData.matchup);
-              refreshGlobalMatchupRef.current && refreshGlobalMatchupRef.current();
-              setTimeout(() => router.push('/?battleStarted=true'), 2500);
-            }
-          }
-        }
-
-        if (matchData?.matchup && (matchData.matchup.status === 'active' || matchData.matchup.status === 'matched')) {
-          setMatchupData(matchData);
-          setActiveMatchup(matchData.matchup);
-          refreshGlobalMatchupRef.current && refreshGlobalMatchupRef.current();
-        }
-
-        const currentActive = activeMatchupRef.current;
-        if (currentActive && (currentActive.status === 'active' || currentActive.status === 'matched')) {
-          if (matchData && (!matchData.matchup || matchData.status === 'none')) {
-            const histRes = await fetch('/api/battles/history?limit=1');
-            if (histRes.ok) {
-              const histData = await histRes.json();
-              const lastMatch = histData.matches?.[0];
-              if (lastMatch && lastMatch.id === currentActive.id) {
-                setActiveMatchup(null);
-                setShowResult({
-                  ...currentActive,
-                  ...lastMatch,
-                  status: 'completed',
-                  winnerId: lastMatch.winnerId || lastMatch.winner_id,
-                  user1FinalBalance: lastMatch.user1FinalBalance || lastMatch.user1_final_balance || currentActive.user1Balance,
-                  user2FinalBalance: lastMatch.user2FinalBalance || lastMatch.user2_final_balance || currentActive.user2Balance,
-                });
-                // Pull authoritative data (cash P&L, rematch state, opponent profile)
-                loadResultDetailsRef.current && loadResultDetailsRef.current(lastMatch.id);
-                fetchDataRef.current && fetchDataRef.current();
-              }
-            }
-          }
-        }
-      } catch {}
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [userId, router]);
-
-  // Safety-net poll for the queue waiting→matched transition. Same
-  // rationale as above: `matchup:start` handles this in near-real-time,
-  // so we only need a slow fallback for the SSE-down case.
-  useEffect(() => {
-    if (!userId || !activeMatchup || activeMatchup.status !== 'waiting') return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch('/api/matchups/current');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.matchup) {
-            if (data.matchup.status === 'active' || data.matchup.status === 'matched') {
-              setActiveMatchup(data.matchup);
-              setMatchupData(data);
-              setShowLobby(data.matchup);
-              refreshGlobalMatchupRef.current && refreshGlobalMatchupRef.current();
-              clearInterval(interval);
-              setTimeout(() => router.push('/?battleStarted=true'), 2500);
-            }
-          } else {
-            setActiveMatchup(null);
-            clearInterval(interval);
-          }
-        }
-      } catch {}
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [userId, activeMatchup?.status, router]);
 
   // ?play=<friendId> opens the PlayFriendModal with that friend pre-selected.
   useEffect(() => {
@@ -490,11 +388,6 @@ export default function BattlePage() {
       if (data.rematchState) setRematchState(data.rematchState);
     } catch {}
   }, [profile]);
-
-  // Keep the polling effect's loadResultDetails ref in sync with the
-  // latest callback so it picks up profile changes without re-creating
-  // the interval. See the polling refactor above.
-  useEffect(() => { loadResultDetailsRef.current = loadResultDetails; }, [loadResultDetails]);
 
   const callRematch = useCallback(async (resultId, action) => {
     if (!resultId) return null;
@@ -609,16 +502,13 @@ export default function BattlePage() {
   // SSE listener for friend-invite state changes — keeps the per-friend
   // "Invite pending" badge / disabled quick-invite button in sync within
   // ~1 s when the receiver accepts/declines, the sender cancels from
-  // another tab, or an outgoing invite expires server-side. Without this
-  // we'd wait up to 5 s for the polling loop above to notice.
+  // another tab, or an outgoing invite expires server-side.
   //
-  // We also mirror the polling loop's "outgoing invite was just accepted →
-  // auto-show the lobby" transition here. If we only refreshed invites,
-  // the polling loop would re-mount with sent.length already 0 and miss
-  // the pending → matched transition entirely.
-  // (invitesRef is declared once earlier, near the polling refactor —
-  // both this SSE refresh path and the 5s polling loop share the same
-  // ref to read the previous invites snapshot.)
+  // We also drive the "outgoing invite was just accepted → auto-show
+  // the lobby" transition here, using `invitesRef` to compare against
+  // the previous snapshot before we overwrite invites with the fresh
+  // payload. (`invitesRef` is declared once earlier, alongside the SSE
+  // ref setup.)
   useEffect(() => {
     if (!userId || isGuest || typeof window === 'undefined') return;
     const client = getBattleStreamClient();
@@ -696,17 +586,56 @@ export default function BattlePage() {
   // lib/battle-events.js fire `matchup:start` whenever a new matchup is
   // created (invite accepted, queue matched) and `matchup:end` whenever a
   // matchup transitions to completed (winner declared, expired, forfeit).
-  // Listening to them directly lets the lobby and result popup appear
-  // within ~1s instead of waiting for the long-interval safety poll.
+  // This is the sole driver for the lobby and result popup transitions on
+  // /battle — there is no longer a fixed-cadence safety poll. SSE drops
+  // are covered by MatchupContext's fallback poll, which engages on the
+  // shared client's `piks:disconnected` lifecycle event.
   //
-  // This is the single subscriber for those events — the invite-refresh
-  // listener above intentionally does NOT also act on `matchup:start` so
-  // we don't issue duplicate /api/matchups/current fetches when the
-  // accept handler bursts both events together.
-  // (`activeMatchupRef` is declared once earlier near the polling refs and
-  // is reused here to avoid a duplicate ref + sync effect.)
+  // The invite-refresh listener above intentionally does NOT also act on
+  // `matchup:start` so we don't issue duplicate /api/matchups/current
+  // fetches when the accept handler bursts both events together.
+  // (`activeMatchupRef` is declared once earlier alongside `invitesRef`.)
   const showResultRef = useRef(showResult);
   useEffect(() => { showResultRef.current = showResult; }, [showResult]);
+  // If a `matchup:start` arrives while the user is still looking at the
+  // result popup from a previous battle, we don't want to clobber that UI
+  // mid-read. We stash the id here and replay the lobby-open logic the
+  // moment the popup is dismissed (drained by the effect further below).
+  // Without this, the SSE event would be silently dropped — the old
+  // long-interval safety poll used to catch this case.
+  const pendingStartRef = useRef(null);
+
+  // Open the lobby for a freshly-started matchup. Shared between the SSE
+  // `matchup:start` handler and the deferred-start drain effect so the
+  // two paths can't drift.
+  const openLobbyForStart = useCallback(async (matchupId) => {
+    try {
+      const res = await fetch('/api/matchups/current');
+      if (!res.ok) return;
+      const data = await res.json().catch(() => null);
+      const m = data?.matchup;
+      if (!m || m.id !== matchupId) return;
+      if (m.status !== 'active' && m.status !== 'matched') return;
+      setActiveMatchup(m);
+      setMatchupData(data);
+      setShowLobby(m);
+      refreshGlobalMatchup();
+      setTimeout(() => router.push('/?battleStarted=true'), 2500);
+    } catch {}
+  }, [refreshGlobalMatchup, router]);
+  const openLobbyForStartRef = useRef(openLobbyForStart);
+  useEffect(() => { openLobbyForStartRef.current = openLobbyForStart; }, [openLobbyForStart]);
+
+  // Drain any deferred `matchup:start` once the result popup is dismissed.
+  // Only fires on the truthy→falsy transition so it doesn't run on every
+  // unrelated render.
+  useEffect(() => {
+    if (showResult) return;
+    const pendingId = pendingStartRef.current;
+    if (!pendingId) return;
+    pendingStartRef.current = null;
+    openLobbyForStartRef.current && openLobbyForStartRef.current(pendingId);
+  }, [showResult]);
 
   useEffect(() => {
     if (!userId || isGuest || typeof window === 'undefined') return;
@@ -715,26 +644,16 @@ export default function BattlePage() {
 
     let cancelled = false;
 
-    const handleMatchupStart = async (matchupId) => {
-      try {
-        const res = await fetch('/api/matchups/current');
-        if (!res.ok || cancelled) return;
-        const data = await res.json().catch(() => null);
-        const m = data?.matchup;
-        if (!m || m.id !== matchupId) return;
-        if (m.status !== 'active' && m.status !== 'matched') return;
-        // Avoid clobbering a result popup the user is currently looking at
-        // — if showResult is set we let it stay; the lobby will surface
-        // when they dismiss it (the long-interval poll will catch up).
-        if (showResultRef.current) return;
-        setActiveMatchup(m);
-        setMatchupData(data);
-        setShowLobby(m);
-        refreshGlobalMatchup();
-        setTimeout(() => {
-          if (!cancelled) router.push('/?battleStarted=true');
-        }, 2500);
-      } catch {}
+    const handleMatchupStart = (matchupId) => {
+      // If the user is mid-read on a result popup, defer the lobby
+      // transition until they dismiss it. The drain effect above will
+      // replay it. Without this, the event would be silently dropped
+      // now that the long-interval safety poll is gone.
+      if (showResultRef.current) {
+        pendingStartRef.current = matchupId;
+        return;
+      }
+      openLobbyForStartRef.current && openLobbyForStartRef.current(matchupId);
     };
 
     const handleMatchupEnd = async (ev) => {
@@ -774,7 +693,7 @@ export default function BattlePage() {
       cancelled = true;
       unsubscribe();
     };
-  }, [userId, isGuest, refreshGlobalMatchup, router, loadResultDetails, fetchData]);
+  }, [userId, isGuest, loadResultDetails, fetchData]);
 
   // When both sides accept and a new matchup is created, navigate both users
   // straight into the new battle.
