@@ -830,10 +830,14 @@ function SilhouetteAvatar({ gradient, size = 40 }) {
 const ONE_TAP_DEFAULT_BUY_IN = 5;
 const ONE_TAP_DEFAULT_GAME_MODE = 'rush';
 const ONE_TAP_BUY_IN_OPTIONS = [5, 10, 25];
+// `coins` mirrors the per-mode starting bankroll surfaced in
+// QuickMatchModal so the idle Play Now card can display the same
+// "X coins to start" context inline. Keep these in sync with
+// QuickMatchModal's GAME_MODE_OPTIONS.
 const ONE_TAP_GAME_MODE_OPTIONS = [
-  { id: 'rush', label: 'Rush', icon: '⚡' },
-  { id: 'original', label: 'Original', icon: '🏆' },
-  { id: 'tournament', label: 'Tournament', icon: '👑' },
+  { id: 'rush', label: 'Rush', icon: '⚡', coins: 10000 },
+  { id: 'original', label: 'Original', icon: '🏆', coins: 10000 },
+  { id: 'tournament', label: 'Tournament', icon: '👑', coins: 100000 },
 ];
 const ONE_TAP_GAME_MODE_IDS = ONE_TAP_GAME_MODE_OPTIONS.map((m) => m.id);
 // Persisted in localStorage so the next visit's tap goes straight to
@@ -2039,6 +2043,21 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                 );
               })}
             </div>
+
+            {/* Live summary of what the current chip selection gets
+                you: the resulting pot (buy-in × 2) and the starting
+                coin bankroll for the chosen mode. Updates instantly
+                as chips toggle so power users can dial in without
+                opening the QuickMatchModal config screen. */}
+            <p
+              className="text-[11px] font-semibold text-gray-300 mt-2"
+              aria-live="polite"
+            >
+              <span className="text-emerald-400">${buyIn * 2}</span>
+              <span className="text-gray-500 font-normal"> pot · </span>
+              <span className="text-white">{selectedGameMode.coins.toLocaleString()}</span>
+              <span className="text-gray-500 font-normal"> coins to start</span>
+            </p>
 
             {searchError && (
               <p
