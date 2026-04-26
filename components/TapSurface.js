@@ -30,7 +30,7 @@ export default function TapSurface({
         transition: 'none',
         ...style,
       }}
-      className={className}
+      className={`no-hover-effect ${className}`.trim()}
     >
       {children}
     </button>
