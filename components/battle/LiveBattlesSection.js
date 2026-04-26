@@ -2951,7 +2951,7 @@ export default function LiveBattlesSection({
           </button>
         </div>
         {retryHint}
-        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
               youVsState={youVsState}
