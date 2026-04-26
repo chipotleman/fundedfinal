@@ -82,7 +82,12 @@ export default async function handler(req, res) {
           .update(battleInvites)
           .set({ status: 'cancelled', respondedAt: new Date() })
           .where(eq(battleInvites.id, id));
-        try { publishBattleEvent(battleInvite.receiverId, { type: 'notification:refresh' }); } catch (_e) {}
+        try {
+          publishBattleEvent(
+            [battleInvite.senderId, battleInvite.receiverId],
+            { type: 'notification:refresh' }
+          );
+        } catch (_e) {}
         return res.status(200).json({ message: 'Battle invite cancelled' });
       }
 
@@ -124,6 +129,12 @@ export default async function handler(req, res) {
             .update(battleInvites)
             .set({ status: 'expired', respondedAt: new Date() })
             .where(eq(battleInvites.id, id));
+          try {
+            publishBattleEvent(
+              [battleInvite.senderId, battleInvite.receiverId],
+              { type: 'notification:refresh' }
+            );
+          } catch (_e) {}
           return res.status(400).json({ error: 'This invite has expired' });
         }
 

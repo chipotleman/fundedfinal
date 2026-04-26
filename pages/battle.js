@@ -494,6 +494,86 @@ export default function BattlePage() {
     return () => unsubscribe();
   }, [showResult?.id, isGuest]);
 
+  // SSE listener for friend-invite state changes — keeps the per-friend
+  // "Invite pending" badge / disabled quick-invite button in sync within
+  // ~1 s when the receiver accepts/declines, the sender cancels from
+  // another tab, or an outgoing invite expires server-side. Without this
+  // we'd wait up to 5 s for the polling loop above to notice.
+  //
+  // We also mirror the polling loop's "outgoing invite was just accepted →
+  // auto-show the lobby" transition here. If we only refreshed invites,
+  // the polling loop would re-mount with sent.length already 0 and miss
+  // the pending → matched transition entirely.
+  const invitesRef = useRef(invites);
+  useEffect(() => { invitesRef.current = invites; }, [invites]);
+  useEffect(() => {
+    if (!userId || isGuest || typeof window === 'undefined') return;
+    const client = getBattleStreamClient();
+    if (!client) return;
+
+    let cancelled = false;
+    let timer = null;
+
+    const refreshInvites = async () => {
+      try {
+        const [inviteRes, matchupRes] = await Promise.all([
+          fetch('/api/battles/invite'),
+          fetch('/api/matchups/current'),
+        ]);
+
+        let matchData = null;
+        if (matchupRes.ok) matchData = await matchupRes.json().catch(() => null);
+
+        if (inviteRes.ok) {
+          const data = await inviteRes.json().catch(() => null);
+          if (data && !cancelled) {
+            const hadPendingSent = invitesRef.current?.sent?.length > 0;
+            const hasPendingSent = data.sent?.length > 0;
+            setInvites(data);
+
+            if (hadPendingSent && !hasPendingSent && matchData?.matchup) {
+              const ms = matchData.matchup.status;
+              if (ms === 'active' || ms === 'matched') {
+                setActiveMatchup(matchData.matchup);
+                setMatchupData(matchData);
+                setShowLobby(matchData.matchup);
+                refreshGlobalMatchup();
+                setTimeout(() => router.push('/?battleStarted=true'), 2500);
+              }
+            }
+          }
+        }
+      } catch {}
+    };
+
+    // Coalesce bursts of events (e.g. accept publishes to both users) so
+    // we don't fire the same fetch twice in quick succession.
+    const scheduleRefresh = () => {
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        refreshInvites();
+      }, 200);
+    };
+
+    const unsubscribe = client.subscribe((ev) => {
+      if (!ev || !ev.type) return;
+      if (
+        ev.type === 'notification:invite' ||
+        ev.type === 'notification:refresh' ||
+        ev.type === 'piks:reconnected'
+      ) {
+        scheduleRefresh();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      unsubscribe();
+    };
+  }, [userId, isGuest, refreshGlobalMatchup, router]);
+
   // When both sides accept and a new matchup is created, navigate both users
   // straight into the new battle.
   useEffect(() => {

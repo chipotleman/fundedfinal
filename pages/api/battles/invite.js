@@ -30,6 +30,18 @@ export default async function handler(req, res) {
         .returning({ id: battleInvites.id, senderId: battleInvites.senderId, receiverId: battleInvites.receiverId, buyIn: battleInvites.buyIn });
       if (expiredRows && expiredRows.length > 0) {
         try {
+          const affected = [
+            ...new Set(
+              expiredRows
+                .flatMap(r => [r.senderId, r.receiverId])
+                .filter(Boolean)
+            ),
+          ];
+          if (affected.length > 0) {
+            publishBattleEvent(affected, { type: 'notification:refresh' });
+          }
+        } catch (_e) {}
+        try {
           const recvIds = [...new Set(expiredRows.map(r => r.receiverId).filter(Boolean))];
           const recvProfMap = new Map();
           if (recvIds.length > 0) {

@@ -4,6 +4,7 @@ import { db } from '../../../lib/db';
 import { messages, friendships, battleInvites, profiles, users, matchups, fakeOpponents } from '../../../shared/schema';
 import { eq, and, or, desc, lt, inArray, gte, isNotNull, isNull } from 'drizzle-orm';
 const { sendPushToUsers } = require('../../../lib/web-push');
+const { publishBattleEvent } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -28,6 +29,18 @@ export default async function handler(req, res) {
         .where(and(eq(battleInvites.status, 'pending'), lt(battleInvites.expiresAt, new Date())))
         .returning({ id: battleInvites.id, senderId: battleInvites.senderId, receiverId: battleInvites.receiverId, buyIn: battleInvites.buyIn });
       if (expiredRows && expiredRows.length > 0) {
+        try {
+          const affected = [
+            ...new Set(
+              expiredRows
+                .flatMap(r => [r.senderId, r.receiverId])
+                .filter(Boolean)
+            ),
+          ];
+          if (affected.length > 0) {
+            publishBattleEvent(affected, { type: 'notification:refresh' });
+          }
+        } catch (_e) {}
         const receiverIds = [...new Set(expiredRows.map(r => r.receiverId).filter(Boolean))];
         const recvProfMap = new Map();
         if (receiverIds.length > 0) {
