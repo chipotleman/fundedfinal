@@ -3002,7 +3002,7 @@ export default function LiveBattlesSection({
       {/* Shared cartoon chip animation styles — emitted here so the
           full Active Battles page picks up the same keyframes and
           reduced-motion override the homepage carousel uses. */}
-      <style>{CARTOON_CHIP_STYLES}</style>
+      <CartoonChipStyles />
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Live Battles</span>

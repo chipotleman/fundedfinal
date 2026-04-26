@@ -1,0 +1,55 @@
+[Log] Logo loaded successfully (9166-b37d6346fcebd4f3.js, line 1)
+[Log] [Goalserve Live] SSE connected (index-153318f07df831f2.js, line 1)
+[Log] [Goalserve Live] Initial status: – Object (index-153318f07df831f2.js, line 1)
+Object
+[Log] [Goalserve Live] Initial events loaded: – 0 (index-153318f07df831f2.js, line 1)
+[Error] ReferenceError: Can't find variable: CARTOON_CHIP_STYLES
+Q — LiveBattlesSection.js:3005
+ak — react-dom.production.min.js:167:135
+i — react-dom.production.min.js:290:335
+oD — react-dom.production.min.js:280:383
+(anonymous function) — react-dom.production.min.js:280:319
+oO — react-dom.production.min.js:280:319
+oE — react-dom.production.min.js:271:86
+ox — react-dom.production.min.js:268:399
+x — scheduler.production.min.js:13:197
+T — scheduler.production.min.js:14:126
+
+	a9 (framework-217c79b1d19feeab.js:1:69901)
+	(anonymous function) (framework-217c79b1d19feeab.js:1:70413)
+	lW (framework-217c79b1d19feeab.js:1:51484)
+	uX (framework-217c79b1d19feeab.js:1:90862)
+	e (framework-217c79b1d19feeab.js:1:111179)
+	(anonymous function) (framework-217c79b1d19feeab.js:1:111188)
+	oU (framework-217c79b1d19feeab.js:1:111700)
+	ox (framework-217c79b1d19feeab.js:1:95072)
+	x (framework-217c79b1d19feeab.js:1:137551)
+	T (framework-217c79b1d19feeab.js:1:138081)
+[Error] ReferenceError: Can't find variable: CARTOON_CHIP_STYLES
+	ee (main-f774c04a9b1d2f91.js:1:18472)
+	fn (main-f774c04a9b1d2f91.js:1:17517)
+	componentDidCatch (main-f774c04a9b1d2f91.js:1:15984)
+	(anonymous function) (framework-217c79b1d19feeab.js:1:70521)
+	lW (framework-217c79b1d19feeab.js:1:51484)
+	uX (framework-217c79b1d19feeab.js:1:90862)
+	e (framework-217c79b1d19feeab.js:1:111179)
+	(anonymous function) (framework-217c79b1d19feeab.js:1:111188)
+	oU (framework-217c79b1d19feeab.js:1:111700)
+	ox (framework-217c79b1d19feeab.js:1:95072)
+	x (framework-217c79b1d19feeab.js:1:137551)
+	T (framework-217c79b1d19feeab.js:1:138081)
+[Error] A client-side exception has occurred, see here for more info: https://nextjs.org/docs/messages/client-side-exception-occurred
+	ee (main-f774c04a9b1d2f91.js:1:18489)
+	fn (main-f774c04a9b1d2f91.js:1:17517)
+	componentDidCatch (main-f774c04a9b1d2f91.js:1:15984)
+	(anonymous function) (framework-217c79b1d19feeab.js:1:70521)
+	lW (framework-217c79b1d19feeab.js:1:51484)
+	uX (framework-217c79b1d19feeab.js:1:90862)
+	e (framework-217c79b1d19feeab.js:1:111179)
+	(anonymous function) (framework-217c79b1d19feeab.js:1:111188)
+	oU (framework-217c79b1d19feeab.js:1:111700)
+	ox (framework-217c79b1d19feeab.js:1:95072)
+	x (framework-217c79b1d19feeab.js:1:137551)
+	T (framework-217c79b1d19feeab.js:1:138081)
+> Selected Element
+< <div style="font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; height: 100vh; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">…</div>
