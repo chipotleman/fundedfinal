@@ -155,7 +155,40 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
     setCurrentMs(ms);
   };
 
-  const handleTrackClick = (e) => {
+  // Drag-to-scrub via Pointer Events: a single press seeks (just like the
+  // previous click handler), and any subsequent movement before release keeps
+  // updating the playback position in real time. setPointerCapture means we
+  // keep getting events even when the finger/cursor leaves the bar.
+  const draggingRef = useRef(false);
+
+  const handlePointerDown = (e) => {
+    if (totalMs <= 0) return;
+    // Only react to the primary mouse button (or touch/pen presses, which
+    // report button === 0 too). Skip right-clicks etc.
+    if (e.button !== undefined && e.button !== 0) return;
+    const track = trackRef.current;
+    if (track && typeof track.setPointerCapture === 'function') {
+      try { track.setPointerCapture(e.pointerId); } catch {}
+    }
+    draggingRef.current = true;
+    seekFromClientX(e.clientX);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!draggingRef.current) return;
+    // Prevent the browser from interpreting the gesture as a scroll/swipe
+    // while we're actively scrubbing.
+    if (e.cancelable) e.preventDefault();
+    seekFromClientX(e.clientX);
+  };
+
+  const endDrag = (e) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    const track = trackRef.current;
+    if (track && typeof track.releasePointerCapture === 'function') {
+      try { track.releasePointerCapture(e.pointerId); } catch {}
+    }
     seekFromClientX(e.clientX);
   };
 
@@ -220,7 +253,10 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
       </button>
       <div
         ref={trackRef}
-        onClick={handleTrackClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
         onKeyDown={handleTrackKeyDown}
         role="slider"
         aria-label="Voice preview scrubber"
@@ -229,7 +265,9 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
         aria-valuenow={Math.round(currentMs)}
         tabIndex={0}
         className="flex items-center gap-[2px] h-8 cursor-pointer min-w-0 flex-1 outline-none"
-        style={{ touchAction: 'manipulation' }}
+        // touch-action: none keeps the browser from stealing horizontal drags
+        // for page scroll/back-swipe while the user is scrubbing.
+        style={{ touchAction: 'none' }}
       >
         {bars.map((p, i) => {
           const h = Math.max(2, Math.round(p * 24));
