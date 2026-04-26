@@ -399,6 +399,28 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const profilePreview = pageProps?.profilePreview;
   const profilePreviewMeta = profilePreview ? (() => {
     const username = profilePreview.username || 'Player';
+    const origin = profilePreview.origin || '';
+    const badge = profilePreview.badge;
+
+    // When the share URL carries ?badge=<id>, the unlocked badge becomes
+    // the hero of the unfurl: badge OG image, badge-specific title and
+    // description, and the deep link points back at /profile/<id>?badge=<id>
+    // so the destination page can highlight the same badge.
+    if (badge && badge.achievementId) {
+      const badgeId = badge.achievementId;
+      const badgeName = badge.name || 'Achievement';
+      const badgeRarity = badge.rarity || 'Common';
+      const title = `@${username} unlocked the ${badgeName} ${badgeRarity} badge on Piks`;
+      const description = `See the ${badgeName} ${badgeRarity} badge @${username} just earned on Piks — and chase yours.`;
+      // Mirror the share URL produced by AchievementDetailModal so click
+      // throughs from the unfurl carry the badge_share ref/b params used by
+      // lib/badgeShareTracking.js as well as the ?badge= deep link param.
+      const sharePath = `/profile/${encodeURIComponent(profilePreview.profileId)}?ref=badge_share&b=${encodeURIComponent(badgeId)}&badge=${encodeURIComponent(badgeId)}`;
+      const url = `${origin}${sharePath}`;
+      const image = `${origin}/api/og/badge/${encodeURIComponent(badgeId)}?u=${encodeURIComponent(username)}`;
+      return { title, description, image, url };
+    }
+
     const wins = profilePreview.wins ?? 0;
     const losses = profilePreview.losses ?? 0;
     const winRate = profilePreview.winRate ?? 0;
@@ -408,7 +430,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
     if (winRate) descParts.push(`${winRate}% win rate`);
     descParts.push(`${earnings} coins earned`);
     const defaultDescription = `${descParts.join(' · ')}.`;
-    const origin = profilePreview.origin || '';
     const sharePath = `/profile/${encodeURIComponent(profilePreview.profileId)}`;
     const url = `${origin}${sharePath}`;
     const image = `${origin}/api/og/profile/${encodeURIComponent(profilePreview.profileId)}`;

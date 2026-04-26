@@ -35,10 +35,14 @@ const EMPTY_PROFILE = {
 export default function PublicProfile() {
   const cache = useProfileCache();
   const router = useRouter();
-  const { id } = router.query;
+  const { id, badge: badgeQuery } = router.query;
   const notificationsCtx = useNotifications();
   const [messageOpen, setMessageOpen] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
+  // Track which ?badge=<id> we've auto-opened so closing the modal doesn't
+  // immediately reopen it (and so navigating to a fresh badge link still
+  // triggers the auto-open the next time around).
+  const autoOpenedBadgeRef = useRef(null);
 
   const cachedProfileEntry = id ? cache.getProfile(id) : null;
   const cachedHistoryEntry = id ? cache.getHistory(id) : null;
@@ -135,6 +139,66 @@ export default function PublicProfile() {
     setEditingBio(false);
     setInlineError(null);
   }, [id]);
+
+  // Reset the auto-open guard when the visited profile or shared badge
+  // changes, so deep-links from social/chat unfurls always pop the modal
+  // for the badge in the URL on first arrival.
+  useEffect(() => {
+    autoOpenedBadgeRef.current = null;
+  }, [id, badgeQuery]);
+
+  // Auto-open the AchievementDetailModal for the badge referenced in
+  // /profile/<id>?badge=<achievementId>. We wait until the profile's
+  // frames list has been loaded so the modal renders progress data,
+  // and only fire once per (id, badge) pair so closing the modal
+  // doesn't immediately reopen it.
+  useEffect(() => {
+    if (!id || !badgeQuery) return;
+    const badgeId = Array.isArray(badgeQuery) ? badgeQuery[0] : badgeQuery;
+    if (!badgeId) return;
+    if (autoOpenedBadgeRef.current === badgeId) return;
+    if (!Array.isArray(profile?.frames) || profile.frames.length === 0) return;
+
+    const frame = profile.frames.find((f) => f && f.achievementId === badgeId);
+    const progress = Array.isArray(profile.allAchievements)
+      ? profile.allAchievements.find((a) => a && a.id === badgeId)
+      : null;
+
+    let detail = null;
+    if (frame) {
+      detail = {
+        achievementId: frame.achievementId,
+        name: frame.name,
+        description: frame.description,
+        rarity: frame.rarity,
+        earned: !!frame.unlocked,
+        earnedAt: progress?.earnedAt || null,
+        progressText: progress?.progressText || '',
+        progressLabel: progress?.progressLabel || '',
+        progressPercent: progress
+          ? progress.progressPercent
+          : frame.unlocked
+            ? 100
+            : 0,
+      };
+    } else if (progress) {
+      detail = {
+        achievementId: progress.id,
+        name: progress.name,
+        description: progress.description,
+        earned: !!progress.earned,
+        earnedAt: progress.earnedAt || null,
+        progressText: progress.progressText || '',
+        progressLabel: progress.progressLabel || '',
+        progressPercent: progress.progressPercent || 0,
+      };
+    }
+
+    if (detail) {
+      autoOpenedBadgeRef.current = badgeId;
+      setSelectedAchievement(detail);
+    }
+  }, [id, badgeQuery, profile?.frames, profile?.allAchievements]);
 
   // Determine "isOwnProfile" from session — does not block render.
   useEffect(() => {

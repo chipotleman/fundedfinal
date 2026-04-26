@@ -139,7 +139,14 @@ export default function AchievementDetailModal({
 
     const origin = window.location.origin;
     const profilePath = `/profile/${encodeURIComponent(viewerProfileId)}`;
-    const shareUrl = `${origin}${profilePath}?ref=${BADGE_SHARE_REF}&b=${encodeURIComponent(achievementId)}`;
+    // `ref` + `b` drive the badge-share analytics that the profile page
+    // strips from the URL after firing (see lib/badgeShareTracking.js).
+    // `badge` is the OG-meta param read by lib/profile-preview.js so
+    // social/chat unfurls swap the generic profile preview for the
+    // badge-specific OG image, title, and description — it is left in
+    // place so the destination page can also auto-open the modal for
+    // the same badge.
+    const shareUrl = `${origin}${profilePath}?ref=${BADGE_SHARE_REF}&b=${encodeURIComponent(achievementId)}&badge=${encodeURIComponent(achievementId)}`;
     const shareText = `I just unlocked the ${displayName} ${rarity} badge on Piks!`;
     const shareTitle = `${displayName} unlocked on Piks`;
     const imagePath = `/api/og/badge/${encodeURIComponent(achievementId)}?u=${encodeURIComponent(shareUsername || 'Player')}`;
