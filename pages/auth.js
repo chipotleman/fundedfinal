@@ -58,25 +58,109 @@ export default function AuthPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Load purchased challenge from localStorage if it exists
+  // Decide whether to show the challenge-start step. We intentionally do NOT
+  // trust localStorage.purchased_challenge as authoritative — a stale or
+  // forged entry would otherwise drop the user on the start screen, where
+  // /api/challenges/start will just 404. Instead, once the user is signed
+  // in we verify with the server that they actually have an active/pending
+  // purchased challenge before flipping to the challenge step.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const purchasedChallenge = localStorage.getItem('purchased_challenge');
-      if (purchasedChallenge) {
-        try {
-          const challengeData = JSON.parse(purchasedChallenge);
-          setSelectedChallenge(challengeData);
-          // If user already authenticated, go straight to challenge start
-          if (session?.user) {
-            setStep('challenge');
-          }
-        } catch (error) {
-          console.error('Error loading purchased challenge:', error);
-          localStorage.removeItem('purchased_challenge');
+    if (typeof window === 'undefined') return;
+
+    const purchasedChallenge = localStorage.getItem('purchased_challenge');
+    if (!purchasedChallenge) return;
+
+    // Wait until we know who the user is. If they're not signed in yet,
+    // leave them on the auth form so they can sign in/up first.
+    if (!session?.user) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const response = await fetch('/api/challenges/active');
+        if (cancelled) return;
+
+        // Only treat a clean 200 response as authoritative. Transient
+        // failures (5xx, network errors) shouldn't strand the user on
+        // /packages — leave them on the auth form so they can retry.
+        if (!response.ok) {
+          console.error(
+            'Failed to verify purchased challenge: status',
+            response.status,
+          );
+          return;
         }
+
+        const data = await response.json().catch(() => null);
+        if (cancelled) return;
+
+        if (!data || data.challenge === undefined) {
+          console.error(
+            'Failed to verify purchased challenge: malformed response',
+          );
+          return;
+        }
+
+        const activeChallenge = data.challenge;
+
+        if (!activeChallenge) {
+          // Server explicitly says there is no active/pending challenge —
+          // clear the stale localStorage breadcrumb and send the user
+          // somewhere they can actually buy one instead of a misleading
+          // start screen.
+          localStorage.removeItem('purchased_challenge');
+          if (cancelled) return;
+          router.replace('/packages');
+          return;
+        }
+
+        const startingBalance = Number(activeChallenge.startingBalance);
+        const profitTarget =
+          activeChallenge.profitTarget !== null &&
+          activeChallenge.profitTarget !== undefined
+            ? Number(activeChallenge.profitTarget)
+            : null;
+
+        // Match the server's challenge to one of the visible tiers so the
+        // matching card is highlighted. We match on challengeType (e.g.
+        // "starter"/"pro"/"elite") and fall back to challenge name.
+        const tierKey =
+          typeof activeChallenge.challengeType === 'string'
+            ? activeChallenge.challengeType.toLowerCase()
+            : '';
+        const matchedTier = challenges.find((tier) => {
+          const tierName = tier.name.toLowerCase();
+          return (
+            (tierKey && tierName.startsWith(tierKey)) ||
+            (typeof activeChallenge.challengeName === 'string' &&
+              tierName === activeChallenge.challengeName.toLowerCase())
+          );
+        });
+
+        setSelectedChallenge({
+          ...(matchedTier ?? {}),
+          id: matchedTier?.id ?? activeChallenge.id,
+          purchasedId: activeChallenge.id,
+          name: matchedTier?.name ?? activeChallenge.challengeName,
+          startingBalance: Number.isFinite(startingBalance)
+            ? startingBalance
+            : matchedTier?.startingBalance ?? null,
+          target: Number.isFinite(profitTarget)
+            ? profitTarget
+            : matchedTier?.target ?? null,
+        });
+        setStep('challenge');
+      } catch (error) {
+        if (cancelled) return;
+        console.error('Error verifying purchased challenge:', error);
       }
-    }
-  }, [session]);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session, router]);
 
   const challenges = [
     {
