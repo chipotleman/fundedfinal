@@ -442,8 +442,59 @@ export default function Dashboard() {
       })
       .filter(Boolean)
       .sort((a, b) => a.diff - b.diff)
-      .map(({ game }) => game);
+      .map(({ game, diff }) => ({ ...game, _scoreGap: diff }));
   }, [categorizedGames.liveGames]);
+
+  // Track which close games just got tighter than they were on the previous tick.
+  // We compare each game's current score gap to the previously-seen gap and flag
+  // any decrease so the card can briefly highlight without shifting layout.
+  const prevGapsRef = useRef(new Map());
+  const [tightenedGames, setTightenedGames] = useState({});
+  const HIGHLIGHT_MS = 5000;
+
+  useEffect(() => {
+    const newlyTightened = {};
+    const seenIds = new Set();
+    closeGames.forEach((game) => {
+      seenIds.add(game.id);
+      const currentDiff = game._scoreGap;
+      if (typeof currentDiff !== 'number') return;
+      const prevDiff = prevGapsRef.current.get(game.id);
+      if (typeof prevDiff === 'number' && currentDiff < prevDiff) {
+        newlyTightened[game.id] = Date.now();
+      }
+      prevGapsRef.current.set(game.id, currentDiff);
+    });
+    // Drop any tracked games no longer in the rail so the map can't grow unbounded
+    for (const id of Array.from(prevGapsRef.current.keys())) {
+      if (!seenIds.has(id)) prevGapsRef.current.delete(id);
+    }
+    if (Object.keys(newlyTightened).length > 0) {
+      setTightenedGames((prev) => ({ ...prev, ...newlyTightened }));
+    }
+  }, [closeGames]);
+
+  // Clear the highlight after a short window so it never lingers.
+  useEffect(() => {
+    const ids = Object.keys(tightenedGames);
+    if (ids.length === 0) return;
+    const now = Date.now();
+    const earliest = Math.min(...Object.values(tightenedGames));
+    const remaining = Math.max(0, HIGHLIGHT_MS - (now - earliest));
+    const timer = setTimeout(() => {
+      const cutoff = Date.now() - HIGHLIGHT_MS;
+      setTightenedGames((prev) => {
+        let changed = false;
+        const next = {};
+        for (const [id, ts] of Object.entries(prev)) {
+          if (ts > cutoff) next[id] = ts;
+          else changed = true;
+        }
+        return changed ? next : prev;
+      });
+    }, remaining + 50);
+    return () => clearTimeout(timer);
+  }, [tightenedGames]);
 
   // Sport filter mappings
   const sportMappings = useMemo(() => ({
@@ -680,16 +731,32 @@ export default function Dashboard() {
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
             {closeGames.map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
+              const isTightened = !!tightenedGames[game.id];
               return (
                 <div 
                   key={game.id} 
-                  className="flex-shrink-0 w-[260px] rounded-xl overflow-hidden" 
-                  style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}
+                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden ${isTightened ? 'close-game-tightened' : ''}`}
+                  style={{
+                    backgroundColor: '#0d0d0d',
+                    border: `1px solid ${isTightened ? '#10b981' : '#1a1a1a'}`,
+                    boxShadow: isTightened ? '0 0 18px rgba(16, 185, 129, 0.35)' : 'none',
+                    transition: 'border-color 250ms ease, box-shadow 250ms ease',
+                  }}
                 >
                   <div className="p-3.5">
                     <div className="flex items-center gap-2 mb-2.5">
                       <span className="text-gray-500 text-[11px] font-medium">{game.sportName}</span>
-                      {isLive ? (
+                      {isTightened ? (
+                        <div
+                          className="flex items-center gap-1 ml-auto px-2 py-0.5 rounded-full"
+                          style={{
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            border: '1px solid rgba(16, 185, 129, 0.45)',
+                          }}
+                        >
+                          <span className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider">Just got closer</span>
+                        </div>
+                      ) : isLive ? (
                         <div className="flex items-center gap-1 ml-auto">
                           <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
                           <span className="text-red-500 text-[11px] font-semibold">LIVE</span>

@@ -267,6 +267,21 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+@keyframes close-game-tightened-pulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(16, 185, 129, 0.30); }
+  50%      { box-shadow: 0 0 26px rgba(16, 185, 129, 0.55); }
+}
+
+.close-game-tightened {
+  animation: close-game-tightened-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .close-game-tightened {
+    animation: none;
+  }
+}
+
 .animate-slide-up {
   animation: slide-up 0.6s ease-out;
 }
