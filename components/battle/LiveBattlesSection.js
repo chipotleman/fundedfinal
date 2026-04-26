@@ -946,6 +946,10 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
   };
 
   const handleCardTap = () => {
+    if (isIdle) {
+      handleNavigate();
+      return;
+    }
     if (onToggle) onToggle();
     else handleNavigate();
   };
@@ -1011,8 +1015,12 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`Your battle — ${topLabel}. Tap to ${isExpanded ? 'hide' : 'show'} preview.`}
-      aria-expanded={isExpanded}
+      aria-label={
+        isIdle
+          ? 'Your battle — Tap to start a 1v1'
+          : `Your battle — ${topLabel}. Tap to ${isExpanded ? 'hide' : 'show'} preview.`
+      }
+      aria-expanded={isIdle ? undefined : isExpanded}
       style={{
         background:
           'linear-gradient(180deg, rgba(139,92,246,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
@@ -1327,6 +1335,14 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
   const toggleExpandedKey = useCallback((key) => {
     setExpandedKey((prev) => (prev === key ? null : key));
   }, []);
+
+  const youVsStatus = youVsState?.status || 'idle';
+  const youVsIsIdle = youVsStatus !== 'active' && youVsStatus !== 'waiting' && youVsStatus !== 'queued';
+  useEffect(() => {
+    if (youVsIsIdle) {
+      setExpandedKey((prev) => (prev === 'youvs' ? null : prev));
+    }
+  }, [youVsIsIdle]);
 
   useEffect(() => {
     fetch('/api/admin/battle-avatars')
