@@ -34,6 +34,55 @@ function PurpleNameLink({ user, className = '', style, fallback = 'Someone' }) {
  * username as the focal point, soft purple glow background, clear
  * "wants to be your friend" framing, and prominent Accept / Decline.
  */
+function formatJoinedAgo(iso) {
+  if (!iso) return '';
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return '';
+  const diffMs = Date.now() - t;
+  if (diffMs < 0) return '';
+  const day = 86400000;
+  const days = Math.floor(diffMs / day);
+  if (days < 1) return 'today';
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) {
+    const w = Math.floor(days / 7);
+    return `${w}w ago`;
+  }
+  if (days < 365) {
+    const mo = Math.floor(days / 30);
+    return `${mo}mo ago`;
+  }
+  const y = Math.floor(days / 365);
+  return `${y}y ago`;
+}
+
+/**
+ * Picks the most useful single line of social proof to show under the
+ * "wants to be your friend" subtitle. Mutual friends rank highest because
+ * they're the most actionable signal, then prior battle history, then a
+ * friendly "joined Piks <X> ago" fallback so the slot rarely looks empty.
+ * Returns null when there's truly nothing to say so the card collapses
+ * gracefully instead of rendering an awkward placeholder.
+ */
+function pickContextLine(context) {
+  if (!context || typeof context !== 'object') return null;
+  const mutual = Number(context.mutualFriends) || 0;
+  const battles = Number(context.priorBattles) || 0;
+  if (mutual > 0) {
+    return mutual === 1 ? '1 mutual friend' : `${mutual} mutual friends`;
+  }
+  if (battles > 0) {
+    return battles === 1
+      ? 'Played 1 battle against you'
+      : `Played ${battles} battles against you`;
+  }
+  if (context.joinedAt) {
+    const ago = formatJoinedAgo(context.joinedAt);
+    if (ago) return `Joined Piks ${ago}`;
+  }
+  return null;
+}
+
 export default function FriendRequestCard({
   sender,
   time,
@@ -42,11 +91,16 @@ export default function FriendRequestCard({
   onDecline,
   onDismiss,
   compact = false,
+  // Optional social-proof payload from /api/notifications. When present,
+  // the card shows a small line of context (mutual friends, prior battles,
+  // or join age) under "wants to be your friend".
+  context = null,
   // When true, the entire card sits inside an outer container that already
   // has its own background/border (e.g. inside a list section). We drop the
   // outer rounded card chrome so adjacent rows don't get extra spacing.
   inset = false,
 }) {
+  const contextLine = pickContextLine(context);
   const avatarSize = compact ? 52 : 60;
   const containerCls = inset
     ? 'relative px-4 py-3'
@@ -115,6 +169,14 @@ export default function FriendRequestCard({
           <div className="text-purple-100/80 text-xs sm:text-sm mt-0.5">
             wants to be your friend
           </div>
+          {contextLine && (
+            <div
+              className="text-[11px] sm:text-xs mt-0.5 truncate"
+              style={{ color: 'rgba(216,180,254,0.85)' }}
+            >
+              {contextLine}
+            </div>
+          )}
         </div>
       </div>
 

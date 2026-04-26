@@ -102,6 +102,7 @@ function Toast({ toast, ctx, router }) {
       <div style={baseStyle}>
         <FriendRequestCard
           sender={sender}
+          context={toast.payload?.context}
           busy={!!busy}
           compact
           onAccept={() => wrap('accept', async () => {

@@ -98,11 +98,93 @@ export default async function handler(req, res) {
       const [p, u] = await Promise.all([
         db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar, equippedFrame: profiles.equippedFrame, lastSeenAt: profiles.lastSeenAt })
           .from(profiles).where(inArray(profiles.id, senderIds)),
-        db.select({ id: users.id, email: users.email, image: users.image })
+        db.select({ id: users.id, email: users.email, image: users.image, createdAt: users.createdAt })
           .from(users).where(inArray(users.id, senderIds)),
       ]);
       p.forEach(x => profMap.set(x.id, x));
       u.forEach(x => userMap.set(x.id, x));
+    }
+
+    // Friend-request social proof: compute mutual-friend count and prior
+    // 1v1 battle count for each pending friend-request sender, in batched
+    // queries that avoid N+1 lookups. Falls back to "joined Piks <X> ago"
+    // on the client when nothing else is available.
+    const friendCtxMap = new Map();
+    const friendRequestSenderIds = [...new Set(pendingFriends.map(f => f.userId).filter(Boolean))];
+    if (friendRequestSenderIds.length > 0) {
+      try {
+        // 1. My accepted friend ids — one query.
+        const myFriendRows = await db
+          .select({ userId: friendships.userId, friendId: friendships.friendId })
+          .from(friendships)
+          .where(and(
+            or(eq(friendships.userId, userId), eq(friendships.friendId, userId)),
+            eq(friendships.status, 'accepted'),
+          ));
+        const myFriendIds = new Set(
+          myFriendRows.map(r => (r.userId === userId ? r.friendId : r.userId)).filter(Boolean)
+        );
+
+        // 2. All accepted friendships involving any of the senders — one query.
+        let senderFriendIdsBySender = new Map();
+        if (myFriendIds.size > 0) {
+          const senderFriendRows = await db
+            .select({ userId: friendships.userId, friendId: friendships.friendId })
+            .from(friendships)
+            .where(and(
+              or(
+                inArray(friendships.userId, friendRequestSenderIds),
+                inArray(friendships.friendId, friendRequestSenderIds),
+              ),
+              eq(friendships.status, 'accepted'),
+            ));
+          for (const row of senderFriendRows) {
+            // Determine which side is the sender and which is the "other".
+            const senderSideIds = [];
+            if (friendRequestSenderIds.includes(row.userId)) senderSideIds.push({ sid: row.userId, other: row.friendId });
+            if (friendRequestSenderIds.includes(row.friendId)) senderSideIds.push({ sid: row.friendId, other: row.userId });
+            for (const { sid, other } of senderSideIds) {
+              if (!other || other === userId) continue;
+              if (!senderFriendIdsBySender.has(sid)) senderFriendIdsBySender.set(sid, new Set());
+              senderFriendIdsBySender.get(sid).add(other);
+            }
+          }
+        }
+
+        // 3. Completed matchups between me and any sender — one query.
+        const priorBattlesBySender = new Map();
+        const battleRows = await db
+          .select({ user1Id: matchups.user1Id, user2Id: matchups.user2Id })
+          .from(matchups)
+          .where(and(
+            eq(matchups.status, 'completed'),
+            or(
+              and(eq(matchups.user1Id, userId), inArray(matchups.user2Id, friendRequestSenderIds)),
+              and(eq(matchups.user2Id, userId), inArray(matchups.user1Id, friendRequestSenderIds)),
+            ),
+          ));
+        for (const row of battleRows) {
+          const otherId = row.user1Id === userId ? row.user2Id : row.user1Id;
+          if (!otherId) continue;
+          priorBattlesBySender.set(otherId, (priorBattlesBySender.get(otherId) || 0) + 1);
+        }
+
+        // 4. Build the per-sender context payload.
+        for (const sid of friendRequestSenderIds) {
+          let mutualFriends = 0;
+          const senderSet = senderFriendIdsBySender.get(sid);
+          if (senderSet && myFriendIds.size > 0) {
+            for (const fid of senderSet) {
+              if (myFriendIds.has(fid)) mutualFriends += 1;
+            }
+          }
+          const priorBattles = priorBattlesBySender.get(sid) || 0;
+          const joinedAt = userMap.get(sid)?.createdAt
+            ? new Date(userMap.get(sid).createdAt).toISOString()
+            : null;
+          friendCtxMap.set(sid, { mutualFriends, priorBattles, joinedAt });
+        }
+      } catch (_e) {}
     }
 
     const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
@@ -147,6 +229,7 @@ export default async function handler(req, res) {
       id: f.id,
       createdAt: f.createdAt,
       sender: buildSender(f.userId),
+      context: friendCtxMap.get(f.userId) || null,
     }));
 
     // Group unread messages by sender — keep only the most recent so the

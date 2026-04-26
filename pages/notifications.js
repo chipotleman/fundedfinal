@@ -483,6 +483,7 @@ function NotificationsFeed({ ctx, router, filter }) {
               <FriendRequestCard
                 key={fr.id}
                 sender={fr.sender}
+                context={fr.context}
                 time={timeAgo(fr.createdAt)}
                 busy={busyId === fr.id}
                 onAccept={() => wrap(fr.id, () => ctx.acceptFriend(fr.id))}

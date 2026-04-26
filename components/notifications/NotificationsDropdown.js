@@ -248,6 +248,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                 <FriendRequestCard
                   key={fr.id}
                   sender={fr.sender}
+                  context={fr.context}
                   time={timeAgo(fr.createdAt)}
                   busy={busyId === fr.id}
                   compact
