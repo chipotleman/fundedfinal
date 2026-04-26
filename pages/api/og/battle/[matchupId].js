@@ -94,10 +94,11 @@ export default async function handler(req) {
   const { searchParams, pathname } = new URL(req.url);
   // Path is /api/og/battle/<matchupId>
   const matchupId = decodeURIComponent(pathname.split('/').pop() || '');
+  const momentParam = searchParams.get('m') || searchParams.get('moment') || null;
 
   let preview = null;
   try {
-    preview = await getBattlePreview(matchupId);
+    preview = await getBattlePreview(matchupId, { momentId: momentParam });
   } catch (_) {
     preview = null;
   }
@@ -107,6 +108,9 @@ export default async function handler(req) {
   const prize = preview?.prize || '—';
   const mode = preview?.mode || 'Battle';
   const statusLabel = preview?.statusLabel || 'Live battle';
+  const moment = preview?.moment || null;
+  const momentSelection = moment?.selection ? String(moment.selection).slice(0, 60) : null;
+  const momentOwner = moment?.ownerUsername || null;
 
   const tree = {
     type: 'div',
@@ -236,6 +240,32 @@ export default async function handler(req) {
                   children: prize,
                 },
               },
+              ...(momentSelection
+                ? [
+                    {
+                      type: 'div',
+                      props: {
+                        style: {
+                          marginTop: 18,
+                          padding: '10px 22px',
+                          borderRadius: 12,
+                          background: 'rgba(249, 115, 22, 0.15)',
+                          border: '1px solid rgba(249, 115, 22, 0.55)',
+                          color: '#fed7aa',
+                          fontSize: 24,
+                          fontWeight: 600,
+                          maxWidth: 900,
+                          display: 'flex',
+                          textAlign: 'center',
+                          justifyContent: 'center',
+                        },
+                        children: momentOwner
+                          ? `Highlight · ${momentOwner}: ${momentSelection}`
+                          : `Highlight · ${momentSelection}`,
+                      },
+                    },
+                  ]
+                : []),
             ],
           },
         },

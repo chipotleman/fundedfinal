@@ -69,6 +69,9 @@ export default function BattleHistoryGroup({
   opponentBetCount = 0,
   myBetCards,
   opponentBetCards,
+  myBetIds,
+  opponentBetIds,
+  momentBetId,
   isOpen,
   onOpenChange,
   children,
@@ -271,6 +274,9 @@ export default function BattleHistoryGroup({
           opponentBetCount={opponentBetCount}
           myBetCards={myBetCards}
           opponentBetCards={opponentBetCards}
+          myBetIds={myBetIds}
+          opponentBetIds={opponentBetIds}
+          momentBetId={momentBetId}
           outcomeBadge={outcomeBadge}
           onClose={() => setIsPopupOpen(false)}
         />

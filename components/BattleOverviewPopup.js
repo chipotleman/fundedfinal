@@ -20,8 +20,28 @@ function getPopupTheme(theme) {
   };
 }
 
-export function TicketCarousel({ cards, theme, emptyMessage }) {
-  const [index, setIndex] = useState(0);
+export function TicketCarousel({
+  cards,
+  theme,
+  emptyMessage,
+  index: controlledIndex,
+  onIndexChange,
+  initialIndex = 0,
+  highlightIndex = -1,
+}) {
+  const [internalIndex, setInternalIndex] = useState(() => Math.max(0, initialIndex));
+  const isControlled = typeof controlledIndex === 'number';
+  const index = isControlled ? controlledIndex : internalIndex;
+
+  const updateIndex = useCallback((updater) => {
+    setInternalIndex((current) => {
+      const baseValue = isControlled ? controlledIndex : current;
+      const nextValue = typeof updater === 'function' ? updater(baseValue) : updater;
+      if (onIndexChange) onIndexChange(nextValue);
+      return isControlled ? current : nextValue;
+    });
+  }, [isControlled, controlledIndex, onIndexChange]);
+
   const touchStartX = useRef(null);
   const mouseStartX = useRef(null);
   const isDragging = useRef(false);
@@ -30,13 +50,13 @@ export function TicketCarousel({ cards, theme, emptyMessage }) {
 
   const prev = useCallback((e) => {
     e && e.stopPropagation();
-    setIndex(i => Math.max(0, i - 1));
-  }, []);
+    updateIndex(i => Math.max(0, i - 1));
+  }, [updateIndex]);
 
   const next = useCallback((e) => {
     e && e.stopPropagation();
-    setIndex(i => Math.min(total - 1, i + 1));
-  }, [total]);
+    updateIndex(i => Math.min(total - 1, i + 1));
+  }, [total, updateIndex]);
 
   const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
 
@@ -46,6 +66,20 @@ export function TicketCarousel({ cards, theme, emptyMessage }) {
     if (Math.abs(diff) > 40) { diff > 0 ? next() : prev(); }
     touchStartX.current = null;
   };
+
+  // Pulse the highlighted card (when arriving from a deep-linked moment)
+  // briefly so the user can see which pick the share was about. Cleared on
+  // unmount or when the highlighted index changes.
+  const [pulseActive, setPulseActive] = useState(false);
+  useEffect(() => {
+    if (highlightIndex < 0 || highlightIndex !== index) {
+      setPulseActive(false);
+      return;
+    }
+    setPulseActive(true);
+    const t = setTimeout(() => setPulseActive(false), 1800);
+    return () => clearTimeout(t);
+  }, [highlightIndex, index]);
 
   const onMouseDown = (e) => { mouseStartX.current = e.clientX; isDragging.current = true; };
 
@@ -64,12 +98,50 @@ export function TicketCarousel({ cards, theme, emptyMessage }) {
     if (e.key === 'ArrowRight') next(e);
   };
 
+  const goTo = useCallback((i) => {
+    updateIndex(() => Math.max(0, Math.min(total - 1, i)));
+  }, [total, updateIndex]);
+
   if (!cards || total === 0) {
     return <p className="text-xs text-gray-500 py-4 text-center">{emptyMessage}</p>;
   }
 
+  const renderCard = (card, i) => (
+    <div
+      key={i}
+      className={`w-full flex-shrink-0 transition-shadow duration-300 ${
+        pulseActive && i === highlightIndex ? 'piks-moment-pulse rounded-xl' : ''
+      }`}
+    >
+      {card}
+    </div>
+  );
+
+  // Shared pulse styles for the deep-linked moment highlight. Defined
+  // once via styled-jsx with `:global` so the animation applies whether
+  // we're in the single-card or multi-card branch.
+  const pulseStyles = (
+    <style jsx>{`
+      @keyframes piks-moment-pulse-anim {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+        50% { box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.55), 0 0 24px rgba(249, 115, 22, 0.45); }
+      }
+      :global(.piks-moment-pulse) {
+        animation: piks-moment-pulse-anim 1.4s ease-in-out 1;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        :global(.piks-moment-pulse) { animation: none; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.55); }
+      }
+    `}</style>
+  );
+
   if (total === 1) {
-    return <div>{cards[0]}</div>;
+    return (
+      <>
+        {renderCard(cards[0], 0)}
+        {pulseStyles}
+      </>
+    );
   }
 
   return (
@@ -86,9 +158,7 @@ export function TicketCarousel({ cards, theme, emptyMessage }) {
           className="flex transition-transform duration-300 ease-in-out"
           style={{ transform: `translateX(-${index * 100}%)` }}
         >
-          {cards.map((card, i) => (
-            <div key={i} className="w-full flex-shrink-0">{card}</div>
-          ))}
+          {cards.map(renderCard)}
         </div>
       </div>
 
@@ -111,7 +181,7 @@ export function TicketCarousel({ cards, theme, emptyMessage }) {
             <button
               key={i}
               type="button"
-              onClick={(e) => { e.stopPropagation(); setIndex(i); }}
+              onClick={(e) => { e.stopPropagation(); goTo(i); }}
               className="rounded-full transition-all duration-200"
               style={{
                 width: i === index ? 16 : 6,
@@ -140,6 +210,7 @@ export function TicketCarousel({ cards, theme, emptyMessage }) {
           {index + 1} / {total}
         </span>
       </div>
+      {pulseStyles}
     </div>
   );
 }
@@ -153,6 +224,9 @@ export default function BattleOverviewPopup({
   opponentBetCount,
   myBetCards,
   opponentBetCards,
+  myBetIds,
+  opponentBetIds,
+  momentBetId,
   outcomeBadge: rawOutcomeBadge,
   onClose,
 }) {
@@ -167,10 +241,42 @@ export default function BattleOverviewPopup({
         border: theme.borderColor,
       }
     : rawOutcomeBadge;
-  const [activeTab, setActiveTab] = useState('mine');
+
+  // Resolve the deep-linked "moment" pick (if any) to the side and
+  // carousel index so we can switch tabs + scroll the carousel + pulse
+  // the matching card on first paint, mirroring the badge auto-open
+  // behaviour on the profile page.
+  const safeMyIds = Array.isArray(myBetIds) ? myBetIds : [];
+  const safeOppIds = Array.isArray(opponentBetIds) ? opponentBetIds : [];
+  const momentIdStr = momentBetId != null ? String(momentBetId) : null;
+  const momentMyIndex = momentIdStr
+    ? safeMyIds.findIndex((id) => String(id) === momentIdStr)
+    : -1;
+  const momentOppIndex = momentIdStr && momentMyIndex < 0
+    ? safeOppIds.findIndex((id) => String(id) === momentIdStr)
+    : -1;
+  const momentSide = momentMyIndex >= 0
+    ? 'mine'
+    : momentOppIndex >= 0
+      ? 'theirs'
+      : null;
+
+  const [activeTab, setActiveTab] = useState(momentSide || 'mine');
+  const [mineIndex, setMineIndex] = useState(Math.max(0, momentMyIndex));
+  const [theirsIndex, setTheirsIndex] = useState(Math.max(0, momentOppIndex));
   const [shareToast, setShareToast] = useState(null);
   const toastTimerRef = useRef(null);
   const scrollContainerRef = useRef(null);
+
+  // When the deep-linked moment changes (e.g. user opens a new shared
+  // popup without unmounting), realign the active tab and indices so the
+  // pulse lands on the right card.
+  useEffect(() => {
+    if (!momentSide) return;
+    setActiveTab(momentSide);
+    if (momentSide === 'mine' && momentMyIndex >= 0) setMineIndex(momentMyIndex);
+    if (momentSide === 'theirs' && momentOppIndex >= 0) setTheirsIndex(momentOppIndex);
+  }, [momentSide, momentMyIndex, momentOppIndex]);
 
   useModalScrollLock(true, { restoreScroll: true, allowScrollRef: scrollContainerRef });
 
@@ -184,12 +290,23 @@ export default function BattleOverviewPopup({
     toastTimerRef.current = setTimeout(() => setShareToast(null), 2200);
   };
 
-  const buildShareUrl = () => {
+  // Use the currently focused pick on the active tab as the share moment
+  // so users can share whichever pivotal pik they're showing off.
+  const focusedMomentId = activeTab === 'mine'
+    ? safeMyIds[mineIndex]
+    : safeOppIds[theirsIndex];
+
+  const buildShareUrl = (overrideMomentId) => {
     const id = matchupId || battle?.matchupId || battle?.id;
     if (!id) return null;
-    if (typeof window === 'undefined') return `/bet-history?battle=${id}`;
+    const moment = overrideMomentId !== undefined ? overrideMomentId : focusedMomentId;
+    if (typeof window === 'undefined') {
+      const m = moment ? `&m=${encodeURIComponent(moment)}` : '';
+      return `/bet-history?battle=${id}${m}`;
+    }
     const url = new URL('/bet-history', window.location.origin);
     url.searchParams.set('battle', id);
+    if (moment) url.searchParams.set('m', moment);
     return url.toString();
   };
 
@@ -495,6 +612,9 @@ export default function BattleOverviewPopup({
                     cards={myBetCards && myBetCards.length > 0 ? myBetCards : null}
                     theme={theme}
                     emptyMessage="No piks placed in this battle."
+                    index={mineIndex}
+                    onIndexChange={setMineIndex}
+                    highlightIndex={momentSide === 'mine' ? momentMyIndex : -1}
                   />
                 ) : (
                   <TicketCarousel
@@ -502,6 +622,9 @@ export default function BattleOverviewPopup({
                     cards={opponentBetCards && opponentBetCards.length > 0 ? opponentBetCards : null}
                     theme={theme}
                     emptyMessage={`${opponent.username} hasn't placed any piks yet.`}
+                    index={theirsIndex}
+                    onIndexChange={setTheirsIndex}
+                    highlightIndex={momentSide === 'theirs' ? momentOppIndex : -1}
                   />
                 )}
               </div>

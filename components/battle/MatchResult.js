@@ -289,13 +289,51 @@ export default function MatchResult({
   const animatedCashPnl = useCountUp(Math.abs(cashPnl), 1000, showStats);
   const animatedPrize = useCountUp(prizeWon, 1100, showStats);
 
-  const handleShare = useCallback(() => {
+  const handleShare = useCallback(async () => {
     const text = `I just won $${formatMoney(prizeWon)} on Piks! 🏆🔥`;
-    navigator.clipboard.writeText(text).then(() => {
+    const id = matchup?.id;
+
+    // Pick a deep-linkable "moment" — the biggest winning pik on our side,
+    // if we have summary data loaded — so the shared link auto-opens the
+    // pivotal pick. Falls back to a plain battle deep link when no summary
+    // is available yet.
+    let momentId = null;
+    if (Array.isArray(summaryData?.myBets)) {
+      const winners = summaryData.myBets.filter((b) => Number(b?.pnl) > 0);
+      if (winners.length > 0) {
+        winners.sort((a, b) => Number(b.pnl) - Number(a.pnl));
+        momentId = winners[0].id || null;
+      }
+    }
+
+    let url = null;
+    if (id && typeof window !== 'undefined') {
+      try {
+        const u = new URL('/bet-history', window.location.origin);
+        u.searchParams.set('battle', id);
+        if (momentId) u.searchParams.set('m', momentId);
+        url = u.toString();
+      } catch (_) {
+        url = null;
+      }
+    }
+
+    if (url && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: 'Piks', text, url });
+        return;
+      } catch (_) {
+        // user cancelled or share failed — fall through to clipboard
+      }
+    }
+
+    const payload = url ? `${text} ${url}` : text;
+    try {
+      await navigator.clipboard.writeText(payload);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {});
-  }, [prizeWon]);
+    } catch (_) {}
+  }, [prizeWon, matchup?.id, summaryData]);
 
   // Per-reaction expiry timers. Each reaction owns its own timer so rapid-fire
   // reactions all expire independently and don't get cancelled when a newer

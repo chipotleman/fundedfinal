@@ -30,6 +30,13 @@ export default function BetHistory() {
 
   const [loading, setLoading] = useState(true);
   const [openBattleId, setOpenBattleId] = useState(null);
+  // The "moment" pick id from `?m=`/`?moment=` is captured into local
+  // state alongside the battle id it was captured for so we can strip the
+  // param from the URL immediately (mirroring the badge auto-open
+  // pattern) without losing the highlight target — and so a stale moment
+  // id can't leak across battle popups opened back-to-back. Shape:
+  // `{ battleId, momentId } | null`.
+  const [openBattleMoment, setOpenBattleMoment] = useState(null);
 
   // Sync open battle popup with the ?battle= URL query so users can deep-link
   useEffect(() => {
@@ -38,6 +45,37 @@ export default function BetHistory() {
     const next = typeof queryBattle === 'string' && queryBattle ? queryBattle : null;
     setOpenBattleId(prev => (prev === next ? prev : next));
   }, [router.isReady, router.query.battle]);
+
+  // Capture the "moment" pick id from the URL into local state, then strip
+  // it so back/forward navigation doesn't re-trigger the highlight pulse
+  // and so the URL stays clean once the popup is showing the right pick.
+  // Accepts both `?m=` (short form used in shared links) and `?moment=`
+  // for parity with server-side preview parsers. We bind the moment to
+  // the `?battle=` value present at capture time so consumers only fire
+  // the highlight on the matching battle even if `openBattleId` swaps
+  // before the moment can be consumed.
+  useEffect(() => {
+    if (!router.isReady) return;
+    const rawShort = router.query.m;
+    const rawLong = router.query.moment;
+    const raw = rawShort != null ? rawShort : rawLong;
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    if (typeof value !== 'string' || !value) return;
+    const rawBattle = router.query.battle;
+    const battleValue = Array.isArray(rawBattle) ? rawBattle[0] : rawBattle;
+    setOpenBattleMoment({
+      battleId: typeof battleValue === 'string' && battleValue ? battleValue : null,
+      momentId: value,
+    });
+    const cleaned = { ...router.query };
+    delete cleaned.m;
+    delete cleaned.moment;
+    router.replace(
+      { pathname: router.pathname, query: cleaned },
+      undefined,
+      { shallow: true, scroll: false },
+    );
+  }, [router.isReady, router.query.m, router.query.moment, router.query.battle]);
 
   // If a deep-linked battle isn't in our battles map (e.g. brand-new signup
   // arriving from a shared public battle preview), fetch its public view so
@@ -556,9 +594,23 @@ export default function BetHistory() {
               const battleEntries = Object.entries(allBattleBets)
                 .filter(([mid]) => mid === openBattleId || battleMatchesFilter(battlesMap[mid]))
                 .sort((a, b) => {
-                  const aMax = Math.max(...a[1].map(x => new Date(x.placedAt || 0).getTime()));
-                  const bMax = Math.max(...b[1].map(x => new Date(x.placedAt || 0).getTime()));
-                  return bMax - aMax;
+                  // Deep-linked fallback groups can have an empty bet
+                  // array (viewer is not a participant). Fall back to the
+                  // battle's own timestamp so sorting stays deterministic
+                  // instead of degenerating to -Infinity from an empty
+                  // Math.max.
+                  const fallbackTs = (mid) => {
+                    const b = battlesMap[mid];
+                    return new Date(b?.endsAt || b?.createdAt || 0).getTime();
+                  };
+                  const placedTs = (bets) => (bets.length === 0
+                    ? -Infinity
+                    : Math.max(...bets.map(x => new Date(x.placedAt || 0).getTime())));
+                  const aTs = placedTs(a[1]);
+                  const bTs = placedTs(b[1]);
+                  const aFinal = Number.isFinite(aTs) ? aTs : fallbackTs(a[0]);
+                  const bFinal = Number.isFinite(bTs) ? bTs : fallbackTs(b[0]);
+                  return bFinal - aFinal;
                 });
 
               // Filter standalone bets by per-bet status.
@@ -568,7 +620,14 @@ export default function BetHistory() {
 
               const groupNodes = battleEntries.map(([mid, bets]) => {
                 const battle = battlesMap[mid];
-                const myBetsSorted = [...bets].sort(sortByDateDesc);
+                // For deep-linked public battles where the viewer has no
+                // local bets (e.g. arriving from a shared link as a
+                // non-participant), fall back to the public payload's
+                // `battle.myBets` so the moment id from the share URL can
+                // resolve and the popup can still render rich content.
+                const isPublicFallback = bets.length === 0 && Array.isArray(battle.myBets) && battle.myBets.length > 0;
+                const mineSourced = isPublicFallback ? battle.myBets : bets;
+                const myBetsSorted = [...mineSourced].sort(sortByDateDesc);
                 const oppBetsSorted = [...(battle.opponentBets || [])].sort(sortByDateDesc);
                 const isBattleEnded = battle.status !== 'active' && battle.status !== 'matched';
                 return (
@@ -577,8 +636,11 @@ export default function BetHistory() {
                     battle={battle}
                     matchupId={mid}
                     myProfile={myProfile}
-                    betCount={bets.length}
+                    betCount={myBetsSorted.length}
                     opponentBetCount={oppBetsSorted.length}
+                    myBetIds={myBetsSorted.map(b => b.id)}
+                    opponentBetIds={oppBetsSorted.map(b => b.id)}
+                    momentBetId={openBattleMoment && openBattleMoment.battleId === mid ? openBattleMoment.momentId : null}
                     isOpen={openBattleId === mid}
                     onOpenChange={(open) => handleBattleOpenChange(mid, open)}
                     myBetCards={myBetsSorted.map(bet => (

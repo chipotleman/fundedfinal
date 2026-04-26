@@ -159,7 +159,11 @@ export async function getServerSideProps(context) {
   if (!id || typeof id !== 'string') return { props: {} };
   try {
     const { getBattlePreview } = await import('../../../lib/battle-preview');
-    const preview = await getBattlePreview(id);
+    const rawMoment = context.query?.m ?? context.query?.moment;
+    const momentId = typeof rawMoment === 'string' && rawMoment
+      ? rawMoment
+      : (Array.isArray(rawMoment) ? rawMoment[0] : null);
+    const preview = await getBattlePreview(id, { momentId });
     if (!preview) return { props: {} };
 
     const proto = (context.req?.headers['x-forwarded-proto'] || '').toString().split(',')[0]
@@ -189,6 +193,7 @@ export async function getServerSideProps(context) {
       description = `${preview.mode} battle on Piks · ${preview.prize} prize pool · ${preview.statusLabel}.`;
     }
 
+    const momentQS = momentId ? `?m=${encodeURIComponent(momentId)}` : '';
     return {
       props: {
         battlePreview: {
@@ -196,7 +201,7 @@ export async function getServerSideProps(context) {
           origin,
           title,
           description,
-          url: `/battle/replay/${encodeURIComponent(id)}`,
+          url: `/battle/replay/${encodeURIComponent(id)}${momentQS}`,
         },
       },
     };
@@ -222,6 +227,7 @@ export default function BattleReplayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [moreBattles, setMoreBattles] = useState([]);
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -353,11 +359,53 @@ export default function BattleReplayPage() {
             </svg>
             Back to battles
           </Link>
-          {endsAt && (
-            <span className="text-[11px]" style={{ color: textSecondary }}>
-              {formatLastSeen(endsAt)}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {endsAt && (
+              <span className="text-[11px]" style={{ color: textSecondary }}>
+                {formatLastSeen(endsAt)}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={async () => {
+                if (typeof window === 'undefined') return;
+                const winners = (myBets || []).filter((b) => Number(b?.pnl) > 0);
+                winners.sort((a, b) => Number(b.pnl) - Number(a.pnl));
+                const momentId = winners[0]?.id || null;
+                const shareUrl = new URL('/bet-history', window.location.origin);
+                shareUrl.searchParams.set('battle', id);
+                if (momentId) shareUrl.searchParams.set('m', momentId);
+                const url = shareUrl.toString();
+                const result = isTie
+                  ? `${player?.username || 'Player 1'} vs ${opponent?.username || 'Player 2'} — tie`
+                  : `${(player1IsWinner ? player?.username : opponent?.username) || 'Player'} won`;
+                const text = `${result} on Piks 🏆`;
+                if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+                  try {
+                    await navigator.share({ title: 'Piks battle', text, url });
+                    return;
+                  } catch (_) {}
+                }
+                try {
+                  await navigator.clipboard.writeText(`${text} ${url}`);
+                  setShareCopied(true);
+                  setTimeout(() => setShareCopied(false), 2000);
+                } catch (_) {}
+              }}
+              className="text-[11px] font-bold inline-flex items-center gap-1 px-2 py-1 rounded-md transition-colors"
+              style={{
+                color: textPrimary,
+                background: 'rgba(250,204,21,0.1)',
+                border: '1px solid rgba(250,204,21,0.35)',
+              }}
+              aria-label="Share battle"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              {shareCopied ? 'Copied!' : 'Share'}
+            </button>
+          </div>
         </div>
 
         <div

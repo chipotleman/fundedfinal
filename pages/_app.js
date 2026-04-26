@@ -370,6 +370,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const battlePreviewMeta = battlePreview ? (() => {
     const u1 = battlePreview.user1?.username || 'Player 1';
     const u2 = battlePreview.user2?.username || 'Opponent';
+    const moment = battlePreview.moment || null;
+    const momentId = battlePreview.momentId || moment?.id || null;
     let defaultTitle;
     if (battlePreview.winnerName) {
       defaultTitle = `${battlePreview.winnerName} won · ${u1} vs ${u2} on Piks`;
@@ -382,14 +384,21 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
     if (battlePreview.scoreText) descParts.push(`Final ${battlePreview.scoreText}`);
     descParts.push(`${battlePreview.prize} prize pool`);
     descParts.push(battlePreview.statusLabel);
+    if (moment?.selection) {
+      const owner = moment.ownerUsername ? `${moment.ownerUsername}: ` : '';
+      descParts.push(`Highlight · ${owner}${moment.selection}`);
+    }
     const defaultDescription = `${descParts.join(' · ')}.`;
     const origin = battlePreview.origin || '';
-    const sharePath = battlePreview.sharePath || `/bet-history?battle=${encodeURIComponent(battlePreview.matchupId)}`;
+    const momentQS = momentId ? `&m=${encodeURIComponent(momentId)}` : '';
+    const sharePath = battlePreview.sharePath
+      || `/bet-history?battle=${encodeURIComponent(battlePreview.matchupId)}${momentQS}`;
     const defaultUrl = `${origin}${sharePath}`;
     const title = battlePreview.title || defaultTitle;
     const description = battlePreview.description || defaultDescription;
+    const imageQS = momentId ? `?m=${encodeURIComponent(momentId)}` : '';
     const image = battlePreview.image
-      || `${origin}/api/og/battle/${encodeURIComponent(battlePreview.matchupId)}`;
+      || `${origin}/api/og/battle/${encodeURIComponent(battlePreview.matchupId)}${imageQS}`;
     const url = battlePreview.url
       ? (battlePreview.url.startsWith('http') ? battlePreview.url : `${origin}${battlePreview.url}`)
       : defaultUrl;
