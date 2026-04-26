@@ -15,16 +15,31 @@ in `_app.js`.
 `scripts/measure-bundle.js` reads `.next/build-manifest.json` and the
 file sizes under `.next/static`, then writes a JSON summary with:
 
-- `totalStaticBytes` — sum of every file under `.next/static` (JS, CSS,
-  media, manifests). This is the headline number the budget caps.
+- `totalStaticBytes` — sum of every file under `.next/static`
+  **excluding `.js.map` source-map files**. This is the headline number
+  the budget caps. Source maps are debug artifacts (see below); they
+  are not user-served bundle bytes.
 - `totalJsBytes` — JS-only subset of the above, reported for context.
+- `totalMapBytes` — informational; the on-disk weight of the `.js.map`
+  files emitted because `next.config.js` sets
+  `productionBrowserSourceMaps: true`. CI gets these "for free" but
+  ships them only as a workflow artifact, never to end users.
 - `perPage[route].totalBytes` — sum of every chunk the build manifest
   lists for that route (shared framework chunks + the page chunk). This
   is what a fresh visitor of that page actually downloads.
 - `perPage[route].pageChunkBytes` — size of just the per-page
   `static/chunks/pages/...` file, useful when isolating "this page got
   fatter" from "the shared chunks got fatter".
+- `perPage[route].modules` — the heaviest source files contributing to
+  that page's chunks, derived by running
+  [`source-map-explorer`](https://www.npmjs.com/package/source-map-explorer)
+  on every chunk's `.js.map`. Capped to the top 30 entries ≥ 1 KB so
+  the JSON stays scannable. This is what powers the per-module diff
+  the budget check prints when a regression hits (see below).
 - `largestPage` — the heaviest route by `totalBytes`.
+- `modulesAvailable` — `true` when at least one chunk had a usable
+  source map and the per-page module breakdown is populated; `false`
+  when the build ran without source maps and the breakdown is empty.
 
 Run it locally after `npm run build`:
 
@@ -32,18 +47,26 @@ Run it locally after `npm run build`:
 node scripts/measure-bundle.js --out bundle-current.json
 ```
 
+Pass `--no-modules` to skip the source-map analysis (faster; produces
+no per-page module breakdown — useful for ad-hoc spot-checks where you
+only need the totals).
+
 ## Current baseline
 
-Stored in [`docs/bundle-baseline.json`](./bundle-baseline.json).
+Stored in [`docs/bundle-baseline.json`](./bundle-baseline.json) (totals
++ thresholds + per-page byte totals) and
+[`docs/bundle-baseline-modules.json`](./bundle-baseline-modules.json)
+(per-page module breakdown used for the regression diff).
 
 | Metric                          | Baseline value |
 | ------------------------------- | -------------- |
-| Total `.next/static`            | **2799.8 KB**  |
-| Total JS only                   | **2685.1 KB**  |
-| Largest page (`/`)              | **778.6 KB**   |
-| `_app` shared shell             | **733.4 KB**   |
+| Total `.next/static`            | **2851.3 KB**  |
+| Total JS only                   | **2735.7 KB**  |
+| Largest page (`/`)              | **788.1 KB**   |
+| `_app` shared shell             | **743.3 KB**   |
 
-The full per-route table lives in `bundle-baseline.json`. Each value is
+The full per-route table lives in `bundle-baseline.json`; the per-page
+module table lives in `bundle-baseline-modules.json`. Each value is
 on-disk byte size (uncompressed) of the files Next.js wrote to
 `.next/static` during a CI-equivalent build.
 
@@ -65,15 +88,25 @@ needed.
 
 In the `build` job:
 
-1. `next build` runs as before.
-2. `node scripts/measure-bundle.js --out bundle-current.json` writes the
-   measurement.
+1. `next build` runs as before. Because `next.config.js` sets
+   `productionBrowserSourceMaps: true`, every client chunk now also
+   gets a `.js.map` file under `.next/static`. This adds roughly **15–25 %
+   to total build time** (the SWC pipeline emits maps in parallel) and
+   ~6.5 MB of `.map` files. Maps are excluded from `totalStaticBytes`
+   so the budget itself is unaffected.
+2. `node scripts/measure-bundle.js --out bundle-current.json` writes
+   the measurement, including the per-page module breakdown.
 3. `node scripts/check-bundle-budget.js --current bundle-current.json
    --baseline docs/bundle-baseline.json --github-summary
    "$GITHUB_STEP_SUMMARY" --markdown-out bundle-report.md --mode fail`
    compares them. On every run it:
    - Prints a one-line summary (and any `FAIL:` / `INFO:` lines) to the
      step log.
+   - For every per-page failure, also prints (and includes in the
+     Markdown report) the **top 3 modules behind the regression** —
+     either modules that grew vs. baseline or modules that did not
+     exist in the baseline at all (the common case for a stray new
+     dependency).
    - Appends a Markdown report to the GitHub Actions step summary so
      reviewers see the numbers in the PR's Checks tab.
    - Writes the same Markdown report to `bundle-report.md` so the
@@ -90,39 +123,71 @@ In the `build` job:
    gets commented.
 5. `bundle-current.json` is uploaded as a workflow artifact
    (`bundle-size`) regardless of pass/fail, so you can download the raw
-   numbers from any run.
+   numbers — including the full per-page module table — from any run.
+
+`scripts/check-bundle-budget.js` auto-discovers
+`docs/bundle-baseline-modules.json` next to the byte baseline; pass
+`--baseline-modules path/to/file.json` to override or
+`--baseline-modules ''` to skip the diff entirely (it falls back to
+listing only that the breakdown was unavailable).
 
 ## When the check fails
 
 You will see something like this in the failed job:
 
 ```text
-bundle budget: total Δ=+72.3KB (limit +50.0KB), failures=1, info=0
-  FAIL: Total .next/static grew by 72.3KB (baseline 2799.8KB → current 2872.1KB),
+bundle budget: total Δ=+80.0KB (limit +50.0KB), failures=2, info=0
+  FAIL: Total .next/static grew by 80.0KB (baseline 2851.3KB → current 2931.3KB),
   which is more than the +50.0KB budget.
+  FAIL: Page `/messenger` grew by 80.0KB (+11.5%, baseline 695.3KB → current 775.3KB),
+  which is more than the +20.0% budget.
+  TOP MODULES on /messenger:
+    - new module `node_modules/firebase/app/dist/index.esm.js` +62.0KB
+    - new module `node_modules/firebase/firestore/dist/index.esm.js` +14.0KB
+    - grew `components/messages/MessagesPanel.js` +4.0KB (baseline 35.0KB → current 39.0KB)
 ```
 
-There are three reasonable responses, in order of preference:
+That tells you exactly which import landed where: a `firebase/app`
+pull-in via `MessagesPanel.js`, costing 76 KB on `/messenger`. There
+are three reasonable responses, in order of preference:
 
-1. **It's a real regression — fix it.** Run `npm run build` locally,
-   then `node scripts/measure-bundle.js` and inspect which page or
-   shared chunk grew. Common causes: a heavy library got pulled into a
-   shared component, an `import` was made eager that should have been
-   `dynamic()`, or a polyfill landed in `_app.js`.
-2. **It's an intentional, justified growth.** Refresh the baseline
-   locally and commit it alongside the change that caused the growth:
+1. **It's a real regression — fix it.** The TOP MODULES list points at
+   the offender directly; you usually don't need to run anything
+   locally. If you want more detail, grab the `bundle-size` workflow
+   artifact and inspect `bundle-current.json[perPage][route].modules`,
+   or rerun `node scripts/measure-bundle.js --out bundle-current.json`
+   locally after `npm run build`. Common causes: a heavy library got
+   pulled into a shared component, an `import` was made eager that
+   should have been `dynamic()`, or a polyfill landed in `_app.js`.
+2. **It's an intentional, justified growth.** Refresh both baseline
+   files:
    ```bash
    npm run build
    node scripts/measure-bundle.js --out /tmp/bundle.json
-   node scripts/refresh-bundle-baseline.js \
-     --current /tmp/bundle.json \
-     --baseline docs/bundle-baseline.json
+   node -e "
+     const fs = require('fs');
+     const baseline = JSON.parse(fs.readFileSync('docs/bundle-baseline.json','utf8'));
+     const current  = JSON.parse(fs.readFileSync('/tmp/bundle.json','utf8'));
+     baseline.generatedFrom    = current.measuredAt;
+     baseline.totalStaticBytes = current.totalStaticBytes;
+     baseline.totalJsBytes     = current.totalJsBytes;
+     baseline.largestPageRoute = current.largestPage.route;
+     baseline.perPage          = Object.fromEntries(
+       Object.entries(current.perPage).map(([k, v]) => [k, v.totalBytes])
+     );
+     fs.writeFileSync('docs/bundle-baseline.json', JSON.stringify(baseline, null, 2) + '\n');
+     const modules = {
+       generatedFrom: current.measuredAt,
+       perPage: Object.fromEntries(
+         Object.entries(current.perPage).map(([k, v]) => [k, v.modules || {}])
+       ),
+     };
+     fs.writeFileSync('docs/bundle-baseline-modules.json', JSON.stringify(modules, null, 2) + '\n');
+   "
    ```
-   `refresh-bundle-baseline.js` preserves the `thresholds` block and
-   only overwrites the measured numbers (`generatedFrom`,
-   `totalStaticBytes`, `totalJsBytes`, `largestPageRoute`, `perPage`).
-   Commit `docs/bundle-baseline.json` along with the change that caused
-   the growth and call it out in the PR description.
+   Commit `docs/bundle-baseline.json` **and**
+   `docs/bundle-baseline-modules.json` along with the change that
+   caused the growth and call it out in the PR description.
 3. **It's noise from a chunk-hash rename you can't pin down.** This
    should be very rare given the 5 KB absolute floor on the per-page
    rule and the 50 KB total cap, but if it happens, refresh the
@@ -207,3 +272,11 @@ node scripts/check-bundle-budget.js \
 ```
 
 Use `--mode warn` to print the diff without exiting non-zero.
+
+## Dependencies
+
+The per-module breakdown depends on
+[`source-map-explorer`](https://www.npmjs.com/package/source-map-explorer)
+(devDependency in `package.json`). It is invoked only by
+`scripts/measure-bundle.js`, never at runtime, and never bundled into
+the application.

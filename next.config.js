@@ -38,6 +38,14 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  // Emit `.js.map` files for client chunks under `.next/static`.
+  // `scripts/measure-bundle.js` parses them with `source-map-explorer`
+  // to produce a per-chunk module breakdown, which the bundle-budget
+  // CI check uses to point at the modules behind a regression
+  // (see docs/bundle-budget.md). The maps themselves are excluded
+  // from the bundle-size measurement so the budget keeps tracking
+  // user-served JS only.
+  productionBrowserSourceMaps: true,
   experimental: {
     instrumentationHook: true,
   },
