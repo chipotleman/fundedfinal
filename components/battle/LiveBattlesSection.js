@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import BattleChat from './BattleChat';
+import QuickMatchModal from './QuickMatchModal';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
@@ -781,7 +782,15 @@ function SilhouetteAvatar({ gradient, size = 40 }) {
   );
 }
 
-function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null }) {
+// Defaults for the homepage one-tap matchmaking flow. Picked as the
+// smallest available buy-in and the fastest mode so a tap on the
+// graffiti "PLAY NOW" sticker drops the user into the lightest commit
+// path. The QuickMatchModal still drives any other entry point with
+// its own config screen.
+const ONE_TAP_BUY_IN = 5;
+const ONE_TAP_GAME_MODE = 'rush';
+
+function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, onMatchFound = null }) {
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
   const [cancelling, setCancelling] = useState(false);
@@ -798,32 +807,86 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
   const showOpponent = !!opponent && (isActive || isWaiting || isQueued);
   const isIdle = !isActive && !isWaiting && !isQueued;
 
-  const [opponentTick, setOpponentTick] = useState(0);
+  // In-card matchmaking state. Drives the new "finding battle" animation
+  // that plays inside the card before the standard match-found popup
+  // takes over. `idle` means we're showing the graffiti PLAY NOW
+  // treatment; `searching` means we're polling for a match; `error`
+  // shows a brief inline message before snapping back to idle.
+  const [searchState, setSearchState] = useState('idle');
+  const [searchError, setSearchError] = useState('');
+  const [searchTimer, setSearchTimer] = useState(0);
+  const [shuffleTick, setShuffleTick] = useState(0);
+  const matchmakingCancelledRef = useRef(false);
+  const cancelNoticeTimerRef = useRef(null);
+  const searchTimerIntervalRef = useRef(null);
+  const pollTimeoutRef = useRef(null);
+  const errorResetTimeoutRef = useRef(null);
+
+  const cleanupSearchTimers = useCallback(() => {
+    if (searchTimerIntervalRef.current) {
+      clearInterval(searchTimerIntervalRef.current);
+      searchTimerIntervalRef.current = null;
+    }
+    if (pollTimeoutRef.current) {
+      clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-    if (showOpponent) return;
+    return () => {
+      matchmakingCancelledRef.current = true;
+      cleanupSearchTimers();
+      if (errorResetTimeoutRef.current) {
+        clearTimeout(errorResetTimeoutRef.current);
+        errorResetTimeoutRef.current = null;
+      }
+      if (cancelNoticeTimerRef.current) {
+        clearTimeout(cancelNoticeTimerRef.current);
+        cancelNoticeTimerRef.current = null;
+      }
+    };
+  }, [cleanupSearchTimers]);
+
+  // Cycle the shuffling silhouette in the in-card search animation.
+  // Only runs while we're actively searching, and bows out under
+  // reduced-motion to keep the visual static.
+  useEffect(() => {
+    if (searchState !== 'searching') return;
     if (typeof window === 'undefined') return;
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mq.matches) return;
-    let id = null;
-    const start = () => {
-      if (!id) id = setInterval(() => setOpponentTick((t) => t + 1), 1800);
-    };
-    const stop = () => {
-      if (id) {
-        clearInterval(id);
-        id = null;
-      }
-    };
-    const onVis = () => (document.hidden ? stop() : start());
-    if (!document.hidden) start();
-    document.addEventListener('visibilitychange', onVis);
-    return () => {
-      stop();
-      document.removeEventListener('visibilitychange', onVis);
-    };
-  }, [showOpponent]);
+    const id = setInterval(() => setShuffleTick((t) => t + 1), 600);
+    return () => clearInterval(id);
+  }, [searchState]);
 
+  // If the global matchup status flips to active/waiting/queued while
+  // we were mid-search (e.g. the queue resolved server-side and the
+  // SSE refresh beat our poll), drop the in-card search UI so we don't
+  // show two competing states at once.
+  useEffect(() => {
+    if (!isIdle && searchState !== 'idle') {
+      matchmakingCancelledRef.current = true;
+      cleanupSearchTimers();
+      setSearchState('idle');
+      setSearchError('');
+    }
+  }, [isIdle, searchState, cleanupSearchTimers]);
+
+  // Cycling silhouette gradient for queued / waiting-without-opponent
+  // states. The idle state no longer cycles fake opponents — that
+  // treatment was replaced by the graffiti PLAY NOW visual — but the
+  // existing active / waiting / queued layouts still rely on this.
+  const [opponentTick, setOpponentTick] = useState(0);
+  useEffect(() => {
+    if (showOpponent) return;
+    if (isIdle) return;
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq.matches) return;
+    const id = setInterval(() => setOpponentTick((t) => t + 1), 1800);
+    return () => clearInterval(id);
+  }, [showOpponent, isIdle]);
   const anonymousOpponent = !showOpponent
     ? ANONYMOUS_OPPONENTS[opponentTick % ANONYMOUS_OPPONENTS.length]
     : null;
@@ -889,13 +952,17 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
     if (Number.isFinite(bi) && bi > 0) pot = bi * 2;
   }
 
-  let topLabel = 'Tap to Play';
-  let topDotColor = '#a78bfa';
+  let topLabel = 'Play Now';
+  let topDotColor = '#fbbf24';
   let ctaText = 'Tap to Start a 1v1';
-  let metaRight = 'Random opponent';
+  let metaRight = '1v1 · $5';
   let progressLabel = 'Tap to start a 1v1';
 
-  if (isActive) {
+  if (searchState === 'searching') {
+    topLabel = 'Searching…';
+    topDotColor = '#06b6d4';
+    metaRight = `${searchTimer}s`;
+  } else if (isActive) {
     topLabel = 'In Battle';
     topDotColor = '#10b981';
     ctaText = 'View Battle';
@@ -946,9 +1013,159 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
     else router.push('/battle');
   };
 
+  const handleSearchError = useCallback((message) => {
+    cleanupSearchTimers();
+    setSearchError(message);
+    setSearchState('error');
+    if (errorResetTimeoutRef.current) clearTimeout(errorResetTimeoutRef.current);
+    errorResetTimeoutRef.current = setTimeout(() => {
+      setSearchState('idle');
+      setSearchError('');
+      errorResetTimeoutRef.current = null;
+    }, 4000);
+  }, [cleanupSearchTimers]);
+
+  const handleInCardMatchFound = useCallback((opp, foundMatchup) => {
+    cleanupSearchTimers();
+    matchmakingCancelledRef.current = true;
+    setSearchState('idle');
+    setSearchError('');
+    setSearchTimer(0);
+    if (onMatchFound) {
+      onMatchFound({
+        opponent: opp || null,
+        matchup: foundMatchup,
+        buyIn: ONE_TAP_BUY_IN,
+        gameMode: ONE_TAP_GAME_MODE,
+      });
+    }
+    try { refreshMatchup(); } catch {}
+  }, [cleanupSearchTimers, onMatchFound, refreshMatchup]);
+
+  const pollForInCardMatch = useCallback(() => {
+    let attempts = 0;
+    const poll = async () => {
+      if (matchmakingCancelledRef.current) return;
+      attempts += 1;
+      try {
+        const res = await fetch('/api/matchups/current');
+        if (matchmakingCancelledRef.current) return;
+        if (res.ok) {
+          const data = await res.json();
+          if ((data.status === 'active' || data.status === 'matched') && data.matchup) {
+            handleInCardMatchFound(data.opponent, data.matchup);
+            return;
+          }
+        }
+      } catch {}
+
+      if (matchmakingCancelledRef.current) return;
+
+      if (attempts < 16) {
+        pollTimeoutRef.current = setTimeout(poll, 2000);
+      } else {
+        // Same fallback the modal uses today: after 16 polls (~32s of
+        // searching + the initial request), reach for a synthetic
+        // opponent so the user always lands somewhere instead of
+        // bouncing back to idle empty-handed.
+        try {
+          const fakeRes = await fetch('/api/matchups/assign-opponent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: myProfile?.id }),
+          });
+          if (matchmakingCancelledRef.current) return;
+          if (fakeRes.ok) {
+            const fakeData = await fakeRes.json();
+            if (fakeData?.matchup) {
+              handleInCardMatchFound(fakeData.opponent, fakeData.matchup);
+              return;
+            }
+          }
+          handleSearchError('No one\'s around right now. Try again.');
+        } catch {
+          if (matchmakingCancelledRef.current) return;
+          handleSearchError('No one\'s around right now. Try again.');
+        }
+      }
+    };
+    pollTimeoutRef.current = setTimeout(poll, 2000);
+  }, [handleInCardMatchFound, handleSearchError, myProfile?.id]);
+
+  const startInCardSearch = useCallback(async () => {
+    matchmakingCancelledRef.current = false;
+    setSearchState('searching');
+    setSearchError('');
+    setSearchTimer(0);
+    cleanupSearchTimers();
+    searchTimerIntervalRef.current = setInterval(() => {
+      setSearchTimer((t) => t + 1);
+    }, 1000);
+    try {
+      const res = await fetch('/api/battles/matchmaking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buyIn: ONE_TAP_BUY_IN, gameMode: ONE_TAP_GAME_MODE }),
+      });
+      if (matchmakingCancelledRef.current) return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        handleSearchError(data.error || 'Couldn\'t start matchmaking. Try again.');
+        return;
+      }
+      const data = await res.json();
+      if (matchmakingCancelledRef.current) return;
+      if (data.matched && data.matchup) {
+        handleInCardMatchFound(data.opponent, data.matchup);
+      } else {
+        pollForInCardMatch();
+      }
+    } catch {
+      if (matchmakingCancelledRef.current) return;
+      handleSearchError('Couldn\'t reach matchmaking. Try again.');
+    }
+  }, [cleanupSearchTimers, handleInCardMatchFound, handleSearchError, pollForInCardMatch]);
+
+  const cancelInCardSearch = useCallback(async () => {
+    matchmakingCancelledRef.current = true;
+    cleanupSearchTimers();
+    setSearchState('idle');
+    // Brief inline confirmation that the user actually cancelled —
+    // matches the spec's "returns smoothly to idle with a brief inline
+    // message" requirement for both failure and cancellation paths.
+    setSearchError('Matchmaking cancelled.');
+    setSearchTimer(0);
+    if (cancelNoticeTimerRef.current) clearTimeout(cancelNoticeTimerRef.current);
+    cancelNoticeTimerRef.current = setTimeout(() => {
+      setSearchError((prev) => (prev === 'Matchmaking cancelled.' ? '' : prev));
+    }, 2500);
+    try {
+      await fetch('/api/battles/matchmaking', { method: 'DELETE' });
+      await fetch('/api/matchups/queue', { method: 'DELETE' });
+    } catch {}
+    try { refreshMatchup(); } catch {}
+  }, [cleanupSearchTimers, refreshMatchup]);
+
   const handleCardTap = () => {
     if (isIdle) {
-      handleNavigate();
+      // While searching, the card is "busy" — only the explicit cancel
+      // affordance should escape, never the card-wide tap.
+      if (searchState === 'searching') return;
+      // Clear any lingering cancel/error inline notice from the
+      // previous attempt so the new search starts visually clean.
+      if (cancelNoticeTimerRef.current) {
+        clearTimeout(cancelNoticeTimerRef.current);
+        cancelNoticeTimerRef.current = null;
+      }
+      setSearchError('');
+      // Authenticated users get the new in-card matchmaking flow.
+      // Signed-out users (no profile yet) fall back to navigating to
+      // /battle so they can sign in / pick a mode there.
+      if (myProfile?.id && onMatchFound) {
+        startInCardSearch();
+      } else {
+        handleNavigate();
+      }
       return;
     }
     if (onToggle) onToggle();
@@ -1054,9 +1271,85 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
         .tap-to-start-cta {
           animation: tapToStartPulse 1.6s ease-in-out infinite;
         }
+        /* Graffiti PLAY NOW sticker — bouncy scale + slight wobble so
+           the idle card visibly reads as a play-now button. */
+        @keyframes youvsPlayBounce {
+          0%, 100% { transform: rotate(-3deg) scale(1); }
+          45% { transform: rotate(-1deg) scale(1.05); }
+          55% { transform: rotate(-2deg) scale(1.04); }
+        }
+        @keyframes youvsTagWobble {
+          0%, 100% { transform: rotate(8deg) translateY(0); }
+          50% { transform: rotate(10deg) translateY(-2px); }
+        }
+        @keyframes youvsSparkPop {
+          0%, 100% { opacity: 0.55; transform: scale(0.85); }
+          50% { opacity: 1; transform: scale(1.15); }
+        }
+        @keyframes youvsMotionDash {
+          0% { stroke-dashoffset: 24; opacity: 0.25; }
+          50% { opacity: 0.85; }
+          100% { stroke-dashoffset: 0; opacity: 0.25; }
+        }
+        :global(.youvs-play-sticker) {
+          animation: youvsPlayBounce 2.4s ease-in-out infinite;
+          transform-origin: center;
+        }
+        :global(.youvs-tag) {
+          animation: youvsTagWobble 2.6s ease-in-out infinite;
+          transform-origin: center;
+        }
+        :global(.youvs-spark) {
+          animation: youvsSparkPop 1.8s ease-in-out infinite;
+        }
+        :global(.youvs-motion-line) {
+          stroke-dasharray: 24;
+          animation: youvsMotionDash 1.6s linear infinite;
+        }
+        /* In-card "finding battle" state. Radar sweep + concentric
+           pulse rings + a swapping silhouette + dot ellipsis make the
+           card feel alive while matchmaking runs in the background. */
+        @keyframes youvsRadarSweep {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes youvsRingPulse {
+          0% { transform: scale(0.6); opacity: 0.55; }
+          100% { transform: scale(1.4); opacity: 0; }
+        }
+        @keyframes youvsShufflePop {
+          0% { opacity: 0; transform: scale(0.7); }
+          50% { opacity: 1; transform: scale(1.05); }
+          100% { opacity: 0.85; transform: scale(1); }
+        }
+        @keyframes youvsDotsPulse {
+          0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
+          40% { opacity: 1; transform: scale(1.1); }
+        }
+        :global(.youvs-radar) {
+          animation: youvsRadarSweep 2.2s linear infinite;
+          transform-origin: center;
+        }
+        :global(.youvs-ring) {
+          animation: youvsRingPulse 1.8s ease-out infinite;
+        }
+        :global(.youvs-shuffle) {
+          animation: youvsShufflePop 0.6s ease-out both;
+        }
+        :global(.youvs-dot) {
+          animation: youvsDotsPulse 1.2s ease-in-out infinite;
+        }
         @media (prefers-reduced-motion: reduce) {
           :global(.youvs-anon-fade),
-          .tap-to-start-cta {
+          .tap-to-start-cta,
+          :global(.youvs-play-sticker),
+          :global(.youvs-tag),
+          :global(.youvs-spark),
+          :global(.youvs-motion-line),
+          :global(.youvs-radar),
+          :global(.youvs-ring),
+          :global(.youvs-shuffle),
+          :global(.youvs-dot) {
             animation: none !important;
           }
         }
@@ -1147,124 +1440,307 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
           <span className="text-gray-400 text-[11px] font-medium flex-shrink-0 ml-2">{metaRight}</span>
         </div>
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <PlayerAvatar user={youUser} isWinning={false} size={40} bgColor="#1e40af" />
-            <div className="min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
-                {youUser.username}
-              </p>
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">You</span>
-            </div>
-          </div>
-
-          <div className="px-3 flex flex-col items-center">
-            <span
-              className="text-xl font-black text-transparent bg-clip-text"
-              style={{ backgroundImage: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }}
+        {isIdle && searchState === 'searching' ? (
+          // In-card "finding battle" animation. Stays inside the same
+          // card footprint — no navigation, no modal — until matchmaking
+          // resolves and the standard match-found popup takes over.
+          <div className="flex flex-col items-center justify-center text-center py-2 select-none" style={{ minHeight: 148 }}>
+            <div
+              className="relative flex items-center justify-center mb-2.5"
+              style={{ width: 96, height: 96 }}
+              aria-hidden="true"
             >
-              VS
-            </span>
-            <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
-          </div>
-
-          <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
-            <div className="min-w-0 text-right">
-              {showOpponent ? (
-                <>
-                  <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
-                    {opponent.username || 'Opponent'}
-                  </p>
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    Opponent
-                  </span>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm font-medium truncate text-gray-300">
-                    Random Opponent
-                  </p>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    {isQueued ? 'Searching…' : 'Tap to start'}
-                  </span>
-                </>
-              )}
-            </div>
-            {showOpponent ? (
-              <PlayerAvatar
-                user={{ id: opponent.id, username: opponent.username, avatar: opponent.avatar }}
-                isWinning={false}
-                size={40}
-                bgColor="#065f46"
-              />
-            ) : (
               <div
-                key={`anon-avatar-${opponentTick}`}
-                className="youvs-anon-fade"
+                className="youvs-ring absolute"
                 style={{
-                  width: 44,
-                  height: 44,
-                  flexShrink: 0,
+                  width: 96,
+                  height: 96,
+                  borderRadius: '50%',
+                  border: '1.5px solid rgba(6,182,212,0.55)',
+                }}
+              />
+              <div
+                className="youvs-ring absolute"
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: '50%',
+                  border: '1.5px solid rgba(139,92,246,0.45)',
+                  animationDelay: '0.6s',
+                }}
+              />
+              <div
+                className="youvs-radar absolute"
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: '50%',
+                  background: 'conic-gradient(from 0deg, transparent 0deg, rgba(6,182,212,0.35) 60deg, transparent 120deg)',
+                }}
+              />
+              <div
+                key={shuffleTick}
+                className="youvs-shuffle relative"
+                style={{
                   borderRadius: '50%',
                   padding: 2,
-                  background: 'linear-gradient(135deg, rgba(16,185,129,0.45), rgba(6,182,212,0.45))',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, rgba(6,182,212,0.65), rgba(139,92,246,0.65))',
                 }}
               >
-                <SilhouetteAvatar gradient={anonymousOpponent.gradient} size={40} />
+                <SilhouetteAvatar
+                  gradient={ANONYMOUS_OPPONENTS[shuffleTick % ANONYMOUS_OPPONENTS.length].gradient}
+                  size={56}
+                />
               </div>
-            )}
-          </div>
-        </div>
-
-        <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
-          <div
-            className="h-full rounded-full transition-all duration-1000"
-            style={{
-              width: `${progressPercent}%`,
-              background: 'linear-gradient(90deg, #8b5cf6, #06b6d4)',
-            }}
-          ></div>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 text-[10px]">
-            {progressLabel}
-          </span>
-          <div className="flex items-center gap-3">
-            {(isWaiting || isQueued) && (
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={!canCancel}
-                className="text-[11px] font-medium text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
-              >
-                {cancelling ? 'Cancelling…' : (isQueued ? 'Leave Queue' : 'Cancel')}
-              </button>
-            )}
-            <span
-              className={`text-[11px] font-semibold flex items-center gap-1 ${isIdle && !isExpanded ? 'tap-to-start-cta' : ''}`}
-              style={{ color: '#a78bfa' }}
+            </div>
+            <p className="text-sm font-bold text-white mb-0.5">Finding your battle…</p>
+            <div className="flex items-center gap-1.5 mb-2" aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="youvs-dot inline-block w-1.5 h-1.5 rounded-full"
+                  style={{
+                    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+                    animationDelay: `${i * 0.18}s`,
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); cancelInCardSearch(); }}
+              className="px-3 py-1 text-[11px] font-medium text-gray-300 hover:text-red-400 rounded-lg transition-colors"
+              style={{
+                background: 'rgba(0,0,0,0.4)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
+              }}
+              aria-label="Cancel matchmaking"
             >
-              {isExpanded ? 'Hide' : (isIdle ? 'Tap to start' : 'Preview')}
+              Cancel
+            </button>
+          </div>
+        ) : isIdle ? (
+          // Graffiti / cartoon PLAY NOW treatment — replaces the
+          // cycling fake-opponent layout. This is the new single
+          // eye-catching "play anyone" visual.
+          <div className="flex flex-col items-center justify-center text-center py-2 select-none" style={{ minHeight: 148 }}>
+            <div className="relative inline-flex items-center justify-center mb-2.5" style={{ height: 76 }}>
               <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className="absolute pointer-events-none"
+                width="180"
+                height="60"
+                viewBox="0 0 180 60"
+                aria-hidden="true"
+                style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+              >
+                <g stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.85">
+                  <line className="youvs-motion-line" x1="6" y1="14" x2="30" y2="14" />
+                  <line className="youvs-motion-line" x1="2" y1="30" x2="34" y2="30" style={{ animationDelay: '0.2s' }} />
+                  <line className="youvs-motion-line" x1="6" y1="46" x2="30" y2="46" style={{ animationDelay: '0.4s' }} />
+                  <line className="youvs-motion-line" x1="150" y1="14" x2="174" y2="14" style={{ animationDelay: '0.1s' }} />
+                  <line className="youvs-motion-line" x1="146" y1="30" x2="178" y2="30" style={{ animationDelay: '0.3s' }} />
+                  <line className="youvs-motion-line" x1="150" y1="46" x2="174" y2="46" style={{ animationDelay: '0.5s' }} />
+                </g>
+              </svg>
+
+              <div
+                className="youvs-play-sticker relative inline-flex items-center justify-center px-5 py-2 rounded-2xl"
                 style={{
-                  transform: isExpanded
-                    ? 'rotate(180deg)'
-                    : (isIdle ? 'rotate(-90deg)' : 'rotate(0deg)'),
-                  transition: 'transform 220ms ease',
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ec4899 100%)',
+                  border: '3px solid #0d0d0d',
+                  boxShadow: '0 5px 0 rgba(0,0,0,0.55), 0 0 22px rgba(251,146,60,0.55)',
                 }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-              </svg>
-            </span>
+                <span
+                  className="text-3xl font-black tracking-tight leading-none"
+                  style={{
+                    color: '#fff',
+                    WebkitTextStroke: '1.5px #0d0d0d',
+                    textShadow: '2px 2px 0 #0d0d0d',
+                    fontStyle: 'italic',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  PLAY NOW
+                </span>
+              </div>
+
+              <div
+                className="youvs-tag absolute"
+                style={{
+                  top: -10,
+                  right: -8,
+                  padding: '2px 6px',
+                  borderRadius: 6,
+                  background: '#10b981',
+                  border: '2px solid #0d0d0d',
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                }}
+              >
+                <span
+                  className="text-[9px] font-black uppercase tracking-wider"
+                  style={{ color: '#0d0d0d', letterSpacing: '0.05em' }}
+                >
+                  1v1
+                </span>
+              </div>
+
+              <span
+                className="youvs-spark absolute text-lg"
+                style={{ top: -8, left: -10, filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))' }}
+                aria-hidden="true"
+              >
+                ⚡
+              </span>
+              <span
+                className="youvs-spark absolute text-base"
+                style={{ bottom: -6, right: 4, animationDelay: '0.6s', filter: 'drop-shadow(0 0 4px rgba(236,72,153,0.7))' }}
+                aria-hidden="true"
+              >
+                ✦
+              </span>
+            </div>
+            <p className="text-sm font-extrabold text-white">
+              Tap to face anyone in a 1v1
+            </p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              Random opponent · ${ONE_TAP_BUY_IN} buy-in · Instant match
+            </p>
+            {searchError && (
+              <p
+                className={`text-[10px] font-medium mt-1.5 ${
+                  searchError === 'Matchmaking cancelled.' ? 'text-gray-400' : 'text-red-400'
+                }`}
+                role="status"
+              >
+                {searchError}
+              </p>
+            )}
           </div>
-        </div>
+        ) : (
+          // Active / waiting / queued — unchanged from the existing
+          // layout per the task contract.
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                <PlayerAvatar user={youUser} isWinning={false} size={40} bgColor="#1e40af" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
+                    {youUser.username}
+                  </p>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">You</span>
+                </div>
+              </div>
+
+              <div className="px-3 flex flex-col items-center">
+                <span
+                  className="text-xl font-black text-transparent bg-clip-text"
+                  style={{ backgroundImage: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }}
+                >
+                  VS
+                </span>
+                <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+                <div className="min-w-0 text-right">
+                  {showOpponent ? (
+                    <>
+                      <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
+                        {opponent.username || 'Opponent'}
+                      </p>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                        Opponent
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium truncate text-gray-300">
+                        Random Opponent
+                      </p>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                        {isQueued ? 'Searching…' : 'Tap to start'}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {showOpponent ? (
+                  <PlayerAvatar
+                    user={{ id: opponent.id, username: opponent.username, avatar: opponent.avatar }}
+                    isWinning={false}
+                    size={40}
+                    bgColor="#065f46"
+                  />
+                ) : (
+                  <div
+                    key={`anon-avatar-${opponentTick}`}
+                    className="youvs-anon-fade"
+                    style={{
+                      width: 44,
+                      height: 44,
+                      flexShrink: 0,
+                      borderRadius: '50%',
+                      padding: 2,
+                      background: 'linear-gradient(135deg, rgba(16,185,129,0.45), rgba(6,182,212,0.45))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <SilhouetteAvatar gradient={anonymousOpponent.gradient} size={40} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
+              <div
+                className="h-full rounded-full transition-all duration-1000"
+                style={{
+                  width: `${progressPercent}%`,
+                  background: 'linear-gradient(90deg, #8b5cf6, #06b6d4)',
+                }}
+              ></div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600 text-[10px]">
+                {progressLabel}
+              </span>
+              <div className="flex items-center gap-3">
+                {(isWaiting || isQueued) && (
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={!canCancel}
+                    className="text-[11px] font-medium text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                  >
+                    {cancelling ? 'Cancelling…' : (isQueued ? 'Leave Queue' : 'Cancel')}
+                  </button>
+                )}
+                <span
+                  className="text-[11px] font-semibold flex items-center gap-1"
+                  style={{ color: '#a78bfa' }}
+                >
+                  {isExpanded ? 'Hide' : 'Preview'}
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    style={{
+                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 220ms ease',
+                    }}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div
@@ -1331,6 +1807,12 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const [expandedKey, setExpandedKey] = useState(null);
+  // When the YouVsCard's in-card matchmaking flow resolves, we hand
+  // off to the existing match-found popup by mounting QuickMatchModal
+  // pre-seeded into its `found` step. The user sees the same standard
+  // modal they'd get from the modal's own search flow — just without
+  // ever seeing config or searching.
+  const [matchFoundData, setMatchFoundData] = useState(null);
   // Soft-retry state for the live battles fetch. Mirrors the inline
   // `RetryHint` pattern used on /battle for friends/requests/invites/matchup
   // /history: we surface a small "tap to retry" hint when the fetch fails or
@@ -1606,6 +2088,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
               onClick={onYouVsClick}
               isExpanded={expandedKey === 'youvs'}
               onToggle={() => toggleExpandedKey('youvs')}
+              onMatchFound={(data) => setMatchFoundData(data)}
             />
           </div>
           {compactBattles.map(battle => (
@@ -1619,6 +2102,19 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
             </div>
           ))}
         </div>
+        <QuickMatchModal
+          isOpen={!!matchFoundData}
+          onClose={() => setMatchFoundData(null)}
+          userId={currentUserId}
+          presetMatch={matchFoundData}
+          onMatchFound={() => {
+            // Continue button on the standard match-found popup
+            // jumps the user to /battle so they land in the lobby
+            // exactly as they would after the modal's own flow.
+            setMatchFoundData(null);
+            router.push('/battle');
+          }}
+        />
       </div>
     );
   }

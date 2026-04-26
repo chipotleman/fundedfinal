@@ -64,7 +64,7 @@ const TIPS = [
   'Live betting can turn a losing battle around',
 ];
 
-export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound }) {
+export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound, presetMatch = null }) {
   useModalScrollLock(isOpen);
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
@@ -109,6 +109,19 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   useEffect(() => {
     if (isOpen) {
       cancelledRef.current = false;
+      // When opened with a pre-resolved match, jump directly to the
+      // "found" step so the modal acts as a hand-off popup for an
+      // externally-driven matchmaking flow (e.g. the in-card search on
+      // the homepage YouVsCard) without ever showing config/searching.
+      if (presetMatch?.matchup) {
+        cleanupAllTimers();
+        setStep('found');
+        setMatchedOpponent(presetMatch.opponent || null);
+        setMatchedMatchup(presetMatch.matchup);
+        if (typeof presetMatch.buyIn === 'number') setBuyIn(presetMatch.buyIn);
+        if (typeof presetMatch.gameMode === 'string') setGameMode(presetMatch.gameMode);
+        setError('');
+      }
       fetch('/api/admin/battle-avatars')
         .then(r => r.json())
         .then(data => {
@@ -133,7 +146,12 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       setTipIndex(0);
     }
     return () => { cleanupAllTimers(); };
-  }, [isOpen]);
+    // `presetMatch` is included so a fresh hand-off (new opponent +
+    // matchup pushed in while the modal is already mounted-but-closed
+    // or even open) re-seeds the `found` step instead of being missed
+    // until the next open/close cycle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, presetMatch]);
 
   useEffect(() => {
     if (isOpen && session?.user?.id) {
