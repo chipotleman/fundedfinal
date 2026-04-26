@@ -126,6 +126,7 @@ export default function IncomingInviteModal() {
 
   return (
     <div
+      data-allow-fixed-overlay="true"
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] flex items-center justify-center p-4 overflow-y-auto"
       onClick={close}
       onKeyDown={(e) => { if (e.key === 'Escape') close(); }}

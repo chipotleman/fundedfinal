@@ -403,7 +403,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           100% { background-position: 100% 100%; }
         }
       `}</style>
-      <div className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
+      <div data-allow-fixed-overlay="true" className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
         <div
           className="rounded-2xl max-w-md w-full overflow-hidden my-auto"
           style={{

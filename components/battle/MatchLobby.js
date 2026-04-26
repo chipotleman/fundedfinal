@@ -336,7 +336,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
         }
       `}</style>
 
-      <div className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 overflow-y-auto`} style={{ background: '#050a15' }}>
+      <div data-allow-fixed-overlay="true" className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 overflow-y-auto`} style={{ background: '#050a15' }}>
         <div className="absolute inset-0" style={{
           background: `radial-gradient(ellipse at 25% 30%, rgba(${theme.rgb},0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 30%, rgba(251,146,60,0.08) 0%, transparent 50%)`,
           animation: 'bgPulse 3s ease-in-out infinite',

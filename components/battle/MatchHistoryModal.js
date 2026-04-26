@@ -51,7 +51,7 @@ export default function MatchHistoryModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+    <div data-allow-fixed-overlay="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
       <div className="rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col my-auto" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
         <div className="p-5 flex-shrink-0" style={{ borderBottom: '1px solid #1a1a1a' }}>
           <div className="flex items-center justify-between">

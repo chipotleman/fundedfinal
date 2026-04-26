@@ -413,7 +413,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const requestCount = friendRequests.length;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
+    <div data-allow-fixed-overlay="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
       <div
         role="dialog"
         aria-modal="true"

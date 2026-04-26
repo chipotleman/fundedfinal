@@ -636,6 +636,7 @@ export default function MatchResult({
       {!isWinner && !isTie && <div className="mr-red-vignette" />}
 
       <div
+        data-allow-fixed-overlay="true"
         className={`fixed inset-0 backdrop-blur-md z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto ${!isWinner && !isTie ? 'mr-shake' : ''}`}
         style={{ background: 'rgba(0,0,0,0.9)', overscrollBehavior: 'contain' }}
         onClick={handleClose}

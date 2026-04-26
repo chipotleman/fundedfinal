@@ -49,6 +49,7 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
       `}</style>
 
       <div
+        data-allow-fixed-overlay="true"
         className="fixed inset-0 z-[9999] flex items-center justify-center px-4 forfeit-overlay overflow-y-auto overscroll-contain"
         style={{
           background: 'radial-gradient(ellipse at center, rgba(127,29,29,0.5) 0%, rgba(0,0,0,0.85) 100%)',
