@@ -209,7 +209,10 @@ export default function Dashboard() {
   const [gamesState, setGames] = useState([]);
   const [allGamesState, setAllGames] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [bankroll, setBankroll] = useState(10000);
+  // Start as null so the visible balance (and the Play Now confirm step's
+  // balance pill, gated by its `hasBalance` guard) doesn't flash a bogus
+  // placeholder before the real profile fetch resolves.
+  const [bankroll, setBankroll] = useState(null);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
   const scrollPositionRef = useRef(0);
@@ -320,10 +323,13 @@ export default function Dashboard() {
           const response = await fetch(`/api/profiles/${user.id}`);
           if (response.ok) {
             const profile = await response.json();
-            if (profile?.bankroll) {
+            // Use a null check (not truthiness) so a real $0 balance still
+            // clears the placeholder loading state for users who actually
+            // have nothing in their account.
+            if (profile?.bankroll != null) {
               setBankroll(parseFloat(profile.bankroll));
             }
-            if (profile?.pnl) {
+            if (profile?.pnl != null) {
               setPnl(parseFloat(profile.pnl));
             }
           }
