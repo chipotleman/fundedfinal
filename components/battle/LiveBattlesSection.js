@@ -345,6 +345,40 @@ function CartoonChip({
   );
 }
 
+// Global keyframes / classes for the shared cartoon info chip
+// primitive used by both the live battle cards and the
+// "Your Battle" card. Defined as a module-level string so we can
+// emit it from every render path that mounts cartoon chips
+// (compact homepage carousel, full Active Battles page, etc.) —
+// keeping the animation classes available everywhere chips render
+// and ensuring reduced-motion users get static chips on every
+// surface.
+const CARTOON_CHIP_STYLES = `
+  @keyframes cartoonChipBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1.5px); }
+  }
+  @keyframes cartoonChipWobble {
+    0%, 100% { transform: rotate(-1.5deg); }
+    50% { transform: rotate(1.5deg); }
+  }
+  .cartoon-chip {
+    font-family: inherit;
+  }
+  .cartoon-chip-bounce {
+    animation: cartoonChipBounce 2.4s ease-in-out infinite;
+  }
+  .cartoon-chip-wobble {
+    animation: cartoonChipWobble 2s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cartoon-chip-bounce,
+    .cartoon-chip-wobble {
+      animation: none !important;
+    }
+  }
+`;
+
 // Mode metadata shared between the live battle chips (which read
 // `battle.challengeType`) and the "Your Battle" mode chooser. Keys
 // match the lower-cased identifiers used elsewhere in this file.
@@ -809,6 +843,66 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
             </div>
           </div>
         )}
+
+        {(() => {
+          // Same cartoon info chip row used by the compact homepage
+          // BattleCard. Surfacing it here keeps the visual language
+          // consistent between the homepage carousel and the full
+          // Active Battles page, and gives at-a-glance context (mode,
+          // pik counts, momentum) without needing to expand the card.
+          // Each chip is rendered only when its underlying data is
+          // real, so missing optional fields degrade to nothing
+          // instead of placeholder values.
+          const chips = [];
+          const modeKey = (battle.challengeType || '').toLowerCase();
+          const modeMeta = CARTOON_MODE_META[modeKey];
+          if (modeMeta) {
+            chips.push(
+              <CartoonChip
+                key="mode"
+                icon={modeMeta.icon}
+                label={modeMeta.label}
+                color={modeMeta.color}
+                animate="bounce"
+                ariaLabel={`Game mode ${modeMeta.label}`}
+              />
+            );
+          }
+          const u1Picks = picks?.user1?.length || 0;
+          const u2Picks = picks?.user2?.length || 0;
+          if (picks && (u1Picks > 0 || u2Picks > 0)) {
+            chips.push(
+              <CartoonChip
+                key="piks"
+                icon="🎯"
+                label={`${u1Picks} vs ${u2Picks} piks`}
+                color="blue"
+                animate="bounce"
+                ariaLabel={`${u1Picks} piks for ${user1.username || 'Player 1'} versus ${u2Picks} piks for ${user2.username || 'Player 2'}`}
+              />
+            );
+          }
+          if (user1OnFire || user2OnFire) {
+            const fireUser = user1OnFire ? user1 : user2;
+            const fireName = fireUser.username || (user1OnFire ? 'Player 1' : 'Player 2');
+            chips.push(
+              <CartoonChip
+                key="fire"
+                icon="🔥"
+                label={`${fireName} hot`}
+                color="orange"
+                animate="wobble"
+                ariaLabel={`${fireName} is on fire`}
+              />
+            );
+          }
+          if (chips.length === 0) return null;
+          return (
+            <div className="flex items-center gap-1.5 flex-wrap mb-2" style={{ minHeight: 22 }}>
+              {chips}
+            </div>
+          );
+        })()}
 
         <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
           <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%`, backgroundColor: '#3b82f6' }}></div>
@@ -2742,38 +2836,11 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
     const featuredCount = compactBattles.length + (youVsState && youVsState.status !== 'idle' ? 1 : 0);
     return (
       <div className="mb-4">
-        {/* Global keyframes / classes for the shared cartoon info chip
-            primitive used by both the live battle cards and the
-            "Your Battle" card. Defined here (rather than inside
-            either card's scoped style block) so every chip animates
-            consistently and the styles are available even when only
-            one card type renders. Reduced-motion users get static
-            chips per the homepage-wide pattern. */}
-        <style>{`
-          @keyframes cartoonChipBounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-1.5px); }
-          }
-          @keyframes cartoonChipWobble {
-            0%, 100% { transform: rotate(-1.5deg); }
-            50% { transform: rotate(1.5deg); }
-          }
-          .cartoon-chip {
-            font-family: inherit;
-          }
-          .cartoon-chip-bounce {
-            animation: cartoonChipBounce 2.4s ease-in-out infinite;
-          }
-          .cartoon-chip-wobble {
-            animation: cartoonChipWobble 2s ease-in-out infinite;
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .cartoon-chip-bounce,
-            .cartoon-chip-wobble {
-              animation: none !important;
-            }
-          }
-        `}</style>
+        {/* Shared cartoon chip animation styles — kept centralized in
+            CARTOON_CHIP_STYLES so every render branch that mounts
+            cartoon chips picks up the same keyframes and the
+            reduced-motion override. */}
+        <style>{CARTOON_CHIP_STYLES}</style>
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Featured Battles</span>
@@ -2828,6 +2895,10 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
 
   return (
     <div className="mb-6">
+      {/* Shared cartoon chip animation styles — emitted here so the
+          full Active Battles page picks up the same keyframes and
+          reduced-motion override the homepage carousel uses. */}
+      <style>{CARTOON_CHIP_STYLES}</style>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Live Battles</span>
