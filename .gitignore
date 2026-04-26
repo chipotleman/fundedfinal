@@ -8,3 +8,6 @@ tsconfig.tsbuildinfo
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Bundle-size measurement output (committed baseline lives in docs/)
+/bundle-current.json
