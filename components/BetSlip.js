@@ -252,20 +252,41 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     setExpandedBets(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Swipe-to-delete handlers - FanDuel style with two-step process
+  // Swipe-to-delete handlers - FanDuel style with two-step process.
+  //
+  // Removing a bet from the slip is a *local-only* action (it just
+  // edits the in-memory BetSlipContext) — it does NOT submit, edit
+  // odds, or otherwise touch a battle. Previously these handlers
+  // bailed early when `betsReadOnly` was true, which is the state
+  // the slip is in when the user is logged in but has no active
+  // matchup ("Start a match to place piks" CTA shown). That meant
+  // a user could add bets, decide not to start a match yet, and
+  // then have NO way to clear the slip — no X button, no swipe,
+  // even with only one bet present. Removing the readOnly guard
+  // fixes that without enabling stake editing or bet placement,
+  // both of which are still gated higher up the tree.
   const REVEAL_WIDTH = 100; // Width to reveal delete button
   const PARTIAL_THRESHOLD = 50; // Swipe past this to snap open
   const FULL_DELETE_THRESHOLD = 200; // Swipe past this to delete immediately
-  
+
   const handleTouchStart = (betId, e) => {
-    if (betsReadOnly) return;
     const touch = e.touches[0];
     const currentOffset = swipeStates[betId]?.offset || 0;
     swipeRefs.current[betId] = {
       startX: touch.clientX,
       startY: touch.clientY,
       initialOffset: currentOffset,
-      isSwiping: false
+      isSwiping: false,
+      // Track the last "haptic zone" we were in so we can fire a
+      // single tap as the finger crosses each snap threshold —
+      // gives the gesture the tactile "click" users expect from
+      // native swipe-to-delete affordances. Zones:
+      //   0 = below PARTIAL_THRESHOLD
+      //   1 = between PARTIAL and FULL
+      //   2 = past FULL (will delete on release)
+      lastHapticZone: currentOffset >= FULL_DELETE_THRESHOLD ? 2
+        : currentOffset >= PARTIAL_THRESHOLD ? 1
+        : 0,
     };
   };
 
@@ -274,7 +295,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     const touch = e.touches[0];
     const deltaX = touch.clientX - swipeRefs.current[betId].startX;
     const deltaY = Math.abs(touch.clientY - swipeRefs.current[betId].startY);
-    
+
     // Only swipe if horizontal movement is greater than vertical
     if (Math.abs(deltaX) > deltaY) {
       swipeRefs.current[betId].isSwiping = true;
@@ -283,6 +304,23 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
       let newOffset = initialOffset - deltaX;
       // Clamp between 0 and max swipe distance
       newOffset = Math.max(0, Math.min(newOffset, FULL_DELETE_THRESHOLD + 50));
+
+      // Fire a tap haptic exactly once each time the user crosses
+      // into a higher zone, so the swipe feels like it "snaps" past
+      // each threshold. We deliberately do NOT fire on the way back
+      // down — that would feel noisy.
+      const zone = newOffset >= FULL_DELETE_THRESHOLD ? 2
+        : newOffset >= PARTIAL_THRESHOLD ? 1
+        : 0;
+      if (zone > swipeRefs.current[betId].lastHapticZone) {
+        haptic.tap();
+        swipeRefs.current[betId].lastHapticZone = zone;
+      } else if (zone < swipeRefs.current[betId].lastHapticZone) {
+        // Reset downward without firing so the next upward crossing
+        // re-triggers the click.
+        swipeRefs.current[betId].lastHapticZone = zone;
+      }
+
       setSwipeStates(prev => ({ ...prev, [betId]: { offset: newOffset, isOpen: prev[betId]?.isOpen || false } }));
     }
   };
@@ -291,9 +329,11 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     if (!swipeRefs.current[betId]) return;
     const state = swipeStates[betId] || { offset: 0, isOpen: false };
     const swipeAmount = state.offset;
-    
+
     if (swipeAmount >= FULL_DELETE_THRESHOLD) {
-      // Full swipe - delete immediately
+      // Full swipe - delete immediately. Stronger haptic so the
+      // user feels the "thunk" of the bet being yanked off the slip.
+      haptic.success();
       setSwipeStates(prev => ({ ...prev, [betId]: { offset: FULL_DELETE_THRESHOLD + 50, isOpen: true } }));
       setTimeout(() => {
         removeBet(betId);
@@ -312,10 +352,10 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     }
     delete swipeRefs.current[betId];
   };
-  
+
   // Handle tap on delete button when revealed
   const handleDeleteTap = (betId) => {
-    if (betsReadOnly) return;
+    haptic.success();
     setSwipeStates(prev => ({ ...prev, [betId]: { offset: REVEAL_WIDTH + 50, isOpen: true } }));
     setTimeout(() => {
       removeBet(betId);
@@ -757,13 +797,40 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                     <span className="text-xs font-bold" style={{ color: '#fed7aa' }}>{formatMoney(bankroll, 0)}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/50 px-2.5 py-1 rounded-full">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span className="text-blue-400 text-xs font-bold">{bets.length} PIK{bets.length !== 1 ? 'S' : ''}</span>
+                {/* Cartoon-themed pik count badge — chunky black border
+                    + offset shadow matches the cards inside the slip,
+                    so the header reads as part of the same design
+                    language instead of a plain pill. */}
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                  style={{
+                    background: 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)',
+                    border: '2px solid #0a0a0a',
+                    boxShadow: '0 2px 0 #0a0a0a',
+                  }}
+                >
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#bfdbfe' }}></div>
+                  <span className="text-xs font-extrabold tracking-wide" style={{ color: '#ffffff' }}>{bets.length} PIK{bets.length !== 1 ? 'S' : ''}</span>
                 </div>
-                <button onClick={onClose} className="text-gray-400 hover:text-white p-1">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                {/* Cartoon-themed close button — same chunky border /
+                    offset-shadow press behavior as the X used on the
+                    individual bet cards, so the whole slip reads as a
+                    single cohesive cartoon UI. */}
+                <button
+                  onClick={() => { haptic.tap(); onClose(); }}
+                  className="flex items-center justify-center pikslip-cartoon-x"
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '9999px',
+                    background: 'linear-gradient(180deg, #1f2937 0%, #111827 100%)',
+                    border: '2px solid #0a0a0a',
+                    boxShadow: '0 2px 0 #0a0a0a',
+                  }}
+                  aria-label="Close Pik Slip"
+                >
+                  <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="#ffffff" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
                 </div>
@@ -837,8 +904,14 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                       
                       return (
                         <div key={bet.id} className="relative overflow-hidden">
-                          {/* Delete area revealed on swipe - clickable, extends with swipe, also swipeable */}
-                          <div 
+                          {/* Delete area revealed on swipe — cartoon themed
+                              to match the single-bet view. Rendered as a
+                              semantic <button> so screen readers announce
+                              it correctly and keyboard users can activate
+                              it; touch/swipe handlers attach the same way
+                              they did on the prior <div> wrapper. */}
+                          <button
+                            type="button"
                             onClick={() => {
                               // Only trigger delete if not currently swiping
                               if (!swipeRefs.current[bet.id]?.isSwiping) {
@@ -848,20 +921,30 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                             onTouchStart={(e) => handleTouchStart(bet.id, e)}
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
                             onTouchEnd={() => handleTouchEnd(bet.id)}
-                            className="absolute inset-y-0 right-0 flex items-center justify-center cursor-pointer"
-                            style={{ 
-                              width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
+                            tabIndex={swipeOffset > 0 ? 0 : -1}
+                            aria-hidden={swipeOffset > 0 ? undefined : true}
+                            aria-label={`Delete ${bet.selection}`}
+                            className="absolute inset-y-0 right-0 flex flex-col items-center justify-center cursor-pointer gap-1 p-0 m-0"
+                            style={{
+                              width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`,
                               opacity: swipeOffset > 0 ? 1 : 0,
                               WebkitTapHighlightColor: 'transparent',
                               WebkitTouchCallout: 'none',
                               WebkitUserSelect: 'none',
                               userSelect: 'none',
                               touchAction: 'pan-x',
-                              backgroundColor: '#dc2626'
+                              background: 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)',
+                              borderTop: '2.5px solid #0a0a0a',
+                              borderBottom: '2.5px solid #0a0a0a',
+                              borderLeft: 'none',
+                              borderRight: 'none',
                             }}
                           >
-                            <span className="text-white font-bold text-sm select-none">Delete</span>
-                          </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <span className="text-white font-extrabold text-[10px] uppercase tracking-wider select-none" style={{ textShadow: '0 1px 0 #0a0a0a' }}>Delete</span>
+                          </button>
                           
                           {/* Swipeable content - NO padding on row, padding goes inside content */}
                           <div 
@@ -891,30 +974,32 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                 )}
                               </div>
                               
-                              {/* Red minus circle */}
-                              {betsReadOnly ? (
-                                <div
-                                  className="flex-shrink-0 rounded-full border flex items-center justify-center"
-                                  style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px', backgroundColor: '#000000', borderColor: 'rgba(107, 114, 128, 0.6)' }}
-                                />
-                              ) : (
-                                <button 
-                                  onClick={() => removeBet(bet.id)}
-                                  className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
-                                  style={{ 
-                                    width: '16px', 
-                                    height: '16px', 
-                                    minWidth: '16px', 
-                                    minHeight: '16px',
-                                    backgroundColor: '#000000'
-                                  }}
-                                  aria-label={`Remove ${bet.selection}`}
-                                >
-                                  <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
-                                  </svg>
-                                </button>
-                              )}
+                              {/* Red minus circle — always interactive. The
+                                "remove from slip" action is local-only and
+                                must work whether or not the user has an
+                                active matchup, so we no longer swap in a
+                                disabled placeholder when betsReadOnly is
+                                true. Cartoon-themed: 2px black border +
+                                offset shadow for the chunky pop look used
+                                throughout the battle UI. */}
+                              <button
+                                onClick={() => { haptic.tap(); removeBet(bet.id); }}
+                                className="flex-shrink-0 rounded-full flex items-center justify-center pikslip-cartoon-x"
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  minWidth: '18px',
+                                  minHeight: '18px',
+                                  background: 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)',
+                                  border: '2px solid #0a0a0a',
+                                  boxShadow: '0 2px 0 #0a0a0a',
+                                }}
+                                aria-label={`Remove ${bet.selection}`}
+                              >
+                                <svg style={{ width: '9px', height: '9px' }} fill="none" stroke="#ffffff" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
+                                </svg>
+                              </button>
                               
                               {/* Bottom segment - connects to next circle */}
                               <div 
@@ -1003,8 +1088,14 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                     
                     return (
                       <div key={bet.id} className="relative rounded-xl overflow-hidden">
-                        {/* Delete area revealed on swipe - clickable, extends with swipe, also swipeable */}
-                        <div 
+                        {/* Delete area revealed on swipe - cartoon-themed
+                            red gradient with trash glyph + "Delete" label.
+                            Border + offset shadow match the rest of the
+                            cartoon UI so the reveal feels like part of
+                            the same design language as the swipeable
+                            card itself. */}
+                        <button
+                          type="button"
                           onClick={() => {
                             // Only trigger delete if not currently swiping
                             if (!swipeRefs.current[bet.id]?.isSwiping) {
@@ -1014,29 +1105,42 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
                           onTouchMove={(e) => handleTouchMove(bet.id, e)}
                           onTouchEnd={() => handleTouchEnd(bet.id)}
-                          className="absolute inset-y-0 right-0 flex items-center justify-center rounded-r-xl cursor-pointer"
-                          style={{ 
-                            width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
+                          tabIndex={swipeOffset > 0 ? 0 : -1}
+                          aria-hidden={swipeOffset > 0 ? undefined : true}
+                          aria-label={`Delete ${bet.selection}`}
+                          className="absolute inset-y-0 right-0 flex flex-col items-center justify-center rounded-r-xl cursor-pointer gap-1 p-0 m-0"
+                          style={{
+                            width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`,
                             opacity: swipeOffset > 0 ? 1 : 0,
                             WebkitTapHighlightColor: 'transparent',
                             WebkitTouchCallout: 'none',
                             WebkitUserSelect: 'none',
                             userSelect: 'none',
                             touchAction: 'pan-x',
-                            backgroundColor: '#dc2626'
+                            background: 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)',
+                            borderTop: '2.5px solid #0a0a0a',
+                            borderRight: '2.5px solid #0a0a0a',
+                            borderBottom: '2.5px solid #0a0a0a',
+                            borderLeft: 'none',
                           }}
                         >
-                          <span className="text-white font-bold text-sm select-none">Delete</span>
-                        </div>
-                        
-                        {/* Swipeable card - matches parlay theme */}
-                        <div 
-                          className="rounded-xl relative"
-                          style={{ 
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span className="text-white font-extrabold text-[11px] uppercase tracking-wider select-none" style={{ textShadow: '0 1px 0 #0a0a0a' }}>Delete</span>
+                        </button>
+
+                        {/* Swipeable card - cartoon themed: chunky 2.5px
+                            black border + offset shadow that lifts the
+                            card off the slip background, matching the
+                            BattleModeChooser / PlayFriendModal language. */}
+                        <div
+                          className="rounded-xl relative pikslip-cartoon-card"
+                          style={{
                             transform: `translateX(-${swipeOffset}px)`,
-                            backgroundColor: '#000000',
-                            borderWidth: 1,
-                            borderColor: 'rgba(55, 65, 81, 0.3)',
+                            background: 'linear-gradient(180deg, #111827 0%, #0a0f1c 100%)',
+                            border: '2.5px solid #0a0a0a',
+                            boxShadow: '0 4px 0 #0a0a0a',
                             transition: swipeRefs.current[bet.id] ? 'none' : 'transform 0.2s ease-out'
                           }}
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
@@ -1049,19 +1153,31 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                             onClick={() => isCollapsible && toggleBetExpanded(bet.id)}
                           >
                             <div className="flex items-center gap-2 flex-1 min-w-0">
-                              {/* Red minus button to remove - matches arrow height (16px) */}
-                              {!betsReadOnly && (
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }}
-                                  className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
-                                  style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }}
-                                  aria-label={`Remove ${bet.selection}`}
-                                >
-                                  <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
-                                  </svg>
-                                </button>
-                              )}
+                              {/* Cartoon-themed remove button. Always
+                                  rendered (no betsReadOnly gate) so the
+                                  user can always clear a bet from the
+                                  slip even before they've started a
+                                  match. Mirrors the parlay-leg X button
+                                  styling to keep the slip visually
+                                  consistent across modes. */}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); haptic.tap(); removeBet(bet.id); }}
+                                className="flex-shrink-0 rounded-full flex items-center justify-center pikslip-cartoon-x"
+                                style={{
+                                  width: '20px',
+                                  height: '20px',
+                                  minWidth: '20px',
+                                  minHeight: '20px',
+                                  background: 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)',
+                                  border: '2px solid #0a0a0a',
+                                  boxShadow: '0 2px 0 #0a0a0a',
+                                }}
+                                aria-label={`Remove ${bet.selection}`}
+                              >
+                                <svg style={{ width: '10px', height: '10px' }} fill="none" stroke="#ffffff" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
+                                </svg>
+                              </button>
                               
                               {isCollapsible && (
                                 <svg className="w-4 h-4 transition-transform flex-shrink-0" style={{ color: '#9ca3af', transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">

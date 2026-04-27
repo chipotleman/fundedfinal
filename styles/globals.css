@@ -839,3 +839,37 @@ button.no-hover-effect.rounded-lg:focus-visible {
    translateX-based shift the moment the button is tapped (causing
    the Pik Slip to "jump" sideways on press). Using `right` keeps
    the offset stable across idle / focus / active states. */
+
+/* ===== Pik Slip cartoon theme =====
+   Press behavior for the chunky red X "remove bet" buttons used in
+   both the single-bet and parlay-leg views. The button has a 2px
+   black border and a 0 2px 0 #0a0a0a offset shadow in its idle
+   state; on press we collapse the shadow and translate the button
+   2px down so it visually depresses into the slip — same press
+   pattern used on cartoon-chooser-option / pfm-cartoon-btn.
+   Hover lift is gated behind hover:hover so touch devices stay
+   crisp (per the no-hover-on-touch user preference). */
+.pikslip-cartoon-x {
+  cursor: pointer;
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out, filter 120ms ease-out;
+  will-change: transform, box-shadow;
+}
+.pikslip-cartoon-x:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #0a0a0a !important;
+}
+@media (hover: hover) {
+  .pikslip-cartoon-x:hover {
+    filter: brightness(1.08);
+  }
+}
+
+/* Subtle interactive lift on the swipeable bet card. We deliberately
+   do NOT translate the card on press (that would conflict with the
+   transform: translateX swipe offset), only nudge brightness so the
+   card feels alive when interacted with on hover-capable devices. */
+@media (hover: hover) {
+  .pikslip-cartoon-card:hover {
+    filter: brightness(1.04);
+  }
+}
