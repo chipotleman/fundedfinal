@@ -873,6 +873,44 @@ button.no-hover-effect.rounded-lg:focus-visible {
   }
 }
 
+/* ===== Rush mode "live now" pulse =====
+   Applied to the Rush tile inside PlayFriendModal (and any other
+   game-mode chooser) when the Rush availability hook reports a
+   live game is in progress. The tile breathes a soft orange glow
+   so the user reads it as "Rush is live and ready to play right
+   now" instead of just another mode. The pulse runs only on
+   reduced-motion-OK devices to respect prefers-reduced-motion. */
+@keyframes pfm-rush-glow {
+  0%, 100% {
+    box-shadow: 0 3px 0 #0a0a0a, 0 0 8px rgba(245,158,11,0.35);
+  }
+  50% {
+    box-shadow: 0 3px 0 #0a0a0a, 0 0 22px rgba(245,158,11,0.7);
+  }
+}
+.pfm-rush-live {
+  animation: pfm-rush-glow 2.4s ease-in-out infinite;
+}
+@keyframes pfm-rush-dot {
+  0%, 100% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+.pfm-rush-dot {
+  animation: pfm-rush-dot 1.2s ease-in-out infinite;
+  display: inline-block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pfm-rush-live, .pfm-rush-dot {
+    animation: none !important;
+  }
+}
+
 /* ===== Messenger cartoon theme =====
    Press-down behavior shared by every cartoon-styled control inside
    the Messenger surface (back arrow, Start Battle CTA, mic + send

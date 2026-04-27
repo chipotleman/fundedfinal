@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useGames } from '../contexts/GamesContext';
 
 // Polls /api/battles/rush/availability and returns the live-game
 // availability for Rush mode. Rush requires an in-progress game (its
@@ -19,8 +20,31 @@ import { useEffect, useState } from 'react';
 // match-start path is responsible for surfacing a clean error if the
 // game state has truly gone away by the time the user tries to
 // start the match.
+//
+// We also OR in the *client-side* games context. The Rush availability
+// API only sees what real Goalserve returns; in demo mode (or when
+// Goalserve is degraded and the dashboard falls back to simulated
+// games) the user still sees a live-games row on the dashboard, so it
+// would be confusing for Rush to be locked. By reading `useGames()`
+// here we mirror exactly what the dashboard renders as "live" and
+// keep the two surfaces in sync.
 export default function useRushAvailability(enabled = true, refreshMs = 60_000) {
-  const [available, setAvailable] = useState(null);
+  const [serverAvailable, setServerAvailable] = useState(null);
+
+  // Pull the live-games signal from the dashboard's source of truth.
+  // We guard against the hook being mounted outside of GamesProvider
+  // (e.g., older tests) by treating an undefined context as "no client
+  // override" rather than throwing.
+  let clientHasLiveGame = false;
+  try {
+    const games = useGames();
+    if (games && Array.isArray(games.apiGames)) {
+      clientHasLiveGame = games.apiGames.some((g) => g && g.isLive);
+    }
+  } catch (_e) {
+    clientHasLiveGame = false;
+  }
+
   useEffect(() => {
     if (!enabled) return undefined;
     let cancelled = false;
@@ -30,9 +54,9 @@ export default function useRushAvailability(enabled = true, refreshMs = 60_000) 
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const data = await r.json();
         if (cancelled) return;
-        setAvailable(!!data?.available);
+        setServerAvailable(!!data?.available);
       } catch (_e) {
-        if (!cancelled) setAvailable(true);
+        if (!cancelled) setServerAvailable(true);
       }
     };
     load();
@@ -42,5 +66,16 @@ export default function useRushAvailability(enabled = true, refreshMs = 60_000) 
       clearInterval(id);
     };
   }, [enabled, refreshMs]);
-  return available;
+
+  // While the first request is in flight return `null` so consumers
+  // keep the existing UI state (don't snap-lock or snap-unlock). Once
+  // we have a server answer, OR it with the client-side signal so a
+  // demo/simulated live game still unlocks Rush.
+  if (serverAvailable === null) {
+    // If the client already shows a live game we can answer
+    // optimistically while we wait for the server — the server can
+    // only ever upgrade us to `true` from here.
+    return clientHasLiveGame ? true : null;
+  }
+  return serverAvailable || clientHasLiveGame;
 }

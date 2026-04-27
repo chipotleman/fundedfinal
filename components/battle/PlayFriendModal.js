@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import useRushAvailability from '../../hooks/useRushAvailability';
+import haptic from '../../utils/haptics';
 import SharedUserAvatar from '../UserAvatar';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
@@ -1179,6 +1180,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
                       const locked = mode.id === 'rush' && rushAvailable === false;
+                      const isRush = mode.id === 'rush';
+                      const rushLive = isRush && rushAvailable === true;
                       const hex = mode.color.replace('#', '');
                       const r = parseInt(hex.substring(0, 2), 16);
                       const g = parseInt(hex.substring(2, 4), 16);
@@ -1190,14 +1193,34 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           key={mode.id}
                           type="button"
                           onClick={() => {
-                            if (locked) return;
+                            // Clear haptic + a11y feedback for both
+                            // accept and reject paths so the user
+                            // always gets a tactile response (mobile-
+                            // first polish per user feedback).
+                            if (locked) {
+                              haptic.warning && haptic.warning();
+                              return;
+                            }
+                            haptic.tap && haptic.tap();
                             setGameMode(mode.id);
                             setShowGameModeInfo(false);
                           }}
-                          disabled={locked}
+                          // Intentionally NOT using native `disabled`
+                          // here so the locked-state warning haptic
+                          // (haptic.warning) still fires when a user
+                          // taps a locked Rush tile. We surface the
+                          // disabled state via aria-disabled + visual
+                          // dim + cursor + the in-handler guard.
                           aria-disabled={locked || undefined}
+                          aria-pressed={selected}
+                          onKeyDown={(e) => {
+                            if (locked && (e.key === 'Enter' || e.key === ' ')) {
+                              e.preventDefault();
+                              haptic.warning && haptic.warning();
+                            }
+                          }}
                           title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
-                          className="pfm-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative"
+                          className={`pfm-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative ${rushLive ? 'pfm-rush-live' : ''}`}
                           style={
                             selected
                               ? {
@@ -1206,13 +1229,17 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                                   boxShadow: `0 4px 0 #0a0a0a, 0 0 16px ${glow}`,
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
+                                  minHeight: 88,
                                 }
                               : {
                                   backgroundColor: elevatedBg,
                                   border: '2.5px solid #0a0a0a',
-                                  boxShadow: '0 3px 0 #0a0a0a',
+                                  boxShadow: rushLive
+                                    ? `0 3px 0 #0a0a0a, 0 0 12px ${glow}`
+                                    : '0 3px 0 #0a0a0a',
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
+                                  minHeight: 88,
                                 }
                           }
                         >
@@ -1228,6 +1255,54 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               Popular
                             </span>
                           )}
+                          {/* Live-now eyebrow on the Rush tile when a
+                              live game is available — this is the key
+                              affordance that tells the user Rush is
+                              ready to play *right now*. The dot pulses
+                              so it reads as live, and the eyebrow uses
+                              the orange Rush palette. */}
+                          {rushLive && (
+                            <span
+                              className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              style={{
+                                background: 'linear-gradient(180deg,#f59e0b,#d97706)',
+                                border: '2px solid #0a0a0a',
+                                boxShadow: '0 2px 0 #0a0a0a',
+                              }}
+                              aria-hidden="true"
+                            >
+                              <span
+                                style={{
+                                  width: 5,
+                                  height: 5,
+                                  borderRadius: '50%',
+                                  backgroundColor: '#fff',
+                                  boxShadow: '0 0 6px rgba(255,255,255,0.95)',
+                                }}
+                                className="pfm-rush-dot"
+                              />
+                              Live
+                            </span>
+                          )}
+                          {/* Locked padlock badge on the Rush tile
+                              when no live game is available — gives
+                              the user a clear visual "you can't pick
+                              this right now" signal beyond the
+                              opacity dim. */}
+                          {locked && (
+                            <span
+                              className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              style={{
+                                background: 'linear-gradient(180deg,#374151,#1f2937)',
+                                border: '2px solid #0a0a0a',
+                                boxShadow: '0 2px 0 #0a0a0a',
+                              }}
+                              aria-hidden="true"
+                            >
+                              <span style={{ fontSize: 9, lineHeight: 1 }}>🔒</span>
+                              Locked
+                            </span>
+                          )}
                           <span className="text-lg leading-none mb-1">{mode.icon}</span>
                           <span className="font-extrabold text-[11px] leading-tight uppercase tracking-wider" style={{ color: textPrimary }}>{mode.label}</span>
                           <span className="text-[8px] uppercase tracking-wider mt-1 leading-none" style={{ color: textMuted }}>Start with</span>
@@ -1238,14 +1313,32 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     })}
                   </div>
                   {rushAvailable === false && (
-                    <p
-                      className="mt-2 text-[11px] flex items-start gap-1.5"
-                      style={{ color: textMuted }}
+                    /* Cartoon-themed Rush-locked notice — chunky black
+                       border + offset shadow + uppercase eyebrow so it
+                       reads as part of the same playful design system
+                       as the rest of the modal (was previously a
+                       plain-text muted line that didn't match). */
+                    <div
+                      className="mt-2 rounded-2xl px-3 py-2.5 text-[11px] leading-snug flex items-start gap-2"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(245,158,11,0.16), rgba(245,158,11,0.05))',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a',
+                        color: '#fde68a',
+                      }}
                       aria-live="polite"
                     >
-                      <span aria-hidden="true">⚡</span>
-                      <span>Rush needs a live game in progress. No games are live right now — Rush will unlock the moment one tips off.</span>
-                    </p>
+                      <span aria-hidden="true" className="text-sm leading-none mt-0.5">⚡</span>
+                      <div>
+                        <div
+                          className="font-extrabold uppercase mb-0.5"
+                          style={{ color: '#fbbf24', fontSize: '9px', letterSpacing: '0.18em' }}
+                        >
+                          Rush locked
+                        </div>
+                        Rush needs a live game in progress. No games are live right now — Rush will unlock the moment one tips off.
+                      </div>
+                    </div>
                   )}
                   {(() => {
                     const selectedMode = GAME_MODE_OPTIONS.find(m => m.id === gameMode);
