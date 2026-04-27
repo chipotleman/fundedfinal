@@ -2452,9 +2452,23 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
   }, [inviteEndedNote]);
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    // CSS Grid (instead of flex column) for the conversation surface.
+    // Grid `auto 1fr auto auto` rows guarantee:
+    //   row 1 (header)   — natural height
+    //   row 2 (messages) — exactly the remaining vertical space
+    //   row 3 (typing)   — natural height
+    //   row 4 (composer) — natural height, always visible at the bottom
+    // Flex column kept getting bitten by `min-height: auto` propagation
+    // bugs in nested flex containers on iOS Safari, which let the
+    // composer slip below the parent card's `overflow-hidden` boundary.
+    // Grid sizes rows from the parent's available height instead of from
+    // child content, so the composer can never be pushed off-screen.
+    <div
+      className="grid h-full min-h-0 overflow-hidden"
+      style={{ gridTemplateRows: 'auto minmax(0, 1fr) auto auto' }}
+    >
       <div
-        className="flex flex-col flex-shrink-0"
+        className="flex flex-col"
         style={{ borderBottom: `1px solid ${cardBorder}` }}
       >
       <div className="flex items-center gap-3 px-3 sm:px-4 py-3">
@@ -3461,7 +3475,15 @@ export default function MessagesPanel({
         </div>
       </div>
 
-      <div className={`flex-1 min-w-0 ${selectedId ? 'flex' : 'hidden md:flex'} flex-col`}>
+      {/* `min-h-0` is REQUIRED here. Without it, this flex item inherits
+          the default `min-height: auto`, which means its measured height
+          can grow to accommodate its child (`ConversationThread`) instead
+          of being clamped to the available flex space. On iOS Safari at
+          `100svh`, that overflow gets clipped by the card's
+          `overflow-hidden`, hiding the composer below the visible card
+          edge. With `min-h-0` here, this pane can shrink to the actual
+          available space and the composer stays visible. */}
+      <div className={`flex-1 min-w-0 min-h-0 ${selectedId ? 'flex' : 'hidden md:flex'} flex-col`}>
         {selectedFriend ? (
           <ConversationThread
             key={selectedFriend.id}
