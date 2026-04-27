@@ -21,14 +21,30 @@ export const PRE_MATCH_MODE_OPTIONS = [
     id: 'rush',
     label: 'Rush',
     icon: '⚡',
+    tagline: 'Game-show showdown',
     description: 'Pick 6 props from a live game',
+    blurb: '6 lightning prop questions from a live game. You and your opponent answer one at a time on a countdown — most correct picks wins.',
+    steps: [
+      { icon: '🎯', text: '6 props auto-loaded from a live game' },
+      { icon: '⏱️', text: 'Both answer each question on the clock' },
+      { icon: '🏁', text: 'Most correct picks takes the pot' },
+    ],
+    durationLabel: '~5 min',
     coins: 10000,
   },
   {
     id: 'original',
     label: 'Original',
     icon: '🏆',
+    tagline: 'Build the bigger bankroll',
     description: 'Highest balance after all games end wins',
+    blurb: 'Place picks on real games all day long. When the final scoreboard locks, the bigger bankroll wins.',
+    steps: [
+      { icon: '💸', text: 'Both start with 10,000 coins' },
+      { icon: '📈', text: 'Place picks on real games all day' },
+      { icon: '👑', text: 'Highest bankroll at lockout wins' },
+    ],
+    durationLabel: 'Full slate',
     coins: 10000,
     recommended: true,
   },
@@ -36,7 +52,15 @@ export const PRE_MATCH_MODE_OPTIONS = [
     id: 'tournament',
     label: 'Tournament',
     icon: '👑',
+    tagline: 'Three-day epic',
     description: '3-day battle with a massive bankroll',
+    blurb: 'A 3-day grind with a massive 100,000-coin bankroll. Build, manage, defend — biggest balance at the buzzer takes it all.',
+    steps: [
+      { icon: '💰', text: '100,000-coin starting bankroll' },
+      { icon: '🗓️', text: '3 days of head-to-head action' },
+      { icon: '🥇', text: 'Biggest balance at the buzzer wins' },
+    ],
+    durationLabel: '3 days',
     coins: 100000,
   },
 ];
@@ -134,8 +158,42 @@ export default function PreMatchPopup({
           animation: preMatchConfirmPulse 1.4s ease-in-out infinite;
           transform-origin: center;
         }
+        @keyframes pmModeIconBounce {
+          0%, 100% { transform: translateY(0) rotate(-4deg); }
+          50% { transform: translateY(-6px) rotate(4deg); }
+        }
+        @keyframes pmModeIconBolt {
+          0%, 100% { transform: translateY(0) rotate(-8deg) scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.7)); }
+          50% { transform: translateY(-4px) rotate(8deg) scale(1.08); filter: drop-shadow(0 0 14px rgba(251,191,36,1)); }
+        }
+        @keyframes pmModeIconCrown {
+          0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px rgba(168,85,247,0.5)); }
+          50% { transform: translateY(-3px) scale(1.05); filter: drop-shadow(0 0 12px rgba(168,85,247,0.85)); }
+        }
+        @keyframes pmStepFadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pmCardPop {
+          0% { transform: scale(0.96); opacity: 0; }
+          60% { transform: scale(1.02); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .pm-mode-card { animation: pmCardPop 280ms cubic-bezier(0.22,1,0.36,1); }
+        .pm-mode-icon-rush { animation: pmModeIconBolt 1.4s ease-in-out infinite; transform-origin: center; }
+        .pm-mode-icon-original { animation: pmModeIconBounce 1.6s ease-in-out infinite; transform-origin: center; }
+        .pm-mode-icon-tournament { animation: pmModeIconCrown 1.8s ease-in-out infinite; transform-origin: center; }
+        .pm-mode-step { animation: pmStepFadeIn 320ms ease-out both; }
+        .pm-mode-step:nth-child(1) { animation-delay: 80ms; }
+        .pm-mode-step:nth-child(2) { animation-delay: 160ms; }
+        .pm-mode-step:nth-child(3) { animation-delay: 240ms; }
         @media (prefers-reduced-motion: reduce) {
-          .pre-match-confirm-btn { animation: none !important; }
+          .pre-match-confirm-btn,
+          .pm-mode-card,
+          .pm-mode-icon-rush,
+          .pm-mode-icon-original,
+          .pm-mode-icon-tournament,
+          .pm-mode-step { animation: none !important; }
         }
       `}</style>
       <div
@@ -244,22 +302,91 @@ export default function PreMatchPopup({
                   );
                 })}
               </div>
-              <div className="mt-3 rounded-xl p-3" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
-                <div className="flex items-start gap-2">
-                  <p className="text-xs text-gray-300 flex-1 leading-snug">{selectedMode.description}</p>
-                  {selectedMode.recommended && (
-                    <span className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap">
-                      POPULAR
-                    </span>
-                  )}
+              <div
+                key={selectedMode.id}
+                className="pm-mode-card mt-3 rounded-2xl p-4 relative overflow-hidden"
+                style={{
+                  background: selectedMode.id === 'rush'
+                    ? 'linear-gradient(135deg, rgba(251,191,36,0.10) 0%, rgba(249,115,22,0.10) 100%)'
+                    : selectedMode.id === 'tournament'
+                    ? 'linear-gradient(135deg, rgba(168,85,247,0.10) 0%, rgba(59,130,246,0.10) 100%)'
+                    : 'linear-gradient(135deg, rgba(16,185,129,0.10) 0%, rgba(6,182,212,0.10) 100%)',
+                  border: '1.5px solid ' + (
+                    selectedMode.id === 'rush'
+                      ? 'rgba(251,191,36,0.45)'
+                      : selectedMode.id === 'tournament'
+                      ? 'rgba(168,85,247,0.45)'
+                      : 'rgba(16,185,129,0.45)'
+                  ),
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={
+                      selectedMode.id === 'rush' ? 'pm-mode-icon-rush'
+                        : selectedMode.id === 'tournament' ? 'pm-mode-icon-tournament'
+                        : 'pm-mode-icon-original'
+                    }
+                    style={{
+                      fontSize: 38,
+                      lineHeight: 1,
+                      flexShrink: 0,
+                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
+                    }}
+                    aria-hidden="true"
+                  >
+                    {selectedMode.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[15px] font-extrabold text-white tracking-tight">{selectedMode.label}</span>
+                      {selectedMode.recommended && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                          style={{ background: 'rgba(16,185,129,0.18)', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)' }}
+                        >
+                          Popular
+                        </span>
+                      )}
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ml-auto"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(229,231,235,0.85)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      >
+                        {selectedMode.durationLabel}
+                      </span>
+                    </div>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold mt-0.5"
+                      style={{
+                        color: selectedMode.id === 'rush' ? '#fbbf24'
+                          : selectedMode.id === 'tournament' ? '#a78bfa'
+                          : '#34d399',
+                      }}
+                    >
+                      {selectedMode.tagline}
+                    </p>
+                  </div>
                 </div>
+
+                <p className="text-xs text-gray-300 leading-snug mt-3">{selectedMode.blurb}</p>
+
+                <div className="mt-3 space-y-1.5">
+                  {selectedMode.steps.map((step, i) => (
+                    <div
+                      key={i}
+                      className="pm-mode-step flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
+                      style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    >
+                      <span aria-hidden="true" style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{step.icon}</span>
+                      <span className="text-[11px] text-gray-200 font-medium leading-snug">{step.text}</span>
+                    </div>
+                  ))}
+                </div>
+
                 <div
-                  className="flex items-center justify-between mt-2 pt-2 border-t"
-                  style={{ borderColor: '#1a1a1a' }}
+                  className="flex items-center justify-between mt-3 pt-3 border-t"
+                  style={{ borderColor: 'rgba(255,255,255,0.08)' }}
                 >
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Starts with</span>
-                  <span className="text-sm font-bold text-white">
-                    {selectedMode.coins.toLocaleString()} coins
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Starting bankroll</span>
+                  <span className="text-sm font-extrabold text-white tabular-nums">
+                    {selectedMode.coins.toLocaleString()} <span className="text-[10px] text-gray-400 uppercase tracking-wider">coins</span>
                   </span>
                 </div>
               </div>
