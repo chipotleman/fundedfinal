@@ -776,7 +776,7 @@ export default function TopNavbar({
               {effectiveBetSlipCount > 0 && (
                 <button
                   onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
-                  className="relative no-hover-effect mr-[110px] lg:mr-[50px]"
+                  className="relative no-hover-effect mr-[150px] lg:mr-[50px]"
                   style={{
                     flexShrink: 0,
                     display: 'flex',
