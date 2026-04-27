@@ -105,33 +105,44 @@ export default function MessengerPage() {
   }
 
   // The Messenger page is strictly viewport-bound: only the inner thread
-  // body scrolls. We sit the inner wrap inside a container sized to the
-  // *small* viewport (`100svh`) minus the top-nav, and clip its overflow
-  // so the page itself can never grow taller than what the user can
-  // actually see. We use `svh` rather than `dvh` because on iOS Safari
-  // `100dvh` includes the area BEHIND the floating bottom toolbar
-  // when the toolbar is collapsing/expanding, which pushes the message
-  // composer underneath Safari's chrome and makes it disappear.
-  // `100svh` always reflects the smallest visible viewport, so the
-  // composer is guaranteed to sit above the toolbar at all times.
+  // body scrolls. We use a single flex column whose total height is
+  // pinned to the *small* viewport (`100svh`). The TopNavbar sits at
+  // the top (sticky inside this flex container, taking its own natural
+  // height) and the inner wrap takes the remaining space via
+  // `flex-1 min-h-0`, then clips its overflow so the composer is
+  // always visible at the bottom regardless of whether the navbar is
+  // currently pinned or unpinned.
   //
-  // We deliberately apply `overflow: hidden` to this *inner* wrap rather
-  // than to the outermost page div. The outer div still contains the
-  // TopNavbar and any portaled overlays (BetSlip, PlayFriendModal), so
-  // their dropdowns and click targets are never clipped, and iOS Safari
-  // taps on the piks logo / hamburger keep working from this page.
+  // We previously sized the inner wrap with
+  // `calc(100svh - var(--top-nav-height, 70px))`. That variable is set
+  // to `0` by TopNavbar whenever nothing is pinned, which made the
+  // inner wrap a full `100svh` *below* the navbar — pushing the
+  // composer ~70px below the visible viewport (behind Safari's
+  // bottom toolbar) and making it appear and then immediately vanish
+  // as the layout settled. Flex sizing eliminates that dependency.
+  //
+  // `svh` is preferred over `dvh` because on iOS Safari `100dvh`
+  // briefly overshoots into the area behind the floating bottom
+  // toolbar while it's collapsing, which would push the composer
+  // underneath the chrome. `100svh` always reflects the smallest
+  // visible viewport, so the composer stays above the toolbar.
   return (
-    <div style={{ backgroundColor: bg, minHeight: '100svh' }}>
+    <div
+      style={{
+        backgroundColor: bg,
+        height: '100svh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
       <TopNavbar
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
       <div
-        className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4 flex flex-col"
-        style={{
-          height: 'calc(100svh - var(--top-nav-height, 70px))',
-          overflow: 'hidden',
-        }}
+        className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4 flex flex-col flex-1 min-h-0"
+        style={{ overflow: 'hidden' }}
       >
         {/* When a conversation is open on mobile, MessagesPanel switches
             to its single-pane view and renders its own conversation
