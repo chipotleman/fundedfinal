@@ -1044,6 +1044,188 @@ const ONE_TAP_GAME_MODE_OPTIONS = [
 // product changes the matchmaking buy-in, mode, or anything else
 // worth re-confirming.
 
+// Slide-to-forfeit affordance for the active YOUR BATTLE card. The
+// thumb is dragged across the track; releasing past ~88% of the
+// track snaps to the end, fires a haptic, and invokes onConfirm.
+// Releasing earlier snaps the thumb back to the start. Pointer
+// events keep mouse + touch on the same code path so it feels
+// fluid on phones and trackpads alike.
+function SlideToForfeit({ onConfirm, disabled = false }) {
+  const trackRef = useRef(null);
+  const animRef = useRef(null);
+  const startPointerXRef = useRef(0);
+  const startThumbRef = useRef(0);
+  const thumbXRef = useRef(0);
+  const maxXRef = useRef(0);
+  const [thumbX, setThumbX] = useState(0);
+  const [maxX, setMaxX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const THUMB = 44;
+  const COMPLETE_RATIO = 0.88;
+
+  useEffect(() => { thumbXRef.current = thumbX; }, [thumbX]);
+  useEffect(() => { maxXRef.current = maxX; }, [maxX]);
+
+  useEffect(() => {
+    const measure = () => {
+      const el = trackRef.current;
+      if (!el) return;
+      setMaxX(Math.max(0, el.clientWidth - THUMB - 4));
+    };
+    measure();
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined' && trackRef.current) {
+      ro = new ResizeObserver(measure);
+      ro.observe(trackRef.current);
+    } else if (typeof window !== 'undefined') {
+      window.addEventListener('resize', measure);
+    }
+    return () => {
+      if (ro) ro.disconnect();
+      else if (typeof window !== 'undefined') window.removeEventListener('resize', measure);
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    };
+  }, []);
+
+  const animateTo = useCallback((target, onDone) => {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    let last = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const step = (now) => {
+      const dt = Math.min(0.05, ((now || Date.now()) - last) / 1000);
+      last = now || Date.now();
+      const current = thumbXRef.current;
+      const diff = target - current;
+      if (Math.abs(diff) < 0.5) {
+        thumbXRef.current = target;
+        setThumbX(target);
+        animRef.current = null;
+        if (onDone) onDone();
+        return;
+      }
+      const next = current + diff * Math.min(1, dt * 14);
+      thumbXRef.current = next;
+      setThumbX(next);
+      animRef.current = requestAnimationFrame(step);
+    };
+    animRef.current = requestAnimationFrame(step);
+  }, []);
+
+  const handlePointerDown = (e) => {
+    if (disabled || confirming) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (animRef.current) {
+      cancelAnimationFrame(animRef.current);
+      animRef.current = null;
+    }
+    setDragging(true);
+    startPointerXRef.current = e.clientX;
+    startThumbRef.current = thumbXRef.current;
+    try { e.currentTarget.setPointerCapture && e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startPointerXRef.current;
+    const next = Math.max(0, Math.min(maxXRef.current, startThumbRef.current + dx));
+    thumbXRef.current = next;
+    setThumbX(next);
+  };
+
+  const handlePointerUp = (e) => {
+    if (!dragging) return;
+    setDragging(false);
+    try { e.currentTarget.releasePointerCapture && e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+    const max = maxXRef.current;
+    if (max > 0 && thumbXRef.current / max >= COMPLETE_RATIO) {
+      animateTo(max, () => {
+        try { haptic.warning(); } catch {}
+        setConfirming(true);
+        Promise.resolve(onConfirm && onConfirm()).catch(() => {}).finally(() => {
+          setConfirming(false);
+          animateTo(0);
+        });
+      });
+    } else {
+      animateTo(0);
+    }
+  };
+
+  const progress = maxX > 0 ? thumbX / maxX : 0;
+  const trackBg = `linear-gradient(90deg, rgba(239,68,68,${0.16 + progress * 0.30}) 0%, rgba(249,115,22,${0.10 + progress * 0.22}) 100%)`;
+
+  return (
+    <div
+      ref={trackRef}
+      style={{
+        position: 'relative',
+        height: 48,
+        borderRadius: 999,
+        background: trackBg,
+        border: '1px solid rgba(239,68,68,0.40)',
+        overflow: 'hidden',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        touchAction: 'none',
+        WebkitTouchCallout: 'none',
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+          color: 'rgba(252,165,165,0.95)',
+          fontSize: 12,
+          fontWeight: 600,
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          opacity: confirming ? 0 : Math.max(0.18, 1 - progress * 1.4),
+          transition: dragging ? 'none' : 'opacity 200ms ease',
+        }}
+      >
+        {confirming ? 'Forfeiting…' : 'Slide to forfeit'}
+      </div>
+      <div
+        role="button"
+        aria-label="Slide to forfeit battle"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClick={(e) => { e.stopPropagation(); }}
+        style={{
+          position: 'absolute',
+          top: 2,
+          left: 2,
+          width: THUMB,
+          height: THUMB,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #ef4444, #f97316)',
+          boxShadow: '0 4px 14px rgba(239,68,68,0.45)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          transform: `translateX(${thumbX}px)`,
+          transition: dragging ? 'none' : 'transform 220ms cubic-bezier(0.22,1,0.36,1)',
+          cursor: disabled || confirming ? 'not-allowed' : 'grab',
+          touchAction: 'none',
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 function YouVsCard({
   youVsState,
   onClick,
@@ -2538,7 +2720,7 @@ function YouVsCard({
                 className="text-[11px] font-semibold flex items-center gap-1"
                 style={{ color: '#34d399' }}
               >
-                {isExpanded ? 'Hide' : 'Preview'}
+                {isExpanded ? 'Hide' : 'More'}
                 <svg
                   className="w-3 h-3"
                   fill="none"
@@ -2767,7 +2949,7 @@ function YouVsCard({
                   className="text-[11px] font-semibold flex items-center gap-1"
                   style={{ color: '#34d399' }}
                 >
-                  {isExpanded ? 'Hide' : 'Preview'}
+                  {isExpanded ? 'Hide' : 'More'}
                   <svg
                     className="w-3 h-3"
                     fill="none"
@@ -2840,6 +3022,25 @@ function YouVsCard({
                 </svg>
               </button>
             </div>
+
+            {isActive && matchup?.id && (
+              <div className="px-3.5 pb-3.5" onClick={(e) => e.stopPropagation()}>
+                <SlideToForfeit
+                  onConfirm={async () => {
+                    try {
+                      const res = await fetch('/api/battles/forfeit', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ matchupId: matchup.id }),
+                      });
+                      if (res.ok) {
+                        try { await refreshMatchup(); } catch {}
+                      }
+                    } catch {}
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
