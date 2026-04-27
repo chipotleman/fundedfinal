@@ -3250,10 +3250,11 @@ export default function LiveBattlesSection({
           presetMatch={matchFoundData}
           onMatchFound={() => {
             // Continue button on the standard match-found popup
-            // jumps the user to /battle so they land in the lobby
-            // exactly as they would after the modal's own flow.
+            // lands the user back on the dashboard so they can
+            // immediately start making picks for their new battle —
+            // mirrors the modal's own default redirect target.
             setMatchFoundData(null);
-            router.push('/battle');
+            router.push('/?battleStarted=true');
           }}
         />
       </div>
