@@ -2644,7 +2644,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
       </div>
 
       {!loadError && (
-        <form onSubmit={handleSend} className="p-3 flex-shrink-0" style={{ borderTop: `1px solid ${cardBorder}` }}>
+        <form
+          onSubmit={handleSend}
+          className="p-3 flex-shrink-0"
+          style={{
+            borderTop: `1px solid ${cardBorder}`,
+            paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
+          }}
+        >
           {voicePreview && !recording ? (
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-lg flex-wrap"

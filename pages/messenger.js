@@ -105,11 +105,15 @@ export default function MessengerPage() {
   }
 
   // The Messenger page is strictly viewport-bound: only the inner thread
-  // body scrolls. We sit the inner wrap inside a container sized to
-  // `100dvh - top-nav-height` and clip its overflow so the page itself can
-  // never grow taller than the visible viewport (which on iOS Safari
-  // shrinks when the keyboard pops up — `dvh` follows that, keeping the
-  // composer and friend header in view).
+  // body scrolls. We sit the inner wrap inside a container sized to the
+  // *small* viewport (`100svh`) minus the top-nav, and clip its overflow
+  // so the page itself can never grow taller than what the user can
+  // actually see. We use `svh` rather than `dvh` because on iOS Safari
+  // `100dvh` includes the area BEHIND the floating bottom toolbar
+  // when the toolbar is collapsing/expanding, which pushes the message
+  // composer underneath Safari's chrome and makes it disappear.
+  // `100svh` always reflects the smallest visible viewport, so the
+  // composer is guaranteed to sit above the toolbar at all times.
   //
   // We deliberately apply `overflow: hidden` to this *inner* wrap rather
   // than to the outermost page div. The outer div still contains the
@@ -117,7 +121,7 @@ export default function MessengerPage() {
   // their dropdowns and click targets are never clipped, and iOS Safari
   // taps on the piks logo / hamburger keep working from this page.
   return (
-    <div style={{ backgroundColor: bg, minHeight: '100dvh' }}>
+    <div style={{ backgroundColor: bg, minHeight: '100svh' }}>
       <TopNavbar
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
@@ -125,7 +129,7 @@ export default function MessengerPage() {
       <div
         className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4 flex flex-col"
         style={{
-          height: 'calc(100dvh - var(--top-nav-height, 70px))',
+          height: 'calc(100svh - var(--top-nav-height, 70px))',
           overflow: 'hidden',
         }}
       >
