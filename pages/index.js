@@ -1205,7 +1205,10 @@ export default function Dashboard() {
       />
 
       <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
-        <div className="mb-2 sm:mb-4">
+        {/* Carousel→pills gap halved per user feedback: was
+            `mb-2 sm:mb-4` + `py-2` (16px mobile / 24px sm+), now
+            `mb-1 sm:mb-2` + `py-1` (8px mobile / 12px sm+). */}
+        <div className="mb-1 sm:mb-2">
           <PromoCarousel slides={promoSlides} />
         </div>
 
@@ -1219,7 +1222,7 @@ export default function Dashboard() {
         />
 
         <div
-          className="-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 mb-3"
+          className="-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-1 mb-3"
           style={{ backgroundColor: '#000000' }}
         >
           {renderSportPills('inline')}
