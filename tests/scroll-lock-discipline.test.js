@@ -17,26 +17,35 @@
  *   same anti-pattern in isolation — the audit missed it because
  *   nothing in the build forces modals to go through the shared hook.
  *
- *   This test is that forcing function. It scans the repo for the two
+ *   This test is that forcing function. It scans the repo for the
  *   tell-tale fingerprints of someone reinventing the scroll-lock and
  *   fails the build if a NEW file outside `hooks/useModalScrollLock.js`
  *   either:
  *     (a) installs a non-passive `touchmove` / `wheel` listener that
  *         calls `preventDefault` (the global scroll-blocking pattern), OR
  *     (b) sets `document.body.style.position = 'fixed'` (the bespoke
- *         scrolled-position-saving pattern).
+ *         scrolled-position-saving pattern), OR
+ *     (c) sets `document.body.style.overflow = 'hidden'` (the bespoke
+ *         body-overflow lock — added in task #576 after a forfeit /
+ *         chat-popup regression where ad-hoc overflow toggles bypassed
+ *         the lock counter and stranded the page when stacked modals
+ *         tore down out of order).
  *
- *   Both are strong signals the shared stacked-modal counter and the
- *   route-change cleanup the rest of the app relies on are being
+ *   All three are strong signals the shared stacked-modal counter and
+ *   the route-change cleanup the rest of the app relies on are being
  *   bypassed.
  *
  * How to run:
  *   node tests/scroll-lock-discipline.test.js
  *
  * Allowlist:
- *   `hooks/useModalScrollLock.js` is the only file allowed to set
- *   `document.body.style.position = 'fixed'`. Nothing is allowed to
- *   install the non-passive touch/wheel preventDefault pattern.
+ *   `hooks/useModalScrollLock.js` is the only production file allowed
+ *   to set `document.body.style.position = 'fixed'` or
+ *   `document.body.style.overflow = 'hidden'`. The corresponding
+ *   runtime regression test (tests/use-modal-scroll-lock.test.js) is
+ *   also allowlisted for the overflow rule because it intentionally
+ *   simulates a stale leftover. Nothing is allowed to install the
+ *   non-passive touch/wheel preventDefault pattern.
  *
  * Exit codes:
  *   0 — clean
@@ -81,6 +90,21 @@ const SCAN_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs']);
 // the shared hook itself qualifies.
 const POSITION_FIXED_ALLOWLIST = new Set([
   path.join('hooks', 'useModalScrollLock.js'),
+]);
+
+// Files that are explicitly permitted to set
+// `document.body.style.overflow = 'hidden'`. Same rationale as the
+// position-fixed allowlist: only the shared hook owns this assignment.
+// Task #576: ad-hoc `overflow:hidden` toggles bypass the lock counter,
+// so when stacked modals tear down out of order the body can be left
+// permanently locked.
+//
+// The runtime regression test for the hook intentionally simulates a
+// stale `overflow: hidden` leftover to verify that the cleanup path
+// no longer re-locks the body, so it is also allowlisted.
+const OVERFLOW_HIDDEN_ALLOWLIST = new Set([
+  path.join('hooks', 'useModalScrollLock.js'),
+  path.join('tests', 'use-modal-scroll-lock.test.js'),
 ]);
 
 // Nothing is allowlisted for the global non-passive touch/wheel
@@ -338,6 +362,29 @@ function findPositionFixedViolations(rel, stripped) {
   return violations;
 }
 
+// (c) `document.body.style.overflow = 'hidden'` outside the shared hook.
+//
+// Task #576: this is the OTHER half of the bespoke body-lock pattern.
+// Setting `overflow: hidden` directly on body sidesteps the shared
+// counter, so when this modal closes out-of-order against another
+// scroll-locking modal (e.g. AuthPopup + chat popup, or ForfeitModal
+// + WonByForfeitModal) the body can end up permanently locked even
+// after every modal is gone. Resets like `overflow = ''` or
+// `overflow = 'auto'` are fine — only literal `'hidden'` is flagged.
+function findOverflowHiddenViolations(rel, stripped) {
+  /** @type {{ rel: string; line: number; snippet: string }[]} */
+  const violations = [];
+  const re =
+    /\bbody\s*\.\s*style\s*\.\s*overflow\s*=\s*(['"`])hidden\1/g;
+  let m;
+  while ((m = re.exec(stripped)) !== null) {
+    const line = lineNumberAt(stripped, m.index);
+    const snippet = stripped.slice(m.index, m.index + 120).replace(/\s+/g, ' ');
+    violations.push({ rel, line, snippet });
+  }
+  return violations;
+}
+
 function main() {
   const files = listFiles(REPO_ROOT);
   /** @type {{ rel: string; line: number; snippet: string; rule: string }[]} */
@@ -356,6 +403,11 @@ function main() {
     if (!POSITION_FIXED_ALLOWLIST.has(rel)) {
       for (const v of findPositionFixedViolations(rel, stripped)) {
         allViolations.push({ ...v, rule: 'position-fixed-on-body' });
+      }
+    }
+    if (!OVERFLOW_HIDDEN_ALLOWLIST.has(rel)) {
+      for (const v of findOverflowHiddenViolations(rel, stripped)) {
+        allViolations.push({ ...v, rule: 'overflow-hidden-on-body' });
       }
     }
     if (!TOUCH_WHEEL_ALLOWLIST.has(rel)) {

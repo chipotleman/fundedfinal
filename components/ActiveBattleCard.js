@@ -6,6 +6,7 @@ import ConnectionBadge from './battle/ConnectionBadge';
 import { formatMoney } from '../utils/formatMoney';
 import UserAvatar from './UserAvatar';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 function formatTimer(ms) {
   if (!ms || ms <= 0) return '00:00';
@@ -105,14 +106,12 @@ export default function ActiveBattleCard({
 
   useEffect(() => { setMounted(true); }, []);
 
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    if (showModal) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = prev; };
-    }
-  }, [showModal]);
+  // Use the shared scroll-lock hook so this modal participates in the
+  // body lock counter (task #576). The previous bespoke
+  // `body.style.overflow = 'hidden'` toggle bypassed the counter and
+  // could collide with stacked modals — leaving the body permanently
+  // locked when sibling modals tore down out-of-order.
+  useModalScrollLock(showModal, { restoreScroll: true });
 
   const userAvatar = myProfile?.avatar || null;
   const userName = myProfile?.username || session?.user?.name || '';
