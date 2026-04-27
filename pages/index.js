@@ -1137,7 +1137,7 @@ export default function Dashboard() {
       />
 
       <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
-        <div className="mb-4">
+        <div className="mb-2 sm:mb-4">
           <PromoCarousel slides={promoSlides} />
         </div>
 

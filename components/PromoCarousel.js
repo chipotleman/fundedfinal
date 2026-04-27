@@ -351,7 +351,7 @@ export default function PromoCarousel({ slides }) {
       </div>
 
       {count > 1 && (
-        <div className="flex justify-center items-center gap-0 sm:gap-1.5 mt-1 sm:mt-3">
+        <div className="flex justify-center items-center gap-1.5 mt-1 sm:mt-3">
           {visible.map((_, i) => (
             <button
               key={i}
@@ -375,8 +375,8 @@ export default function PromoCarousel({ slides }) {
               <span
                 className={`rounded-full block transition-all duration-300 ${
                   i === activeIndex
-                    ? 'w-[5px] h-[2px] sm:w-[22px] sm:h-[6px]'
-                    : 'w-[2px] h-[2px] sm:w-[6px] sm:h-[6px]'
+                    ? 'w-[22px] h-[6px]'
+                    : 'w-[6px] h-[6px]'
                 }`}
                 style={{
                   background:
