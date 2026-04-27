@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
-import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
 import DepositMatchContainer from '../components/DepositMatchContainer';
@@ -420,13 +419,6 @@ export default function Dashboard() {
   useEffect(() => {
     refreshLastBuyIn();
   }, [refreshLastBuyIn]);
-
-  const handleBetPlaced = (newBankroll) => {
-    const bankrollValue = Number(newBankroll);
-    if (!isNaN(bankrollValue)) {
-      setBankroll(bankrollValue);
-    }
-  };
 
   const toggleGameExpanded = (gameId) => {
     setExpandedGames(prev => ({ ...prev, [gameId]: !prev[gameId] }));
@@ -1578,13 +1570,6 @@ export default function Dashboard() {
       </div>
 
       <Footer />
-
-      <BetSlip
-        bankroll={bankroll}
-        isOpen={showBetSlip}
-        onClose={() => setShowBetSlip(false)}
-        onBetPlaced={handleBetPlaced}
-      />
 
       {showBattleWalkthrough && hasActiveMatchup && matchup && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.88)' }}>

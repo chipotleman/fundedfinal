@@ -3,7 +3,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import TopNavbar from '../../components/TopNavbar';
-import BetSlip from '../../components/BetSlip';
 import UserAvatar from '../../components/UserAvatar';
 import AchievementBadge from '../../components/AchievementBadge';
 import AchievementDetailModal from '../../components/AchievementDetailModal';
@@ -847,12 +846,6 @@ export default function PublicProfile() {
         betSlipCount={betSlip?.length || 0}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
-      {showBetSlip && (
-        <BetSlip
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
       
       <div className="pt-16 pb-24 px-4 max-w-4xl mx-auto">
         <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>

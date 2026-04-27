@@ -4,7 +4,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { signIn, useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
-import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -773,15 +772,6 @@ export default function AuthPage() {
             </form>
           </div>
         </div>
-      )}
-
-      {/* Bet Slip */}
-      {showBetSlip && (
-        <BetSlip
-          bankroll={10000}
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
       )}
 
       <style jsx>{`

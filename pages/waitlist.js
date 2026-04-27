@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
-import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -191,13 +190,6 @@ export default function Waitlist() {
           </p>
         </div>
       </div>
-      {showBetSlip && (
-        <BetSlip
-          bankroll={bankroll}
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
     </div>
   );
 }

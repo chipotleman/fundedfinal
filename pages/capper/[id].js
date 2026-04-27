@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../../components/TopNavbar';
-import BetSlip from '../../components/BetSlip';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -367,13 +366,6 @@ export default function CapperProfile() {
         </div>
       </div>
 
-      {showBetSlip && (
-        <BetSlip
-          bankroll={bankroll}
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
     </div>
   );
 }

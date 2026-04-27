@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import TopNavbar from '../components/TopNavbar';
-import BetSlip from '../components/BetSlip';
 import Footer from '../components/Footer';
 import { useBetSlip } from '../contexts/BetSlipContext';
 
@@ -29,9 +28,6 @@ export default function DataPrivacyRequest() {
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
-      {showBetSlip && (
-        <BetSlip isOpen={showBetSlip} onClose={() => setShowBetSlip(false)} />
-      )}
       <div className="px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold mb-8" style={{ color: '#ffffff' }}>

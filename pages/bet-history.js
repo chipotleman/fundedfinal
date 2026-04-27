@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
-import BetSlip from '../components/BetSlip';
 import PiksBetCard from '../components/PiksBetCard';
 import ShareableBetSlip from '../components/ShareableBetSlip';
 import BattleHistoryGroup from '../components/BattleHistoryGroup';
@@ -711,15 +710,6 @@ export default function BetHistory() {
           </div>
         </div>
       </div>
-
-      {/* Bet Slip */}
-      {showBetSlip && (
-        <BetSlip
-          bankroll={bankroll}
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
 
       {/* Shareable Bet Slip Modal */}
       <ShareableBetSlip

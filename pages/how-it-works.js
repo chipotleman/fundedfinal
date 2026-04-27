@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import ChallengeOverview from '../components/ChallengeOverview';
-import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -333,15 +332,6 @@ export default function Home() {
         </div>
 
       </div>
-
-      {/* Bet Slip */}
-      {showBetSlip && (
-        <BetSlip
-          bankroll={bankroll}
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
 
     </div>
   );

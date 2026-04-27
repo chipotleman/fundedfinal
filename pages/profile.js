@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
-import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function Profile() {
@@ -180,12 +179,6 @@ export default function Profile() {
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
-      {showBetSlip && (
-        <BetSlip
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
       
       <div className="pt-20 pb-16">
         {/* Header */}

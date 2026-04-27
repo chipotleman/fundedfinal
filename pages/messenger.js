@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
-import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import MessagesPanel from '../components/messages/MessagesPanel';
@@ -82,9 +81,6 @@ export default function MessengerPage() {
           betSlipCount={betSlip.length}
           onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
         />
-        {showBetSlip && (
-          <BetSlip isOpen={showBetSlip} onClose={() => setShowBetSlip(false)} />
-        )}
       </div>
     );
   }
@@ -96,9 +92,6 @@ export default function MessengerPage() {
           betSlipCount={betSlip.length}
           onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
         />
-        {showBetSlip && (
-          <BetSlip isOpen={showBetSlip} onClose={() => setShowBetSlip(false)} />
-        )}
         <div className="max-w-md mx-auto mt-20 px-4 text-center">
           <h1 className="text-2xl font-bold mb-2" style={{ color: textPrimary }}>
             Sign in to send messages
@@ -129,9 +122,6 @@ export default function MessengerPage() {
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
-      {showBetSlip && (
-        <BetSlip isOpen={showBetSlip} onClose={() => setShowBetSlip(false)} />
-      )}
       <div
         className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4 flex flex-col"
         style={{

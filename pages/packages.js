@@ -2,7 +2,6 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import TopNavbar from "../components/TopNavbar";
-import BetSlip from "../components/BetSlip";
 import { useBetSlip } from "../contexts/BetSlipContext";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -482,14 +481,6 @@ export default function Packages() {
         </Link>
       </div>
 
-      {/* Bet Slip */}
-      {showBetSlip && (
-        <BetSlip
-          bankroll={bankroll}
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
     </div>
   );
 }

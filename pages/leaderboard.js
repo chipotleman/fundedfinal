@@ -7,7 +7,6 @@ import TapSurface from '../components/TapSurface';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
 import { useAuth } from '../contexts/AuthContext';
-import BetSlip from '../components/BetSlip';
 
 function ProfileLink({ user, extras, children, className = '', ...rest }) {
   const handlers = useProfilePrefetchHandlers(user, extras);
@@ -547,14 +546,6 @@ const Leaderboard = () => {
           </div>
         )}
       </div>
-
-      {showBetSlip && (
-        <BetSlip
-          bankroll={bankroll}
-          isOpen={showBetSlip}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
 
       {showProfileModal && (
         <ProfileModal

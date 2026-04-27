@@ -27,6 +27,7 @@ import MyChallengePopup from '../components/MyChallengePopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
 import PublicBattlePreview from '../components/PublicBattlePreview';
+import BetSlip from '../components/BetSlip';
 import { useEventTracking } from '../hooks/useEventTracking';
 import { releaseBodyScrollLock } from '../hooks/useGlobalScrollLockRecovery';
 import { useRouter } from 'next/router';
@@ -97,6 +98,20 @@ function PresenceHeartbeat({ isLoggedIn }) {
   return null;
 }
 
+// Routes that intentionally hide the rest of the app chrome (top
+// navbar, beta gate, etc.). Centralized here so the beta-auth gate and
+// the GlobalBetSlip mount stay in lockstep — adding a new chrome-less
+// route in one place automatically suppresses the slip there too,
+// preventing an orphan panel on a screen that has no trigger button.
+function isChromelessRoute(pathname) {
+  const path = pathname || '';
+  if (path.startsWith('/debug')) return true;
+  if (path.startsWith('/admin')) return true;
+  if (path === '/checkout' || path === '/checkout-design') return true;
+  if (path === '/battle/replay/[id]') return true;
+  return false;
+}
+
 // Wraps the active route so we can apply the desktop "PIK SLIP as side
 // panel" shift in one place. When the slip is open AND the viewport is
 // at the md breakpoint or larger, this wrapper translates the page
@@ -119,6 +134,27 @@ function PageShellShifter({ children }) {
     >
       {children}
     </div>
+  );
+}
+
+// Single global Pik Slip mount. Lives inside <BetSlipProvider> so it
+// reads the same `showBetSlip` flag the top navbar toggles, which means
+// the slip opens on every page that shows the navbar — not only the
+// pages that used to render their own <BetSlip /> instance. Suppressed
+// on the same routes where the rest of the chrome is intentionally
+// hidden today (debug, admin, checkout, replay), so we don't leak an
+// orphan panel onto screens that don't show the trigger button. The
+// beta-landing and public-battle-preview gates short-circuit above
+// <BetSlipProvider> entirely, so they never reach this mount.
+function GlobalBetSlip() {
+  const router = useRouter();
+  const { showBetSlip, setShowBetSlip } = useBetSlip();
+  if (isChromelessRoute(router?.pathname)) return null;
+  return (
+    <BetSlip
+      isOpen={showBetSlip}
+      onClose={() => setShowBetSlip(false)}
+    />
   );
 }
 
@@ -367,6 +403,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
     };
   }, [session]);
 
+  // Individual flags are still used by chrome-specific gates below
+  // (each route hides a slightly different combination of UI), but they
+  // all derive from the same isChromelessRoute() helper that the
+  // GlobalBetSlip mount uses, so adding a new chrome-less route in one
+  // place keeps every gate in sync automatically.
   const isDebugPage = router?.pathname?.startsWith('/debug');
   const isAdminPage = router?.pathname?.startsWith('/admin');
   const isCheckoutPage = router?.pathname === '/checkout' || router?.pathname === '/checkout-design';
@@ -572,6 +613,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                 <IncomingInviteModal />
                 <PushOptInPrompt />
                 <BonusClaimedCelebration />
+                <GlobalBetSlip />
                 {/* Solid Black Background */}
                 <div
                   style={{
