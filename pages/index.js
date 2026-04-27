@@ -1240,8 +1240,8 @@ export default function Dashboard() {
                     transition: 'border-color 250ms ease, box-shadow 250ms ease',
                   }}
                 >
-                  <div className="p-3.5">
-                    <div className="flex items-center gap-2 mb-2.5" style={{ minHeight: '22px' }}>
+                  <div className="p-2.5 sm:p-3">
+                    <div className="flex items-center gap-2 mb-1.5" style={{ minHeight: '20px' }}>
                       <span className="text-gray-500 text-[11px] font-medium truncate" style={{ minWidth: 0 }}>{game.sportName}</span>
                       <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
                         {isLeadChange && (
@@ -1278,10 +1278,10 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div 
-                      className="mb-3 cursor-pointer -mx-1.5 px-1.5 py-1 rounded-lg transition-colors"
+                      className="mb-2 cursor-pointer -mx-1.5 px-1.5 py-0.5 rounded-lg transition-colors"
                       onClick={() => router.push(`/game/${game.id}`)}
                     >
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-0.5">
                         <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: '170px' }}>{game.awayTeamFull || game.awayTeam}</span>
                         {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>}
                       </div>

@@ -13,6 +13,7 @@ import NotificationsDropdown from './notifications/NotificationsDropdown';
 import MessagesDropdown from './notifications/MessagesDropdown';
 import MessagePopup from './messages/MessagePopup';
 import { formatMoney } from '../utils/formatMoney';
+import haptic from '../utils/haptics';
 
 export default function TopNavbar({
   betSlipCount,
@@ -774,8 +775,8 @@ export default function TopNavbar({
                   before the auth buttons / avatar. */}
               {effectiveBetSlipCount > 0 && (
                 <button
-                  onClick={effectiveOnBetSlipClick}
-                  className="relative no-hover-effect mr-[64px] lg:mr-[50px]"
+                  onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
+                  className="relative no-hover-effect mr-[76px] lg:mr-[50px]"
                   style={{
                     flexShrink: 0,
                     display: 'flex',
@@ -1013,7 +1014,7 @@ export default function TopNavbar({
                 across breakpoints. Sized compact to fit narrow widths. */}
             {effectiveBetSlipCount > 0 && (
               <button
-                onClick={effectiveOnBetSlipClick}
+                onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
                 className="relative no-hover-effect flex-shrink-0"
                 style={{
                   display: 'flex',

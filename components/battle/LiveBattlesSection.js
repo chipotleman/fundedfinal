@@ -18,6 +18,7 @@ import {
 import { readLocalOneTapPrefs, writeLocalOneTapPrefs, fetchOneTapPrefs, saveOneTapPrefs } from '../../utils/oneTapPrefs';
 import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
 import PreMatchPopup from './PreMatchPopup';
+import haptic from '../../utils/haptics';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -1620,8 +1621,10 @@ function YouVsCard({
       // where the page's requireAuth wrapper triggers the sign-in
       // popup first and then opens the same chooser.
       if (myProfile?.id && onMatchFound) {
+        haptic.tap();
         setShowChooser(true);
       } else {
+        haptic.tap();
         router.push('/battle?openChooser=1');
       }
       return;

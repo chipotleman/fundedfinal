@@ -6,6 +6,7 @@ import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip
 import { writeLocalOneTapPrefs, saveOneTapPrefs } from '../../utils/oneTapPrefs';
 import { setPlayNowConfirmSkipped } from '../../lib/playNowConfirm';
 import { formatMoney } from '../../utils/formatMoney';
+import haptic from '../../utils/haptics';
 
 // Stepped pre-match popup used by the homepage "Your Battle" card and
 // by the Battle Mode Chooser's Quick Match option. Walks the user
@@ -99,6 +100,7 @@ export default function PreMatchPopup({
 
   const handleConfirm = () => {
     if (dontAsk) setPlayNowConfirmSkipped(true);
+    haptic.tap();
     onConfirm({ buyIn, gameMode });
   };
 
