@@ -721,13 +721,13 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
 
       {isOpen && (
         <>
-          {/* Backdrop - blocks clicks but NOT body scroll (preserves sticky positioning) */}
-          <div 
-            data-betslip="true"
-            className="fixed inset-0 z-[98] hidden md:block"
-            style={{ backgroundColor: '#000000' }}
-            onClick={onClose}
-          />
+          {/* Backdrop — mobile only. On desktop the slip docks as a true
+              side panel and the page content shifts left by the panel
+              width (see PageShellShifter / .page-content-shift in
+              globals.css), so a full-viewport backdrop would block the
+              shifted page that the user can now still see and interact
+              with. Mobile keeps no backdrop because the slip already
+              takes over the full viewport at <md. */}
           
           {/* Bet slip panel - uses overscroll-behavior to contain scroll within panel */}
           <div 

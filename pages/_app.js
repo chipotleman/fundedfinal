@@ -3,7 +3,7 @@ import Head from 'next/head';
 import '../styles/globals.css';
 import { SessionProvider } from 'next-auth/react';
 import { AuthProvider } from '../contexts/AuthContext';
-import { BetSlipProvider } from '../contexts/BetSlipContext';
+import { BetSlipProvider, useBetSlip } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import { ProfileCacheProvider } from '../contexts/ProfileCacheContext';
 import { UserPreferencesProvider } from '../contexts/UserPreferencesContext';
@@ -95,6 +95,31 @@ function PresenceHeartbeat({ isLoggedIn }) {
   }, [isLoggedIn]);
 
   return null;
+}
+
+// Wraps the active route so we can apply the desktop "PIK SLIP as side
+// panel" shift in one place. When the slip is open AND the viewport is
+// at the md breakpoint or larger, this wrapper translates the page
+// content left by the panel width via the .betslip-open CSS class
+// (defined in styles/globals.css). The transform is a no-op on mobile
+// so the slip's existing full-screen behavior is preserved. Lives
+// inside <BetSlipProvider> so it can read the context value directly,
+// keeping individual pages free of per-page shift logic.
+function PageShellShifter({ children }) {
+  const { showBetSlip } = useBetSlip();
+  return (
+    <div
+      className={`page-content-shift${showBetSlip ? ' betslip-open' : ''}`}
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#000000',
+        width: '100vw',
+        position: 'relative',
+      }}
+    >
+      {children}
+    </div>
+  );
 }
 
 function AutoGrader() {
@@ -580,17 +605,16 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                   }}
                 />
                 
-                {/* Page wrapper - menu opens instantly with no slide animation */}
-                <div 
-                  style={{
-                    minHeight: '100vh',
-                    backgroundColor: '#000000',
-                    width: '100vw',
-                    position: 'relative',
-                  }}
-                >
+                {/* Page wrapper - menu opens instantly with no slide animation.
+                    On desktop (md+), this wrapper translates left by the
+                    bet-slip panel width (420px) when the slip is open, so the
+                    docked side panel reveals on the right and both are visible
+                    side-by-side. Mobile is unchanged — the slip continues to
+                    take over the full viewport. The shift is handled by
+                    PageShellShifter so it can read showBetSlip from context. */}
+                <PageShellShifter>
                   <Component {...pageProps} />
-                </div>
+                </PageShellShifter>
                 
                 {/* Global Popups - Available on all pages */}
                 <ChallengePopup 

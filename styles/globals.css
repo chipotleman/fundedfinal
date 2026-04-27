@@ -10,6 +10,28 @@ html[data-modal-open] {
   overscroll-behavior: contain;
 }
 
+/* Desktop "PIK SLIP as side panel" shift. The wrapper holding the
+   active route translates left by the bet-slip panel width whenever the
+   slip is open at the md breakpoint and above, revealing the docked
+   slip on the right edge. Mobile keeps the existing full-screen slip
+   behavior — no shift below md. Transform-based so layout doesn't
+   reflow and no horizontal scrollbar appears (body has overflow-x:
+   hidden). */
+.page-content-shift {
+  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+@media (min-width: 768px) {
+  .page-content-shift.betslip-open {
+    transform: translate3d(-420px, 0, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-content-shift {
+    transition: none;
+  }
+}
+
 /* GLOBAL BUTTON RESET - Remove all tap/active highlights from every button */
 button,
 [role="button"],
