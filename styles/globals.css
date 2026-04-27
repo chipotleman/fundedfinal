@@ -873,3 +873,25 @@ button.no-hover-effect.rounded-lg:focus-visible {
     filter: brightness(1.04);
   }
 }
+
+/* ===== Messenger cartoon theme =====
+   Press-down behavior shared by every cartoon-styled control inside
+   the Messenger surface (back arrow, Start Battle CTA, mic + send
+   buttons in the composer). Identical pattern to pikslip-cartoon-x:
+   collapse the offset shadow and translate the button 2px so it
+   visually depresses into the chat. Hover lift is gated behind
+   hover:hover so touch devices stay crisp (no-hover-on-touch pref). */
+.msg-cartoon-btn {
+  cursor: pointer;
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out, filter 120ms ease-out;
+  will-change: transform, box-shadow;
+}
+.msg-cartoon-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #0a0a0a !important;
+}
+@media (hover: hover) {
+  .msg-cartoon-btn:hover {
+    filter: brightness(1.08);
+  }
+}

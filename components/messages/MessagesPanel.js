@@ -2469,30 +2469,26 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     >
       <div
         className="flex flex-col"
-        style={{ borderBottom: `1px solid ${cardBorder}` }}
+        style={{ borderBottom: '2.5px solid #0a0a0a' }}
       >
       <div className="flex items-center gap-3 px-3 sm:px-4 py-3">
-        {/* Mobile-only back-to-inbox arrow. Replaces the old tiny blue
-            "Back to messages" text link that sat above this row — that
-            link was easy to miss and didn't read as a back affordance.
-            The page-level Back/Close in the Messenger header is still
-            rendered above this so the user always has both
-            "back to inbox" (this) and "leave Messenger" (above) in one
-            tap. Tap target is at least 44x44 to satisfy iOS touch
-            guidance and to be reliably hittable next to the avatar. */}
+        {/* Mobile-only back-to-inbox arrow — cartoon themed (chunky
+            black outline + offset shadow + press-down) so it matches
+            the rest of the new battle UI. Tap target stays 44x44. */}
         {onBack && (
           <button
             type="button"
             onClick={onBack}
             aria-label="Back to messages"
-            className="md:hidden inline-flex items-center justify-center rounded-lg text-blue-300 active:text-white -ml-1 flex-shrink-0"
+            className="msg-cartoon-btn md:hidden inline-flex items-center justify-center rounded-2xl text-white -ml-1 flex-shrink-0"
             style={{
               width: 44,
               height: 44,
               minWidth: 44,
               minHeight: 44,
-              backgroundColor: 'rgba(59,130,246,0.12)',
-              border: '1px solid rgba(59,130,246,0.35)',
+              background: 'linear-gradient(180deg,#1f2937,#111827)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 3px 0 #0a0a0a',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
@@ -2526,9 +2522,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
         </div>
         {onStartBattle && (
           <>
-            {/* Mobile: square icon-only button. Same blue gradient + glow as
-                the standard "Start a Battle" CTA on the Battle page so the
-                visual language is identical no matter where the flow starts. */}
+            {/* Mobile: square icon-only Start Battle button — cartoon
+                themed (chunky black border + offset shadow + bold blue
+                gradient) so the trigger feels like part of the same
+                product as the modal it opens. */}
             <button
               type="button"
               onClick={() => {
@@ -2539,17 +2536,21 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                 onStartBattle(friend);
               }}
               disabled={hasActiveMatchup}
-              className="sm:hidden relative inline-flex items-center justify-center w-9 h-9 rounded-lg text-white border border-blue-500/40 overflow-hidden flex-shrink-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
+              className="msg-cartoon-btn sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-2xl text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.5)',
+                textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+              }}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : 'Start Battle'}
               aria-label={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : `Start battle with ${friend?.username || 'friend'}`}
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500" />
-              <svg className="w-4 h-4 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </button>
-            {/* Desktop: compact icon + label pill, same blue treatment. */}
+            {/* Desktop: cartoon-themed pill with icon + label. */}
             <button
               type="button"
               onClick={() => {
@@ -2560,16 +2561,20 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                 onStartBattle(friend);
               }}
               disabled={hasActiveMatchup}
-              className="hidden sm:inline-flex relative items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white border border-blue-500/40 overflow-hidden flex-shrink-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
+              className="msg-cartoon-btn hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-extrabold uppercase tracking-wider text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.5)',
+                textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+              }}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
               aria-label={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : `Start battle with ${friend?.username || 'friend'}`}
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500" />
-              <svg className="w-3.5 h-3.5 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span className="relative">{hasActiveMatchup ? 'In a battle' : 'Start Battle'}</span>
+              <span>{hasActiveMatchup ? 'In a battle' : 'Start Battle'}</span>
             </button>
           </>
         )}
@@ -2609,16 +2614,29 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             key={m.id}
             className={`flex flex-col ${m.senderId === myId ? 'items-end' : 'items-start'}`}
           >
+            {/* Cartoon-themed bubbles — chunky black border + offset
+                shadow on both sides. Mine uses a bold blue gradient
+                (matches the "Start Battle" CTA), theirs uses a dark
+                slate gradient so the contrast still reads cleanly. */}
             <div
-              className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-snug break-words ${
+              className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-sm leading-snug break-words ${
                 m.senderId === myId
-                  ? 'bg-blue-500 text-white rounded-br-sm'
+                  ? 'text-white rounded-br-sm'
                   : 'text-white rounded-bl-sm'
               }`}
               style={
                 m.senderId === myId
-                  ? { boxShadow: '0 0 14px rgba(59,130,246,0.35)' }
-                  : { backgroundColor: '#0f1622', border: '1px solid rgba(59,130,246,0.18)' }
+                  ? {
+                      background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.35)',
+                      textShadow: '0 1px 0 rgba(0,0,0,0.25)',
+                    }
+                  : {
+                      background: 'linear-gradient(180deg,#1f2937,#111827)',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 3px 0 #0a0a0a',
+                    }
               }
             >
               {m.messageType === 'voice' && m.attachmentUrl ? (
@@ -2870,6 +2888,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             )}
             </>
           ) : (
+            /* Cartoon-themed composer row — text input has chunky black
+               border + soft inset shadow, mic + send have the same
+               offset-shadow press behavior as the rest of the slip. */
             <div className="flex gap-2">
               <input
                 ref={inputRef}
@@ -2877,12 +2898,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                 value={reply}
                 onChange={handleReplyChange}
                 placeholder="Write a message…"
-                className="flex-1 min-w-0 px-3 py-2 rounded-lg focus:outline-none focus:border-blue-400"
+                className="flex-1 min-w-0 px-3.5 py-2.5 rounded-2xl focus:outline-none"
                 style={{
                   backgroundColor: inputBg,
-                  border: `1px solid ${cardBorder}`,
+                  border: '2.5px solid #0a0a0a',
                   color: textPrimary,
-                  boxShadow: 'inset 0 0 0 1px rgba(59,130,246,0.05)',
+                  boxShadow: 'inset 0 2px 0 rgba(0,0,0,0.4)',
                   fontSize: 16,
                   lineHeight: '20px',
                 }}
@@ -2895,13 +2916,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                   onClick={handleStartRecording}
                   disabled={sending}
                   aria-label="Record voice message"
-                  className="px-3 py-2 rounded-lg text-white disabled:opacity-50"
+                  className="msg-cartoon-btn flex items-center justify-center w-11 px-0 rounded-2xl text-white disabled:opacity-50"
                   style={{
-                    backgroundColor: '#0d1310',
-                    border: `1px solid ${cardBorder}`,
+                    background: 'linear-gradient(180deg,#1f2937,#111827)',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 3px 0 #0a0a0a',
                   }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="9" y="2" width="6" height="12" rx="3" />
                     <path d="M5 10v2a7 7 0 0 0 14 0v-2" />
                     <line x1="12" y1="19" x2="12" y2="22" />
@@ -2911,11 +2933,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                 <button
                   type="submit"
                   disabled={!reply.trim() || sending}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-shadow"
+                  className="msg-cartoon-btn px-4 py-2 disabled:opacity-50 text-white text-xs font-extrabold uppercase tracking-wider rounded-2xl"
                   style={{
+                    background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                    border: '2.5px solid #0a0a0a',
                     boxShadow: !reply.trim() || sending
-                      ? 'none'
-                      : '0 0 14px rgba(59,130,246,0.5)',
+                      ? '0 3px 0 #0a0a0a'
+                      : '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.5)',
+                    textShadow: '0 1px 0 rgba(0,0,0,0.35)',
                   }}
                 >
                   {sending ? '…' : 'Send'}
@@ -3406,6 +3431,9 @@ export default function MessagesPanel({
               ? `${last.fromMe ? 'You: ' : ''}${last.preview || last.content || ''}`
               : `${f.battleWins || 0}W-${f.battleLosses || 0}L`;
             return (
+              /* Cartoon-themed inbox row — selected gets a thicker
+                 black left bar to read like the chunky outline used
+                 elsewhere; unread badges already use the right glow. */
               <button
                 key={f.id}
                 type="button"
@@ -3413,8 +3441,9 @@ export default function MessagesPanel({
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors relative"
                 style={{
                   backgroundColor: isSelected ? rowSelected : 'transparent',
-                  borderBottom: `1px solid ${cardBorder}`,
-                  borderLeft: isSelected ? '2px solid #3b82f6' : '2px solid transparent',
+                  borderBottom: '1.5px solid rgba(10,10,10,0.6)',
+                  borderLeft: isSelected ? '4px solid #0a0a0a' : '4px solid transparent',
+                  boxShadow: isSelected ? 'inset 4px 0 0 #3b82f6' : 'none',
                 }}
                 onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = rowHover; }}
                 onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}

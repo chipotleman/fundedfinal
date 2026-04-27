@@ -434,8 +434,34 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         <div className="px-5 pt-5 pb-0 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 id="pfm-title" className="text-lg font-bold" style={{ color: textPrimary }}>Play a Friend</h2>
-              <p className="text-xs mt-0.5" style={{ color: textMuted }}>Challenge someone to a 1v1 battle</p>
+              {/* Cartoon-styled title to match BattleModeChooser:
+                  uppercase, extrabold, drop shadow on the heading and a
+                  smaller all-caps eyebrow for the subtitle. Keeps
+                  PlayFriendModal in the same visual family as the rest
+                  of the battle UI. */}
+              <h2
+                id="pfm-title"
+                className="font-black uppercase"
+                style={{
+                  color: textPrimary,
+                  fontSize: '20px',
+                  lineHeight: 1.05,
+                  letterSpacing: '0.06em',
+                  textShadow: '0 2px 0 #000',
+                }}
+              >
+                Play a Friend
+              </h2>
+              <p
+                className="mt-1 font-extrabold uppercase"
+                style={{
+                  color: '#60a5fa',
+                  fontSize: '10px',
+                  letterSpacing: '0.18em',
+                }}
+              >
+                Challenge someone to a 1v1 battle
+              </p>
             </div>
             <button
               aria-label="Close"
@@ -573,7 +599,17 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               Waiting for {selectedFriend?.username || 'your opponent'}
             </h3>
 
-            <div className="mt-4 rounded-xl p-3 text-left space-y-2" style={{ backgroundColor: elevatedBg, border: `1px solid ${cardBorder}` }}>
+            {/* Cartoon-themed waiting tips card — chunky black border +
+                offset shadow so the supporting copy still reads as part
+                of the same playful design language as the VS card. */}
+            <div
+              className="mt-4 rounded-2xl p-3 text-left space-y-2"
+              style={{
+                backgroundColor: elevatedBg,
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 4px 0 #0a0a0a',
+              }}
+            >
               <div className="flex items-start gap-2">
                 <span className="text-sm leading-none mt-0.5">✅</span>
                 <p className="text-xs leading-snug" style={{ color: textSecondary }}>
@@ -595,23 +631,69 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
             </div>
 
             {inviteCountdown > 0 ? (
+              /* Cartoon countdown — chunky black border around the
+                 progress track so it matches the rest of the slip. */
               <div className="mt-4">
-                <div className="w-full rounded-full h-1.5 mb-2 overflow-hidden" style={{ backgroundColor: elevatedBg }}>
-                  <div className="pfm-wait-shimmer h-1.5 rounded-full" style={{ width: `${(inviteCountdown / (INVITE_EXPIRY_HOURS * 3600)) * 100}%`, background: '#3b82f6' }}></div>
+                <div
+                  className="w-full rounded-full h-2.5 mb-2 overflow-hidden"
+                  style={{
+                    backgroundColor: '#0a0a0a',
+                    border: '2px solid #0a0a0a',
+                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  <div
+                    className="pfm-wait-shimmer h-full rounded-full"
+                    style={{
+                      width: `${(inviteCountdown / (INVITE_EXPIRY_HOURS * 3600)) * 100}%`,
+                      background: 'linear-gradient(90deg,#3b82f6,#22d3ee)',
+                      boxShadow: '0 0 12px rgba(59,130,246,0.55)',
+                    }}
+                  ></div>
                 </div>
-                <p className="text-xs" style={{ color: textMuted }}>Invite expires in {formatCountdown(inviteCountdown)}</p>
+                <p
+                  className="text-[10px] font-extrabold uppercase tracking-[0.18em]"
+                  style={{ color: textMuted }}
+                >
+                  Invite expires in {formatCountdown(inviteCountdown)}
+                </p>
               </div>
             ) : (
               <div className="mt-4">
-                <p className="text-yellow-400 text-sm">Invite expired.</p>
-                <button onClick={() => { setSent(false); setError(''); }} className="mt-3 px-4 py-2 rounded-lg text-sm transition-colors" style={{ backgroundColor: elevatedBg, color: textSecondary }}>
+                <p
+                  className="font-extrabold uppercase"
+                  style={{ color: '#fcd34d', fontSize: '12px', letterSpacing: '0.12em' }}
+                >
+                  Invite expired
+                </p>
+                <button
+                  onClick={() => { setSent(false); setError(''); }}
+                  className="pfm-cartoon-btn mt-3 px-4 py-2.5 rounded-2xl text-xs font-extrabold uppercase tracking-wider"
+                  style={{
+                    background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                    color: '#fff',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.4)',
+                    textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                  }}
+                >
                   Try Again
                 </button>
               </div>
             )}
 
             {error && (
-              <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 text-red-400 text-xs pfm-fade-in">{error}</div>
+              <div
+                className="mt-3 rounded-2xl p-3 text-xs pfm-fade-in"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(239,68,68,0.18), rgba(239,68,68,0.06))',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 4px 0 #0a0a0a',
+                  color: '#fecaca',
+                }}
+              >
+                {error}
+              </div>
             )}
 
             <button
@@ -645,8 +727,21 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto px-5 pb-5">
+            {/* Cartoon-themed non-sent error box — same red gradient +
+                chunky black border + offset shadow as the sent state,
+                so failures read consistently across both branches. */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm mb-4 pfm-fade-in">{error}</div>
+              <div
+                className="rounded-2xl p-3 text-sm mb-4 pfm-fade-in"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(239,68,68,0.18), rgba(239,68,68,0.06))',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 4px 0 #0a0a0a',
+                  color: '#fecaca',
+                }}
+              >
+                {error}
+              </div>
             )}
 
             {activeTab === 'friends' && !lockedFriend && !selectedFriend && (
@@ -1044,16 +1139,21 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   <div className="flex items-baseline justify-between mb-2 gap-2">
                     <div className="relative flex items-center gap-1.5" ref={gameModeInfoRef}>
                       <label className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: textMuted }}>Game Mode</label>
+                      {/* Cartoon `?` info button — chunky black border +
+                          offset shadow + press-down. Glows blue when
+                          active so users see the tooltip is open. */}
                       <button
                         type="button"
                         onClick={() => setShowGameModeInfo(v => !v)}
                         aria-label="What's the difference between buy-in and coins?"
                         aria-expanded={showGameModeInfo}
-                        className="w-4 h-4 inline-flex items-center justify-center rounded-full text-[9px] font-bold leading-none transition-colors"
+                        className="pfm-cartoon-btn w-5 h-5 inline-flex items-center justify-center rounded-full text-[10px] font-extrabold leading-none"
                         style={{
-                          backgroundColor: showGameModeInfo ? '#3b82f6' : elevatedBg,
-                          color: showGameModeInfo ? '#fff' : textSecondary,
-                          border: `1px solid ${showGameModeInfo ? '#3b82f6' : cardBorder}`,
+                          background: showGameModeInfo ? 'linear-gradient(180deg,#3b82f6,#2563eb)' : 'linear-gradient(180deg,#1f2937,#111827)',
+                          color: '#ffffff',
+                          border: '2px solid #0a0a0a',
+                          boxShadow: '0 2px 0 #0a0a0a',
+                          textShadow: '0 1px 0 rgba(0,0,0,0.35)',
                         }}
                       >
                         ?
@@ -1061,15 +1161,15 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       {showGameModeInfo && (
                         <div
                           role="tooltip"
-                          className="absolute left-0 top-full mt-2 z-30 w-64 max-w-[calc(100vw-2rem)] p-3 rounded-xl text-[11px] leading-snug"
+                          className="absolute left-0 top-full mt-2 z-30 w-64 max-w-[calc(100vw-2rem)] p-3 rounded-2xl text-[11px] leading-snug"
                           style={{
                             backgroundColor: cardBg,
                             color: textSecondary,
-                            border: `1px solid ${cardBorder}`,
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                            border: '2.5px solid #0a0a0a',
+                            boxShadow: '0 5px 0 #0a0a0a, 0 12px 24px rgba(0,0,0,0.6)',
                           }}
                         >
-                          The <span style={{ color: textPrimary, fontWeight: 600 }}>${buyIn}</span> above is each player&apos;s wager. The coins below are the in-battle starting bankroll each player gets to bet with.
+                          The <span style={{ color: textPrimary, fontWeight: 800 }}>${buyIn}</span> above is each player&apos;s wager. The coins below are the in-battle starting bankroll each player gets to bet with.
                         </div>
                       )}
                     </div>
@@ -1150,18 +1250,23 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   {(() => {
                     const selectedMode = GAME_MODE_OPTIONS.find(m => m.id === gameMode);
                     if (!selectedMode) return null;
+                    // Cartoon-themed mode description card — chunky black
+                    // border + offset shadow + a colored glow pulled from
+                    // the active mode's palette so it feels connected to
+                    // the tile the user just picked.
                     return (
                       <div
                         aria-live="polite"
-                        className="mt-2 flex items-start gap-2 rounded-lg px-2.5 py-2"
+                        className="mt-2 flex items-start gap-2 rounded-2xl px-3 py-2.5"
                         style={{
-                          backgroundColor: `${selectedMode.color}0d`,
-                          border: `1px solid ${selectedMode.color}26`,
+                          background: `linear-gradient(180deg, ${selectedMode.color}1f, ${selectedMode.color}0a)`,
+                          border: '2.5px solid #0a0a0a',
+                          boxShadow: `0 4px 0 #0a0a0a, 0 0 14px ${selectedMode.color}40`,
                         }}
                       >
-                        <span className="text-xs leading-none mt-0.5" aria-hidden="true">{selectedMode.icon}</span>
+                        <span className="text-sm leading-none mt-0.5" aria-hidden="true">{selectedMode.icon}</span>
                         <p className="text-[11px] leading-snug" style={{ color: textSecondary }}>
-                          <span className="font-semibold" style={{ color: textPrimary }}>{selectedMode.label}:</span>{' '}
+                          <span className="font-extrabold uppercase tracking-wider" style={{ color: textPrimary }}>{selectedMode.label}:</span>{' '}
                           {selectedMode.description}
                         </p>
                       </div>
@@ -1184,10 +1289,24 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
             }}
           >
             {hasActiveMatchup && (
+              /* Cartoon-themed warning — chunky red border + offset
+                 shadow + bold uppercase eyebrow so it carries the same
+                 design language as the cartoon "Cancel Invite" button. */
               <div
-                className="rounded-xl px-3 py-2 text-xs leading-snug"
-                style={{ backgroundColor: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}
+                className="rounded-2xl px-3 py-2.5 text-xs leading-snug"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(248,113,113,0.16), rgba(248,113,113,0.06))',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(248,113,113,0.25)',
+                  color: '#fecaca',
+                }}
               >
+                <div
+                  className="font-extrabold uppercase mb-0.5"
+                  style={{ color: '#fca5a5', fontSize: '9px', letterSpacing: '0.18em' }}
+                >
+                  Battle in progress
+                </div>
                 {ACTIVE_BATTLE_BLOCK_MESSAGE}
               </div>
             )}
