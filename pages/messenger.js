@@ -129,7 +129,20 @@ export default function MessengerPage() {
           overflow: 'hidden',
         }}
       >
-        <div className="flex items-center gap-2 mb-2 sm:mb-3 flex-shrink-0">
+        {/* When a conversation is open on mobile, MessagesPanel switches
+            to its single-pane view and renders its own conversation
+            header (with avatar, name, and a back-to-inbox arrow). We
+            hide this page-level header below `md` in that case so the
+            two headers don't stack and steal the vertical space the
+            composer needs to stay visible above the on-screen keyboard.
+            The conversation header's back arrow calls `onSelect(null)`
+            which clears `selectedId` and re-shows this row, giving the
+            user the page-level Back button to leave Messenger entirely.
+            On desktop (md+) the page header is always visible because
+            inbox + conversation are shown side-by-side. */}
+        <div
+          className={`${selectedId ? 'hidden md:flex' : 'flex'} items-center gap-2 mb-2 sm:mb-3 flex-shrink-0`}
+        >
           {/* Mobile-only Back/Close — guaranteed escape hatch out of
               Messenger that's always reachable in one tap, even when the
               iOS keyboard or Safari URL bar is on screen. The TopNavbar's
