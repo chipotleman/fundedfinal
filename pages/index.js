@@ -1102,12 +1102,15 @@ export default function Dashboard() {
             inactiveColor="transparent"
             activeTextColor={'#ffffff'}
             inactiveTextColor={'#9ca3af'}
+            aria-label={getSportLabel(sport)}
+            title={isCondensed ? getSportLabel(sport) : undefined}
             style={{
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: pillPadding,
+              justifyContent: 'center',
+              gap: isCondensed ? 0 : '8px',
+              padding: isCondensed ? '5px 10px' : pillPadding,
               borderRadius: '9999px',
               fontSize: pillFontSize,
               fontWeight: '500',
@@ -1116,8 +1119,8 @@ export default function Dashboard() {
               borderColor: selectedSport === sport ? ('#4b5563') : ('#1f2937')
             }}
           >
-            <span style={{ fontSize: iconSize }}>{getSportIcon(sport)}</span>
-            <span>{getSportLabel(sport)}</span>
+            <span style={{ fontSize: isCondensed ? '18px' : iconSize, lineHeight: 1 }}>{getSportIcon(sport)}</span>
+            {!isCondensed && <span>{getSportLabel(sport)}</span>}
           </TapSurface>
         ))}
       </div>
