@@ -3434,7 +3434,16 @@ export default function LiveBattlesSection({
           </button>
         </div>
         {retryHint}
-        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* items-stretch (instead of items-start) lets every card in the
+            horizontal carousel match the tallest sibling's height. Without
+            this, a battle whose players haven't both locked in their picks
+            renders shorter than one with picks (since the picks row + the
+            "🎯 X vs Y piks" cartoon chip are conditional), which made the
+            "awaiting" cards look out of place next to fully-locked battles
+            and the YouVsCard. The cards themselves already use w-full h-full
+            on their outer wrapper, so they fill the stretched parent
+            cleanly. */}
+        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
               youVsState={youVsState}
