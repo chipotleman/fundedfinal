@@ -17,6 +17,7 @@ import {
 } from '../../lib/playNowConfirm';
 import { readLocalOneTapPrefs, writeLocalOneTapPrefs, fetchOneTapPrefs, saveOneTapPrefs } from '../../utils/oneTapPrefs';
 import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
+import PreMatchPopup from './PreMatchPopup';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -1018,17 +1019,15 @@ function SilhouetteAvatar({ gradient, size = 40 }) {
 // config screen.
 const ONE_TAP_DEFAULT_BUY_IN = 5;
 const ONE_TAP_DEFAULT_GAME_MODE = 'rush';
-const ONE_TAP_BUY_IN_OPTIONS = [5, 10, 25];
 // `coins` mirrors the per-mode starting bankroll surfaced in
-// QuickMatchModal so the idle Play Now card can display the same
-// "X coins to start" context inline. Keep these in sync with
+// QuickMatchModal. Used to render the "X coins to start" context
+// inside the idle metaRight string. Keep in sync with
 // QuickMatchModal's GAME_MODE_OPTIONS.
 const ONE_TAP_GAME_MODE_OPTIONS = [
   { id: 'rush', label: 'Rush', icon: '⚡', coins: 10000 },
   { id: 'original', label: 'Original', icon: '🏆', coins: 10000 },
   { id: 'tournament', label: 'Tournament', icon: '👑', coins: 100000 },
 ];
-const ONE_TAP_GAME_MODE_IDS = ONE_TAP_GAME_MODE_OPTIONS.map((m) => m.id);
 // Persisted defaults for the one-tap card live in `utils/oneTapPrefs`,
 // which keeps a localStorage cache for instant render and — for signed-in
 // users — mirrors the value to their profile so it follows them across
@@ -1043,14 +1042,6 @@ const ONE_TAP_GAME_MODE_IDS = ONE_TAP_GAME_MODE_OPTIONS.map((m) => m.id);
 // spec's "any user the first time after a deploy" line whenever
 // product changes the matchmaking buy-in, mode, or anything else
 // worth re-confirming.
-// How long the confirmation step stays open before snapping back to
-// idle if the user doesn't act. Long enough to read and decide, short
-// enough that an accidental enter doesn't leave the card "armed".
-const PLAY_NOW_CONFIRM_TIMEOUT_MS = 10000;
-// Inline notice text used after a no-cost cancel from the confirm
-// step. Centralised so the "neutral, not an error" styling check in
-// the idle render branch stays in sync with the helper that sets it.
-const PLAY_NOW_CANCEL_NOTICE = 'Cancelled — no money spent.';
 
 function YouVsCard({
   youVsState,
@@ -1176,18 +1167,21 @@ function YouVsCard({
   // In-card matchmaking state. Drives the new "finding battle" animation
   // that plays inside the card before the standard match-found popup
   // takes over. `idle` means we're showing the graffiti PLAY NOW
-  // treatment; `confirm` means the user tapped once and we're waiting
-  // for them to confirm the $5 spend before any API call fires;
-  // `searching` means we're polling for a match; `error` shows a brief
-  // inline message before snapping back to idle.
+  // treatment; `searching` means we're polling for a match; `error`
+  // shows a brief inline message before snapping back to idle. The
+  // pre-match buy-in / game-mode / confirm config now lives in the
+  // separate `PreMatchPopup` (see `showPrePopup` below) instead of an
+  // inline confirm step on the card itself.
   const [searchState, setSearchState] = useState('idle');
   const [searchError, setSearchError] = useState('');
   const [searchTimer, setSearchTimer] = useState(0);
   const [shuffleTick, setShuffleTick] = useState(0);
-  // Local "Don't ask again" toggle inside the confirm step. Persisted
-  // to localStorage only when the user actually confirms — backing out
-  // shouldn't quietly opt them out of future warnings.
-  const [confirmDontAsk, setConfirmDontAsk] = useState(false);
+  // Stepped pre-match popup. Opens when the user picks Quick Match
+  // (either by tapping Play Now and choosing Quick Match in the
+  // chooser, or by tapping Play Now when they've already picked a
+  // default mode but haven't opted out of the confirm gate). Closing
+  // it without confirming returns to idle without firing any API.
+  const [showPrePopup, setShowPrePopup] = useState(false);
   // Inline "Choose Battle Mode" chooser. Mirrors the chooser opened
   // by the Start a Battle button on /battle so the home card surfaces
   // the same Quick Match / Challenge Friend / Private Match options
@@ -1212,7 +1206,6 @@ function YouVsCard({
   const searchTimerIntervalRef = useRef(null);
   const pollTimeoutRef = useRef(null);
   const errorResetTimeoutRef = useRef(null);
-  const confirmTimeoutRef = useRef(null);
 
   const cleanupSearchTimers = useCallback(() => {
     if (searchTimerIntervalRef.current) {
@@ -1237,10 +1230,6 @@ function YouVsCard({
         clearTimeout(cancelNoticeTimerRef.current);
         cancelNoticeTimerRef.current = null;
       }
-      if (confirmTimeoutRef.current) {
-        clearTimeout(confirmTimeoutRef.current);
-        confirmTimeoutRef.current = null;
-      }
     };
   }, [cleanupSearchTimers]);
 
@@ -1264,15 +1253,16 @@ function YouVsCard({
     if (!isIdle && searchState !== 'idle') {
       matchmakingCancelledRef.current = true;
       cleanupSearchTimers();
-      if (confirmTimeoutRef.current) {
-        clearTimeout(confirmTimeoutRef.current);
-        confirmTimeoutRef.current = null;
-      }
       setSearchState('idle');
       setSearchError('');
-      setConfirmDontAsk(false);
     }
-  }, [isIdle, searchState, cleanupSearchTimers]);
+    if (!isIdle && showPrePopup) {
+      // Likewise close the pre-match popup if a battle resolves while
+      // it's still on screen — the user has nothing meaningful to
+      // confirm anymore.
+      setShowPrePopup(false);
+    }
+  }, [isIdle, searchState, showPrePopup, cleanupSearchTimers]);
 
   // Cycling silhouette gradient for queued / waiting-without-opponent
   // states. The idle state no longer cycles fake opponents — that
@@ -1372,10 +1362,6 @@ function YouVsCard({
     topLabel = 'Searching…';
     topDotColor = '#06b6d4';
     metaRight = `${searchTimer}s`;
-  } else if (searchState === 'confirm') {
-    topLabel = 'Confirm Spend';
-    topDotColor = '#fbbf24';
-    metaRight = `1v1 · $${buyIn}`;
   } else if (isActive) {
     topLabel = 'In Battle';
     topDotColor = '#10b981';
@@ -1580,78 +1566,42 @@ function YouVsCard({
     }
   }, []);
 
-  // Move from the graffiti idle layout into the one-tap confirmation
-  // step. No API calls run here — money is not committed until the
-  // user explicitly confirms in the next step.
-  const enterConfirmStep = useCallback(() => {
+  // Open the stepped pre-match popup. The popup itself is responsible
+  // for the buy-in / mode / confirm flow; on confirm it calls back into
+  // `handlePopupConfirm` below to actually fire matchmaking. Closing
+  // the popup without confirming is a no-op (no API calls).
+  const openPrePopup = useCallback(() => {
     setSearchError('');
-    setConfirmDontAsk(false);
-    setSearchState('confirm');
-    if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
-    // Auto-revert to idle if the user walks away. Avoids the card
-    // staying "armed" indefinitely after an accidental tap.
-    confirmTimeoutRef.current = setTimeout(() => {
-      confirmTimeoutRef.current = null;
-      setSearchState((prev) => (prev === 'confirm' ? 'idle' : prev));
-      setConfirmDontAsk(false);
-    }, PLAY_NOW_CONFIRM_TIMEOUT_MS);
+    setShowPrePopup(true);
   }, []);
 
-  // User backed out of the confirmation step. Per the spec, this must
-  // not trigger any API calls; we just snap back to idle and show a
-  // brief inline notice so the cancellation feels acknowledged.
-  const cancelConfirmStep = useCallback(() => {
-    if (confirmTimeoutRef.current) {
-      clearTimeout(confirmTimeoutRef.current);
-      confirmTimeoutRef.current = null;
-    }
-    setSearchState('idle');
-    setConfirmDontAsk(false);
-    setSearchError(PLAY_NOW_CANCEL_NOTICE);
-    if (cancelNoticeTimerRef.current) clearTimeout(cancelNoticeTimerRef.current);
-    cancelNoticeTimerRef.current = setTimeout(() => {
-      setSearchError((prev) => (prev === PLAY_NOW_CANCEL_NOTICE ? '' : prev));
-    }, 2500);
-  }, []);
-
-  // User confirmed the spend. Persist their "Don't ask again" choice
-  // (only if they actually opted in) and kick off matchmaking.
-  const confirmAndStartSearch = useCallback(() => {
-    if (confirmTimeoutRef.current) {
-      clearTimeout(confirmTimeoutRef.current);
-      confirmTimeoutRef.current = null;
-    }
-    if (confirmDontAsk && typeof window !== 'undefined') {
-      try {
-        window.localStorage.setItem(PLAY_NOW_SKIP_CONFIRM_KEY, PLAY_NOW_SKIP_CONFIRM_VERSION);
-      } catch {}
-    }
-    setConfirmDontAsk(false);
+  // Pre-match popup confirmed. Apply the user's selections (the popup
+  // already persisted them via the same path the inline confirm step
+  // used) and kick off the in-card search.
+  const handlePopupConfirm = useCallback(({ buyIn: nextBuyIn, gameMode: nextMode }) => {
+    setShowPrePopup(false);
+    if (typeof nextBuyIn === 'number') setBuyIn(nextBuyIn);
+    if (typeof nextMode === 'string') setGameMode(nextMode);
+    // Update the prefs ref synchronously so the matchmaking POST
+    // fired immediately below picks up the just-confirmed values
+    // without waiting for React state to flush.
+    prefsRef.current = {
+      buyIn: typeof nextBuyIn === 'number' ? nextBuyIn : buyIn,
+      gameMode: typeof nextMode === 'string' ? nextMode : gameMode,
+    };
     startInCardSearch();
-  }, [confirmDontAsk, startInCardSearch]);
+  }, [buyIn, gameMode, startInCardSearch]);
 
   const handleCardTap = () => {
     if (isIdle) {
       // While searching, the card is "busy" — only the explicit cancel
       // affordance should escape, never the card-wide tap.
       if (searchState === 'searching') return;
-      // While in the confirm step, a card-wide tap is treated as the
-      // "tap again to confirm" gesture. The explicit Cancel button
-      // below stops propagation so it can still back out. If the
-      // user can't actually cover the buy-in, the tap is treated as
-      // an "Add funds" gesture instead so the card-wide path matches
-      // the visible CTA — otherwise a stray tap would still kick off
-      // matchmaking and hit the server-side insufficient-balance error
-      // we're trying to prevent.
-      if (searchState === 'confirm') {
-        if (insufficientBalance) {
-          cancelConfirmStep();
-          router.push(`/deposit?amount=${Math.ceil(balanceShortfall)}`);
-        } else {
-          confirmAndStartSearch();
-        }
-        return;
-      }
+      // The pre-match popup is mounted as a portal-style overlay. If
+      // it's already open the card tap is meaningless (the popup
+      // captures clicks); guard anyway so a stray bubble can't fire
+      // matchmaking twice.
+      if (showPrePopup) return;
       // Clear any lingering cancel/error inline notice from the
       // previous attempt so the new search starts visually clean.
       if (cancelNoticeTimerRef.current) {
@@ -1659,16 +1609,21 @@ function YouVsCard({
         cancelNoticeTimerRef.current = null;
       }
       setSearchError('');
-      // Authenticated users get the inline Choose Battle Mode chooser
-      // — Quick Match continues to run the in-card matchmaking flow
-      // (with its first-time confirm-spend gate), while Challenge
-      // Friend and Private Match hand off to /battle so they can
-      // reuse the page's friends list, modals, and lobby/active-battle
-      // destination. Signed-out users get the existing auth gate by
-      // routing to /battle?openChooser=1, where the page's requireAuth
-      // wrapper triggers the sign-in popup before the chooser opens.
+      // PLAY NOW is the card's primary call to action: a Quick Match
+      // flow. Authenticated users go straight through the same path
+      // the chooser's Quick Match button uses — open the stepped
+      // pre-match popup unless they previously opted out of the
+      // prompt (in which case we drop straight into the in-card
+      // "Finding your battle" animation with their persisted
+      // defaults). Signed-out users hit the existing auth gate by
+      // routing to /battle?openChooser=1, where the page's
+      // requireAuth wrapper triggers the sign-in popup first.
       if (myProfile?.id && onMatchFound) {
-        setShowChooser(true);
+        if (shouldSkipConfirm()) {
+          startInCardSearch();
+        } else {
+          openPrePopup();
+        }
       } else {
         router.push('/battle?openChooser=1');
       }
@@ -1732,17 +1687,17 @@ function YouVsCard({
     expandedBody = 'Matchmaking is finding a player at your buy-in. You can leave the queue anytime.';
   }
 
-  // Quick Match pick from the inline chooser. Closes the chooser
-  // and resumes the existing in-card matchmaking flow — first-time
-  // players see the confirm-spend gate, returning players who opted
-  // out of the prompt skip straight into the radar/Finding-your-battle
-  // animation. Visually identical to the pre-chooser behavior.
+  // Quick Match pick from the inline chooser. Closes the chooser and
+  // either opens the stepped pre-match popup (first-time / opt-in users)
+  // or jumps straight to the in-card "Finding your battle" animation
+  // using the user's persisted defaults (returning users who flipped
+  // the "Don't ask me again" toggle).
   const handleChooserQuickMatch = () => {
     setShowChooser(false);
     if (shouldSkipConfirm()) {
       startInCardSearch();
     } else {
-      enterConfirmStep();
+      openPrePopup();
     }
   };
 
@@ -1781,10 +1736,8 @@ function YouVsCard({
       tabIndex={0}
       aria-label={
         isIdle
-          ? (searchState === 'confirm'
-              ? (insufficientBalance
-                  ? `Not enough balance for a $${buyIn} ${gameMode.toUpperCase()} battle. Tap to add funds, or use the cancel button to back out.`
-                  : `Confirm $${buyIn} ${gameMode.toUpperCase()} battle. Tap again to confirm or use the cancel button to back out.`)
+          ? (searchState === 'searching'
+              ? 'Your battle — Finding your battle. Use the cancel button to stop.'
               : 'Your battle — Tap to start a 1v1')
           : `Your battle — ${topLabel}. Tap to ${isExpanded ? 'hide' : 'show'} preview.`
       }
@@ -1959,6 +1912,84 @@ function YouVsCard({
           animation: heroPrizeBob 2.2s ease-in-out infinite;
           transform-origin: center;
         }
+
+        /* ----- Cartoon "Finding your battle" animation ----- */
+        @keyframes youvsFindRing {
+          0%   { transform: scale(0.55); opacity: 0.85; }
+          70%  { transform: scale(1.4); opacity: 0; }
+          100% { transform: scale(1.4); opacity: 0; }
+        }
+        :global(.youvs-find-ring) {
+          animation: youvsFindRing 1.8s ease-out infinite;
+          transform-origin: center;
+        }
+        @keyframes youvsFindAvatarLeft {
+          0%, 100% { transform: translateY(0) rotate(-3deg); }
+          50%      { transform: translateY(-6px) rotate(3deg); }
+        }
+        :global(.youvs-find-avatar-left) {
+          animation: youvsFindAvatarLeft 1.1s ease-in-out infinite;
+        }
+        @keyframes youvsFindAvatarRight {
+          0%, 100% { transform: translateY(0) rotate(3deg); }
+          50%      { transform: translateY(-6px) rotate(-3deg); }
+        }
+        :global(.youvs-find-avatar-right) {
+          animation: youvsFindAvatarRight 1.1s ease-in-out infinite;
+          animation-delay: 0.55s;
+        }
+        @keyframes youvsFindVs {
+          0%, 100% { transform: rotate(-6deg) scale(1); }
+          25%      { transform: rotate(6deg) scale(1.15); }
+          50%      { transform: rotate(-4deg) scale(1.05); }
+          75%      { transform: rotate(4deg) scale(1.12); }
+        }
+        :global(.youvs-find-vs-sticker) {
+          animation: youvsFindVs 1.2s ease-in-out infinite;
+          transform-origin: center;
+        }
+        @keyframes youvsFindTitle {
+          0%, 100% { background-position: 0% 50%; transform: scale(1); }
+          50%      { background-position: 100% 50%; transform: scale(1.04); }
+        }
+        :global(.youvs-find-title) {
+          animation: youvsFindTitle 1.6s ease-in-out infinite;
+        }
+        @keyframes youvsFindDot {
+          0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
+          40%           { opacity: 1;    transform: scale(1.25); }
+        }
+        :global(.youvs-find-dot) {
+          animation: youvsFindDot 1.1s ease-in-out infinite;
+        }
+        @keyframes youvsFindConfetti {
+          0%   { transform: translateY(0) rotate(0deg); opacity: 0.85; }
+          50%  { transform: translateY(-10px) rotate(180deg); opacity: 1; }
+          100% { transform: translateY(0) rotate(360deg); opacity: 0.85; }
+        }
+        :global(.youvs-find-confetti) {
+          animation: youvsFindConfetti 1.6s ease-in-out infinite;
+        }
+        @keyframes youvsFindSpark {
+          0%, 100% { transform: scale(0.7); opacity: 0.4; }
+          50%      { transform: scale(1.25); opacity: 1; }
+        }
+        :global(.youvs-find-spark) {
+          animation: youvsFindSpark 1.3s ease-in-out infinite;
+          display: inline-block;
+          color: #fff;
+          will-change: transform, opacity;
+        }
+        @keyframes youvsFindSwoosh {
+          0%   { stroke-dashoffset: 50; opacity: 0; }
+          40%  { opacity: 1; }
+          100% { stroke-dashoffset: 0;  opacity: 0; }
+        }
+        :global(.youvs-find-swoosh) {
+          stroke-dasharray: 50;
+          animation: youvsFindSwoosh 1.4s ease-out infinite;
+        }
+
         @media (prefers-reduced-motion: reduce) {
           :global(.youvs-anon-fade),
           .tap-to-start-cta,
@@ -1974,7 +2005,16 @@ function YouVsCard({
           :global(.hero-sweep),
           :global(.hero-ring),
           :global(.hero-vs),
-          :global(.hero-prize) {
+          :global(.hero-prize),
+          :global(.youvs-find-ring),
+          :global(.youvs-find-avatar-left),
+          :global(.youvs-find-avatar-right),
+          :global(.youvs-find-vs-sticker),
+          :global(.youvs-find-title),
+          :global(.youvs-find-dot),
+          :global(.youvs-find-confetti),
+          :global(.youvs-find-spark),
+          :global(.youvs-find-swoosh) {
             animation: none !important;
           }
           :global(.hero-sweep) { opacity: 0.18; }
@@ -2056,73 +2096,175 @@ function YouVsCard({
         </div>
 
         {isIdle && searchState === 'searching' ? (
-          // In-card "finding battle" animation. Stays inside the same
-          // card footprint — no navigation, no modal — until matchmaking
-          // resolves and the standard match-found popup takes over.
-          <div className="flex flex-col items-center justify-center text-center py-1 sm:py-2 select-none min-h-0 sm:min-h-[148px]">
-            <div
-              className="relative flex items-center justify-center mb-1 sm:mb-2.5 w-[56px] h-[56px] sm:w-24 sm:h-24"
-              aria-hidden="true"
-            >
+          // Cartoon, lively, full-container "Finding your battle"
+          // animation. Replaces the previous small-avatar + green-neon-
+          // dots radar with a bright, playful, full-bleed treatment:
+          // bouncing avatars on either side of a chunky VS sticker,
+          // animated background sparkles + confetti + swooshes, an
+          // animated title, and a clearly-visible cancel affordance.
+          // The elapsed-seconds counter stays in the card header
+          // (driven by `searchTimer` -> `metaRight`).
+          <div
+            className="relative flex flex-col items-center justify-center text-center py-2 sm:py-3 select-none min-h-0 sm:min-h-[160px] overflow-hidden"
+          >
+            {/* Background flair — pulsing rings, swooshes, confetti,
+                sparkles. Pure presentation; no semantics. */}
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
               <div
-                className="youvs-ring absolute w-full h-full"
+                className="youvs-find-ring absolute"
                 style={{
+                  left: '50%', top: '50%',
+                  width: 120, height: 120,
+                  marginLeft: -60, marginTop: -60,
                   borderRadius: '50%',
-                  border: '1.5px solid rgba(6,182,212,0.55)',
+                  border: '2px solid rgba(251,191,36,0.45)',
                 }}
               />
               <div
-                className="youvs-ring absolute w-full h-full"
+                className="youvs-find-ring absolute"
                 style={{
+                  left: '50%', top: '50%',
+                  width: 120, height: 120,
+                  marginLeft: -60, marginTop: -60,
                   borderRadius: '50%',
-                  border: '1.5px solid rgba(16,185,129,0.45)',
-                  animationDelay: '0.6s',
+                  border: '2px solid rgba(34,211,238,0.4)',
+                  animationDelay: '0.7s',
                 }}
               />
               <div
-                className="youvs-radar absolute w-full h-full"
+                className="youvs-find-ring absolute"
                 style={{
+                  left: '50%', top: '50%',
+                  width: 120, height: 120,
+                  marginLeft: -60, marginTop: -60,
                   borderRadius: '50%',
-                  background: 'conic-gradient(from 0deg, transparent 0deg, rgba(6,182,212,0.35) 60deg, transparent 120deg)',
+                  border: '2px solid rgba(244,114,182,0.4)',
+                  animationDelay: '1.4s',
                 }}
               />
-              <div className="youvs-shuffle-scale relative">
-                <div
-                  key={shuffleTick}
-                  className="youvs-shuffle relative"
+              {/* Swoosh lines on each side */}
+              <svg
+                className="absolute pointer-events-none"
+                width="100%" height="100%"
+                viewBox="0 0 360 160" preserveAspectRatio="none"
+                style={{ inset: 0 }}
+              >
+                <g stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7">
+                  <line className="youvs-find-swoosh" x1="6" y1="40" x2="44" y2="40" />
+                  <line className="youvs-find-swoosh" x1="2" y1="80" x2="48" y2="80" style={{ animationDelay: '0.2s' }} />
+                  <line className="youvs-find-swoosh" x1="6" y1="120" x2="44" y2="120" style={{ animationDelay: '0.4s' }} />
+                </g>
+                <g stroke="#22d3ee" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7">
+                  <line className="youvs-find-swoosh" x1="316" y1="40" x2="354" y2="40" style={{ animationDelay: '0.1s' }} />
+                  <line className="youvs-find-swoosh" x1="312" y1="80" x2="358" y2="80" style={{ animationDelay: '0.3s' }} />
+                  <line className="youvs-find-swoosh" x1="316" y1="120" x2="354" y2="120" style={{ animationDelay: '0.5s' }} />
+                </g>
+              </svg>
+              {/* Confetti pieces, scattered around the layout */}
+              <span className="youvs-find-confetti absolute" style={{ left: '12%', top: '14%', background: '#fbbf24', width: 6, height: 10, borderRadius: 2, transform: 'rotate(20deg)' }} />
+              <span className="youvs-find-confetti absolute" style={{ left: '22%', top: '74%', background: '#22d3ee', width: 5, height: 9, borderRadius: 2, transform: 'rotate(-12deg)', animationDelay: '0.4s' }} />
+              <span className="youvs-find-confetti absolute" style={{ left: '78%', top: '18%', background: '#f472b6', width: 6, height: 10, borderRadius: 2, transform: 'rotate(28deg)', animationDelay: '0.8s' }} />
+              <span className="youvs-find-confetti absolute" style={{ left: '86%', top: '70%', background: '#34d399', width: 5, height: 9, borderRadius: 2, transform: 'rotate(-22deg)', animationDelay: '0.2s' }} />
+              <span className="youvs-find-confetti absolute" style={{ left: '52%', top: '8%', background: '#a78bfa', width: 5, height: 8, borderRadius: 2, transform: 'rotate(8deg)', animationDelay: '1.0s' }} />
+              <span className="youvs-find-confetti absolute" style={{ left: '46%', top: '88%', background: '#f97316', width: 5, height: 9, borderRadius: 2, transform: 'rotate(-8deg)', animationDelay: '0.6s' }} />
+              {/* Sparkles in corners */}
+              <span className="youvs-find-spark absolute" style={{ left: '6%', top: '8%', fontSize: 16, filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.7))' }}>✦</span>
+              <span className="youvs-find-spark absolute" style={{ right: '6%', top: '60%', fontSize: 14, filter: 'drop-shadow(0 0 5px rgba(34,211,238,0.7))', animationDelay: '0.6s' }}>✨</span>
+              <span className="youvs-find-spark absolute" style={{ left: '8%', bottom: '8%', fontSize: 14, filter: 'drop-shadow(0 0 5px rgba(244,114,182,0.7))', animationDelay: '1.0s' }}>⚡</span>
+              <span className="youvs-find-spark absolute" style={{ right: '4%', top: '8%', fontSize: 16, filter: 'drop-shadow(0 0 5px rgba(167,139,250,0.7))', animationDelay: '0.3s' }}>✨</span>
+            </div>
+
+            {/* Avatars + chunky VS centerpiece */}
+            <div className="relative z-10 flex items-center justify-center gap-3 sm:gap-5 mb-2 sm:mb-3">
+              <div
+                className="youvs-find-avatar-left relative"
+                style={{
+                  borderRadius: '50%',
+                  padding: 3,
+                  background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+                  boxShadow: '0 4px 0 rgba(0,0,0,0.55), 0 0 16px rgba(59,130,246,0.55)',
+                  border: '2.5px solid #0d0d0d',
+                }}
+              >
+                {myProfile?.id ? (
+                  <PlayerAvatar user={youUser} isWinning={false} size={48} bgColor="#1e40af" />
+                ) : (
+                  <SilhouetteAvatar gradient="linear-gradient(135deg, #3b82f6, #06b6d4)" size={48} />
+                )}
+              </div>
+
+              <div
+                className="youvs-find-vs-sticker relative inline-flex items-center justify-center px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ea580c 100%)',
+                  border: '3px solid #0d0d0d',
+                  boxShadow: '0 4px 0 rgba(0,0,0,0.55), 0 0 18px rgba(251,146,60,0.6)',
+                }}
+              >
+                <span
+                  className="text-xl sm:text-2xl font-black tracking-tight leading-none italic"
                   style={{
-                    borderRadius: '50%',
-                    padding: 2,
-                    background: 'linear-gradient(135deg, rgba(6,182,212,0.65), rgba(16,185,129,0.65))',
+                    color: '#fff',
+                    WebkitTextStroke: '1.5px #0d0d0d',
+                    textShadow: '2px 2px 0 #0d0d0d',
                   }}
                 >
-                  <SilhouetteAvatar
-                    gradient={ANONYMOUS_OPPONENTS[shuffleTick % ANONYMOUS_OPPONENTS.length].gradient}
-                    size={56}
-                  />
-                </div>
+                  VS
+                </span>
+              </div>
+
+              <div
+                key={shuffleTick}
+                className="youvs-find-avatar-right relative"
+                style={{
+                  borderRadius: '50%',
+                  padding: 3,
+                  background: ANONYMOUS_OPPONENTS[shuffleTick % ANONYMOUS_OPPONENTS.length].gradient,
+                  boxShadow: '0 4px 0 rgba(0,0,0,0.55), 0 0 16px rgba(244,114,182,0.55)',
+                  border: '2.5px solid #0d0d0d',
+                }}
+              >
+                <SilhouetteAvatar
+                  gradient={ANONYMOUS_OPPONENTS[shuffleTick % ANONYMOUS_OPPONENTS.length].gradient}
+                  size={48}
+                />
               </div>
             </div>
-            <p className="text-sm font-bold text-white mb-0.5">Finding your battle…</p>
-            <div className="flex items-center gap-1.5 mb-1 sm:mb-2" aria-hidden="true">
+
+            {/* Animated title */}
+            <p
+              className="youvs-find-title text-sm sm:text-base font-extrabold leading-tight relative z-10 mb-1"
+              style={{
+                background: 'linear-gradient(135deg, #fbbf24, #f472b6, #22d3ee)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                backgroundSize: '200% 200%',
+              }}
+            >
+              Finding your battle…
+            </p>
+
+            <div className="flex items-center gap-1.5 mb-2 relative z-10" aria-hidden="true">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="youvs-dot inline-block w-1.5 h-1.5 rounded-full"
+                  className="youvs-find-dot inline-block w-1.5 h-1.5 rounded-full"
                   style={{
-                    background: 'linear-gradient(135deg, #06b6d4, #10b981)',
+                    background: 'linear-gradient(135deg, #fbbf24, #f97316)',
                     animationDelay: `${i * 0.18}s`,
                   }}
                 />
               ))}
             </div>
+
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); cancelInCardSearch(); }}
-              className="px-3 py-1 text-[11px] font-medium text-gray-300 hover:text-red-400 rounded-lg transition-colors"
+              className="relative z-10 px-3.5 py-1.5 text-[11px] font-semibold text-gray-200 hover:text-red-400 rounded-lg transition-colors"
               style={{
-                background: 'rgba(0,0,0,0.4)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(0,0,0,0.55)',
+                border: '1.5px solid rgba(255,255,255,0.16)',
                 backdropFilter: 'blur(6px)',
                 WebkitBackdropFilter: 'blur(6px)',
               }}
@@ -2130,241 +2272,6 @@ function YouVsCard({
             >
               Cancel
             </button>
-          </div>
-        ) : isIdle && searchState === 'confirm' ? (
-          // First-time confirmation step. We've intentionally NOT
-          // hit any matchmaking endpoint yet — the user must tap
-          // again (either the card or the explicit confirm button)
-          // to actually commit the spend. The Cancel button
-          // backs out without any API calls. The buy-in / mode
-          // selectors live here (instead of on the idle card) so
-          // the home card can lead with PLAY NOW and let users
-          // pick their stake & mode at the moment they actually
-          // care about it. Selections are persisted via the same
-          // local + server prefs path the idle card used to use,
-          // so the "remembered preference" behaviour is unchanged.
-          <div
-            className="flex flex-col items-center justify-center text-center py-1 sm:py-2 select-none min-h-0 sm:min-h-[148px]"
-          >
-            <div
-              className="flex items-center gap-1.5 mb-1.5 px-2.5 py-1 rounded-full"
-              style={{
-                background: 'rgba(251, 191, 36, 0.12)',
-                border: '1px solid rgba(251, 191, 36, 0.45)',
-              }}
-              aria-hidden="true"
-            >
-              <svg
-                className="w-3 h-3"
-                viewBox="0 0 20 20"
-                fill="#fbbf24"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a1 1 0 011 1v3a1 1 0 11-2 0V7a1 1 0 011-1zm0 8a1 1 0 100-2 1 1 0 000 2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span
-                className="text-[10px] font-bold uppercase tracking-wider"
-                style={{ color: '#fbbf24' }}
-              >
-                Real money · ${buyIn}
-              </span>
-            </div>
-            <p className="text-[15px] font-extrabold text-white leading-tight">
-              Spend ${buyIn} on a {gameMode.toUpperCase()} battle?
-            </p>
-            <p className="text-[11px] text-gray-400 mt-0.5 mb-1.5 px-2">
-              Pick your stake &amp; mode, then tap to confirm.
-            </p>
-            {/* Buy-in chooser — moved here from the idle card so the
-                home card can lead with PLAY NOW. Stops propagation so
-                taps on the chips don't fire the card-wide "tap again
-                to confirm" gesture. */}
-            <div
-              className="flex items-center justify-center gap-1.5 mb-1 flex-wrap"
-              role="radiogroup"
-              aria-label="Buy-in"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {ONE_TAP_BUY_IN_OPTIONS.map((amount) => {
-                const selected = amount === buyIn;
-                return (
-                  <CartoonChip
-                    key={amount}
-                    asButton
-                    role="radio"
-                    ariaChecked={selected}
-                    ariaLabel={`Buy-in $${amount}`}
-                    icon="💰"
-                    label={`$${amount}`}
-                    color="orange"
-                    selected={selected}
-                    animate={selected ? 'bounce' : 'none'}
-                    onClick={(e) => { e.stopPropagation(); handleSelectBuyIn(amount); }}
-                  />
-                );
-              })}
-            </div>
-            <div
-              className="flex items-center justify-center gap-1.5 mb-1 flex-wrap"
-              role="radiogroup"
-              aria-label="Game mode"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {ONE_TAP_GAME_MODE_OPTIONS.map((mode) => {
-                const selected = mode.id === gameMode;
-                const meta = CARTOON_MODE_META[mode.id] || { color: 'blue' };
-                return (
-                  <CartoonChip
-                    key={mode.id}
-                    asButton
-                    role="radio"
-                    ariaChecked={selected}
-                    ariaLabel={`Game mode ${mode.label}`}
-                    icon={mode.icon}
-                    label={mode.label}
-                    color={meta.color}
-                    selected={selected}
-                    animate={selected ? 'bounce' : 'none'}
-                    onClick={(e) => { e.stopPropagation(); handleSelectGameMode(mode.id); }}
-                  />
-                );
-              })}
-            </div>
-            {/* Live summary of what the current chip selection gets
-                you: the resulting pot (buy-in × 2) and the starting
-                coin bankroll for the chosen mode. */}
-            <div
-              className="flex items-center justify-center gap-1.5 mb-1.5 flex-wrap"
-              aria-live="polite"
-            >
-              <CartoonChip
-                icon="💎"
-                label={`$${buyIn * 2} pot`}
-                color="emerald"
-                animate="bounce"
-                ariaLabel={`Total pot of $${buyIn * 2}`}
-              />
-              <CartoonChip
-                icon="🪙"
-                label={`${selectedGameMode.coins.toLocaleString()} coins`}
-                color="cyan"
-                animate="bounce"
-                ariaLabel={`Starts with ${selectedGameMode.coins.toLocaleString()} coins`}
-              />
-            </div>
-            {/* Balance row — sourced from the homepage's already-fetched
-                bankroll so we don't add a server call just to render it.
-                When the player can't cover the buy-in we surface a clear
-                "Add funds" affordance instead of the confirm button so
-                they don't run into a server-side insufficient-balance
-                error after committing. Hidden entirely when no balance
-                is known (e.g. signed-out fallback). */}
-            {hasBalance && (
-              <div
-                className="flex items-center gap-1.5 mb-2.5 px-2.5 py-1 rounded-full"
-                style={{
-                  background: insufficientBalance
-                    ? 'rgba(239, 68, 68, 0.12)'
-                    : 'rgba(255, 255, 255, 0.06)',
-                  border: insufficientBalance
-                    ? '1px solid rgba(239, 68, 68, 0.45)'
-                    : '1px solid rgba(255, 255, 255, 0.12)',
-                }}
-                aria-label={
-                  insufficientBalance
-                    ? `Your balance is $${formatMoney(numericBalance)} — not enough for the $${buyIn} buy-in`
-                    : `Your balance is $${formatMoney(numericBalance)}`
-                }
-              >
-                <span
-                  className="text-[10px] uppercase tracking-wider font-semibold"
-                  style={{ color: insufficientBalance ? '#fca5a5' : 'rgba(148,163,184,0.95)' }}
-                >
-                  Your balance
-                </span>
-                <span
-                  className="text-[11px] font-extrabold tabular-nums"
-                  style={{ color: insufficientBalance ? '#fca5a5' : '#ffffff' }}
-                >
-                  ${formatMoney(numericBalance)}
-                </span>
-                {insufficientBalance && (
-                  <span
-                    className="text-[9px] font-bold uppercase tracking-wider"
-                    style={{ color: '#fca5a5' }}
-                  >
-                    · Need ${formatMoney(balanceShortfall)}
-                  </span>
-                )}
-              </div>
-            )}
-            <div className="flex items-center gap-2 mb-2">
-              {insufficientBalance ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    cancelConfirmStep();
-                    router.push(`/deposit?amount=${Math.ceil(balanceShortfall)}`);
-                  }}
-                  className="play-now-confirm-btn px-4 py-2 rounded-lg text-[12px] font-extrabold text-white uppercase tracking-wider"
-                  style={{
-                    background: 'linear-gradient(135deg, #facc15 0%, #f59e0b 55%, #ef4444 100%)',
-                    border: '2px solid #0d0d0d',
-                    boxShadow: '0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(248,113,113,0.55)',
-                  }}
-                  aria-label={`Add funds to play a $${buyIn} battle`}
-                >
-                  Add funds to play
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); confirmAndStartSearch(); }}
-                  className="play-now-confirm-btn px-4 py-2 rounded-lg text-[12px] font-extrabold text-white uppercase tracking-wider"
-                  style={{
-                    background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ea580c 100%)',
-                    border: '2px solid #0d0d0d',
-                    boxShadow: '0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(251,146,60,0.5)',
-                  }}
-                  aria-label={`Confirm $${buyIn} ${gameMode.toUpperCase()} battle`}
-                >
-                  Tap to confirm ${buyIn}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); cancelConfirmStep(); }}
-                className="px-3 py-2 text-[11px] font-medium text-gray-300 hover:text-red-400 rounded-lg transition-colors"
-                style={{
-                  background: 'rgba(0,0,0,0.4)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                }}
-                aria-label="Cancel — do not spend money"
-              >
-                Cancel
-              </button>
-            </div>
-            <label
-              className="inline-flex items-center gap-1.5 text-[10px] text-gray-400 cursor-pointer select-none"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <input
-                type="checkbox"
-                checked={confirmDontAsk}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  setConfirmDontAsk(e.target.checked);
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-3 h-3 accent-amber-500 cursor-pointer"
-                aria-label="Don't ask me again"
-              />
-              <span>Don't ask me again</span>
-            </label>
           </div>
         ) : isActive ? (
           // Mortal Kombat-style hero treatment for the active "In
@@ -2745,7 +2652,7 @@ function YouVsCard({
             {searchError && (
               <p
                 className={`text-[10px] font-medium mt-1.5 ${
-                  searchError === 'Matchmaking cancelled.' || searchError === PLAY_NOW_CANCEL_NOTICE
+                  searchError === 'Matchmaking cancelled.'
                     ? 'text-gray-400'
                     : 'text-red-400'
                 }`}
@@ -2943,6 +2850,22 @@ function YouVsCard({
       onPickQuickMatch={handleChooserQuickMatch}
       onPickChallengeFriend={handleChooserChallengeFriend}
       onPickPrivateMatch={handleChooserPrivateMatch}
+    />
+    {/* Stepped pre-match popup (buy-in → mode → confirm). Replaces the
+        legacy inline confirm step. The popup is responsible for
+        persisting the user's selections (via the same writeLocal /
+        saveOneTapPrefs path) and for honoring the "Don't ask me again"
+        toggle (via setPlayNowConfirmSkipped). On confirm, we apply
+        the picked buy-in / mode and kick the in-card "Finding your
+        battle" animation. Closing without confirming is a no-op. */}
+    <PreMatchPopup
+      isOpen={showPrePopup}
+      onClose={() => setShowPrePopup(false)}
+      onConfirm={handlePopupConfirm}
+      initialBuyIn={buyIn}
+      initialGameMode={gameMode}
+      balance={balance}
+      currentUserId={myProfile?.id || null}
     />
     {/* In-card Play Friend / Private Match modals — mounted only when
         the home page supplies the friends list + current-user profile

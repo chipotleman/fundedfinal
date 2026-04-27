@@ -12,7 +12,7 @@
 //     convenience that pre-existed this task.
 const STORAGE_KEY = 'piks:onetap-prefs:v1';
 const VALID_MODES = new Set(['rush', 'original', 'tournament']);
-const VALID_BUY_INS = new Set([5, 10, 25]);
+const VALID_BUY_INS = new Set([5, 10, 25, 50, 100]);
 
 function normalize(value) {
   if (!value || typeof value !== 'object') return null;

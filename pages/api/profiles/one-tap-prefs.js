@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm';
 // and `ONE_TAP_GAME_MODE_OPTIONS`); a mismatch here would mean the
 // user's pick on one device silently fails to save when synced.
 const VALID_MODES = new Set(['rush', 'original', 'tournament']);
-const VALID_BUY_INS = new Set([5, 10, 25]);
+const VALID_BUY_INS = new Set([5, 10, 25, 50, 100]);
 
 function normalize(value) {
   if (!value || typeof value !== 'object') return null;
