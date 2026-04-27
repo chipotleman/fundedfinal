@@ -1370,6 +1370,11 @@ function YouVsCard({
   // the same Quick Match / Challenge Friend / Private Match options
   // instead of jumping straight into a Quick Match search.
   const [showChooser, setShowChooser] = useState(false);
+  // In-card Quick Match modal. Mirrors the QuickMatchModal opened
+  // from the /battle page so picking Quick Match here surfaces the
+  // full buy-in / mode picker instead of jumping straight to the
+  // queue with the user's persisted defaults.
+  const [showQuickMatchModal, setShowQuickMatchModal] = useState(false);
   // In-card Play Friend / Private Match modals. When the home page
   // wires up the `friends` / `currentUser` props the chooser opens
   // these directly so the user never leaves the home page; the
@@ -1869,18 +1874,14 @@ function YouVsCard({
     expandedBody = 'Matchmaking is finding a player at your buy-in. You can leave the queue anytime.';
   }
 
-  // Quick Match pick from the inline chooser. Closes the chooser and
-  // either opens the stepped pre-match popup (first-time / opt-in users)
-  // or jumps straight to the in-card "Finding your battle" animation
-  // using the user's persisted defaults (returning users who flipped
-  // the "Don't ask me again" toggle).
+  // Quick Match pick from the inline chooser. Mounts the same
+  // QuickMatchModal that the /battle page's Start a Battle button
+  // opens, so the user always sees the full buy-in / mode picker
+  // before entering the queue (instead of being dropped straight
+  // into matchmaking with persisted defaults).
   const handleChooserQuickMatch = () => {
     setShowChooser(false);
-    if (shouldSkipConfirm()) {
-      startInCardSearch();
-    } else {
-      openPrePopup();
-    }
+    setShowQuickMatchModal(true);
   };
 
   // Challenge Friend / Private Match picks. When the home page wires
@@ -3052,13 +3053,31 @@ function YouVsCard({
       onPickChallengeFriend={handleChooserChallengeFriend}
       onPickPrivateMatch={handleChooserPrivateMatch}
     />
-    {/* Stepped pre-match popup (buy-in → mode → confirm). Replaces the
-        legacy inline confirm step. The popup is responsible for
-        persisting the user's selections (via the same writeLocal /
-        saveOneTapPrefs path) and for honoring the "Don't ask me again"
-        toggle (via setPlayNowConfirmSkipped). On confirm, we apply
-        the picked buy-in / mode and kick the in-card "Finding your
-        battle" animation. Closing without confirming is a no-op. */}
+    {/* Quick Match modal — same component the /battle page mounts when
+        the Start a Battle chooser picks Quick Match. Surfaces the full
+        buy-in / mode picker before any matchmaking happens, so the
+        home-page Quick Match flow no longer drops users straight into
+        the queue with their persisted defaults. */}
+    <QuickMatchModal
+      isOpen={showQuickMatchModal}
+      onClose={() => setShowQuickMatchModal(false)}
+      userId={myProfile?.id || currentUserId || null}
+      onMatchFound={(matchup, opponentMeta) => {
+        setShowQuickMatchModal(false);
+        // Refresh the global matchup context so the YouVsCard
+        // immediately swaps from idle to "live in a battle" without
+        // a full page reload.
+        try { refreshMatchup(); } catch {}
+        // Mirror /battle's post-match landing so users go straight
+        // to the dashboard to start picking.
+        setTimeout(() => router.push('/?battleStarted=true'), 1200);
+      }}
+    />
+    {/* Legacy stepped pre-match popup. Kept mounted (gated by
+        showPrePopup) for any future re-enable, but no entry point
+        currently sets showPrePopup=true — the chooser now opens the
+        full QuickMatchModal above instead. Safe to delete along with
+        openPrePopup / handlePopupConfirm in a follow-up cleanup. */}
     <PreMatchPopup
       isOpen={showPrePopup}
       onClose={() => setShowPrePopup(false)}
