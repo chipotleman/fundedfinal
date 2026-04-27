@@ -358,7 +358,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
     return (
       <div
         ref={cardRef}
-        className={`w-full rounded-xl cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
+        className={`w-full h-full rounded-xl cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
         onClick={() => setExpanded(!expanded)}
         style={{
           backgroundColor: '#0d0d0d',
@@ -1729,7 +1729,7 @@ function YouVsCard({
   return (
     <>
     <div
-      className="youvs-card rounded-xl overflow-hidden cursor-pointer w-full flex flex-col relative"
+      className="youvs-card rounded-xl overflow-hidden cursor-pointer w-full h-full flex flex-col relative"
       onClick={handleCardTap}
       onKeyDown={handleKeyDown}
       role="button"
@@ -2105,7 +2105,7 @@ function YouVsCard({
           // The elapsed-seconds counter stays in the card header
           // (driven by `searchTimer` -> `metaRight`).
           <div
-            className="relative flex flex-col items-center justify-center text-center py-2 sm:py-3 select-none min-h-0 sm:min-h-[160px] overflow-hidden"
+            className="relative flex flex-1 flex-col items-center justify-center text-center py-2 sm:py-3 select-none min-h-0 sm:min-h-[160px] overflow-hidden"
           >
             {/* Background flair — pulsing rings, swooshes, confetti,
                 sparkles. Pure presentation; no semantics. */}
@@ -2565,7 +2565,7 @@ function YouVsCard({
           // chips that used to live here moved into the confirmation
           // popup so the home card can lead with the call to action
           // and a short explainer of what tapping it actually does.
-          <div className="flex flex-col items-center justify-center text-center py-2 sm:py-3 select-none min-h-0 sm:min-h-[148px]">
+          <div className="flex flex-1 flex-col items-center justify-center text-center py-2 sm:py-3 select-none min-h-0 sm:min-h-[148px]">
             <div className="relative inline-flex items-center justify-center mb-2 sm:mb-3 h-[58px] sm:h-[100px]">
               <svg
                 className="absolute pointer-events-none hidden sm:block"
@@ -2739,7 +2739,7 @@ function YouVsCard({
               </div>
             </div>
 
-            <div className="h-1 rounded-full overflow-hidden mb-1 sm:mb-2" style={{ background: '#1a1a1a' }}>
+            <div className="h-1 rounded-full overflow-hidden mb-1 sm:mb-2 mt-auto" style={{ background: '#1a1a1a' }}>
               <div
                 className="h-full rounded-full transition-all duration-1000"
                 style={{
@@ -3214,7 +3214,7 @@ export default function LiveBattlesSection({
           </button>
         </div>
         {retryHint}
-        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
               youVsState={youVsState}
