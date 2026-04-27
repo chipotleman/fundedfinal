@@ -1609,21 +1609,18 @@ function YouVsCard({
         cancelNoticeTimerRef.current = null;
       }
       setSearchError('');
-      // PLAY NOW is the card's primary call to action: a Quick Match
-      // flow. Authenticated users go straight through the same path
-      // the chooser's Quick Match button uses — open the stepped
-      // pre-match popup unless they previously opted out of the
-      // prompt (in which case we drop straight into the in-card
-      // "Finding your battle" animation with their persisted
-      // defaults). Signed-out users hit the existing auth gate by
-      // routing to /battle?openChooser=1, where the page's
-      // requireAuth wrapper triggers the sign-in popup first.
+      // PLAY NOW always opens the shared Battle Mode Chooser so the
+      // entry point matches the Start a Battle button on /battle —
+      // Quick Match, Challenge Friend, and Private Match are all
+      // surfaced before any mode-specific popup runs. The chooser's
+      // Quick Match handler still respects the user's "Don't ask me
+      // again" preference, so the in-popup shortcut continues to
+      // work once they're inside that branch. Signed-out users hit
+      // the existing auth gate by routing to /battle?openChooser=1,
+      // where the page's requireAuth wrapper triggers the sign-in
+      // popup first and then opens the same chooser.
       if (myProfile?.id && onMatchFound) {
-        if (shouldSkipConfirm()) {
-          startInCardSearch();
-        } else {
-          openPrePopup();
-        }
+        setShowChooser(true);
       } else {
         router.push('/battle?openChooser=1');
       }
