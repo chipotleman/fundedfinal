@@ -11,6 +11,7 @@ import FireBattleContainer from '../components/FireBattleContainer';
 import PoolContainer from '../components/PoolContainer';
 import ReferralBonusContainer from '../components/ReferralBonusContainer';
 import MostSharedBadgeContainer from '../components/MostSharedBadgeContainer';
+import RushExplainerContainer from '../components/RushExplainerContainer';
 import PromoCarousel from '../components/PromoCarousel';
 import { DEFAULT_PROMO_SLOTS, normalizePromoSlots } from '../lib/promoSlots';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
@@ -169,6 +170,7 @@ export default function Dashboard() {
       pool: () => <PoolContainer />,
       referral: () => <ReferralBonusContainer />,
       most_shared_badge: () => <MostSharedBadgeContainer />,
+      rush_explainer: () => <RushExplainerContainer />,
       empty: () => null,
     };
     return promoSlots
