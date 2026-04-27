@@ -1129,6 +1129,28 @@ export default function Dashboard() {
             handleSportClick(next);
           };
           const labelList = pill.sports.map(getSportLabel).join(' / ');
+          // Total available games (live + upcoming) across every
+          // league inside this pill. Used as the badge value on the
+          // condensed bar so the small superscript number reflects
+          // *games* rather than *leagues* (per user feedback). We
+          // walk the full categorized lists and de-dupe by id so
+          // bundles don't double-count games that somehow appear in
+          // both buckets.
+          const liveList = categorizedGames.liveGames || [];
+          const upcomingList = categorizedGames.upcomingGames || [];
+          const validNamesUpper = new Set(
+            pill.sports.flatMap((s) => (sportMappings[s] || [s]).map((n) => n.toUpperCase()))
+          );
+          const seenIds = new Set();
+          let gameCount = 0;
+          for (const g of [...liveList, ...upcomingList]) {
+            const nameUpper = (g.sportName || '').toUpperCase();
+            if (!validNamesUpper.has(nameUpper)) continue;
+            const id = g.id ?? `${g.sportName}-${g.startTime}-${g.homeTeam}-${g.awayTeam}`;
+            if (seenIds.has(id)) continue;
+            seenIds.add(id);
+            gameCount += 1;
+          }
           return (
             <TapSurface
               key={pill.key}
@@ -1153,15 +1175,27 @@ export default function Dashboard() {
                 fontWeight: '500',
                 borderWidth: '1px',
                 borderStyle: 'solid',
-                borderColor: isActive ? ('#4b5563') : ('#1f2937')
+                // Colored active outline (per user feedback): when a
+                // sport pill is selected it now gets a blue ring +
+                // soft glow instead of the previous near-invisible
+                // gray border. We use box-shadow for the ring so the
+                // pill width doesn't shift when active vs. inactive.
+                borderColor: isActive ? '#3b82f6' : '#1f2937',
+                boxShadow: isActive
+                  ? '0 0 0 1.5px #3b82f6, 0 0 14px rgba(59,130,246,0.45)'
+                  : 'none',
+                transition: 'box-shadow 140ms ease-out, border-color 140ms ease-out',
               }}
             >
               <span style={{ fontSize: isCondensed ? '18px' : iconSize, lineHeight: 1 }}>{pill.icon}</span>
               {!isCondensed && <span>{getSportLabel(pill.sports[0])}</span>}
-              {isCondensed && isBundle && (
-                // Subtle stack indicator so the user can see the pill
-                // bundles multiple leagues. Absolutely positioned so it
-                // doesn't change the pill's hit area or layout width.
+              {isCondensed && gameCount > 0 && (
+                // Game-count badge — was previously the *league*
+                // count (only shown on bundled pills). Per user
+                // feedback we now show the live + upcoming game
+                // total for this pill on every condensed pill that
+                // has at least one game. Absolutely positioned so
+                // it doesn't change the pill's hit area or layout.
                 <span
                   aria-hidden="true"
                   style={{
@@ -1182,7 +1216,7 @@ export default function Dashboard() {
                     pointerEvents: 'none',
                   }}
                 >
-                  {pill.sports.length}
+                  {gameCount}
                 </span>
               )}
             </TapSurface>
