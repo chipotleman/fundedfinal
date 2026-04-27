@@ -9,9 +9,14 @@ export default function TapSurface({
   className = '',
   style = {},
   disabled = false,
+  // Spread any additional props (aria-*, title, data-*, etc.) onto the
+  // underlying <button> so callers can attach accessibility metadata
+  // and tooltips without needing a custom wrapper.
+  ...rest
 }) {
   return (
     <button
+      {...rest}
       type="button"
       disabled={disabled}
       onClick={() => { if (!disabled && onTap) onTap(); }}

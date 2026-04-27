@@ -1022,11 +1022,50 @@ export default function Dashboard() {
   // Reusable sport-pill row. Rendered inline at the top of the page AND
   // inside the condensed sticky header — both share the same selectedSport
   // state so picking a sport in either updates both immediately.
+  //
+  // For the condensed bar we bundle leagues that share the same emoji
+  // (e.g., NFL + NCAAF, NBA + NCAAB + Euro Basketball, NHL + Int'l
+  // Hockey) into a single pill so the icon row doesn't show duplicate
+  // 🏈/🏀/🏒. Tapping a bundled pill cycles through the leagues inside
+  // it, so both leagues remain reachable from the condensed bar.
   const renderSportPills = (variant = 'inline') => {
     const isCondensed = variant === 'condensed';
     const pillPadding = isCondensed ? '6px 12px' : '10px 16px';
     const pillFontSize = isCondensed ? '12px' : '14px';
     const iconSize = isCondensed ? '13px' : '16px';
+
+    // Build the per-variant list of pill sources. For the inline row
+    // each league is its own pill; for the condensed bar we collapse
+    // by emoji into bundles, preserving the original sport order so
+    // the first-occurrence league becomes the bundle's default tap.
+    let pillSources;
+    if (isCondensed) {
+      const byIcon = new Map();
+      const groups = [];
+      for (const sport of sports) {
+        const icon = getSportIcon(sport);
+        const existing = byIcon.get(icon);
+        if (existing) {
+          existing.sports.push(sport);
+        } else {
+          const group = { icon, sports: [sport] };
+          byIcon.set(icon, group);
+          groups.push(group);
+        }
+      }
+      pillSources = groups.map((g) => ({
+        key: g.icon,
+        icon: g.icon,
+        sports: g.sports,
+      }));
+    } else {
+      pillSources = sports.map((sport) => ({
+        key: sport,
+        icon: getSportIcon(sport),
+        sports: [sport],
+      }));
+    }
+
     return (
       <div
         className={`flex items-center space-x-2 overflow-x-auto scrollbar-hide ${isCondensed ? '' : 'pb-1'}`}
@@ -1069,36 +1108,86 @@ export default function Dashboard() {
           ></span>
           <span>Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}</span>
         </TapSurface>
-        {sports.map((sport) => (
-          <TapSurface
-            key={sport}
-            onTap={() => handleSportClick(sport)}
-            isActive={selectedSport === sport}
-            activeColor={'#1a1a1a'}
-            inactiveColor="transparent"
-            activeTextColor={'#ffffff'}
-            inactiveTextColor={'#9ca3af'}
-            aria-label={getSportLabel(sport)}
-            title={isCondensed ? getSportLabel(sport) : undefined}
-            style={{
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: isCondensed ? 0 : '8px',
-              padding: isCondensed ? '5px 10px' : pillPadding,
-              borderRadius: '9999px',
-              fontSize: pillFontSize,
-              fontWeight: '500',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: selectedSport === sport ? ('#4b5563') : ('#1f2937')
-            }}
-          >
-            <span style={{ fontSize: isCondensed ? '18px' : iconSize, lineHeight: 1 }}>{getSportIcon(sport)}</span>
-            {!isCondensed && <span>{getSportLabel(sport)}</span>}
-          </TapSurface>
-        ))}
+        {pillSources.map((pill) => {
+          // For inline pills `pill.sports` always has length 1 so this
+          // collapses back to the original single-league behavior.
+          const isActive = pill.sports.includes(selectedSport);
+          const isBundle = pill.sports.length > 1;
+          const handleTap = () => {
+            if (!isBundle) {
+              handleSportClick(pill.sports[0]);
+              return;
+            }
+            // Bundled (condensed) pill: cycle through the leagues so
+            // both NBA + NCAAB (etc.) remain reachable from the bar.
+            if (!isActive) {
+              handleSportClick(pill.sports[0]);
+              return;
+            }
+            const idx = pill.sports.indexOf(selectedSport);
+            const next = pill.sports[(idx + 1) % pill.sports.length];
+            handleSportClick(next);
+          };
+          const labelList = pill.sports.map(getSportLabel).join(' / ');
+          return (
+            <TapSurface
+              key={pill.key}
+              onTap={handleTap}
+              isActive={isActive}
+              activeColor={'#1a1a1a'}
+              inactiveColor="transparent"
+              activeTextColor={'#ffffff'}
+              inactiveTextColor={'#9ca3af'}
+              aria-label={labelList}
+              title={isCondensed ? labelList : undefined}
+              style={{
+                flexShrink: 0,
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: isCondensed ? 0 : '8px',
+                padding: isCondensed ? '5px 10px' : pillPadding,
+                borderRadius: '9999px',
+                fontSize: pillFontSize,
+                fontWeight: '500',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: isActive ? ('#4b5563') : ('#1f2937')
+              }}
+            >
+              <span style={{ fontSize: isCondensed ? '18px' : iconSize, lineHeight: 1 }}>{pill.icon}</span>
+              {!isCondensed && <span>{getSportLabel(pill.sports[0])}</span>}
+              {isCondensed && isBundle && (
+                // Subtle stack indicator so the user can see the pill
+                // bundles multiple leagues. Absolutely positioned so it
+                // doesn't change the pill's hit area or layout width.
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    top: -2,
+                    right: -2,
+                    minWidth: 14,
+                    height: 14,
+                    padding: '0 3px',
+                    borderRadius: 9999,
+                    backgroundColor: isActive ? '#3b82f6' : '#1f2937',
+                    color: '#ffffff',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    lineHeight: '14px',
+                    textAlign: 'center',
+                    border: '1.5px solid #000000',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  {pill.sports.length}
+                </span>
+              )}
+            </TapSurface>
+          );
+        })}
       </div>
     );
   };
