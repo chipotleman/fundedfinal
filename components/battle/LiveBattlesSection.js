@@ -1380,15 +1380,11 @@ function YouVsCard({
     topLabel = 'In Battle';
     topDotColor = '#10b981';
     ctaText = 'View Battle';
-    if (pot != null && timeLeftMs > 0) {
-      metaRight = `$${formatMoney(pot, 0)} · ${formatTimeRemaining(timeLeftMs)}`;
-    } else if (pot != null) {
-      metaRight = `$${formatMoney(pot, 0)} pot`;
-    } else if (timeLeftMs > 0) {
-      metaRight = formatTimeRemaining(timeLeftMs);
-    } else {
-      metaRight = 'Live now';
-    }
+    // The pot is now rendered as a focal "prize plate" inside the
+    // hero composition below, so the top meta line carries only the
+    // time remaining (kept here so the spec's "time remaining stays
+    // present in roughly the same location" requirement is met).
+    metaRight = timeLeftMs > 0 ? formatTimeRemaining(timeLeftMs) : 'Live now';
     progressLabel = `${progressPercent.toFixed(0)}% complete`;
   } else if (isWaiting) {
     topLabel = 'Waiting';
@@ -1912,6 +1908,57 @@ function YouVsCard({
         :global(.youvs-dot) {
           animation: youvsDotsPulse 1.2s ease-in-out infinite;
         }
+        /* Mortal Kombat-style hero treatment for the active "In Battle"
+           state. The arena gets a slow diagonal sheen, each fighter
+           portrait pulses with a colored ring, the cartoon VS rocks
+           with a subtle kick, and the prize plate bobs to read as a
+           prize callout. All gracefully degrade under reduced-motion
+           below — the still hero look stays bold without movement. */
+        @keyframes heroSweep {
+          0% { transform: translateX(-110%) skewX(-18deg); opacity: 0; }
+          35% { opacity: 0.55; }
+          100% { transform: translateX(110%) skewX(-18deg); opacity: 0; }
+        }
+        :global(.hero-sweep) {
+          background: linear-gradient(95deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%);
+          animation: heroSweep 4.2s ease-in-out infinite;
+        }
+        @keyframes heroRingPulse {
+          0% { transform: scale(0.94); opacity: 0.75; }
+          80% { transform: scale(1.18); opacity: 0; }
+          100% { transform: scale(1.18); opacity: 0; }
+        }
+        :global(.hero-ring) {
+          border-width: 2px;
+          border-style: solid;
+          pointer-events: none;
+          animation: heroRingPulse 2s ease-out infinite;
+        }
+        :global(.hero-ring-you) {
+          border-color: rgba(52,211,153,0.75);
+          box-shadow: 0 0 12px rgba(16,185,129,0.55);
+        }
+        :global(.hero-ring-opp) {
+          border-color: rgba(248,113,113,0.75);
+          box-shadow: 0 0 12px rgba(239,68,68,0.55);
+        }
+        @keyframes heroVsKick {
+          0%, 100% { transform: scale(1) rotate(-2deg); }
+          50% { transform: scale(1.08) rotate(2deg); }
+        }
+        :global(.hero-vs) {
+          display: inline-block;
+          animation: heroVsKick 2.4s ease-in-out infinite;
+          transform-origin: center;
+        }
+        @keyframes heroPrizeBob {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-2px) scale(1.04); }
+        }
+        :global(.hero-prize) {
+          animation: heroPrizeBob 2.2s ease-in-out infinite;
+          transform-origin: center;
+        }
         @media (prefers-reduced-motion: reduce) {
           :global(.youvs-anon-fade),
           .tap-to-start-cta,
@@ -1923,9 +1970,15 @@ function YouVsCard({
           :global(.youvs-ring),
           :global(.youvs-shuffle),
           :global(.youvs-dot),
-          :global(.play-now-confirm-btn) {
+          :global(.play-now-confirm-btn),
+          :global(.hero-sweep),
+          :global(.hero-ring),
+          :global(.hero-vs),
+          :global(.hero-prize) {
             animation: none !important;
           }
+          :global(.hero-sweep) { opacity: 0.18; }
+          :global(.hero-ring) { opacity: 0.4; }
         }
         .youvs-card:focus-visible {
           border-color: rgba(52, 211, 153, 0.95) !important;
@@ -2313,6 +2366,292 @@ function YouVsCard({
               <span>Don't ask me again</span>
             </label>
           </div>
+        ) : isActive ? (
+          // Mortal Kombat-style hero treatment for the active "In
+          // Battle" state. Fills the card with fighter portraits, a
+          // giant cartoon VS mark, and a prominent prize plate so the
+          // user immediately reads "this match matters". The status
+          // pill, time-remaining label, and Preview toggle are kept
+          // in roughly the same locations as the previous compact
+          // layout so existing interactions stay intact. Animated
+          // accents (sweep, pulsing rings, prize bob) gracefully
+          // degrade under prefers-reduced-motion via the styles above.
+          <>
+            <div
+              className="hero-arena relative flex flex-col flex-1 mt-0.5 mb-1.5 sm:mb-2 rounded-lg overflow-hidden"
+              style={{
+                minHeight: 138,
+                background:
+                  'radial-gradient(120% 90% at 50% 35%, rgba(16,185,129,0.30) 0%, rgba(6,182,212,0.16) 35%, rgba(13,13,13,0) 70%), radial-gradient(80% 60% at 50% 100%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%), linear-gradient(180deg, #0a1413 0%, #050a0c 100%)',
+                border: '1.5px solid rgba(16,185,129,0.35)',
+                boxShadow:
+                  'inset 0 0 0 1px rgba(16,185,129,0.18), inset 0 16px 24px rgba(0,0,0,0.45)',
+              }}
+            >
+              {/* Arena floor lines — faint perspective hint at the
+                  bottom edge so the radial gradient reads as an arena
+                  pit rather than a flat panel. */}
+              <svg
+                className="absolute inset-x-0 bottom-0 pointer-events-none w-full"
+                height="48"
+                viewBox="0 0 380 48"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+                style={{ opacity: 0.5 }}
+              >
+                <defs>
+                  <linearGradient id="hero-arena-grid" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(16,185,129,0)" />
+                    <stop offset="100%" stopColor="rgba(16,185,129,0.55)" />
+                  </linearGradient>
+                </defs>
+                <g stroke="url(#hero-arena-grid)" strokeWidth="0.6" fill="none">
+                  <line x1="0" y1="48" x2="380" y2="48" />
+                  <line x1="0" y1="36" x2="380" y2="36" />
+                  <line x1="0" y1="24" x2="380" y2="24" />
+                </g>
+              </svg>
+              {/* Diagonal sheen sweeping across the arena. */}
+              <div className="hero-sweep absolute inset-0 pointer-events-none" aria-hidden="true" />
+
+              {/* Fighter row */}
+              <div className="relative flex items-start justify-between gap-1 px-2 pt-2.5 sm:pt-3">
+                {/* You — emerald/cyan corner */}
+                <div className="flex flex-col items-center min-w-0 flex-1">
+                  <div className="relative" style={{ width: 64, height: 64 }}>
+                    <span
+                      className="hero-ring hero-ring-you absolute inset-0 rounded-full"
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="hero-ring hero-ring-you absolute inset-0 rounded-full"
+                      aria-hidden="true"
+                      style={{ animationDelay: '0.6s' }}
+                    />
+                    <div
+                      className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, #34d399 0%, #06b6d4 100%)',
+                        padding: 3,
+                        border: '2.5px solid #0d0d0d',
+                        boxShadow:
+                          '0 4px 0 rgba(0,0,0,0.55), 0 0 16px rgba(16,185,129,0.55)',
+                      }}
+                    >
+                      <div className="rounded-full overflow-hidden w-full h-full bg-black flex items-center justify-center">
+                        <UserAvatar user={youUser} size={52} />
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="mt-1 px-1.5 py-0.5 rounded-md max-w-full"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, rgba(16,185,129,0.55), rgba(6,182,212,0.45))',
+                      border: '1.5px solid #0d0d0d',
+                      boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                    }}
+                  >
+                    <span
+                      className="block text-[10px] font-black uppercase tracking-wider truncate text-center"
+                      style={{
+                        color: '#fff',
+                        textShadow: '1px 1px 0 #0d0d0d',
+                        maxWidth: 110,
+                      }}
+                    >
+                      {youUser.username}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Cartoon VS centerpiece */}
+                <div className="relative flex flex-col items-center justify-center px-1 flex-shrink-0 self-center">
+                  <span
+                    className="hero-vs text-3xl sm:text-4xl font-black italic leading-none"
+                    style={{
+                      color: '#fff',
+                      WebkitTextStroke: '2px #0d0d0d',
+                      textShadow:
+                        '3px 3px 0 #0d0d0d, 0 0 18px rgba(251,191,36,0.55)',
+                      letterSpacing: '-0.04em',
+                      fontFamily: 'Impact, "Arial Black", sans-serif',
+                    }}
+                  >
+                    VS
+                  </span>
+                </div>
+
+                {/* Opponent — orange/red corner */}
+                <div className="flex flex-col items-center min-w-0 flex-1">
+                  <div className="relative" style={{ width: 64, height: 64 }}>
+                    <span
+                      className="hero-ring hero-ring-opp absolute inset-0 rounded-full"
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="hero-ring hero-ring-opp absolute inset-0 rounded-full"
+                      aria-hidden="true"
+                      style={{ animationDelay: '0.6s' }}
+                    />
+                    <div
+                      className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
+                        padding: 3,
+                        border: '2.5px solid #0d0d0d',
+                        boxShadow:
+                          '0 4px 0 rgba(0,0,0,0.55), 0 0 16px rgba(239,68,68,0.55)',
+                      }}
+                    >
+                      <div className="rounded-full overflow-hidden w-full h-full bg-black flex items-center justify-center">
+                        {showOpponent ? (
+                          <UserAvatar
+                            user={{
+                              id: opponent.id,
+                              username: opponent.username,
+                              avatar: opponent.avatar,
+                            }}
+                            size={52}
+                          />
+                        ) : (
+                          <SilhouetteAvatar
+                            gradient={['#fbbf24', '#f97316']}
+                            size={52}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="mt-1 px-1.5 py-0.5 rounded-md max-w-full"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, rgba(239,68,68,0.55), rgba(249,115,22,0.45))',
+                      border: '1.5px solid #0d0d0d',
+                      boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                    }}
+                  >
+                    <span
+                      className="block text-[10px] font-black uppercase tracking-wider truncate text-center"
+                      style={{
+                        color: '#fff',
+                        textShadow: '1px 1px 0 #0d0d0d',
+                        maxWidth: 110,
+                      }}
+                    >
+                      {showOpponent ? opponent?.username || 'Opponent' : 'Opponent'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Prize plate — pot styled as a prize callout so a
+                  glance reads "this match is worth $X". Falls back to
+                  a green "Live now" plate if no pot data is available
+                  so the bottom of the arena is never empty. */}
+              <div className="relative flex justify-center mt-auto pb-2 pt-1.5">
+                {pot != null ? (
+                  <div
+                    className="hero-prize relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #facc15 0%, #f59e0b 60%, #ea580c 100%)',
+                      border: '2.5px solid #0d0d0d',
+                      boxShadow:
+                        '0 4px 0 rgba(0,0,0,0.55), 0 0 22px rgba(251,191,36,0.65)',
+                    }}
+                    aria-label={`Prize pot $${formatMoney(pot, 0)}`}
+                  >
+                    <span
+                      className="text-[9px] font-black uppercase tracking-widest"
+                      style={{ color: '#2a1404' }}
+                    >
+                      Pot
+                    </span>
+                    <span
+                      className="text-base sm:text-lg font-black tabular-nums"
+                      style={{
+                        color: '#fff',
+                        WebkitTextStroke: '1.5px #0d0d0d',
+                        textShadow: '2px 2px 0 #0d0d0d',
+                        letterSpacing: '-0.01em',
+                        lineHeight: 1,
+                        fontFamily: 'Impact, "Arial Black", sans-serif',
+                      }}
+                    >
+                      ${formatMoney(pot, 0)}
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    className="hero-prize inline-flex items-center px-3 py-1 rounded-full"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #34d399, #10b981)',
+                      border: '2.5px solid #0d0d0d',
+                      boxShadow: '0 3px 0 rgba(0,0,0,0.55)',
+                    }}
+                  >
+                    <span
+                      className="text-[10px] font-black uppercase tracking-widest"
+                      style={{ color: '#022c1f' }}
+                    >
+                      Live Now
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Match progress — kept so the active card still tells
+                time-of-match. Visually unchanged from before so the
+                rail stays familiar. */}
+            <div
+              className="h-1 rounded-full overflow-hidden mb-1 sm:mb-2"
+              style={{ background: '#1a1a1a' }}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-1000"
+                style={{
+                  width: `${progressPercent}%`,
+                  background: 'linear-gradient(90deg, #10b981, #06b6d4)',
+                }}
+              ></div>
+            </div>
+
+            {/* Footer — Preview toggle stays in the same place as
+                before so the existing expand/collapse interaction
+                is preserved. */}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600 text-[10px]">{progressLabel}</span>
+              <span
+                className="text-[11px] font-semibold flex items-center gap-1"
+                style={{ color: '#34d399' }}
+              >
+                {isExpanded ? 'Hide' : 'Preview'}
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style={{
+                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 220ms ease',
+                  }}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </span>
+            </div>
+          </>
         ) : isIdle ? (
           // Graffiti / cartoon PLAY NOW treatment — the sticker is the
           // focal point of the card. The buy-in / game-mode / pot
@@ -2417,8 +2756,9 @@ function YouVsCard({
             )}
           </div>
         ) : (
-          // Active / waiting / queued — unchanged from the existing
-          // layout per the task contract.
+          // Waiting / queued — unchanged from the existing layout
+          // per the task contract. Active state has its own hero
+          // branch above.
           <>
             <div className="flex items-center justify-between mb-1.5 sm:mb-3">
               <div className="flex items-center gap-2.5 flex-1 min-w-0">
