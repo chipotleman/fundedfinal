@@ -168,21 +168,31 @@ export default function MessengerPage() {
             type="button"
             onClick={handleLeaveMessenger}
             aria-label="Leave Messenger"
-            className="sm:hidden inline-flex items-center gap-1 px-2 -ml-1 rounded-lg font-semibold text-sm text-white"
+            className="msg-cartoon-btn sm:hidden inline-flex items-center gap-1.5 px-3 -ml-1 font-extrabold text-xs uppercase text-white"
             style={{
               minHeight: 44,
               minWidth: 44,
-              backgroundColor: 'rgba(59,130,246,0.16)',
-              border: '1px solid rgba(59,130,246,0.45)',
+              borderRadius: 14,
+              background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 3px 0 #0a0a0a',
+              letterSpacing: '0.12em',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
             </svg>
             <span>Back</span>
           </button>
-          <h1 className="text-lg sm:text-2xl font-bold tracking-tight" style={{ color: '#3b82f6' }}>
+          <h1
+            className="font-extrabold uppercase tracking-tight text-white"
+            style={{
+              fontSize: 'clamp(18px, 4vw, 26px)',
+              letterSpacing: '0.04em',
+              textShadow: '0 2px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
+            }}
+          >
             Messenger
           </h1>
           {/* Desktop-only Close link so parity with mobile is maintained
@@ -191,14 +201,17 @@ export default function MessengerPage() {
             type="button"
             onClick={handleLeaveMessenger}
             aria-label="Close Messenger"
-            className="hidden sm:inline-flex items-center gap-1 ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-300 hover:text-white"
+            className="msg-cartoon-btn hidden sm:inline-flex items-center gap-1.5 ml-auto px-3 py-1.5 text-[11px] font-extrabold uppercase text-white"
             style={{
-              backgroundColor: 'rgba(59,130,246,0.10)',
-              border: '1px solid rgba(59,130,246,0.35)',
+              borderRadius: 12,
+              background: 'linear-gradient(180deg,#dc2626,#b91c1c)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 3px 0 #0a0a0a',
+              letterSpacing: '0.14em',
             }}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
             </svg>
             <span>Close</span>
           </button>

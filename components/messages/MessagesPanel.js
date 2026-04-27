@@ -3368,13 +3368,19 @@ export default function MessagesPanel({
   const textSecondary = '#9ca3af';
   const inputBg = '#0a1220';
   const rowHover = 'rgba(59,130,246,0.06)';
-  const rowSelected = 'rgba(59,130,246,0.12)';
-  const cardShadow = '0 0 0 1px rgba(59,130,246,0.08), 0 8px 32px -8px rgba(59,130,246,0.18)';
+  const rowSelected = 'rgba(59,130,246,0.18)';
+  // Cartoon panel chrome — chunky 2.5px black border + offset shadow
+  // matches PikSlip / PlayFriendModal / PrivateMatchModal so the
+  // Messenger feels part of the same family. Kept as a separate
+  // constant from `cardBorder` (the soft blue accent) so the inbox
+  // row internals can keep their original subtler accent.
+  const panelBorder = '2.5px solid #0a0a0a';
+  const panelShadow = '0 4px 0 #0a0a0a, 0 0 24px -8px rgba(59,130,246,0.35)';
 
   const isFullpage = variant === 'fullpage';
   const containerStyle = isFullpage
-    ? { backgroundColor: cardBg, border: `1px solid ${cardBorder}`, height: '100%', boxShadow: cardShadow }
-    : { backgroundColor: cardBg, border: `1px solid ${cardBorder}`, minHeight, boxShadow: cardShadow };
+    ? { backgroundColor: cardBg, border: panelBorder, height: '100%', boxShadow: panelShadow }
+    : { backgroundColor: cardBg, border: panelBorder, minHeight, boxShadow: panelShadow };
 
   const sidebarMaxHeight = isFullpage ? undefined : 480;
 
@@ -3385,17 +3391,38 @@ export default function MessagesPanel({
     >
       <div
         className={`md:w-72 flex-shrink-0 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}
-        style={{ borderRight: `1px solid ${cardBorder}` }}
+        style={{ borderRight: '2.5px solid #0a0a0a' }}
       >
-        <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-          <div className="text-sm font-bold mb-2" style={{ color: textPrimary }}>Messages</div>
+        <div
+          className="px-4 py-3 flex-shrink-0"
+          style={{
+            borderBottom: '2.5px solid #0a0a0a',
+            background: 'linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%)',
+          }}
+        >
+          <div
+            className="font-extrabold uppercase mb-2"
+            style={{
+              color: '#3b82f6',
+              fontSize: 11,
+              letterSpacing: '0.18em',
+              textShadow: '0 1px 0 #0a0a0a',
+            }}
+          >
+            Messages
+          </div>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search friends…"
-            className="w-full px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-500"
-            style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }}
+            className="w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none"
+            style={{
+              backgroundColor: inputBg,
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 2px 0 #0a0a0a, inset 0 2px 0 rgba(0,0,0,0.4)',
+              color: textPrimary,
+            }}
           />
         </div>
         <div
@@ -3440,10 +3467,18 @@ export default function MessagesPanel({
                 onClick={() => onSelect(f.id)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors relative"
                 style={{
-                  backgroundColor: isSelected ? rowSelected : 'transparent',
-                  borderBottom: '1.5px solid rgba(10,10,10,0.6)',
-                  borderLeft: isSelected ? '4px solid #0a0a0a' : '4px solid transparent',
-                  boxShadow: isSelected ? 'inset 4px 0 0 #3b82f6' : 'none',
+                  // Selected: gradient tint pop + bold inset blue
+                  // chunky bar on the left so the row reads as
+                  // "active conversation" the same way the buy-in /
+                  // game-mode tiles read selected elsewhere.
+                  background: isSelected
+                    ? 'linear-gradient(180deg, rgba(59,130,246,0.22), rgba(59,130,246,0.10))'
+                    : 'transparent',
+                  borderBottom: '2px solid #0a0a0a',
+                  borderLeft: isSelected ? '5px solid #0a0a0a' : '5px solid transparent',
+                  boxShadow: isSelected
+                    ? 'inset 5px 0 0 #3b82f6, inset 0 0 18px -8px rgba(59,130,246,0.6)'
+                    : 'none',
                 }}
                 onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = rowHover; }}
                 onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
