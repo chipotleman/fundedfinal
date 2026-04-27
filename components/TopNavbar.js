@@ -58,10 +58,8 @@ export default function TopNavbar({
   const hasUnviewedAchievements = (unviewedAchievementCount || 0) > 0;
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const notifBellRef = useRef(null);
-  const condensedNotifBellRef = useRef(null);
   const [showMsgDropdown, setShowMsgDropdown] = useState(false);
   const msgBtnRef = useRef(null);
-  const condensedMsgBtnRef = useRef(null);
   const [messageFriend, setMessageFriend] = useState(null);
   
   // Prefetch all top-nav destinations so the next-page bundle is cached
@@ -768,11 +766,16 @@ export default function TopNavbar({
                 </div>
               )}
 
-              {/* Pik Slip Button - sized to match the sport filter pills */}
+              {/* Pik Slip Button - sized to match the sport filter pills.
+                  Trailing margin is larger below the lg breakpoint so the
+                  count badge cannot crowd the absolutely-positioned mobile
+                  hamburger (and its notification dot). On lg+ the hamburger
+                  is hidden, so we tighten back to the original 50px spacing
+                  before the auth buttons / avatar. */}
               {effectiveBetSlipCount > 0 && (
                 <button
                   onClick={effectiveOnBetSlipClick}
-                  className="relative no-hover-effect"
+                  className="relative no-hover-effect mr-[64px] lg:mr-[50px]"
                   style={{
                     flexShrink: 0,
                     display: 'flex',
@@ -787,7 +790,6 @@ export default function TopNavbar({
                     borderColor: '#2563eb',
                     backgroundColor: '#2563eb',
                     color: '#ffffff',
-                    marginRight: '50px',
                     lineHeight: 1,
                   }}
                   aria-label="Open Pik Slip"
@@ -993,11 +995,11 @@ export default function TopNavbar({
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          <div className="px-2 sm:px-4 py-1 flex items-center gap-1.5 sm:gap-2 min-h-[48px] sm:min-h-[52px]">
+          <div className="px-2 sm:px-4 py-1 flex items-center gap-2 min-h-[48px] sm:min-h-[52px]">
             {/* Sport pills (rendered by parent so selection stays in sync).
                 Only the pills slot grows + scrolls horizontally. When stage 2
                 hasn't engaged yet we render an empty flex spacer so the
-                right-side controls stay anchored to the right edge. */}
+                Pik Slip stays anchored to the right edge. */}
             {showCondensedPills ? (
               <div className="flex-1 min-w-0 overflow-hidden">
                 {renderCondensedSportPills && renderCondensedSportPills()}
@@ -1006,129 +1008,17 @@ export default function TopNavbar({
               <div className="flex-1 min-w-0" aria-hidden="true" />
             )}
 
-            {/* Right-side controls — hidden on mobile so the condensed bar
-                shows only the sport pills row at small widths. Desktop keeps
-                the full set of controls anchored to the right edge. */}
-            <div className="hidden sm:flex items-center gap-1.5 sm:gap-2">
-            {/* Cash balance — same source as the desktop pill in the full nav */}
-            {isLoggedIn && hasActiveChallenge && userProfile && (
-              <button
-                onClick={() => setExplainerType('cash')}
-                title="Real cash balance — click for details"
-                className="flex-shrink-0 flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:brightness-110"
-                style={{
-                  background: 'linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(21,128,61,0.08) 100%)',
-                  border: '1px solid rgba(34,197,94,0.45)',
-                }}
-              >
-                <span className="text-[11px] leading-none">💵</span>
-                <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap" style={{ color: '#86efac' }}>
-                  ${formatMoney(parseFloat(userProfile.bankroll), 0)}
-                </span>
-              </button>
-            )}
-
-            {/* Battle coins pill — mirrors the full nav's ⚔ pill while a matchup is active */}
-            {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
-              <button
-                onClick={() => setExplainerType('coins')}
-                title="In-battle play coins — click for details"
-                className="flex-shrink-0 flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:brightness-110"
-                style={{
-                  background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
-                  border: '1px solid rgba(251,146,60,0.45)',
-                }}
-                aria-label="Battle coins details"
-              >
-                <span className="text-[11px] leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap" style={{ color: '#fed7aa' }}>
-                  {formatMoney(parseFloat(matchupBalance), 0)}
-                </span>
-              </button>
-            )}
-
-            {/* Notifications + messages affordances — open the lightweight
-                dropdowns in place (same dropdowns as the full top bar) so
-                the user can peek without leaving the page. Anchored to the
-                condensed bar's own buttons. The full bar's dropdown
-                instances stay mounted but receive `open=false` whenever
-                the condensed bar is engaged (and vice versa) so only one
-                instance has document/scroll listeners attached at a time —
-                clicks inside the visible dropdown can't be misread as
-                "outside" by a hidden twin instance. */}
-            {isLoggedIn && (
-              <div className="relative flex-shrink-0">
-                <button
-                  ref={condensedNotifBellRef}
-                  onClick={() => { setShowMsgDropdown(false); setShowNotifDropdown(v => !v); }}
-                  title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
-                  aria-label={notifTotal > 0 ? `${notifTotal} new notifications` : 'Notifications'}
-                  aria-haspopup="true"
-                  aria-expanded={showNotifDropdown}
-                  className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
-                >
-                  <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  {notifTotal > 0 && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
-                      style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
-                    >
-                      {notifTotal > 9 ? '9+' : notifTotal}
-                    </span>
-                  )}
-                </button>
-                <NotificationsDropdown
-                  open={showNotifDropdown && showCondensedBar}
-                  onClose={() => setShowNotifDropdown(false)}
-                  anchorRef={condensedNotifBellRef}
-                />
-              </div>
-            )}
-
-            {isLoggedIn && (
-              <div className="relative flex-shrink-0">
-                <button
-                  ref={condensedMsgBtnRef}
-                  onClick={() => { setShowNotifDropdown(false); setShowMsgDropdown(v => !v); }}
-                  title={notifMessages > 0 ? `${notifMessages} unread message${notifMessages > 1 ? 's' : ''}` : 'Messages'}
-                  aria-label={notifMessages > 0 ? `${notifMessages} unread messages` : 'Messages'}
-                  aria-haspopup="true"
-                  aria-expanded={showMsgDropdown}
-                  className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
-                >
-                  <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
-                  </svg>
-                  {notifMessages > 0 && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
-                      style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
-                    >
-                      {notifMessages > 9 ? '9+' : notifMessages}
-                    </span>
-                  )}
-                </button>
-                <MessagesDropdown
-                  open={showMsgDropdown && showCondensedBar}
-                  onClose={() => setShowMsgDropdown(false)}
-                  anchorRef={condensedMsgBtnRef}
-                  onSelectConversation={(friend) => setMessageFriend(friend)}
-                />
-              </div>
-            )}
-
-            {/* Pik Slip mirror — sized to match the condensed sport pills */}
+            {/* Pik Slip — only right-side affordance in the condensed bar.
+                Shown on both mobile and desktop so the bar reads identically
+                across breakpoints. Sized compact to fit narrow widths. */}
             {effectiveBetSlipCount > 0 && (
               <button
                 onClick={effectiveOnBetSlipClick}
-                className="relative no-hover-effect"
+                className="relative no-hover-effect flex-shrink-0"
                 style={{
-                  flexShrink: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: '6px',
                   padding: '6px 12px',
                   borderRadius: '9999px',
                   fontSize: '12px',
@@ -1154,7 +1044,6 @@ export default function TopNavbar({
                 </span>
               </button>
             )}
-            </div>
           </div>
         </div>
       )}
