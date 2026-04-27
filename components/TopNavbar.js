@@ -19,7 +19,6 @@ export default function TopNavbar({
   betSlipCount,
   onBetSlipClick,
   pinned = true,
-  headerPassed = false,
   sportsRowPassed = false,
   renderCondensedSportPills,
 }) {
@@ -28,14 +27,15 @@ export default function TopNavbar({
   const effectiveOnBetSlipClick = onBetSlipClick || (() => ctxSetShowBetSlip(!ctxShowBetSlip));
   const condensedBarRef = useRef(null);
   const hasCondensedBar = !!renderCondensedSportPills;
-  // Stage 1: condensed bar mounts as soon as the main header scrolls away
-  // (`headerPassed`). The mount/unmount on this flip is what lets iOS
-  // Safari re-engage cleanly on every scroll-up-then-down pass.
-  // Stage 2: once the inline sport row also scrolls away
-  // (`sportsRowPassed`), the already-mounted bar swaps in its sport
-  // pills slot — no remount, just a content swap.
-  const showCondensedBar = hasCondensedBar && headerPassed;
-  const showCondensedPills = showCondensedBar && sportsRowPassed;
+  // Single-stage engagement: the condensed bar only mounts once the
+  // inline sport-pill row has scrolled above the viewport
+  // (`sportsRowPassed`). Earlier the bar mounted in two stages — first
+  // when the main nav scrolled away (empty bar), then a content swap
+  // when the pills also scrolled away — which produced a brief "black
+  // bar with no pills" state on the way down. Mount/unmount on the
+  // single flip still lets iOS Safari re-engage cleanly on every
+  // scroll-up-then-down pass.
+  const showCondensedBar = hasCondensedBar && sportsRowPassed;
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -1001,16 +1001,12 @@ export default function TopNavbar({
         >
           <div className="px-2 sm:px-4 py-1 flex items-center gap-2 min-h-[48px] sm:min-h-[52px]">
             {/* Sport pills (rendered by parent so selection stays in sync).
-                Only the pills slot grows + scrolls horizontally. When stage 2
-                hasn't engaged yet we render an empty flex spacer so the
-                Pik Slip stays anchored to the right edge. */}
-            {showCondensedPills ? (
-              <div className="flex-1 min-w-0 overflow-hidden">
-                {renderCondensedSportPills && renderCondensedSportPills()}
-              </div>
-            ) : (
-              <div className="flex-1 min-w-0" aria-hidden="true" />
-            )}
+                Only the pills slot grows + scrolls horizontally. The bar
+                only mounts once `sportsRowPassed` is true, so the pills
+                are always present when this renders. */}
+            <div className="flex-1 min-w-0 overflow-hidden">
+              {renderCondensedSportPills && renderCondensedSportPills()}
+            </div>
 
             {/* Pik Slip — only right-side affordance in the condensed bar.
                 Shown on both mobile and desktop so the bar reads identically

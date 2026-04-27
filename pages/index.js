@@ -977,52 +977,26 @@ export default function Dashboard() {
     setSelectedSport(sport);
   };
 
-  // Two-stage condensed-header engagement on the home page.
+  // Condensed-header engagement on the home page.
   //
-  // Stage 1 (`headerPassed`): a sentinel placed immediately below the main
-  // top nav (logo / balance / notifications) tells us when that header has
-  // scrolled out of view. As soon as it does, the slim condensed bar
-  // mounts at the top of the viewport so balance / notifications / slip
-  // stay reachable.
+  // A sentinel placed just above the inline sport-pill row tells us when
+  // those pills have scrolled above the top of the viewport. Only then
+  // does the condensed sticky bar mount — so the bar always reveals
+  // with its sport pills already inside it (no empty/black intermediate
+  // state when the user is between the main nav and the pills row).
   //
-  // Stage 2 (`sportsRowPassed`): a second sentinel placed just above the
-  // inline sport-pill row tells us when those pills have also scrolled
-  // away. Once that fires the condensed bar reveals its sport-pills slot.
-  //
-  // Both observers use IntersectionObserver (root: null) so the engaged
-  // state re-fires on every scroll-up-then-down pass — a previous direct
-  // scroll handler worked once on iOS Safari and then got stuck. Each
-  // sentinel is wired through a state variable + callback ref so that if
-  // its DOM node remounts (route transition back, conditional re-mount)
-  // the observer rebinds against the fresh node. A plain `useRef` would
-  // not trigger that re-bind.
-  const [headerSentinelNode, setHeaderSentinelNode] = useState(null);
-  const setHeaderSentinelRef = useCallback((node) => {
-    setHeaderSentinelNode(node || null);
-  }, []);
+  // The observer uses IntersectionObserver (root: null) so the engaged
+  // state re-fires on every scroll-up-then-down pass — a previous
+  // direct scroll handler worked once on iOS Safari and then got stuck.
+  // The sentinel is wired through a state variable + callback ref so
+  // that if its DOM node remounts (route transition back, conditional
+  // re-mount) the observer rebinds against the fresh node. A plain
+  // `useRef` would not trigger that re-bind.
   const [sportsSentinelNode, setSportsSentinelNode] = useState(null);
   const setSportRowSentinelRef = useCallback((node) => {
     setSportsSentinelNode(node || null);
   }, []);
-  const [headerPassed, setHeaderPassed] = useState(false);
   const [sportsRowPassed, setSportsRowPassed] = useState(false);
-
-  useEffect(() => {
-    if (!headerSentinelNode || typeof IntersectionObserver === 'undefined') return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        const above = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-        setHeaderPassed((prev) => (prev === above ? prev : above));
-      },
-      { root: null, threshold: 0 }
-    );
-    observer.observe(headerSentinelNode);
-    return () => {
-      observer.disconnect();
-    };
-  }, [headerSentinelNode]);
 
   useEffect(() => {
     if (!sportsSentinelNode || typeof IntersectionObserver === 'undefined') return undefined;
@@ -1137,19 +1111,8 @@ export default function Dashboard() {
         betSlipCount={betSlip.length}
         onBetSlipClick={handleBetSlipClick}
         pinned={false}
-        headerPassed={headerPassed}
         sportsRowPassed={sportsRowPassed}
         renderCondensedSportPills={() => renderSportPills('condensed')}
-      />
-
-      {/* Sentinel: placed immediately below the main top nav. When this
-          scrolls above the top of the viewport the condensed sticky bar
-          mounts (stage 1 — balance / notifications / slip), even before
-          the inline sport row leaves view. */}
-      <div
-        ref={setHeaderSentinelRef}
-        aria-hidden="true"
-        style={{ height: 1, width: '100%', pointerEvents: 'none' }}
       />
 
       <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
@@ -1159,7 +1122,7 @@ export default function Dashboard() {
 
         {/* Sentinel: placed immediately above the inline sport-choice row.
             When this scrolls above the top of the viewport the condensed
-            sticky header reveals its sport-pill slot (stage 2). */}
+            sticky header mounts with its sport pills already in place. */}
         <div
           ref={setSportRowSentinelRef}
           aria-hidden="true"
