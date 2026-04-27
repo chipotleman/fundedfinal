@@ -217,7 +217,7 @@ async function setupSmokeStubs(page) {
 
 /**
  * Sibling of `setupSmokeStubs` for the signed-out marketing pages
- * (`/login`, `/how-it-works`, `/pricing`, `/pikking-101`, `/auth`).
+ * (`/login`, `/pricing`, `/pikking-101`, `/auth`).
  *
  * Deliberately does NOT seed `current_user` in `localStorage` and
  * does NOT pretend `/api/auth/session` returned a populated NextAuth

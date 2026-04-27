@@ -1,5 +1,4 @@
 import { useRouter } from "next/router";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import TopNavbar from "../components/TopNavbar";
 import { useBetSlip } from "../contexts/BetSlipContext";
@@ -469,16 +468,6 @@ export default function Packages() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Compact Call to Action */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 text-center">
-        <Link
-          href="/how-it-works"
-          className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 border border-slate-600 inline-block"
-        >
-          Learn More About Our Process
-        </Link>
       </div>
 
     </div>

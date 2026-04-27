@@ -384,13 +384,6 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
           ) : (
             <div className="space-y-4">
               <Link
-                href="/how-it-works"
-                onClick={onClose}
-                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
-              >
-                How It Works
-              </Link>
-              <Link
                 href="/battle"
                 onClick={onClose}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"

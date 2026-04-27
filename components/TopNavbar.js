@@ -616,9 +616,6 @@ export default function TopNavbar({
                 </>
               ) : (
                 <>
-                  <Link href="/how-it-works" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
-                    How It Works
-                  </Link>
                   <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: '#d1d5db' }}>
                     Battle
                   </Link>

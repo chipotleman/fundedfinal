@@ -9,7 +9,7 @@
  * us a hard fail signal whenever a build-time regression silently
  * breaks `/`, `/battle`, the balance / withdrawal flow, OR the public
  * pages a fresh visitor hits before they have a session
- * (`/login`, `/how-it-works`, `/pricing`).
+ * (`/login`, `/pricing`).
  *
  * Each path is mounted in a desktop and a mobile Playwright project.
  * Authenticated routes get `setupSmokeStubs` (fake `current_user` +
@@ -136,14 +136,6 @@ const SIGNED_OUT_PAGES = [
     // unconditionally on every mount of the form view and is the
     // natural "the sign-in UI is up" signal.
     marker: { role: 'button', name: 'Sign In', exact: true },
-  },
-  {
-    path: '/how-it-works',
-    name: 'how-it-works (signed-out)',
-    // The "Get Funded to Bet" hero h1 is rendered unconditionally on
-    // mount. The accessible name flattens the inline <span> wrapping
-    // "Funded".
-    marker: { role: 'heading', name: /Get .*Funded.* to Bet/i },
   },
   {
     path: '/pricing',

@@ -18,7 +18,6 @@ import BonusClaimedCelebration from '../components/BonusClaimedCelebration';
 import PushOptInPrompt from '../components/notifications/PushOptInPrompt';
 import WonByForfeitModal from '../components/WonByForfeitModal';
 import ChallengePopup from '../components/ChallengePopup';
-import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
 import AuthPopup from '../components/AuthPopup';
 import OnboardingPopup from '../components/OnboardingPopup';
@@ -218,7 +217,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
 
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);
-  const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
   const [showDemoPopup, setShowDemoPopup] = useState(false);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [authPopupMode, setAuthPopupMode] = useState('signin');
@@ -354,10 +352,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
       setShowChallengePopup(true);
     };
 
-    const handleOpenHowItWorks = () => {
-      setShowHowItWorksPopup(true);
-    };
-
     const handleMobileMenuToggle = (e) => {
       setMobileMenuOpen(e.detail.isOpen);
     };
@@ -395,7 +389,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
 
     if (typeof window !== 'undefined') {
       window.addEventListener('openChallengePopup', handleOpenChallengePopup);
-      window.addEventListener('openHowItWorks', handleOpenHowItWorks);
       window.addEventListener('mobileMenuToggle', handleMobileMenuToggle);
       window.addEventListener('openDemoPopup', handleOpenDemoPopup);
       window.addEventListener('openAuthPopup', handleOpenAuthPopup);
@@ -407,7 +400,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
-        window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
         window.removeEventListener('mobileMenuToggle', handleMobileMenuToggle);
         window.removeEventListener('openDemoPopup', handleOpenDemoPopup);
         window.removeEventListener('openAuthPopup', handleOpenAuthPopup);
@@ -680,11 +672,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
                   initialIndex={selectedChallengeIndex}
                 />
                 
-                <HowItWorksPopup 
-                  isOpen={showHowItWorksPopup} 
-                  onClose={() => setShowHowItWorksPopup(false)} 
-                />
-
                 <DemoPopup 
                   isOpen={showDemoPopup} 
                   onClose={() => setShowDemoPopup(false)} 
@@ -742,7 +729,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
 // not flash on hard reloads. NOTE: defining MyApp.getInitialProps
 // disables Next.js Automatic Static Optimization globally — every page
 // renders per-request, including content pages (terms, privacy,
-// responsible-pikking, how-it-works) that would otherwise be statically
+// responsible-pikking) that would otherwise be statically
 // served. We accept this trade-off because the gate flash is the more
 // visible UX problem during private beta and most pages in this app
 // already use getServerSideProps for live data anyway. If/when the gate
