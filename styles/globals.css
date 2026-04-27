@@ -801,3 +801,25 @@ button.no-hover-effect.rounded-lg:focus-visible {
   animation: piksCondensedBarIn 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   will-change: transform, opacity;
 }
+
+/* Top-nav Pik Slip horizontal shift.
+   The button lives inside an absolutely-positioned, shrink-to-fit
+   right cluster on mobile, so naive Tailwind `mr-[Npx]` arbitrary
+   values get swallowed when the cluster's content width is clamped
+   to its containing block. Forcing the margin via !important on a
+   dedicated class — combined with `transform: translateX(-Npx)` —
+   guarantees the button visually shifts left of the absolutely-
+   positioned hamburger menu on every viewport, with no layout
+   reshuffling of the other right-cluster items.
+   On lg+ the hamburger is hidden, so the shift collapses to the
+   tighter desktop spacing. */
+.topnav-pikslip {
+  margin-right: 60px !important;
+  transform: translateX(-44px);
+}
+@media (min-width: 1024px) {
+  .topnav-pikslip {
+    margin-right: 50px !important;
+    transform: none;
+  }
+}

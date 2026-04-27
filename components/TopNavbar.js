@@ -768,15 +768,18 @@ export default function TopNavbar({
               )}
 
               {/* Pik Slip Button - sized to match the sport filter pills.
-                  Trailing margin is larger below the lg breakpoint so the
-                  count badge cannot crowd the absolutely-positioned mobile
-                  hamburger (and its notification dot). On lg+ the hamburger
-                  is hidden, so we tighten back to the original 50px spacing
-                  before the auth buttons / avatar. */}
+                  We use the `topnav-pikslip` CSS class (defined in
+                  styles/globals.css) to control the trailing margin via
+                  a media query with `!important`. Tailwind arbitrary
+                  values like `mr-[450px]` were getting swallowed by the
+                  shrink-to-fit width of the absolutely-positioned right
+                  cluster — the !important rule guarantees the shift
+                  applies regardless of cluster layout quirks, and the
+                  media query keeps the desktop spacing tight. */}
               {effectiveBetSlipCount > 0 && (
                 <button
                   onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
-                  className="relative no-hover-effect mr-[450px] lg:mr-[50px]"
+                  className="relative no-hover-effect topnav-pikslip"
                   style={{
                     flexShrink: 0,
                     display: 'flex',
@@ -1011,7 +1014,10 @@ export default function TopNavbar({
 
             {/* Pik Slip — only right-side affordance in the condensed bar.
                 Shown on both mobile and desktop so the bar reads identically
-                across breakpoints. Sized compact to fit narrow widths. */}
+                across breakpoints. Sized compact to fit narrow widths.
+                Stays snug to the right edge: no hamburger to clear in the
+                condensed bar, so we deliberately do NOT apply the
+                `topnav-pikslip` shift here. */}
             {effectiveBetSlipCount > 0 && (
               <button
                 onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
