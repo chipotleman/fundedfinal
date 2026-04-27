@@ -1251,7 +1251,7 @@ export default function Dashboard() {
               return (
                 <div 
                   key={game.id} 
-                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden ${pulseClass}`}
+                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden flex flex-col ${pulseClass}`}
                   style={{
                     backgroundColor: '#0d0d0d',
                     border: `1px solid ${accentBorder}`,
@@ -1259,7 +1259,7 @@ export default function Dashboard() {
                     transition: 'border-color 250ms ease, box-shadow 250ms ease',
                   }}
                 >
-                  <div className="p-2.5 sm:p-3">
+                  <div className="p-2.5 sm:p-3 flex-1 flex flex-col">
                     <div className="flex items-center gap-2 mb-1.5" style={{ minHeight: '20px' }}>
                       <span className="text-gray-500 text-[11px] font-medium truncate" style={{ minWidth: 0 }}>{game.sportName}</span>
                       <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
@@ -1309,6 +1309,7 @@ export default function Dashboard() {
                         {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>}
                       </div>
                     </div>
+                    <div className="mt-auto">
                     <GapHistoryStrip history={gapHistories[game.id]} currentGap={game._scoreGap} />
                     <div className="flex gap-1.5">
                       {game.lines?.moneyline?.away ? (
@@ -1347,6 +1348,7 @@ export default function Dashboard() {
                           <svg className="w-4 h-4" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </div>
                       )}
+                    </div>
                     </div>
                   </div>
                 </div>
