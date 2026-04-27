@@ -815,11 +815,17 @@ button.no-hover-effect.rounded-lg:focus-visible {
    tighter desktop spacing. */
 .topnav-pikslip {
   margin-right: 60px !important;
-  transform: translateX(-44px);
+  position: relative;
+  right: 44px;
 }
 @media (min-width: 1024px) {
   .topnav-pikslip {
     margin-right: 50px !important;
-    transform: none;
+    right: 0;
   }
 }
+/* The global `.no-hover-effect:focus/:active` rule above forces
+   `transform: none !important`, which would wipe out any
+   translateX-based shift the moment the button is tapped (causing
+   the Pik Slip to "jump" sideways on press). Using `right` keeps
+   the offset stable across idle / focus / active states. */
