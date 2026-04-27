@@ -16,8 +16,12 @@ export function CartoonChip({
   selected = true,
   role,
   ariaChecked,
+  ariaDisabled,
   asButton = false,
   size = 'sm',
+  disabled = false,
+  title,
+  style: styleOverride,
 }) {
   const palettes = {
     blue:    { bg: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)', text: '#0d1024', glow: 'rgba(59,130,246,0.55)' },
@@ -41,6 +45,9 @@ export function CartoonChip({
       role={role}
       aria-checked={ariaChecked}
       aria-label={ariaLabel}
+      aria-disabled={ariaDisabled || (asButton && disabled) || undefined}
+      disabled={asButton && disabled ? true : undefined}
+      title={title}
       className={`cartoon-chip ${animClass}`.trim()}
       style={{
         display: 'inline-flex',
@@ -59,10 +66,13 @@ export function CartoonChip({
         boxShadow: selected
           ? `0 2px 0 rgba(0,0,0,0.55), 0 0 10px ${p.glow}`
           : '0 2px 0 rgba(0,0,0,0.55)',
-        cursor: asButton ? 'pointer' : 'default',
+        cursor: asButton ? (disabled ? 'not-allowed' : 'pointer') : 'default',
         transformOrigin: 'center',
         flexShrink: 0,
         lineHeight: 1.1,
+        // Style overrides win last so callers can dim/lock chips
+        // (used by PreMatchPopup to grey out Rush when no live games).
+        ...(styleOverride || {}),
       }}
     >
       {icon ? (

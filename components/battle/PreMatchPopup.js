@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import useRushAvailability from '../../hooks/useRushAvailability';
 import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
 import { writeLocalOneTapPrefs, saveOneTapPrefs } from '../../utils/oneTapPrefs';
 import { setPlayNowConfirmSkipped } from '../../lib/playNowConfirm';
@@ -80,6 +81,12 @@ export default function PreMatchPopup({
   const [buyIn, setBuyIn] = useState(initialBuyIn);
   const [gameMode, setGameMode] = useState(initialGameMode);
   const [dontAsk, setDontAsk] = useState(false);
+  // Rush mode requires a live game (its 6 prop questions are pulled from
+  // an in-progress matchup). When no live games are available we lock
+  // the Rush chip so the user can't pick a mode that would immediately
+  // fail to start. `null` = still loading; `true` = available;
+  // `false` = no live games right now.
+  const rushAvailable = useRushAvailability(isOpen);
 
   // Re-seed local state every time the popup opens so a previous
   // session's mid-flow selection doesn't leak into the next opening.
@@ -91,6 +98,16 @@ export default function PreMatchPopup({
       setDontAsk(false);
     }
   }, [isOpen, initialBuyIn, initialGameMode]);
+
+  // If the user's saved default mode is Rush but no live games are
+  // available, silently bump them onto Original so the popup doesn't
+  // open with a mode they can't actually pick.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (rushAvailable === false && gameMode === 'rush') {
+      setGameMode('original');
+    }
+  }, [isOpen, rushAvailable, gameMode]);
 
   // Mirror the YouVsCard's persistence path: write the local cache
   // synchronously (so guests still benefit) and, when signed in,
@@ -284,24 +301,48 @@ export default function PreMatchPopup({
                 {PRE_MATCH_MODE_OPTIONS.map((mode) => {
                   const selected = gameMode === mode.id;
                   const meta = CARTOON_MODE_META[mode.id] || { color: 'blue', icon: mode.icon, label: mode.label };
+                  // Rush requires a live game; lock the chip when none
+                  // are available so a user can't pick a mode that
+                  // would fail to start.
+                  const locked = mode.id === 'rush' && rushAvailable === false;
+                  const lockedAria = locked ? ' (no live games right now)' : '';
                   return (
                     <CartoonChip
                       key={mode.id}
                       asButton
                       role="radio"
                       ariaChecked={selected}
-                      ariaLabel={`Game mode ${mode.label}${mode.recommended ? ' (popular)' : ''}`}
+                      ariaLabel={`Game mode ${mode.label}${mode.recommended ? ' (popular)' : ''}${lockedAria}`}
+                      ariaDisabled={locked}
+                      disabled={locked}
                       icon={meta.icon || mode.icon}
                       label={meta.label || mode.label}
                       color={meta.color}
                       size="lg"
                       selected={selected}
                       animate={selected ? 'bounce' : 'none'}
-                      onClick={() => handleSelectMode(mode.id)}
+                      onClick={() => {
+                        if (locked) return;
+                        handleSelectMode(mode.id);
+                      }}
+                      title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
+                      style={locked ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
                     />
                   );
                 })}
               </div>
+              {rushAvailable === false && (
+                <div
+                  className="mt-2 text-[11px] flex items-start gap-1.5"
+                  style={{ color: '#9ca3af' }}
+                  aria-live="polite"
+                >
+                  <span aria-hidden="true">⚡</span>
+                  <span>
+                    Rush needs a live game in progress. No games are live right now — Rush will unlock the moment one tips off.
+                  </span>
+                </div>
+              )}
               <div
                 key={selectedMode.id}
                 className="pm-mode-card mt-3 rounded-2xl p-4 relative overflow-hidden"

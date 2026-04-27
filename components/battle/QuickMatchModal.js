@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import useRushAvailability from '../../hooks/useRushAvailability';
 import UserAvatar from '../UserAvatar';
 import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
 
@@ -70,6 +71,12 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
+  // Rush requires a live game — lock the chip when none are available.
+  const rushAvailable = useRushAvailability(isOpen);
+  useEffect(() => {
+    if (!isOpen) return;
+    if (rushAvailable === false && gameMode === 'rush') setGameMode('original');
+  }, [isOpen, rushAvailable, gameMode]);
   const [searchTime, setSearchTime] = useState(0);
   const [error, setError] = useState('');
   const [avatars, setAvatars] = useState([]);
@@ -505,24 +512,35 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
                       const meta = CARTOON_MODE_META[mode.id] || { color: 'blue', icon: mode.icon, label: mode.label };
+                      const locked = mode.id === 'rush' && rushAvailable === false;
                       return (
                         <CartoonChip
                           key={mode.id}
                           asButton
                           role="radio"
                           ariaChecked={selected}
-                          ariaLabel={`Game mode ${mode.label}${mode.recommended ? ' (popular)' : ''}`}
+                          ariaLabel={`Game mode ${mode.label}${mode.recommended ? ' (popular)' : ''}${locked ? ' (no live games right now)' : ''}`}
+                          ariaDisabled={locked}
+                          disabled={locked}
                           icon={meta.icon || mode.icon}
                           label={meta.label || mode.label}
                           color={meta.color}
                           size="lg"
                           selected={selected}
                           animate={selected ? 'bounce' : 'none'}
-                          onClick={() => setGameMode(mode.id)}
+                          onClick={() => { if (!locked) setGameMode(mode.id); }}
+                          title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
+                          style={locked ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
                         />
                       );
                     })}
                   </div>
+                  {rushAvailable === false && (
+                    <p className="mt-2 text-[11px] text-gray-400 flex items-start gap-1.5" aria-live="polite">
+                      <span aria-hidden="true">⚡</span>
+                      <span>Rush needs a live game in progress. No games are live right now — Rush will unlock the moment one tips off.</span>
+                    </p>
+                  )}
                   {selectedMode && (
                     <div className="mt-2 flex items-start gap-2">
                       <p className={`${th.modeDesc} text-[11px] flex-1`}>

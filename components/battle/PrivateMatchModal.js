@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import useRushAvailability from '../../hooks/useRushAvailability';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
@@ -15,6 +16,12 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
   const [mode, setMode] = useState('choose');
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
+  // Rush requires a live game — lock the row when none are available.
+  const rushAvailable = useRushAvailability(isOpen);
+  useEffect(() => {
+    if (!isOpen) return;
+    if (rushAvailable === false && gameMode === 'rush') setGameMode('original');
+  }, [isOpen, rushAvailable, gameMode]);
   const [code, setCode] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const [matchupId, setMatchupId] = useState(null);
@@ -215,14 +222,21 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                 <div className="space-y-1.5">
                   {GAME_MODE_OPTIONS.map(m => {
                     const selected = gameMode === m.id;
+                    const locked = m.id === 'rush' && rushAvailable === false;
                     return (
                       <button
                         key={m.id}
-                        onClick={() => setGameMode(m.id)}
+                        type="button"
+                        onClick={() => { if (!locked) setGameMode(m.id); }}
+                        disabled={locked}
+                        aria-disabled={locked || undefined}
+                        title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all"
                         style={{
                           backgroundColor: selected ? `${m.color}15` : '#111',
                           border: `1px solid ${selected ? `${m.color}60` : 'transparent'}`,
+                          opacity: locked ? 0.45 : 1,
+                          cursor: locked ? 'not-allowed' : 'pointer',
                         }}
                       >
                         <span className="text-base">{m.icon}</span>
@@ -230,6 +244,7 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                           <div className="flex items-center gap-1.5">
                             <span className="font-bold text-xs text-white">{m.label}</span>
                             {m.recommended && <span className="text-[8px] bg-blue-500/20 text-blue-400 px-1 py-0.5 rounded-full font-semibold">POPULAR</span>}
+                            {locked && <span className="text-[8px] bg-gray-500/20 text-gray-400 px-1 py-0.5 rounded-full font-semibold">NO LIVE GAMES</span>}
                           </div>
                           <p className="text-gray-500 text-[10px]">{m.description}</p>
                         </div>
@@ -241,6 +256,12 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                     );
                   })}
                 </div>
+                {rushAvailable === false && (
+                  <p className="mt-2 text-[11px] text-gray-400 flex items-start gap-1.5" aria-live="polite">
+                    <span aria-hidden="true">⚡</span>
+                    <span>Rush needs a live game in progress. No games are live right now — Rush will unlock the moment one tips off.</span>
+                  </p>
+                )}
               </div>
               <button
                 onClick={createMatch}

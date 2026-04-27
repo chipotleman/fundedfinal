@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import useRushAvailability from '../../hooks/useRushAvailability';
 import SharedUserAvatar from '../UserAvatar';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
@@ -45,6 +46,12 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     : 'original';
   const [buyIn, setBuyIn] = useState(rememberedBuyIn);
   const [gameMode, setGameMode] = useState(rememberedMode);
+  // Rush requires a live game — lock the mode tile when none are available.
+  const rushAvailable = useRushAvailability(isOpen);
+  useEffect(() => {
+    if (!isOpen) return;
+    if (rushAvailable === false && gameMode === 'rush') setGameMode('original');
+  }, [isOpen, rushAvailable, gameMode]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -987,14 +994,25 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   <div className="grid grid-cols-3 gap-1.5">
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
+                      const locked = mode.id === 'rush' && rushAvailable === false;
                       return (
                         <button
                           key={mode.id}
-                          onClick={() => { setGameMode(mode.id); setShowGameModeInfo(false); }}
+                          type="button"
+                          onClick={() => {
+                            if (locked) return;
+                            setGameMode(mode.id);
+                            setShowGameModeInfo(false);
+                          }}
+                          disabled={locked}
+                          aria-disabled={locked || undefined}
+                          title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
                           className="flex flex-col items-center text-center px-1.5 py-2 rounded-xl transition-all relative"
                           style={{
                             backgroundColor: selected ? `${mode.color}12` : elevatedBg,
                             border: `1px solid ${selected ? `${mode.color}40` : cardBorder}`,
+                            opacity: locked ? 0.45 : 1,
+                            cursor: locked ? 'not-allowed' : 'pointer',
                           }}
                         >
                           {mode.recommended && (
@@ -1009,6 +1027,16 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       );
                     })}
                   </div>
+                  {rushAvailable === false && (
+                    <p
+                      className="mt-2 text-[11px] flex items-start gap-1.5"
+                      style={{ color: textMuted }}
+                      aria-live="polite"
+                    >
+                      <span aria-hidden="true">⚡</span>
+                      <span>Rush needs a live game in progress. No games are live right now — Rush will unlock the moment one tips off.</span>
+                    </p>
+                  )}
                   {(() => {
                     const selectedMode = GAME_MODE_OPTIONS.find(m => m.id === gameMode);
                     if (!selectedMode) return null;
