@@ -816,11 +816,21 @@ button.no-hover-effect.rounded-lg:focus-visible {
 .topnav-pikslip {
   margin-right: 60px !important;
   position: relative;
-  right: 44px;
+  /* Shifted 100px to the right vs. the previous 44px-left offset
+     (was `right: 44px`, now `right: -56px`) so the Pik Slip sits
+     further toward the hamburger on mobile where the right-side
+     real estate is wide and the previous placement felt too close
+     to the centered logo. Negative `right` values move the
+     position-relative element rightward. */
+  right: -56px;
 }
 @media (min-width: 1024px) {
   .topnav-pikslip {
     margin-right: 50px !important;
+    /* Desktop is intentionally NOT shifted: the user account
+       cluster (avatar / login buttons) sits immediately to the
+       right of Pik Slip in the lg+ layout, so any rightward
+       offset here would overlap that cluster. */
     right: 0;
   }
 }
