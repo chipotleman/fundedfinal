@@ -33,17 +33,33 @@ import useLeadChangeCue from '../hooks/useLeadChangeCue';
 // (green = closing, orange = widening, gray = stable). Always reserves the
 // same vertical space so newly arriving history can't shift the card layout.
 function GapHistoryStrip({ history, currentGap }) {
+  // Always render at the same height + with a "MONEYLINE" label on the
+  // left so the row never reads as empty space. When there's enough
+  // score-gap history to draw a trend, the tiny line chart and gap
+  // delta render on the right; otherwise it's just the label, which
+  // also makes it crystal-clear which bet type the two odds buttons
+  // below are placing.
   const RESERVED_HEIGHT = 18;
   const points = Array.isArray(history) ? history : [];
   const hasUsable = points.length >= 2;
 
+  const moneylineLabel = (
+    <span
+      className="text-[10px] font-semibold uppercase tracking-wider"
+      style={{ color: '#6b7280', letterSpacing: '0.08em' }}
+    >
+      Moneyline
+    </span>
+  );
+
   if (!hasUsable) {
     return (
       <div
-        className="mb-2"
+        className="mb-2 flex items-center"
         style={{ height: RESERVED_HEIGHT }}
-        aria-hidden="true"
-      />
+      >
+        {moneylineLabel}
+      </div>
     );
   }
 
@@ -73,37 +89,40 @@ function GapHistoryStrip({ history, currentGap }) {
       style={{ height: RESERVED_HEIGHT }}
       title={`Recent score gaps: ${points.join(' → ')}`}
     >
-      <svg
-        width={w}
-        height={h}
-        viewBox={`0 -1 ${w} ${h + 2}`}
-        style={{ overflow: 'visible', flexShrink: 0 }}
-        aria-hidden="true"
-      >
-        <polyline
-          fill="none"
-          stroke={color}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          points={polyPoints}
-        />
-        {coords.map((p, i) => {
-          const isLast = i === coords.length - 1;
-          return (
-            <circle
-              key={i}
-              cx={p.x}
-              cy={p.y}
-              r={isLast ? 1.8 : 1.1}
-              fill={color}
-            />
-          );
-        })}
-      </svg>
-      <span className="text-[10px] font-semibold tabular-nums" style={{ color }}>
-        {arrow} Gap {displayGap}
-      </span>
+      {moneylineLabel}
+      <div className="ml-auto flex items-center gap-1.5">
+        <svg
+          width={w}
+          height={h}
+          viewBox={`0 -1 ${w} ${h + 2}`}
+          style={{ overflow: 'visible', flexShrink: 0 }}
+          aria-hidden="true"
+        >
+          <polyline
+            fill="none"
+            stroke={color}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={polyPoints}
+          />
+          {coords.map((p, i) => {
+            const isLast = i === coords.length - 1;
+            return (
+              <circle
+                key={i}
+                cx={p.x}
+                cy={p.y}
+                r={isLast ? 1.8 : 1.1}
+                fill={color}
+              />
+            );
+          })}
+        </svg>
+        <span className="text-[10px] font-semibold tabular-nums" style={{ color }}>
+          {arrow} Gap {displayGap}
+        </span>
+      </div>
     </div>
   );
 }
