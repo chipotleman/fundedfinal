@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
+import { grantBetaAccess } from '../utils/betaAccess';
 
 export default function BetaLanding({ onAuthenticated }) {
   const [password, setPassword] = useState('');
@@ -23,7 +24,7 @@ export default function BetaLanding({ onAuthenticated }) {
       return;
     }
     if (BETA_PASSWORDS.includes(password.toLowerCase())) {
-      localStorage.setItem('beta_access', 'true');
+      grantBetaAccess();
       onAuthenticated();
     } else {
       setError('Incorrect password');

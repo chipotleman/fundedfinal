@@ -31,6 +31,12 @@ import BetSlip from '../components/BetSlip';
 import { useEventTracking } from '../hooks/useEventTracking';
 import { releaseBodyScrollLock } from '../hooks/useGlobalScrollLockRecovery';
 import { useRouter } from 'next/router';
+import App from 'next/app';
+import {
+  grantBetaAccess,
+  setBetaAccessCookie,
+  readBetaAccessFromCookieHeader,
+} from '../utils/betaAccess';
 
 function AnalyticsTracker() {
   const { trackPageView } = useEventTracking();
@@ -185,7 +191,7 @@ function AutoGrader() {
   return null;
 }
 
-function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
+function MyApp({ Component, pageProps: { session, ...pageProps }, router, initialBetaAccess = false }) {
   // Defensive global cleanup: on every route change, clear any body/html
   // styles that modals (BetSlip, ActiveBattleCard, OnboardingPopup,
   // ChallengePopup, AuthPopup, BalanceModal, ShareableBetSlip, etc.) may
@@ -223,7 +229,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [betaAuthenticated, setBetaAuthenticated] = useState(false);
+  // Initialize beta gate from the SSR-read cookie so the BetaLanding
+  // component does not flash on hard reloads. On client-side navs the
+  // state persists across pages because _app.js does not unmount.
+  const [betaAuthenticated, setBetaAuthenticated] = useState(initialBetaAccess);
   const [justAuthenticated, setJustAuthenticated] = useState(false);
 
   // Force dark theme on root element and clear any legacy theme preference.
@@ -300,6 +309,12 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
       const betaAccess = localStorage.getItem('beta_access');
       if (betaAccess === 'true') {
         setBetaAuthenticated(true);
+        // Migrate existing users who already have localStorage but no
+        // cookie yet — write the cookie so future hard reloads can SSR
+        // the actual app instead of the gate.
+        if (!initialBetaAccess) {
+          setBetaAccessCookie();
+        }
       }
     }
 
@@ -547,8 +562,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
           <PublicBattlePreview
             preview={battlePreview}
             onJoinClick={() => {
+              grantBetaAccess();
               if (typeof window !== 'undefined') {
-                localStorage.setItem('beta_access', 'true');
                 window.__pendingBattleOpen = battlePreview.matchupId;
               }
               setBetaAuthenticated(true);
@@ -557,8 +572,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
               setShowAuthPopup(true);
             }}
             onLoginClick={() => {
+              grantBetaAccess();
               if (typeof window !== 'undefined') {
-                localStorage.setItem('beta_access', 'true');
                 window.__pendingBattleOpen = battlePreview.matchupId;
               }
               setBetaAuthenticated(true);
@@ -722,5 +737,22 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
     </SessionProvider>
   );
 }
+
+// Read the beta_access cookie server-side so the BetaLanding gate does
+// not flash on hard reloads. NOTE: defining MyApp.getInitialProps
+// disables Next.js Automatic Static Optimization globally — every page
+// renders per-request, including content pages (terms, privacy,
+// responsible-pikking, how-it-works) that would otherwise be statically
+// served. We accept this trade-off because the gate flash is the more
+// visible UX problem during private beta and most pages in this app
+// already use getServerSideProps for live data anyway. If/when the gate
+// is removed (or moved into middleware), delete this hook to restore
+// Automatic Static Optimization on the remaining content pages.
+MyApp.getInitialProps = async (appContext) => {
+  const appProps = await App.getInitialProps(appContext);
+  const cookieHeader = appContext?.ctx?.req?.headers?.cookie || '';
+  const initialBetaAccess = readBetaAccessFromCookieHeader(cookieHeader);
+  return { ...appProps, initialBetaAccess };
+};
 
 export default MyApp;

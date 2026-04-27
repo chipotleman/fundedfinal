@@ -7,6 +7,7 @@ import { formatMoney } from '../../../utils/formatMoney';
 import { formatLastSeen } from '../../../utils/relativeTime';
 import { getBattlePreview } from '../../../lib/battle-preview';
 import { useAuth } from '../../../contexts/AuthContext';
+import { grantBetaAccess } from '../../../utils/betaAccess';
 
 const cardBg = '#0d0d0d';
 const cardBorder = '#1a1a1a';
@@ -219,7 +220,7 @@ export default function BattleReplayPage() {
   const handleSignUpClick = () => {
     if (typeof window === 'undefined') return;
     try {
-      localStorage.setItem('beta_access', 'true');
+      grantBetaAccess();
     } catch (_e) {}
     window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
   };
