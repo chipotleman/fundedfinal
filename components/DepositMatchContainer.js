@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import haptic from '../utils/haptics';
 
 export default function DepositMatchContainer() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function DepositMatchContainer() {
   const isReturning = status === 'authenticated' && hasDeposited === true;
 
   const handleClick = () => {
+    haptic.tap();
     router.push('/withdrawal');
   };
 

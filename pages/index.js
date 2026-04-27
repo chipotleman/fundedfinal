@@ -23,6 +23,7 @@ import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useGames } from '../contexts/GamesContext';
 import { useMatchup } from '../contexts/MatchupContext';
+import haptic from '../utils/haptics';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { useGoalserveLive } from '../hooks/useGoalserveLive';
 import useModalScrollLock from '../hooks/useModalScrollLock';
@@ -972,6 +973,7 @@ export default function Dashboard() {
   };
 
   const handleSportClick = (sport) => {
+    haptic.tap();
     setSelectedSport(sport);
   };
 

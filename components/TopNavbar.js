@@ -959,7 +959,7 @@ export default function TopNavbar({
               {/* Mobile Menu Toggle - Menu Icon (only visible when menu is closed) */}
               {!showMobileMenu && (
                 <button
-                  onClick={toggleMobileMenu}
+                  onClick={() => { haptic.tap(); toggleMobileMenu(); }}
                   className="lg:hidden absolute no-hover-effect hamburger-btn"
                   style={{ WebkitTapHighlightColor: 'transparent', right: '4px', top: '50%', marginTop: '-19px', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
                   aria-label={isLoggedIn && (notifAlerts + notifMessages) > 0 ? 'Open menu (you have unread notifications)' : 'Open menu'}
