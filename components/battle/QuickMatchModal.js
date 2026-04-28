@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import useRushAvailability from '../../hooks/useRushAvailability';
 import UserAvatar from '../UserAvatar';
-import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
+import { CartoonChipStyles } from './CartoonChip';
 
 const GAME_MODE_OPTIONS = [
   {
@@ -446,156 +446,291 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
         >
           {step === 'config' && (
             <>
-              <div className="px-5 py-4" style={{ borderBottom: '2.5px solid #0a0a0a', background: '#0d0d0d' }}>
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <h2 className="font-extrabold uppercase text-white" style={{ fontSize: 14, letterSpacing: '0.14em' }}>Quick Match</h2>
-                    <p className="text-blue-300/80 text-[11px] font-bold uppercase mt-0.5" style={{ letterSpacing: '0.12em' }}>Find a random opponent instantly</p>
+              {/* Header — mirrors PlayFriendModal exactly so the two
+                  popups read as one design system. The only thing
+                  that changes between them is the title copy and the
+                  "challenging" card below. */}
+              <div className="px-5 pt-5 pb-0 flex-shrink-0">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2
+                      id="qm-title"
+                      className="font-black uppercase"
+                      style={{
+                        color: '#fff',
+                        fontSize: '20px',
+                        lineHeight: 1.05,
+                        letterSpacing: '0.06em',
+                        textShadow: '0 2px 0 #000',
+                      }}
+                    >
+                      Quick Match
+                    </h2>
+                    <p
+                      className="mt-1 font-extrabold uppercase"
+                      style={{
+                        color: '#60a5fa',
+                        fontSize: '10px',
+                        letterSpacing: '0.18em',
+                      }}
+                    >
+                      Find a random opponent instantly
+                    </p>
                   </div>
                   <button
-                    onClick={onClose}
                     aria-label="Close"
-                    className="msg-cartoon-btn flex items-center justify-center"
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 12,
-                      background: 'linear-gradient(180deg,#dc2626,#b91c1c)',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 2px 0 #0a0a0a',
-                      color: '#fff',
-                    }}
+                    onClick={onClose}
+                    className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: '#111', border: '2.5px solid #0a0a0a', boxShadow: '0 3px 0 #0a0a0a' }}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                    <svg className="w-4 h-4" style={{ color: '#fff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
               </div>
 
-              <div className="p-5 space-y-5">
-                {error && <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm">{error}</div>}
-
-                <div>
-                  <label className={`text-xs font-medium ${th.labelText} uppercase tracking-wider mb-2 block`}>Buy-In</label>
-                  {/* Cartoon chip row — same primitive as the homepage
-                      "Your Battle" card so the matchmaking UX reads as
-                      one product. radio role + aria-checked preserve
-                      the keyboard / SR semantics of the original
-                      grid of buttons. */}
+              <div className="px-5 pb-5 space-y-4">
+                {error && (
                   <div
-                    className="flex items-center gap-1.5 flex-wrap"
-                    role="radiogroup"
-                    aria-label="Buy-in"
+                    className="rounded-2xl px-3 py-2.5 text-xs leading-snug"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(248,113,113,0.16), rgba(248,113,113,0.06))',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 4px 0 #0a0a0a',
+                      color: '#fecaca',
+                    }}
                   >
+                    {error}
+                  </div>
+                )}
+
+                {/* "Random opponent" card — visual analogue of the
+                    "CHALLENGING {friend}" card in PlayFriendModal so
+                    the layout is identical, but the eyebrow + label
+                    explain that matchmaking will pick a stranger
+                    instead of expecting the user to pick someone. */}
+                <div
+                  className="flex items-center gap-3 p-3 rounded-2xl"
+                  style={{
+                    background: 'linear-gradient(180deg,rgba(251,146,60,0.14),rgba(251,146,60,0.04))',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(251,146,60,0.18)',
+                  }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: 'linear-gradient(180deg,#fb923c,#ea580c)',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 2px 0 #0a0a0a',
+                      color: '#fff',
+                      fontSize: 18,
+                    }}
+                    aria-hidden="true"
+                  >
+                    ⚡
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[9px] font-extrabold uppercase tracking-[0.2em]" style={{ color: '#fb923c' }}>Opponent</div>
+                    <div className="text-sm font-extrabold truncate" style={{ color: '#fff' }}>Random Match</div>
+                    <div className="text-[10px] mt-0.5" style={{ color: '#9ca3af' }}>We&apos;ll find you someone of similar skill.</div>
+                  </div>
+                </div>
+
+                {/* Buy-in tiles — identical 5-button grid to PFM. */}
+                <div>
+                  <label className="text-[11px] font-extrabold uppercase tracking-wider mb-2 block" style={{ color: '#6b7280' }}>Buy-In</label>
+                  <div className="grid grid-cols-5 gap-2">
                     {BUY_IN_OPTIONS.map(amount => {
                       const selected = buyIn === amount;
                       return (
-                        <CartoonChip
+                        <button
                           key={amount}
-                          asButton
-                          role="radio"
-                          ariaChecked={selected}
-                          ariaLabel={`Buy-in $${amount}`}
-                          icon="💰"
-                          label={`$${amount}`}
-                          color="orange"
-                          size="lg"
-                          selected={selected}
-                          animate={selected ? 'bounce' : 'none'}
                           onClick={() => setBuyIn(amount)}
-                        />
+                          className="msg-cartoon-btn py-2 rounded-xl text-sm font-extrabold"
+                          style={
+                            selected
+                              ? {
+                                  background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                                  color: '#fff',
+                                  border: '2.5px solid #0a0a0a',
+                                  boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.45)',
+                                  textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                                }
+                              : {
+                                  backgroundColor: '#111',
+                                  color: '#9ca3af',
+                                  border: '2.5px solid #0a0a0a',
+                                  boxShadow: '0 3px 0 #0a0a0a',
+                                }
+                          }
+                        >
+                          ${amount}
+                        </button>
                       );
                     })}
                   </div>
                 </div>
 
+                {/* Game-mode rich tiles — the high-information layout
+                    the user explicitly called out as the better one.
+                    Identical to PlayFriendModal so both modals share
+                    one mental model. */}
                 <div>
-                  <label className={`text-xs font-medium ${th.labelText} uppercase tracking-wider mb-2 block`}>Game Mode</label>
-                  {/* Cartoon chip row for mode selection — matches the
-                      homepage "Your Battle" mode chooser. The
-                      description / starting-coin metadata for the
-                      chosen mode is shown below so we keep the info
-                      density of the old radio rows without losing the
-                      cartoon-chip family look. */}
-                  <div
-                    className="flex items-center gap-1.5 flex-wrap"
-                    role="radiogroup"
-                    aria-label="Game mode"
-                  >
+                  <div className="flex items-baseline justify-between mb-2 gap-2">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Game Mode</label>
+                    <span className="text-[10px]" style={{ color: '#6b7280' }}>Coins = starting bankroll</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
-                      const meta = CARTOON_MODE_META[mode.id] || { color: 'blue', icon: mode.icon, label: mode.label };
                       const locked = mode.id === 'rush' && rushAvailable === false;
+                      const isRush = mode.id === 'rush';
+                      const rushLive = isRush && rushAvailable === true;
+                      const hex = (mode.color || '#3b82f6').replace('#', '');
+                      const r = parseInt(hex.substring(0, 2), 16);
+                      const g = parseInt(hex.substring(2, 4), 16);
+                      const b = parseInt(hex.substring(4, 6), 16);
+                      const glow = `rgba(${r},${g},${b},0.45)`;
+                      const tint = `rgba(${r},${g},${b},0.18)`;
                       return (
-                        <CartoonChip
+                        <button
                           key={mode.id}
-                          asButton
-                          role="radio"
-                          ariaChecked={selected}
-                          ariaLabel={`Game mode ${mode.label}${mode.recommended ? ' (popular)' : ''}${locked ? ' (no live games right now)' : ''}`}
-                          ariaDisabled={locked}
-                          disabled={locked}
-                          icon={meta.icon || mode.icon}
-                          label={meta.label || mode.label}
-                          color={meta.color}
-                          size="lg"
-                          selected={selected}
-                          animate={selected ? 'bounce' : 'none'}
+                          type="button"
                           onClick={() => { if (!locked) setGameMode(mode.id); }}
+                          aria-disabled={locked || undefined}
+                          aria-pressed={selected}
                           title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
-                          style={locked ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
-                        />
+                          className="msg-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative"
+                          style={
+                            selected
+                              ? {
+                                  background: `linear-gradient(180deg,${tint},#111)`,
+                                  border: '2.5px solid #0a0a0a',
+                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 16px ${glow}`,
+                                  opacity: locked ? 0.45 : 1,
+                                  cursor: locked ? 'not-allowed' : 'pointer',
+                                  minHeight: 88,
+                                }
+                              : {
+                                  backgroundColor: '#111',
+                                  border: '2.5px solid #0a0a0a',
+                                  boxShadow: rushLive
+                                    ? `0 3px 0 #0a0a0a, 0 0 12px ${glow}`
+                                    : '0 3px 0 #0a0a0a',
+                                  opacity: locked ? 0.45 : 1,
+                                  cursor: locked ? 'not-allowed' : 'pointer',
+                                  minHeight: 88,
+                                }
+                          }
+                        >
+                          {mode.recommended && (
+                            <span
+                              className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              style={{
+                                background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                                border: '2px solid #0a0a0a',
+                                boxShadow: '0 2px 0 #0a0a0a',
+                              }}
+                            >
+                              Popular
+                            </span>
+                          )}
+                          {rushLive && (
+                            <span
+                              className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              style={{
+                                background: 'linear-gradient(180deg,#f59e0b,#d97706)',
+                                border: '2px solid #0a0a0a',
+                                boxShadow: '0 2px 0 #0a0a0a',
+                              }}
+                              aria-hidden="true"
+                            >
+                              <span
+                                style={{
+                                  width: 5,
+                                  height: 5,
+                                  borderRadius: '50%',
+                                  backgroundColor: '#fff',
+                                  boxShadow: '0 0 6px rgba(255,255,255,0.95)',
+                                }}
+                              />
+                              Live
+                            </span>
+                          )}
+                          {locked && (
+                            <span
+                              className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              style={{
+                                background: 'linear-gradient(180deg,#374151,#1f2937)',
+                                border: '2px solid #0a0a0a',
+                                boxShadow: '0 2px 0 #0a0a0a',
+                              }}
+                              aria-hidden="true"
+                            >
+                              <span style={{ fontSize: 9, lineHeight: 1 }}>🔒</span>
+                              Locked
+                            </span>
+                          )}
+                          <span className="text-lg leading-none mb-1">{mode.icon}</span>
+                          <span className="font-extrabold text-[11px] leading-tight uppercase tracking-wider" style={{ color: '#fff' }}>{mode.label}</span>
+                          <span className="text-[8px] uppercase tracking-wider mt-1 leading-none" style={{ color: '#6b7280' }}>Start with</span>
+                          <span className="font-extrabold text-[11px] mt-0.5" style={{ color: '#fff' }}>{mode.coins.toLocaleString()}</span>
+                          <span className="text-[9px]" style={{ color: '#6b7280' }}>coins</span>
+                        </button>
                       );
                     })}
                   </div>
                   {rushAvailable === false && (
-                    <p className="mt-2 text-[11px] text-gray-400 flex items-start gap-1.5" aria-live="polite">
-                      <span aria-hidden="true">⚡</span>
-                      <span>Rush needs a live game in progress. No games are live right now — Rush will unlock the moment one tips off.</span>
-                    </p>
+                    <div
+                      className="mt-2 rounded-2xl px-3 py-2.5 text-[11px] leading-snug flex items-start gap-2"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(245,158,11,0.16), rgba(245,158,11,0.05))',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a',
+                        color: '#fde68a',
+                      }}
+                      aria-live="polite"
+                    >
+                      <span aria-hidden="true" className="text-sm leading-none mt-0.5">⚡</span>
+                      <div>
+                        <div
+                          className="font-extrabold uppercase mb-0.5"
+                          style={{ color: '#fbbf24', fontSize: '9px', letterSpacing: '0.18em' }}
+                        >
+                          Rush locked
+                        </div>
+                        Rush needs a live game in progress. No games are live right now — Rush will unlock the moment one tips off.
+                      </div>
+                    </div>
                   )}
                   {selectedMode && (
-                    <div className="mt-2 flex items-start gap-2">
-                      <p className={`${th.modeDesc} text-[11px] flex-1`}>
+                    <div
+                      aria-live="polite"
+                      className="mt-2 flex items-start gap-2 rounded-2xl px-3 py-2.5"
+                      style={{
+                        background: `linear-gradient(180deg, ${selectedMode.color}1f, ${selectedMode.color}0a)`,
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: `0 4px 0 #0a0a0a, 0 0 14px ${selectedMode.color}40`,
+                      }}
+                    >
+                      <span className="text-sm leading-none mt-0.5" aria-hidden="true">{selectedMode.icon}</span>
+                      <p className="text-[11px] leading-snug" style={{ color: '#9ca3af' }}>
+                        <span className="font-extrabold uppercase tracking-wider" style={{ color: '#fff' }}>{selectedMode.label}:</span>{' '}
                         {selectedMode.description}
-                        {selectedMode.recommended && (
-                          <span className="ml-1.5 text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full font-semibold align-middle">POPULAR</span>
-                        )}
                       </p>
-                      <div className="text-right flex-shrink-0">
-                        <div className={`${th.infoValue} font-bold text-xs`}>{selectedMode.coins.toLocaleString()}</div>
-                        <div className="text-gray-500 text-[10px]">coins</div>
-                      </div>
                     </div>
                   )}
                 </div>
 
-                <div
-                  className="rounded-2xl p-4 flex items-center justify-between"
-                  style={{
-                    background: 'linear-gradient(180deg,#111,#0a0a0a)',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 3px 0 #0a0a0a',
-                  }}
-                >
-                  <div>
-                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.16em' }}>Prize Pool</div>
-                    <div className="text-white font-extrabold text-lg leading-none mt-1" style={{ textShadow: '0 1px 0 #0a0a0a' }}>${potSize}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.16em' }}>Winner Gets</div>
-                    <div className="font-extrabold text-lg leading-none mt-1" style={{ color: '#34d399', textShadow: '0 1px 0 #0a0a0a' }}>${payout}</div>
-                  </div>
-                </div>
-
                 <button
                   onClick={startSearch}
-                  className="msg-cartoon-btn w-full text-white font-extrabold py-3.5 rounded-2xl uppercase"
+                  className="msg-cartoon-btn w-full text-white font-extrabold uppercase tracking-wider py-3.5 rounded-2xl"
                   style={{
-                    background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
+                    background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
                     border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
-                    letterSpacing: '0.12em',
-                    fontSize: 14,
+                    boxShadow: '0 5px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55)',
+                    textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                    fontSize: 15,
                   }}
                 >
                   Find Opponent
