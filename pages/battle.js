@@ -48,6 +48,19 @@ const QUICK_MODE_BADGES = { rush: 'R', tournament: 'T' };
 
 export default function BattlePage() {
   const router = useRouter();
+  // Rush mode is a dedicated 6-question mini-game with its own gameplay
+  // page at /battle/rush/[id]. The original/tournament modes drop the
+  // user back on the dashboard (`/?battleStarted=true`) where they place
+  // bets that resolve the matchup. This helper picks the right destination
+  // based on the matchup's mode so every "battle started" navigation in
+  // this file stays consistent.
+  const navigateAfterBattleStart = useCallback((matchup) => {
+    if (matchup?.durationType === 'rush' && matchup?.id) {
+      router.push(`/battle/rush/${matchup.id}`);
+    } else {
+      router.push('/?battleStarted=true');
+    }
+  }, [router]);
   const { data: session, status } = useSession();
   const { matchup: globalMatchup, matchupData: globalMatchupData, hasActiveMatchup: globalHasActive, isWaiting: globalIsWaiting, hasAnyMatchup: globalHasAny, refresh: refreshGlobalMatchup } = useMatchup();
   const profileCache = useProfileCache();
@@ -729,7 +742,7 @@ export default function BattlePage() {
                 setMatchupData(matchData);
                 setShowLobby(matchData.matchup);
                 refreshGlobalMatchup();
-                setTimeout(() => router.push('/?battleStarted=true'), 2500);
+                setTimeout(() => navigateAfterBattleStart(matchData.matchup), 2500);
               }
             }
           }
@@ -808,9 +821,9 @@ export default function BattlePage() {
       setMatchupData(data);
       setShowLobby(m);
       refreshGlobalMatchup();
-      setTimeout(() => router.push('/?battleStarted=true'), 2500);
+      setTimeout(() => navigateAfterBattleStart(m), 2500);
     } catch {}
-  }, [refreshGlobalMatchup, router]);
+  }, [refreshGlobalMatchup, navigateAfterBattleStart]);
   const openLobbyForStartRef = useRef(openLobbyForStart);
   useEffect(() => { openLobbyForStartRef.current = openLobbyForStart; }, [openLobbyForStart]);
 
@@ -893,8 +906,14 @@ export default function BattlePage() {
     setResultData(null);
     setRematchState(null);
     refreshGlobalMatchup();
-    setTimeout(() => router.push('/?battleStarted=true'), 400);
-  }, [rematchState?.rematchMatchupId]);
+    // The rematch path always re-creates a matchup of the SAME mode as
+    // the original, so the rush-aware nav helper handles routing here too.
+    const newMatchup = rematchState?.rematchMatchup || (showResult?.durationType === 'rush' ? { id: rematchState?.rematchMatchupId, durationType: 'rush' } : null);
+    setTimeout(() => {
+      if (newMatchup) navigateAfterBattleStart(newMatchup);
+      else router.push('/?battleStarted=true');
+    }, 400);
+  }, [rematchState?.rematchMatchupId, rematchState?.rematchMatchup, showResult?.durationType, navigateAfterBattleStart, router, refreshGlobalMatchup]);
 
   const consumedDeepLinkRef = useRef(null);
   useEffect(() => {
@@ -1031,20 +1050,23 @@ export default function BattlePage() {
       });
       if (res.ok) {
         const data = await res.json();
+        let lobbyMatchup = null;
         if (data.matchup) {
+          lobbyMatchup = data.matchup;
           setShowLobby(data.matchup);
         } else if (data.matchupId) {
           const matchRes = await fetch(`/api/matchups/${data.matchupId}`);
           if (matchRes.ok) {
             const matchData = await matchRes.json();
-            setShowLobby(matchData.matchup || matchData);
+            lobbyMatchup = matchData.matchup || matchData;
+            setShowLobby(lobbyMatchup);
           } else {
             router.push('/');
           }
         }
         fetchData();
         refreshGlobalMatchup();
-        setTimeout(() => router.push('/?battleStarted=true'), 2500);
+        setTimeout(() => navigateAfterBattleStart(lobbyMatchup), 2500);
       }
     } catch {}
   };
@@ -2327,7 +2349,7 @@ export default function BattlePage() {
             setShowLobby(matchup);
             refreshGlobalMatchup();
           }
-          setTimeout(() => router.push('/?battleStarted=true'), 2500);
+          setTimeout(() => navigateAfterBattleStart(matchup), 2500);
         }}
       />
 

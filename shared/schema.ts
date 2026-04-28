@@ -684,7 +684,11 @@ export const matchups = pgTable("matchups", {
   // Private match code
   privateCode: varchar("private_code", { length: 10 }),
   matchType: varchar("match_type", { length: 20 }).default('random'), // random, friend, private
-  
+
+  // Rush mini-game state (live-game vote, generated questions, per-player
+  // answers, scoring, tiebreak). Only used when durationType='rush'.
+  rushState: jsonb("rush_state"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

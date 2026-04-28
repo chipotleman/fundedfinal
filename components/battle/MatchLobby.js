@@ -47,6 +47,14 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
     if (countdown === 0) {
       setShowBattle(true);
       const t = setTimeout(() => {
+        // Rush is a dedicated 6-question gameshow at /battle/rush/[id] —
+        // we route there directly rather than dropping the user back on
+        // the dashboard like the original/tournament lobbies do.
+        const isRush = getGameMode(matchup) === 'rush';
+        if (isRush && matchup?.id) {
+          router.push(`/battle/rush/${matchup.id}`);
+          return;
+        }
         if (onDismiss) {
           onDismiss();
         } else {
@@ -55,7 +63,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
       }, 1500);
       return () => clearTimeout(t);
     }
-  }, [countdown, router, onDismiss]);
+  }, [countdown, router, onDismiss, matchup]);
 
   // Field-by-field merge of every source the lobby might receive opponent
   // data from. Earlier sources win per-field but never block later sources
