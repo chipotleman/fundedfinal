@@ -195,26 +195,6 @@ export default function MessengerPage() {
           >
             Messenger
           </h1>
-          {/* Desktop-only Close link so parity with mobile is maintained
-              without disturbing the existing desktop layout. */}
-          <button
-            type="button"
-            onClick={handleLeaveMessenger}
-            aria-label="Close Messenger"
-            className="msg-cartoon-btn hidden sm:inline-flex items-center gap-1.5 ml-auto px-3 py-1.5 text-[11px] font-extrabold uppercase text-white"
-            style={{
-              borderRadius: 12,
-              background: 'linear-gradient(180deg,#dc2626,#b91c1c)',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: '0 3px 0 #0a0a0a',
-              letterSpacing: '0.14em',
-            }}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            <span>Close</span>
-          </button>
         </div>
         <div className="flex-1 min-h-0">
           <MessagesPanel

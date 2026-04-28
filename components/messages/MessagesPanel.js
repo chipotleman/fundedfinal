@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { formatSeenAgo } from '../../utils/relativeTime';
 import ActiveStatus, { isUserOnline } from '../ActiveStatus';
-import UserAvatar, { UserNameLink } from '../UserAvatar';
+import UserAvatar, { UserNameLink, useProfilePrefetchHandlers } from '../UserAvatar';
 import { useMatchup } from '../../contexts/MatchupContext';
 
 const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
@@ -1094,6 +1095,60 @@ function VoiceBubble({ url, durationMs, peaks, mine, messageId }) {
       messageId={messageId}
       variant={mine ? 'mine' : 'theirs'}
     />
+  );
+}
+
+/**
+ * Single click target for the friend's identity row in the conversation
+ * header. Wraps the avatar, username, and active-status row in one
+ * <Link> so the entire block (including the gap between avatar and
+ * name) navigates to /profile/{friend.id}. Defensive: if `friend.id`
+ * is missing (still loading) we render the same visual without the
+ * link wrapper so the layout doesn't shift when the id arrives.
+ */
+function ProfileHeaderLink({ friend, textPrimary, textSecondary }) {
+  const prefetch = useProfilePrefetchHandlers(friend);
+  const inner = (
+    <>
+      <UserAvatar
+        user={friend}
+        isOnline={friend?.isOnline ?? isUserOnline(friend?.lastSeenAt)}
+        onlineDotBorderColor={'#0a0a0a'}
+      />
+      <div className="flex-1 min-w-0">
+        <div
+          className="text-sm font-semibold truncate"
+          style={{ color: textPrimary }}
+        >
+          {friend?.username || 'Player'}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <ActiveStatus
+            isOnline={friend?.isOnline}
+            lastSeenAt={friend?.lastSeenAt}
+            size="xs"
+          />
+          {(friend?.battleWins != null || friend?.battleLosses != null) && (
+            <span className="text-[10px]" style={{ color: textSecondary }}>
+              · {friend?.battleWins || 0}W - {friend?.battleLosses || 0}L
+            </span>
+          )}
+        </div>
+      </div>
+    </>
+  );
+  if (!friend?.id) {
+    return <div className="flex items-center gap-3 flex-1 min-w-0">{inner}</div>;
+  }
+  return (
+    <Link
+      href={`/profile/${friend.id}`}
+      aria-label={`View ${friend.username || 'profile'}`}
+      className="flex items-center gap-3 flex-1 min-w-0 -mx-1 px-1 py-1 rounded-lg hover:bg-white/5 transition-colors"
+      {...prefetch}
+    >
+      {inner}
+    </Link>
   );
 }
 
@@ -2497,29 +2552,13 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             </svg>
           </button>
         )}
-        <UserAvatar
-          user={friend}
-          isOnline={friend?.isOnline ?? isUserOnline(friend?.lastSeenAt)}
-          onlineDotBorderColor={'#0a0a0a'}
-          link
-        />
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
-            <UserNameLink user={friend} style={{ color: textPrimary }} />
-          </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <ActiveStatus
-              isOnline={friend.isOnline}
-              lastSeenAt={friend.lastSeenAt}
-              size="xs"
-            />
-            {(friend.battleWins != null || friend.battleLosses != null) && (
-              <span className="text-[10px]" style={{ color: textSecondary }}>
-                · {friend.battleWins || 0}W - {friend.battleLosses || 0}L
-              </span>
-            )}
-          </div>
-        </div>
+        {/* Whole identity area (avatar + name + status) is one big click
+            target that navigates to the friend's profile. Previously the
+            avatar and name were each wrapped in their own <Link>, which
+            left a dead zone between them and made the affordance feel
+            inconsistent. A single Link guarantees the entire row is
+            tappable, including any whitespace around the name. */}
+        <ProfileHeaderLink friend={friend} textPrimary={textPrimary} textSecondary={textSecondary} />
         {onStartBattle && (
           <>
             {/* Mobile: square icon-only Start Battle button — cartoon
@@ -3193,7 +3232,12 @@ export default function MessagesPanel({
   useEffect(() => {
     if (loading) return;
     fetchConversations();
-  }, [unreadKey, selectedId, fetchConversations]);
+    // Intentionally NOT depending on `selectedId` — clicking a conversation
+    // shouldn't refetch the entire inbox. The `markMessagesRead` call in
+    // the parent already updates `unreadKey`, which triggers a refresh
+    // when needed. Re-fetching on every selection caused a perceptible
+    // pause when switching threads.
+  }, [unreadKey, fetchConversations]);
 
   const selectedIdRef = useRef(selectedId);
   useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
