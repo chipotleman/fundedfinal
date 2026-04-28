@@ -426,6 +426,53 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     }
   }, [isOpen]);
 
+  // Desktop "click outside / Escape to close" for the docked slip.
+  // On md+ the slip is a side panel and the page stays visible/interactive,
+  // so we close on outside pointerdown or Escape. Mobile (<md) is full-screen
+  // so every target is inside the slip and these handlers are a no-op.
+  // While an in-slip modal (coin explainer, share, receipt) is on top of the
+  // panel, dismissals belong to that modal — kept in a ref so toggling those
+  // modals doesn't re-attach the document listeners.
+  const inSlipModalRef = useRef(false);
+  useEffect(() => {
+    inSlipModalRef.current = showCoinsExplainer || showShareModal || showReceipt;
+  }, [showCoinsExplainer, showShareModal, showReceipt]);
+
+  // Hold onClose in a ref so the parent's freshly-allocated arrow each
+  // render doesn't churn the listener subscription below.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    if (typeof window === 'undefined') return undefined;
+
+    const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
+    const isInsideSlip = (node) =>
+      node instanceof Element && !!node.closest('[data-betslip="true"]');
+
+    const handlePointerDown = (e) => {
+      if (!isDesktop()) return;
+      if (inSlipModalRef.current) return;
+      if (isInsideSlip(e.target)) return;
+      onCloseRef.current?.();
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key !== 'Escape') return;
+      if (!isDesktop()) return;
+      if (inSlipModalRef.current) return;
+      onCloseRef.current?.();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
   const userChallenge = 'basic';
   const challengeMinBets = {
     'basic': 10,
