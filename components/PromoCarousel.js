@@ -1,6 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { trackPromoEvent } from '../lib/promoTracking';
 
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 const SCROLL_SPEED_PX_PER_SEC = 30;
 
 function usePrefersReducedMotion() {
@@ -39,7 +42,7 @@ function SlideHost({
     [slideKey, registerRef],
   );
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = localRef.current;
     if (!el) return;
     const update = () => {
@@ -166,7 +169,7 @@ export default function PromoCarousel({ slides }) {
     return false;
   }, []);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     tryMeasureSetWidth();
   }, [tryMeasureSetWidth, count, showLoop, emptyKeys]);
 
