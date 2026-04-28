@@ -347,7 +347,12 @@ function Row({ type, sender, time, children }) {
         {children}
       </div>
       {time && (
-        <span className="text-[10px] text-gray-500 mt-1 flex-shrink-0">{timeAgo(time)}</span>
+        <span
+          className="text-[10px] text-gray-500 mt-1 flex-shrink-0"
+          suppressHydrationWarning
+        >
+          {timeAgo(time)}
+        </span>
       )}
     </div>
   );

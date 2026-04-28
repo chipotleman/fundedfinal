@@ -2652,7 +2652,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
               )}
             </div>
             {showSeen && idx === lastOutgoingIdx && (
-              <p className="text-[10px] mt-0.5 mr-0.5" style={{ color: textSecondary }}>
+              <p
+                className="text-[10px] mt-0.5 mr-0.5"
+                style={{ color: textSecondary }}
+                suppressHydrationWarning
+              >
                 {thread[lastOutgoingIdx].readAt
                   ? `Seen ${formatSeenAgo(thread[lastOutgoingIdx].readAt)}`
                   : 'Seen'}
@@ -3498,7 +3502,11 @@ export default function MessagesPanel({
                       {f.username || 'Player'}
                     </span>
                     {last?.createdAt && (
-                      <span className="text-[10px] flex-shrink-0" style={{ color: textSecondary }}>
+                      <span
+                        className="text-[10px] flex-shrink-0"
+                        style={{ color: textSecondary }}
+                        suppressHydrationWarning
+                      >
                         {timeAgo(last.createdAt)}
                       </span>
                     )}

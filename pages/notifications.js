@@ -63,7 +63,11 @@ function TypedRow({ type, time, avatar, children, accentOverride }) {
       {avatar}
       <div className="flex-1 min-w-0">{children}</div>
       {time && (
-        <span className="text-[10px] flex-shrink-0 mt-1" style={{ color: textSecondary }}>
+        <span
+          className="text-[10px] flex-shrink-0 mt-1"
+          style={{ color: textSecondary }}
+          suppressHydrationWarning
+        >
           {time}
         </span>
       )}

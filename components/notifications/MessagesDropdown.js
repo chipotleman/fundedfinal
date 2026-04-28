@@ -225,7 +225,10 @@ export default function MessagesDropdown({ open, onClose, anchorRef, onSelectCon
                     {f.username || 'Player'}
                   </span>
                   {last?.createdAt && (
-                    <span className="text-[10px] text-gray-500 flex-shrink-0">
+                    <span
+                      className="text-[10px] text-gray-500 flex-shrink-0"
+                      suppressHydrationWarning
+                    >
                       {timeAgo(last.createdAt)}
                     </span>
                   )}
