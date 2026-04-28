@@ -438,25 +438,37 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
         <div
           className="rounded-2xl max-w-md w-full overflow-hidden my-auto"
           style={{
-            backgroundColor: th.cardBg,
-            border: `1px solid ${th.cardBorder}`,
-            boxShadow:
-              step === 'found' || step === 'searching'
-                ? '0 10px 40px rgba(0,0,0,0.6), 0 0 60px rgba(0,0,0,0.4)'
-                : 'none',
+            background: 'linear-gradient(180deg, #141414 0%, #0a0a0a 100%)',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 4px 0 #0a0a0a, 0 10px 40px rgba(0,0,0,0.6), 0 0 60px rgba(59,130,246,0.18)',
           }}
           onClick={e => e.stopPropagation()}
         >
           {step === 'config' && (
             <>
-              <div className="p-5" style={{ borderBottom: `1px solid ${th.cardBorder}` }}>
+              <div className="px-5 py-4" style={{ borderBottom: '2.5px solid #0a0a0a', background: '#0d0d0d' }}>
                 <div className="flex items-center justify-between">
-                  <h2 className={`text-lg font-bold ${th.headerText}`}>Quick Match</h2>
-                  <button onClick={onClose} className={`${th.closeBtn} transition-colors`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  <div className="min-w-0">
+                    <h2 className="font-extrabold uppercase text-white" style={{ fontSize: 14, letterSpacing: '0.14em' }}>Quick Match</h2>
+                    <p className="text-blue-300/80 text-[11px] font-bold uppercase mt-0.5" style={{ letterSpacing: '0.12em' }}>Find a random opponent instantly</p>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    aria-label="Close"
+                    className="msg-cartoon-btn flex items-center justify-center"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 12,
+                      background: 'linear-gradient(180deg,#dc2626,#b91c1c)',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 2px 0 #0a0a0a',
+                      color: '#fff',
+                    }}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
-                <p className={`${th.subText} text-sm mt-1`}>Find a random opponent instantly</p>
               </div>
 
               <div className="p-5 space-y-5">
@@ -557,20 +569,34 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                   )}
                 </div>
 
-                <div className="rounded-xl p-3 flex items-center justify-between" style={{ backgroundColor: th.infoBg, border: `1px solid ${th.infoBorder}` }}>
+                <div
+                  className="rounded-2xl p-4 flex items-center justify-between"
+                  style={{
+                    background: 'linear-gradient(180deg,#111,#0a0a0a)',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 3px 0 #0a0a0a',
+                  }}
+                >
                   <div>
-                    <div className={`${th.infoLabel} text-xs`}>Prize Pool</div>
-                    <div className={`${th.infoValue} font-bold`}>${potSize}</div>
+                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.16em' }}>Prize Pool</div>
+                    <div className="text-white font-extrabold text-lg leading-none mt-1" style={{ textShadow: '0 1px 0 #0a0a0a' }}>${potSize}</div>
                   </div>
                   <div className="text-right">
-                    <div className={`${th.infoLabel} text-xs`}>Winner Gets</div>
-                    <div className="text-green-400 font-bold">${payout}</div>
+                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.16em' }}>Winner Gets</div>
+                    <div className="font-extrabold text-lg leading-none mt-1" style={{ color: '#34d399', textShadow: '0 1px 0 #0a0a0a' }}>${payout}</div>
                   </div>
                 </div>
 
                 <button
                   onClick={startSearch}
-                  className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-600/25"
+                  className="msg-cartoon-btn w-full text-white font-extrabold py-3.5 rounded-2xl uppercase"
+                  style={{
+                    background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
+                    letterSpacing: '0.12em',
+                    fontSize: 14,
+                  }}
                 >
                   Find Opponent
                 </button>
@@ -588,8 +614,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                     <div
                       className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                       style={{
-                        border: '3px solid #3b82f6',
+                        border: '3.5px solid #0a0a0a',
                         background: th.avatarBg1,
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.45), inset 0 0 0 2.5px #3b82f6',
                         animation: 'qm-user-glow 2s ease-in-out infinite',
                       }}
                     >
@@ -599,8 +626,18 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                       />
                     </div>
                   </div>
-                  <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>{userName}</p>
-                  <p className="text-blue-400 text-[10px] font-medium mt-0.5">Ready</p>
+                  <p
+                    className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md"
+                    style={{
+                      background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 2px 0 #0a0a0a',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
+                    {userName}
+                  </p>
+                  <p className="text-blue-300 text-[10px] font-extrabold uppercase mt-1" style={{ letterSpacing: '0.16em' }}>Ready</p>
                 </div>
 
                 <div className="flex flex-col items-center justify-center flex-shrink-0 relative z-20">
@@ -656,8 +693,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                       <div
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                         style={{
-                          border: '3px solid #fb923c',
+                          border: '3.5px solid #0a0a0a',
                           background: th.avatarBg2,
+                          boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(251,146,60,0.45), inset 0 0 0 2.5px #fb923c',
                           animation: 'qm-opp-glow 2s ease-in-out infinite',
                         }}
                       >
@@ -670,12 +708,32 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                     </div>
                   </div>
                   {currentName ? (
-                    <div key={currentName} style={{ animation: 'qm-name-slide 0.3s ease-out' }}>
-                      <p className="text-orange-300 text-xs md:text-sm font-bold mt-1 truncate max-w-[100px] text-center">{currentName}</p>
-                      <p className="text-gray-600 text-[10px] text-center">({currentRecord})</p>
+                    <div key={currentName} style={{ animation: 'qm-name-slide 0.3s ease-out' }} className="flex flex-col items-center">
+                      <p
+                        className="text-white text-[11px] md:text-xs font-extrabold uppercase mt-1 truncate max-w-[110px] text-center px-2 py-0.5 rounded-md"
+                        style={{
+                          background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                          border: '2.5px solid #0a0a0a',
+                          boxShadow: '0 2px 0 #0a0a0a',
+                          letterSpacing: '0.08em',
+                        }}
+                      >
+                        {currentName}
+                      </p>
+                      <p className="text-orange-300 text-[10px] font-extrabold mt-1" style={{ letterSpacing: '0.1em' }}>({currentRecord})</p>
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-xs md:text-sm font-bold mt-1">Searching...</p>
+                    <p
+                      className="text-white text-[11px] md:text-xs font-extrabold uppercase mt-1 px-2 py-0.5 rounded-md"
+                      style={{
+                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 2px 0 #0a0a0a',
+                        letterSpacing: '0.14em',
+                      }}
+                    >
+                      Searching…
+                    </p>
                   )}
                   <div className="flex items-center gap-1 mt-0.5">
                     {[0, 1, 2].map(i => (
@@ -698,23 +756,18 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{selectedMode?.label}</span>
                 </div>
                 <div
-                  className="inline-flex flex-col items-center rounded-xl px-6 py-2"
+                  className="inline-flex flex-col items-center rounded-2xl px-6 py-2"
                   style={{
-                    background: 'rgba(245,158,11,0.10)',
-                    border: '1px solid rgba(250,204,21,0.55)',
-                    boxShadow: '0 0 30px rgba(250,204,21,0.20), inset 0 0 14px rgba(250,204,21,0.06)',
+                    background: 'linear-gradient(180deg, #f59e0b 0%, #b45309 100%)',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a, 0 0 24px rgba(250,204,21,0.28)',
                   }}
                 >
-                  <span className="text-[8px] uppercase tracking-[0.25em] mb-0.5" style={{ color: '#fde68a' }}>Win Up To</span>
+                  <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] mb-0.5" style={{ color: '#0a0a0a' }}>Win Up To</span>
                   <span
-                    className="text-2xl md:text-3xl font-black leading-none"
+                    className="text-2xl md:text-3xl font-black leading-none text-white"
                     style={{
-                      background: 'linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      textShadow: '0 0 20px rgba(250,204,21,0.30)',
-                      filter: 'drop-shadow(0 2px 6px rgba(180,83,9,0.40))',
+                      textShadow: '0 2px 0 #0a0a0a, 0 0 18px rgba(255,255,255,0.18)',
                     }}
                   >
                     ${payout}
@@ -740,16 +793,28 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
               </div>
 
               <div className="px-5 pb-5 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full"
+                  style={{
+                    background: 'linear-gradient(180deg,#0d0d0d,#0a0a0a)',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 2px 0 #0a0a0a',
+                  }}
+                >
                   <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  <span className="text-cyan-400 text-xs font-mono" style={{ animation: 'qm-timer-tick 1s ease-in-out infinite' }}>
+                  <span className="text-cyan-300 text-[11px] font-extrabold font-mono" style={{ animation: 'qm-timer-tick 1s ease-in-out infinite' }}>
                     {searchTime}s
                   </span>
                 </div>
                 <button
                   onClick={cancelSearch}
-                  className={`px-5 py-2 ${th.cancelText} rounded-xl transition-colors text-xs font-medium`}
-                  style={{ backgroundColor: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+                  className="msg-cartoon-btn px-4 py-2 text-white rounded-xl text-[11px] font-extrabold uppercase"
+                  style={{
+                    background: 'linear-gradient(180deg,#374151,#1f2937)',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 2px 0 #0a0a0a',
+                    letterSpacing: '0.14em',
+                  }}
                 >
                   Cancel
                 </button>
@@ -771,10 +836,13 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
               <div className="relative z-10">
                 <div className="pt-5 pb-2 text-center">
                   <h3
-                    className="text-lg md:text-xl font-black text-transparent bg-clip-text mb-1"
+                    className="text-xl md:text-2xl font-black mb-1 inline-block px-3 py-1 rounded-xl"
                     style={{
-                      backgroundImage: 'linear-gradient(90deg, #10b981, #06b6d4)',
-                      WebkitBackgroundClip: 'text',
+                      color: '#fff',
+                      background: 'linear-gradient(180deg,#10b981,#059669)',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 3px 0 #0a0a0a',
+                      letterSpacing: '0.16em',
                       animation: 'qm-matched-slam 0.6s ease-out forwards 0.2s',
                       opacity: 0,
                       transform: 'scale(0.3)',
@@ -782,7 +850,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                   >
                     MATCH FOUND
                   </h3>
-                  <p className="text-gray-500 text-[11px]">Your opponent is ready</p>
+                  <p className="text-gray-400 text-[11px] font-bold uppercase mt-2" style={{ letterSpacing: '0.14em' }}>Your opponent is ready</p>
                 </div>
 
                 <div className="flex items-center justify-center gap-4 md:gap-8 py-5 px-4">
@@ -791,9 +859,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                       <div
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                         style={{
-                          border: '3px solid #3b82f6',
+                          border: '3.5px solid #0a0a0a',
                           background: th.avatarBg1,
-                          boxShadow: '0 0 20px rgba(59,130,246,0.3)',
+                          boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.45), inset 0 0 0 2.5px #3b82f6',
                         }}
                       >
                         <UserAvatar
@@ -802,8 +870,18 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                         />
                       </div>
                     </div>
-                    <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>{userName}</p>
-                    <p className="text-[10px] text-blue-400/70 mt-0.5">YOU</p>
+                    <p
+                      className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md"
+                      style={{
+                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 2px 0 #0a0a0a',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      {userName}
+                    </p>
+                    <p className="text-[10px] text-blue-300 font-extrabold uppercase mt-1" style={{ letterSpacing: '0.18em' }}>YOU</p>
                   </div>
 
                   <div className="flex flex-col items-center relative z-20">
@@ -821,15 +899,16 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                   <div className="flex flex-col items-center">
                     <div className="relative mb-2">
                       <div
-                        className="absolute rounded-full border border-emerald-500/30"
+                        className="absolute rounded-full border-2 border-emerald-500/40"
                         style={{ animation: 'qm-found-ring-expand 1.2s ease-out forwards', top: '-8px', left: '-8px', right: '-8px', bottom: '-8px' }}
                       />
 
                       <div
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                         style={{
-                          border: '3px solid #ef4444',
+                          border: '3.5px solid #0a0a0a',
                           background: th.avatarBg2,
+                          boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(239,68,68,0.45), inset 0 0 0 2.5px #ef4444',
                           animation: 'qm-avatar-lock 0.6s ease-out forwards',
                         }}
                       >
@@ -843,28 +922,43 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                         />
                       </div>
                     </div>
-                    <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>
+                    <p
+                      className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md"
+                      style={{
+                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 2px 0 #0a0a0a',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
                       {matchedOpponent?.username || 'Opponent'}
                     </p>
-                    <p className="text-[10px] text-red-400/60 mt-0.5">OPP</p>
+                    <p className="text-[10px] text-red-300 font-extrabold uppercase mt-1" style={{ letterSpacing: '0.18em' }}>OPP</p>
                   </div>
                 </div>
 
-                <div className="mx-4 mb-4 rounded-xl p-3 flex items-center justify-between" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+                <div
+                  className="mx-4 mb-4 rounded-2xl p-3 flex items-center justify-between"
+                  style={{
+                    background: 'linear-gradient(180deg,#111,#0a0a0a)',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 3px 0 #0a0a0a',
+                  }}
+                >
                   <div>
-                    <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Mode</div>
-                    <div className={`${th.infoValue} font-bold text-sm flex items-center gap-1`}>
+                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.14em' }}>Mode</div>
+                    <div className="text-white font-extrabold text-sm flex items-center gap-1 mt-0.5">
                       <span>{selectedMode?.icon}</span>
                       <span>{selectedMode?.label}</span>
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Pot</div>
-                    <div className={`${th.infoValue} font-bold text-sm`}>${potSize}</div>
+                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.14em' }}>Pot</div>
+                    <div className="text-white font-extrabold text-sm mt-0.5">${potSize}</div>
                   </div>
                   <div className="text-right">
-                    <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Win</div>
-                    <div className="font-bold text-sm" style={{
+                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.14em' }}>Win</div>
+                    <div className="font-extrabold text-sm mt-0.5" style={{
                       background: 'linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
@@ -876,10 +970,13 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                 <div className="px-4 pb-5">
                   <button
                     onClick={handleContinue}
-                    className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all duration-200 active:scale-[0.98]"
+                    className="msg-cartoon-btn w-full py-3.5 rounded-2xl font-extrabold text-white uppercase"
                     style={{
-                      backgroundColor: '#2563eb',
-                      boxShadow: '0 4px 20px rgba(37,99,235,0.3)',
+                      background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 4px 0 #0a0a0a, 0 0 20px rgba(59,130,246,0.35)',
+                      letterSpacing: '0.14em',
+                      fontSize: 14,
                     }}
                   >
                     Continue to Battle

@@ -343,17 +343,42 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
         }} />
 
         <div className="max-w-lg w-full my-auto text-center relative z-10">
-          <div className="lobby-label mb-1">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: `rgba(${theme.rgb},0.15)` }}>
+          <div className="lobby-label mb-2">
+            <div
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              style={{
+                background: `linear-gradient(180deg, rgba(${theme.rgb},0.35), rgba(${theme.rgb},0.18))`,
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 3px 0 #0a0a0a',
+              }}
+            >
               <span className="text-xs">{theme.icon}</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: theme.color }}>{theme.label}</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider" style={{ color: '#fff', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>{theme.label}</span>
             </div>
           </div>
-          <div className="lobby-label mb-1">
-            <span className="text-xs font-bold uppercase tracking-[0.3em] text-gray-500">{matchTypeLabel}</span>
+          <div className="lobby-label mb-2">
+            <span
+              className="inline-block text-[10px] font-extrabold uppercase tracking-[0.3em] text-gray-300 px-2.5 py-1 rounded-full"
+              style={{
+                background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 2px 0 #0a0a0a',
+              }}
+            >
+              {matchTypeLabel}
+            </span>
           </div>
-          <div className={`lobby-label text-2xl md:text-3xl font-black mb-1 ${'text-white'}`}>1v1 MATCH</div>
-          <div className="lobby-label text-xs text-gray-500 mb-8">Get ready. The game is about to begin.</div>
+          <div
+            className="lobby-label text-2xl md:text-3xl font-black mb-1 inline-block"
+            style={{
+              color: '#fff',
+              textShadow: '0 2px 0 #0a0a0a, 0 0 22px rgba(255,255,255,0.18)',
+              letterSpacing: '0.06em',
+            }}
+          >
+            1v1 MATCH
+          </div>
+          <div className="lobby-label text-[11px] text-gray-400 font-bold uppercase mb-8" style={{ letterSpacing: '0.16em' }}>Get ready. The game is about to begin.</div>
 
           <div className="flex items-stretch justify-center gap-0 mb-8 relative" style={{ minHeight: '200px' }}>
             <div className={`text-center ${entered ? 'lobby-player-left' : 'opacity-0'}`} style={{ flex: '1 1 0%', minWidth: 0 }}>
@@ -361,8 +386,8 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                 <div
                   className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
                   style={{
-                    border: `4px solid ${theme.color}`,
-                    boxShadow: `0 0 30px rgba(${theme.rgb},0.4), inset 0 0 20px rgba(${theme.rgb},0.1)`,
+                    border: '4px solid #0a0a0a',
+                    boxShadow: `0 4px 0 #0a0a0a, 0 0 30px rgba(${theme.rgb},0.45), inset 0 0 0 3px ${theme.color}`,
                     background: '#0c1a35',
                     animation: 'ringPulse 2s ease-in-out infinite',
                   }}
@@ -373,17 +398,42 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                   />
                 </div>
               </div>
-              <div className={`text-sm md:text-base font-bold ${'text-white'}`}>{player1.username || 'Player 1'}</div>
+              <div
+                className="inline-block px-2.5 py-1 rounded-lg text-sm md:text-base font-extrabold text-white max-w-full truncate"
+                style={{
+                  background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 2px 0 #0a0a0a',
+                }}
+              >
+                {player1.username || 'Player 1'}
+              </div>
             </div>
 
-            <div className="flex flex-col items-center relative z-10 -mx-4">
+            <div className="flex flex-col items-center justify-center relative z-10 -mx-4">
               {showBattle ? (
-                <div className="lobby-battle-text text-3xl md:text-4xl font-black" style={{ color: theme.color, textShadow: `0 0 30px rgba(${theme.rgb},0.5)` }}>
+                <div
+                  className="lobby-battle-text text-3xl md:text-4xl font-black px-3 py-1.5 rounded-xl"
+                  style={{
+                    color: '#fff',
+                    background: `linear-gradient(180deg, ${theme.color}, rgba(${theme.rgb},0.7))`,
+                    border: '3px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a',
+                    letterSpacing: '0.08em',
+                  }}
+                >
                   BATTLE!
                 </div>
               ) : (
                 <div className={`${entered ? 'lobby-vs' : 'opacity-0'}`}>
-                  <div className={`text-5xl md:text-6xl font-black italic ${'text-white'}`} style={{ textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
+                  <div
+                    className="text-5xl md:text-6xl font-black italic text-white"
+                    style={{
+                      WebkitTextStroke: '3px #0a0a0a',
+                      textShadow: '0 4px 0 #0a0a0a, 0 0 24px rgba(255,255,255,0.25)',
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
                     VS
                   </div>
                 </div>
@@ -395,8 +445,8 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                 <div
                   className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
                   style={{
-                    border: '4px solid #fb923c',
-                    boxShadow: '0 0 30px rgba(251,146,60,0.4), inset 0 0 20px rgba(251,146,60,0.1)',
+                    border: '4px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a, 0 0 30px rgba(251,146,60,0.45), inset 0 0 0 3px #fb923c',
                     background: '#1a0a00',
                   }}
                 >
@@ -406,42 +456,69 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                   />
                 </div>
               </div>
-              <div className={`text-sm md:text-base font-bold ${'text-white'}`}>{player2.username || 'Player 2'}</div>
+              <div
+                className="inline-block px-2.5 py-1 rounded-lg text-sm md:text-base font-extrabold text-white max-w-full truncate"
+                style={{
+                  background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 2px 0 #0a0a0a',
+                }}
+              >
+                {player2.username || 'Player 2'}
+              </div>
             </div>
           </div>
 
           <div className="lobby-prize">
             <div
-              className="inline-flex flex-col items-center rounded-2xl px-10 py-5 mb-6 backdrop-blur-sm"
+              className="inline-flex flex-col items-center rounded-2xl px-10 py-5 mb-6"
               style={{
-                background: 'linear-gradient(180deg, rgba(245,158,11,0.18) 0%, rgba(180,83,9,0.10) 100%)',
-                border: '1px solid rgba(250,204,21,0.55)',
-                boxShadow: '0 0 40px rgba(250,204,21,0.25), inset 0 0 20px rgba(250,204,21,0.08)',
+                background: 'linear-gradient(180deg, #f59e0b 0%, #b45309 100%)',
+                border: '3px solid #0a0a0a',
+                boxShadow: '0 5px 0 #0a0a0a, 0 0 40px rgba(250,204,21,0.30)',
               }}
             >
-              <span className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: '#fde68a' }}>Prize Pot</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-[0.28em] mb-1" style={{ color: '#0a0a0a' }}>Prize Pot</span>
               <span
-                className="text-5xl md:text-6xl font-black leading-none"
+                className="text-5xl md:text-6xl font-black leading-none text-white"
                 style={{
-                  background: 'linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  textShadow: '0 0 25px rgba(250,204,21,0.35)',
-                  filter: 'drop-shadow(0 2px 8px rgba(180,83,9,0.45))',
+                  textShadow: '0 3px 0 #0a0a0a, 0 0 24px rgba(255,255,255,0.18)',
+                  letterSpacing: '-0.01em',
                 }}
               >
                 ${payout > 0 ? formatMoney(payout, 0) : formatMoney(parseFloat(potSize || 0), 0)}
               </span>
-              <span className="text-[10px] mt-2" style={{ color: '#fcd34d' }}>🏆 Winner takes all · 10% fee 🏆</span>
+              <span className="text-[10px] mt-2 font-extrabold uppercase tracking-wider" style={{ color: '#0a0a0a' }}>🏆 Winner takes all · 10% fee 🏆</span>
             </div>
           </div>
 
           {!showBattle && (
-            <div className="mb-4">
-              <div className="text-xs font-bold uppercase tracking-[0.25em] mb-2" style={{ color: theme.color }}>Match Found</div>
-              <div className="text-gray-500 text-xs mb-2">Starting in</div>
-              <div key={countdown} className={`lobby-countdown text-5xl md:text-6xl font-black ${'text-white'}`}>
+            <div className="mb-4 flex flex-col items-center">
+              <div
+                className="inline-block text-[11px] font-extrabold uppercase tracking-[0.25em] mb-2 px-3 py-1 rounded-full"
+                style={{
+                  color: '#fff',
+                  background: `linear-gradient(180deg, ${theme.color}, rgba(${theme.rgb},0.7))`,
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 3px 0 #0a0a0a',
+                }}
+              >
+                Match Found
+              </div>
+              <div className="text-gray-400 text-[11px] font-bold uppercase mb-2" style={{ letterSpacing: '0.16em' }}>Starting in</div>
+              <div
+                key={countdown}
+                className="lobby-countdown text-5xl md:text-6xl font-black text-white inline-flex items-center justify-center"
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: 24,
+                  background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                  border: '3px solid #0a0a0a',
+                  boxShadow: `0 5px 0 #0a0a0a, 0 0 30px rgba(${theme.rgb},0.35)`,
+                  textShadow: '0 3px 0 #0a0a0a',
+                }}
+              >
                 {countdown}
               </div>
             </div>
