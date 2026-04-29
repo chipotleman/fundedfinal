@@ -16,15 +16,15 @@ export default function TopCappersContainer() {
 
   return (
     <div
-      className="w-[187px] md:w-[240px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
+      className="w-[230px] md:w-[295px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
       style={{ backgroundColor: '#000' }}
       onClick={handleClick}
       role="button"
       aria-label="View this week's top cappers leaderboard"
     >
-      {/* Container is 4:3 to match the source banner art (1448×1086).
-          object-cover gives a perfect edge-to-edge fill with no
-          letterboxing or cropping. */}
+      {/* Container width matches the trimmed banner aspect (1352×824 ≈ 1.64)
+          at the unified carousel height (140/180), so the bordered card
+          fills the tile edge-to-edge with no padding. */}
       <img
         src="/promos/top-cappers.png"
         alt="Top Cappers this week — live leaderboard, updated in real time"
