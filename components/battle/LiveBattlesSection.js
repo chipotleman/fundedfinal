@@ -303,7 +303,13 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
   const [internalExpanded, setInternalExpanded] = useState(false);
   const expanded = compact ? isExpanded : internalExpanded;
-  const setExpanded = compact ? () => onToggle?.() : setInternalExpanded;
+  // Forward the desired next value to onToggle (instead of a blind
+  // invert), so the carousel can set the shared row state explicitly.
+  // This avoids a parity bug where, while peers are force-expanded by
+  // YouVsCard's active state, clicking "Hide" would flip the underlying
+  // preference the wrong way and leak that wrong preference back out
+  // when YouVsCard later returned to idle.
+  const setExpanded = compact ? (next) => onToggle?.(next) : setInternalExpanded;
   const cardRef = useRef(null);
 
   useEffect(() => {
@@ -3153,6 +3159,16 @@ export default function LiveBattlesSection({
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const [expandedKey, setExpandedKey] = useState(null);
+  // The compact dashboard carousel uses `items-stretch`, so expanding any
+  // single card forces every other card in the row to grow to match — which
+  // looked like dead empty space below the un-expanded peers. To keep the
+  // row visually full we drive every BattleCard from a single shared
+  // `battlesExpanded` flag: clicking Preview on any card expands all of
+  // them, clicking Hide collapses all of them. When the YouVsCard is in an
+  // active/waiting/queued state it pushes the row tall on its own, so we
+  // also force peer expansion in that case (the user can't shrink the row
+  // below YouVsCard's hero anyway).
+  const [battlesExpanded, setBattlesExpanded] = useState(false);
   // When the YouVsCard's in-card matchmaking flow resolves, we hand
   // off to the existing match-found popup by mounting QuickMatchModal
   // pre-seeded into its `found` step. The user sees the same standard
@@ -3184,6 +3200,22 @@ export default function LiveBattlesSection({
       setExpandedKey((prev) => (prev === 'youvs' ? null : prev));
     }
   }, [youVsIsIdle]);
+
+  // Force every BattleCard in the carousel to render its expanded preview
+  // when the row is already tall — either because the user explicitly
+  // toggled Preview on any card, or because the YouVsCard is in an active
+  // matchmaking/in-battle state and is pushing the row height up on its
+  // own. This keeps the row visually full instead of leaving large empty
+  // gaps below short, un-expanded peer cards.
+  const battleCardsExpanded = battlesExpanded || !youVsIsIdle;
+  // BattleCard forwards the desired next value (true to expand, false to
+  // collapse) so we can record the user's exact preference. While
+  // YouVsCard is non-idle the visible state stays forced-expanded, but
+  // the recorded preference still applies the moment YouVsCard returns
+  // to idle.
+  const setBattleCardsExpanded = useCallback((next) => {
+    setBattlesExpanded(Boolean(next));
+  }, []);
 
   useEffect(() => {
     fetch('/api/admin/battle-avatars')
@@ -3466,8 +3498,8 @@ export default function LiveBattlesSection({
               <BattleCard
                 battle={battle}
                 compact
-                isExpanded={expandedKey === battle.id}
-                onToggle={() => toggleExpandedKey(battle.id)}
+                isExpanded={battleCardsExpanded}
+                onToggle={setBattleCardsExpanded}
               />
             </div>
           ))}
