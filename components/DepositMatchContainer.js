@@ -34,167 +34,25 @@ export default function DepositMatchContainer() {
     router.push('/withdrawal');
   };
 
-  const badgeLabel = isReturning ? '🔥 Reload Bonus' : '⭐ New Player';
-  const eyebrow = isReturning ? 'Reload Match' : 'First Deposit Match';
-  const headlinePercent = isReturning ? '50% MATCH' : '100% MATCH';
-  const subline = isReturning ? (
-    <>Up to <span className="text-yellow-300">$50 Free</span> on your next deposit</>
-  ) : (
-    <>Up to <span className="text-yellow-300">$100 Free</span> on your first deposit</>
-  );
-  const ctaLabel = isReturning ? 'Claim Bonus →' : 'Claim Match →';
-
   return (
-    <>
-      <style>{`
-        @keyframes deposit-shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        @keyframes deposit-coin-float {
-          0% {
-            transform: translateY(20px) translateX(0) rotate(0deg);
-            opacity: 0;
-          }
-          15% { opacity: 1; }
-          100% {
-            transform: translateY(-180px) translateX(var(--coin-x, 10px)) rotate(360deg);
-            opacity: 0;
-          }
-        }
-        @keyframes deposit-sparkle {
-          0%, 100% { opacity: 0; transform: scale(0.5); }
-          50% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes deposit-badge-bob {
-          0%, 100% { transform: rotate(-6deg) scale(1); }
-          50% { transform: rotate(-3deg) scale(1.05); }
-        }
-        @keyframes deposit-cta-pulse {
-          0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(250, 204, 21, 0.5); }
-          50% { transform: scale(1.04); box-shadow: 0 6px 28px rgba(250, 204, 21, 0.8); }
-        }
-      `}</style>
-
-      <div
-        className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
-        style={{
-          background:
-            'linear-gradient(135deg, #2d1b00 0%, #5a3a00 20%, #8a5d00 45%, #b8830d 70%, #6b4500 100%)',
-          border: '2px solid rgba(250, 204, 21, 0.6)',
-        }}
-        onClick={handleClick}
-        role="button"
-        aria-label="Claim first deposit match"
-      >
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          {[...Array(10)].map((_, i) => (
-            <div
-              key={`coin-${i}`}
-              className="absolute rounded-full flex items-center justify-center"
-              style={{
-                width: `${10 + (i % 3) * 4}px`,
-                height: `${10 + (i % 3) * 4}px`,
-                left: `${5 + i * 9.5}%`,
-                bottom: '-10px',
-                background:
-                  'radial-gradient(circle at 30% 30%, #fde68a 0%, #facc15 45%, #b45309 100%)',
-                boxShadow: '0 0 8px rgba(250, 204, 21, 0.8), inset 0 -2px 3px rgba(120, 53, 15, 0.6)',
-                animation: `deposit-coin-float ${3 + (i % 4) * 0.6}s linear infinite`,
-                animationDelay: `${i * 0.35}s`,
-                ['--coin-x']: `${(i % 2 === 0 ? 1 : -1) * (8 + (i % 3) * 6)}px`,
-              }}
-            />
-          ))}
-          {[...Array(14)].map((_, i) => (
-            <div
-              key={`sparkle-${i}`}
-              className="absolute"
-              style={{
-                width: `${3 + (i % 3) * 2}px`,
-                height: `${3 + (i % 3) * 2}px`,
-                left: `${(i * 7.5) % 100}%`,
-                top: `${(i * 13) % 90}%`,
-                background: '#fef9c3',
-                borderRadius: '50%',
-                boxShadow: '0 0 8px #fde68a, 0 0 16px #facc15',
-                animation: `deposit-sparkle ${1.5 + (i % 4) * 0.5}s ease-in-out infinite`,
-                animationDelay: `${i * 0.18}s`,
-              }}
-            />
-          ))}
-        </div>
-
-        <div
-          className="absolute top-2 left-2 md:top-3 md:left-3 px-2 py-1 md:px-3 md:py-1.5 rounded-md z-20"
-          style={{
-            background: 'linear-gradient(135deg, #facc15 0%, #f59e0b 100%)',
-            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.6)',
-            animation: 'deposit-badge-bob 2s ease-in-out infinite',
-            transformOrigin: 'center',
-          }}
-        >
-          <span className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-amber-950">
-            {badgeLabel}
-          </span>
-        </div>
-
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 md:px-6 text-center">
-          <div
-            className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mb-0.5 md:mb-1"
-            style={{
-              color: '#fef3c7',
-              textShadow: '0 1px 2px rgba(0,0,0,0.6)',
-            }}
-          >
-            {eyebrow}
-          </div>
-
-          <div
-            className="text-2xl md:text-5xl font-black leading-none"
-            style={{
-              backgroundImage:
-                'linear-gradient(180deg, #fff7d6 0%, #fde68a 35%, #facc15 65%, #b45309 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-              letterSpacing: '0.02em',
-            }}
-          >
-            {headlinePercent}
-          </div>
-
-          <div
-            className="text-xs md:text-base font-bold mt-0.5 md:mt-1"
-            style={{
-              color: '#fff7d6',
-              textShadow: '0 1px 3px rgba(0,0,0,0.6)',
-            }}
-          >
-            {subline}
-          </div>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClick();
-            }}
-            className="mt-1.5 md:mt-3 px-5 md:px-8 py-1.5 md:py-2.5 rounded-xl font-black text-xs md:text-base uppercase tracking-wider relative overflow-hidden"
-            style={{
-              background:
-                'linear-gradient(135deg, #b45309 0%, #92400e 50%, #78350f 100%)',
-              color: '#fff7d6',
-              border: '1.5px solid rgba(255, 247, 214, 0.85)',
-              animation: 'deposit-cta-pulse 1.6s ease-in-out infinite',
-              textShadow: '0 1px 2px rgba(0,0,0,0.6)',
-            }}
-          >
-            <span className="relative z-10">{ctaLabel}</span>
-          </button>
-        </div>
-      </div>
-    </>
+    <div
+      className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[200px] md:h-[260px] hover:scale-[1.02] active:scale-[0.98]"
+      style={{ backgroundColor: '#000' }}
+      onClick={handleClick}
+      role="button"
+      aria-label={isReturning ? 'Claim reload deposit match' : 'Claim first deposit match'}
+    >
+      {/* Static branded artwork — full-bleed image so the carousel slot
+          shows the designed banner exactly as authored. The image is
+          square; we cover-crop it into the slot with the focal "50%
+          MATCH" headline and "CLAIM BONUS" CTA centered. */}
+      <img
+        src="/promos/reload-match.png"
+        alt="Reload Match — 50% bonus, up to $50 free on your next deposit"
+        className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
+        draggable={false}
+        loading="lazy"
+      />
+    </div>
   );
 }
