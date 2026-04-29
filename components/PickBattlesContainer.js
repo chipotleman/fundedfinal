@@ -15,16 +15,19 @@ export default function PickBattlesContainer() {
 
   return (
     <div
-      className="w-[140px] md:w-[180px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
+      className="w-[187px] md:w-[240px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
       style={{ backgroundColor: '#000' }}
       onClick={handleClick}
       role="button"
       aria-label="Enter a 1v1 Pick Battle"
     >
+      {/* Container is 4:3 to match the source banner art (1448×1086).
+          object-cover gives a perfect edge-to-edge fill with no
+          letterboxing or cropping. */}
       <img
         src="/promos/pick-battles.png"
         alt="1v1 Pick Battles — fast, competitive, head-to-head matchups"
-        className="absolute inset-0 w-full h-full object-contain object-center select-none pointer-events-none"
+        className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
         draggable={false}
         loading="lazy"
       />

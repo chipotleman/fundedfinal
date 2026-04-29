@@ -36,20 +36,15 @@ export default function DepositMatchContainer() {
 
   return (
     <div
-      className="w-[160px] md:w-[200px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
+      className="w-[187px] md:w-[240px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
       style={{ backgroundColor: '#000' }}
       onClick={handleClick}
       role="button"
       aria-label={isReturning ? 'Claim reload deposit match' : 'Claim first deposit match'}
     >
-      {/* Container is intentionally a touch wider than tall (160×140 / 200×180)
-          so the square source PNG can `object-cover` the full width without
-          any horizontal crop — the bordered card's left and right edges
-          stay fully visible and the focal "50% MATCH" headline + "CLAIM
-          BONUS" CTA sit fully inside the frame. The minor top/bottom
-          overflow is what trims the ~6% black padding baked around the
-          source image, so the bordered card lines up at the same visual
-          height as the other promo tiles in the carousel. */}
+      {/* Container is 4:3 to match the source banner art (1448×1086).
+          object-cover gives a perfect edge-to-edge fill with no
+          letterboxing or cropping. */}
       <img
         src="/promos/reload-match.png"
         alt="Reload Match — 50% bonus, up to $50 free on your next deposit"
