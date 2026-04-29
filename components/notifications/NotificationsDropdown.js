@@ -99,15 +99,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
       }}
     >
       <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between gap-2">
-        <span
-          className="font-bold text-sm tracking-wide"
-          style={{
-            background: 'linear-gradient(90deg, #60a5fa 0%, #22d3ee 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
+        <span className="font-bold text-sm tracking-wide text-white">
           Notifications
         </span>
         {total > 0 && (

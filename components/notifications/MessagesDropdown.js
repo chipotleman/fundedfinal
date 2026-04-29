@@ -152,15 +152,7 @@ export default function MessagesDropdown({ open, onClose, anchorRef, onSelectCon
       }}
     >
       <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between gap-2">
-        <span
-          className="font-bold text-sm tracking-wide"
-          style={{
-            background: 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
+        <span className="font-bold text-sm tracking-wide text-white">
           Messages
         </span>
         {total > 0 && (
