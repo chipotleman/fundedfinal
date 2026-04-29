@@ -22,10 +22,16 @@ export default function TrendingBetContainer() {
       role="button"
       aria-label="Trending now — see what the public is betting on"
     >
+      {/* The source PNG has ~6% black padding baked around its bordered
+          card; we scale the image up to crop that empty padding so this
+          tile reads at the same visual height as the other promo tiles
+          in the carousel. The container's overflow-hidden clips the
+          overflow cleanly. */}
       <img
         src="/promos/trending-picks.png"
         alt="Trending now — 1.6k picks on PUR ML -133 with 78% public confidence"
-        className="absolute inset-0 w-full h-full object-contain object-center select-none pointer-events-none"
+        className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
+        style={{ transform: 'scale(1.12)' }}
         draggable={false}
         loading="lazy"
       />

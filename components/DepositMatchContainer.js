@@ -45,11 +45,17 @@ export default function DepositMatchContainer() {
       {/* Static branded artwork — full-bleed image so the carousel slot
           shows the designed banner exactly as authored. The image is
           square; we cover-crop it into the slot with the focal "50%
-          MATCH" headline and "CLAIM BONUS" CTA centered. */}
+          MATCH" headline and "CLAIM BONUS" CTA centered. The source PNG
+          has ~6% black padding baked around its bordered card; we scale
+          the image up to crop that empty padding so this tile reads at
+          the same visual height as the other promo tiles in the
+          carousel. The container's overflow-hidden clips the overflow
+          cleanly. */}
       <img
         src="/promos/reload-match.png"
         alt="Reload Match — 50% bonus, up to $50 free on your next deposit"
-        className="absolute inset-0 w-full h-full object-contain object-center select-none pointer-events-none"
+        className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
+        style={{ transform: 'scale(1.12)' }}
         draggable={false}
         loading="lazy"
       />
