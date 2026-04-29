@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
@@ -7,6 +7,21 @@ import haptic from '../../utils/haptics';
 import UserAvatar from '../UserAvatar';
 import { CartoonChipStyles } from './CartoonChip';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
+import { useGames } from '../../contexts/GamesContext';
+import { getBattleStreamClient } from '../../lib/battleStreamClient';
+
+// Rush in-popup flow constants. The modal carries the user all the way
+// from "MATCH FOUND" through live-game voting → rules → countdown so the
+// experience feels like a single trivia-crack-style ritual instead of a
+// page swap. Once the 3-2-1-GO countdown ends we hand off to
+// /battle/rush/[id] for the question gameplay (which is its own routed
+// page so refreshes/back-button still work).
+const RUSH_VOTE_GAME_LIMIT = 3;
+const RUSH_FOUND_TO_VOTE_DELAY_MS = 1400;
+const RUSH_RULES_DURATION_MS = 2800;
+const RUSH_COUNTDOWN_TICK_MS = 800;
+const RUSH_GO_DURATION_MS = 600;
+const RUSH_STATE_POLL_MS = 750;
 
 const GAME_MODE_OPTIONS = [
   {
@@ -93,6 +108,15 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const [userProfile, setUserProfile] = useState(null);
   const [tipIndex, setTipIndex] = useState(0);
   const [tipFade, setTipFade] = useState(false);
+  // Rush in-popup flow state
+  const [rushState, setRushState] = useState(null);
+  const [serverLiveGames, setServerLiveGames] = useState([]);
+  const [rushVoteError, setRushVoteError] = useState('');
+  const [pendingVoteId, setPendingVoteId] = useState(null);
+  const [countdownNum, setCountdownNum] = useState(3);
+  const [voteDeadlineTick, setVoteDeadlineTick] = useState(0);
+  const games = useGames();
+  const apiGames = games?.apiGames;
   const { data: session } = useSession();
   const router = useRouter();
   const intervalRef = useRef(null);
@@ -156,6 +180,13 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
       setMatchedOpponent(null);
       setMatchedMatchup(null);
       setTipIndex(0);
+      // Reset rush in-popup flow state so a fresh open doesn't carry
+      // stale vote/state from a previous match into the next session.
+      setRushState(null);
+      setServerLiveGames([]);
+      setRushVoteError('');
+      setPendingVoteId(null);
+      setCountdownNum(3);
     }
     return () => { cleanupAllTimers(); };
     // `presetMatch` is included so a fresh hand-off (new opponent +
@@ -212,6 +243,242 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
       };
     }
   }, [step, avatars]);
+
+  // ========================================================================
+  // Rush in-popup flow effects
+  //
+  // These power the trivia-crack-style ritual the user goes through when
+  // a Rush match is found: brief "MATCH FOUND" beat → live-game vote →
+  // rules slide → 3-2-1 countdown → handoff to /battle/rush/[id] for the
+  // question gameplay. We poll the same /api/battles/rush/[id]/state
+  // endpoint the routed page uses (and subscribe to its SSE channel) so
+  // the modal stays in lock-step with the server-authoritative state
+  // machine — votes, deadline expiry, and the voting→playing flip all
+  // come from the same source of truth.
+  // ========================================================================
+
+  // Auto-advance from "MATCH FOUND" to the live-game vote slide for Rush.
+  // Other modes (original / tournament) still show the Continue button.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (step !== 'found') return;
+    if (gameMode !== 'rush') return;
+    if (!matchedMatchup?.id) return;
+    const t = setTimeout(() => {
+      if (cancelledRef.current) return;
+      setStep('rush-vote');
+    }, RUSH_FOUND_TO_VOTE_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [isOpen, step, gameMode, matchedMatchup?.id]);
+
+  // Poll + SSE the rush state for the matched matchup whenever we're in
+  // any rush sub-step. Polling at 750ms keeps the deadline countdown
+  // smooth; SSE delivers near-instant updates for the voting→playing
+  // flip and the opponent's vote landing.
+  useEffect(() => {
+    if (!isOpen) return;
+    const inRushFlow = step === 'rush-vote' || step === 'rush-rules' || step === 'rush-countdown';
+    if (!inRushFlow) return;
+    const matchupId = matchedMatchup?.id;
+    if (!matchupId) return;
+
+    let cancelled = false;
+    const fetchRush = async () => {
+      try {
+        const res = await fetch(`/api/battles/rush/${matchupId}/state`);
+        if (cancelled || !res.ok) return;
+        const j = await res.json();
+        if (!cancelled) setRushState(j.rush || null);
+      } catch {}
+    };
+    fetchRush();
+    const t = setInterval(fetchRush, RUSH_STATE_POLL_MS);
+
+    let unsub = null;
+    try {
+      const client = getBattleStreamClient();
+      if (client) {
+        unsub = client.subscribe((ev) => {
+          if (!ev) return;
+          if (ev.type === 'matchup:rush:update' && ev.matchupId === matchupId) fetchRush();
+          else if (ev.type === 'piks:reconnected') fetchRush();
+        });
+      }
+    } catch {}
+
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+      if (unsub) { try { unsub(); } catch {} }
+    };
+  }, [isOpen, step, matchedMatchup?.id]);
+
+  // Tick once a second on the vote slide so the deadline ring stays in
+  // sync without us having to lean on the polling response time.
+  useEffect(() => {
+    if (step !== 'rush-vote') return;
+    const t = setInterval(() => setVoteDeadlineTick(n => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [step]);
+
+  // Load the live-game list from the dedicated endpoint while voting.
+  // We merge this with the dashboard's GamesContext stream below so
+  // demo / simulated live games still show up here.
+  useEffect(() => {
+    if (step !== 'rush-vote') return;
+    let cancelled = false;
+    fetch('/api/goalserve/live')
+      .then(r => r.json())
+      .then(j => { if (!cancelled) setServerLiveGames(j?.games || []); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [step]);
+
+  // Detect server-side voting resolution → advance to rules slide.
+  useEffect(() => {
+    if (step !== 'rush-vote') return;
+    if (rushState?.phase === 'playing' || rushState?.phase === 'completed') {
+      setStep('rush-rules');
+    }
+  }, [step, rushState?.phase]);
+
+  // Deadlock guard: if the vote deadline has passed and neither player
+  // ever voted, the server-side resolveVotingIfReady() leaves phase as
+  // 'voting' indefinitely (chosen vote is null, no question generation
+  // possible). Without this guard the modal would spin forever waiting
+  // for a phase flip that never comes. After a 4s grace past deadline
+  // we hand off to the routed rush page where the full forfeit /
+  // refund UX lives.
+  useEffect(() => {
+    if (step !== 'rush-vote') return;
+    if (!rushState || rushState.phase !== 'voting') return;
+    const deadline = rushState.voteDeadline ? new Date(rushState.voteDeadline).getTime() : null;
+    if (!deadline) return;
+    const matchupId = matchedMatchup?.id;
+    if (!matchupId) return;
+    const myVote = userId ? rushState.gameVotes?.[userId] : null;
+    const opponentId = matchedOpponent?.id;
+    const oppVote = opponentId ? rushState.gameVotes?.[opponentId] : null;
+    // Only kick in when nobody voted — single-vote expiry is handled
+    // server-side and will flip to 'playing' on the next state read.
+    if (myVote || oppVote) return;
+    const overdueBy = Date.now() - deadline;
+    if (overdueBy <= 4000) return;
+    onClose();
+    router.push(`/battle/rush/${matchupId}`);
+  }, [step, rushState, matchedMatchup?.id, matchedOpponent?.id, userId, voteDeadlineTick, onClose, router]);
+
+  // Rules slide auto-advances into the 3-2-1 countdown.
+  useEffect(() => {
+    if (step !== 'rush-rules') return;
+    setCountdownNum(3);
+    const t = setTimeout(() => {
+      if (cancelledRef.current) return;
+      setStep('rush-countdown');
+    }, RUSH_RULES_DURATION_MS);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  // 3-2-1-GO countdown ticker. After the GO! flash we hand off to the
+  // dedicated /battle/rush/[id] page where the question gameplay lives.
+  useEffect(() => {
+    if (step !== 'rush-countdown') return;
+    if (countdownNum > 0) {
+      const t = setTimeout(() => {
+        if (cancelledRef.current) return;
+        setCountdownNum(n => n - 1);
+        haptic.tap?.();
+      }, RUSH_COUNTDOWN_TICK_MS);
+      return () => clearTimeout(t);
+    }
+    // countdownNum === 0 → show "GO!" briefly, then route to gameplay.
+    const t = setTimeout(() => {
+      const matchupId = matchedMatchup?.id;
+      if (!matchupId) return;
+      // Bypass the parent's onMatchFound for rush — the modal owns the
+      // entire pre-game ritual, so we navigate straight to the gameplay
+      // page instead of bubbling the match up to the page-level handler.
+      onClose();
+      router.push(`/battle/rush/${matchupId}`);
+    }, RUSH_GO_DURATION_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, countdownNum, matchedMatchup?.id]);
+
+  // Live games for the vote slide. Merge server list + GamesContext
+  // (mirrors the routed rush page's logic) so demo / simulated live
+  // games surface here too. Cap at RUSH_VOTE_GAME_LIMIT so the slide
+  // stays a snappy 3-card pick rather than a long scroll.
+  const liveGamesForVote = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    const push = (g) => {
+      if (!g) return;
+      const key = `${g.sport_key || ''}::${g.id ?? ''}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(g);
+    };
+    serverLiveGames.forEach(push);
+    if (Array.isArray(apiGames)) {
+      apiGames.forEach((g) => { if (g && g.isLive) push(g); });
+    }
+    return out.slice(0, RUSH_VOTE_GAME_LIMIT);
+  }, [serverLiveGames, apiGames]);
+
+  const submitRushVote = async (game) => {
+    const matchupId = matchedMatchup?.id;
+    if (!matchupId || pendingVoteId) return;
+    setPendingVoteId(String(game.id));
+    setRushVoteError('');
+    haptic.tap?.();
+    try {
+      const snapshot = {
+        id: game.id,
+        sport_key: game.sport_key,
+        sport_title: game.sport_title,
+        home_team: game.home_team,
+        away_team: game.away_team,
+        scores: game.scores,
+        status: game.status,
+        isLive: game.isLive,
+      };
+      const res = await fetch(`/api/battles/rush/${matchupId}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId: String(game.id), gameSnapshot: snapshot }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setRushVoteError(j.error || 'Failed to vote');
+      } else {
+        // Refetch immediately so the local state shows our vote without
+        // waiting for the next 750ms poll tick.
+        try {
+          const j = await fetch(`/api/battles/rush/${matchupId}/state`).then(r => r.json());
+          setRushState(j.rush || null);
+        } catch {}
+      }
+    } catch (err) {
+      setRushVoteError(err?.message || 'Network error');
+    } finally {
+      setPendingVoteId(null);
+    }
+  };
+
+  const isInRushFlow = step === 'rush-vote' || step === 'rush-rules' || step === 'rush-countdown';
+
+  // Closing the modal mid-rush would orphan the user in an active
+  // matchup. Instead, hand them off to the routed gameplay page so
+  // they can finish (or forfeit) from there.
+  const handleClose = () => {
+    if (isInRushFlow && matchedMatchup?.id) {
+      onClose();
+      router.push(`/battle/rush/${matchedMatchup.id}`);
+      return;
+    }
+    onClose();
+  };
 
   const handleMatchFound = (opponent, matchup) => {
     if (cancelledRef.current) return;
@@ -450,7 +717,16 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
           100% { background-position: 100% 100%; }
         }
       `}</style>
-      <div data-allow-fixed-overlay="true" className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
+      <div data-allow-fixed-overlay="true" className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => {
+        // 'found' is a hard pause — clicks outside don't dismiss it.
+        // The new rush sub-steps are also non-dismissable on backdrop
+        // click since the user is already in an active matchup; the
+        // explicit close button (which routes to /battle/rush/[id])
+        // remains the only way out.
+        if (step === 'found' || isInRushFlow) return;
+        if (step === 'searching') { cancelSearch(); }
+        onClose();
+      }}>
         <div
           className="rounded-2xl max-w-md w-full overflow-hidden my-auto"
           style={{
@@ -1226,25 +1502,650 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 </div>
 
                 <div className="px-4 pb-5">
-                  <button
-                    onClick={handleContinue}
-                    className="msg-cartoon-btn w-full py-3.5 rounded-2xl font-extrabold text-white uppercase"
-                    style={{
-                      background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 4px 0 #0a0a0a, 0 0 20px rgba(59,130,246,0.35)',
-                      letterSpacing: '0.14em',
-                      fontSize: 14,
-                    }}
-                  >
-                    Continue to Battle
-                  </button>
+                  {gameMode === 'rush' ? (
+                    // Rush auto-advances into the live-game vote slide
+                    // ~1.4s after MATCH FOUND lands. Show a short hint
+                    // here so the user knows the popup is about to flip
+                    // them into the vote, not just sitting idle.
+                    <div
+                      className="w-full py-3.5 rounded-2xl text-center font-extrabold text-white uppercase flex items-center justify-center gap-2"
+                      style={{
+                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 4px 0 #0a0a0a',
+                        letterSpacing: '0.14em',
+                        fontSize: 13,
+                      }}
+                    >
+                      <span
+                        className="inline-block w-2 h-2 rounded-full"
+                        style={{ background: '#fbbf24', boxShadow: '0 0 10px #fbbf24', animation: 'qm-bolt-flicker 0.9s ease-in-out infinite' }}
+                      />
+                      <span style={{ color: '#fbbf24' }}>Loading live games…</span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleContinue}
+                      className="msg-cartoon-btn w-full py-3.5 rounded-2xl font-extrabold text-white uppercase"
+                      style={{
+                        background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 4px 0 #0a0a0a, 0 0 20px rgba(59,130,246,0.35)',
+                        letterSpacing: '0.14em',
+                        fontSize: 14,
+                      }}
+                    >
+                      Continue to Battle
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           )}
+
+          {step === 'rush-vote' && (
+            <RushVoteSlide
+              rushState={rushState}
+              userId={session?.user?.id}
+              opponent={matchedOpponent}
+              userName={userName}
+              userAvatar={userAvatar}
+              userProfileId={userProfile?.id}
+              matchupId={matchedMatchup?.id}
+              liveGames={liveGamesForVote}
+              pendingVoteId={pendingVoteId}
+              onVote={submitRushVote}
+              onClose={handleClose}
+              error={rushVoteError}
+            />
+          )}
+
+          {step === 'rush-rules' && (
+            <RushRulesSlide onClose={handleClose} />
+          )}
+
+          {step === 'rush-countdown' && (
+            <RushCountdownSlide num={countdownNum} />
+          )}
         </div>
       </div>
     </>
+  );
+}
+
+// ===========================================================================
+// Rush in-popup sub-slides
+//
+// Three small presentational components that render the cartoon-themed
+// vote → rules → countdown ritual inside QuickMatchModal. They share the
+// same design language (2.5px black borders, 4px hard shadow, blue=YOU /
+// orange=OPP color split) so the whole flow reads as one continuous
+// trivia-crack-style sequence rather than four disconnected screens.
+// ===========================================================================
+
+const SELF_COLOR = '#3b82f6';
+const SELF_COLOR_DEEP = '#1d4ed8';
+const OPP_COLOR = '#fb923c';
+const OPP_COLOR_DEEP = '#c2410c';
+
+function RushVoteSlide({
+  rushState,
+  userId,
+  opponent,
+  liveGames,
+  pendingVoteId,
+  onVote,
+  onClose,
+  error,
+}) {
+  const myVote = userId ? rushState?.gameVotes?.[userId] : null;
+  const opponentId = opponent?.id;
+  const oppVote = opponentId ? rushState?.gameVotes?.[opponentId] : null;
+  const bothVoted = !!myVote && !!oppVote;
+  const sameGame = bothVoted && String(myVote?.gameId) === String(oppVote?.gameId);
+
+  // Live deadline countdown — rushState.voteDeadline is ISO from the
+  // server; we render seconds-remaining based on Date.now() so it
+  // ticks even between polls.
+  const deadline = rushState?.voteDeadline ? new Date(rushState.voteDeadline).getTime() : null;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 200);
+    return () => clearInterval(t);
+  }, []);
+  const remaining = deadline ? Math.max(0, deadline - now) : null;
+  const remainingSec = remaining != null ? Math.ceil(remaining / 1000) : null;
+  const urgent = remainingSec != null && remainingSec <= 5;
+
+  const noLive = liveGames.length === 0;
+
+  return (
+    <div className="relative">
+      <style>{`
+        @keyframes rvCardIn {
+          0% { opacity: 0; transform: translateY(8px) scale(0.97); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes rvBadgePop {
+          0% { transform: scale(0); }
+          60% { transform: scale(1.18); }
+          100% { transform: scale(1); }
+        }
+        @keyframes rvUrgentPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+        @keyframes rvBoltSwing {
+          0%, 100% { transform: rotate(-8deg) scale(1); }
+          50% { transform: rotate(8deg) scale(1.1); }
+        }
+        .rv-card { animation: rvCardIn 220ms cubic-bezier(0.22,1,0.36,1) both; }
+        .rv-card:nth-child(1) { animation-delay: 30ms; }
+        .rv-card:nth-child(2) { animation-delay: 90ms; }
+        .rv-card:nth-child(3) { animation-delay: 150ms; }
+        .rv-badge { animation: rvBadgePop 280ms cubic-bezier(0.34,1.56,0.64,1) both; }
+        .rv-bolt { animation: rvBoltSwing 1.4s ease-in-out infinite; display: inline-block; transform-origin: center; }
+        .rv-urgent { animation: rvUrgentPulse 0.5s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .rv-card, .rv-badge, .rv-bolt, .rv-urgent { animation: none !important; }
+        }
+      `}</style>
+
+      {/* Header — mirrors the 'config' header so the popup keeps its
+          visual identity through the flow. Close button hands off to
+          /battle/rush/[id] (handled by parent's handleClose). */}
+      <div className="px-5 pt-5 pb-3">
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="min-w-0 flex items-center gap-2">
+            <span className="rv-bolt" aria-hidden="true" style={{ fontSize: 22 }}>⚡</span>
+            <div className="min-w-0">
+              <h2 className="font-black uppercase text-white" style={{ fontSize: 18, lineHeight: 1.05, letterSpacing: '0.06em', textShadow: '0 2px 0 #000' }}>
+                Pick a Game
+              </h2>
+              <p className="mt-0.5 font-extrabold uppercase" style={{ color: '#fbbf24', fontSize: 9, letterSpacing: '0.18em' }}>
+                Both vote — host wins ties
+              </p>
+            </div>
+          </div>
+          {remainingSec != null && (
+            <div
+              className={`text-base font-black tabular-nums px-3 py-1.5 rounded-full ${urgent ? 'rv-urgent' : ''}`}
+              style={{
+                background: urgent ? 'linear-gradient(180deg,#ef4444,#b91c1c)' : 'linear-gradient(180deg,#fbbf24,#d97706)',
+                color: '#0a0a0a',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 3px 0 #0a0a0a',
+              }}
+              aria-label={`${remainingSec} seconds to vote`}
+            >
+              {remainingSec}s
+            </div>
+          )}
+        </div>
+
+        {/* Player vote-status pills in their identity colors, so it's
+            unmistakable which check belongs to whom on a card below. */}
+        <div className="flex items-center gap-2 mt-2">
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+            style={{
+              background: myVote ? `linear-gradient(180deg,${SELF_COLOR},${SELF_COLOR_DEEP})` : 'rgba(255,255,255,0.05)',
+              color: myVote ? '#fff' : '#9ca3af',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: myVote ? `0 2px 0 #0a0a0a, 0 0 12px ${SELF_COLOR}66` : '0 2px 0 #0a0a0a',
+            }}
+          >
+            <span style={{ fontSize: 11 }}>{myVote ? '✓' : '○'}</span>
+            <span>You</span>
+          </span>
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+            style={{
+              background: oppVote ? `linear-gradient(180deg,${OPP_COLOR},${OPP_COLOR_DEEP})` : 'rgba(255,255,255,0.05)',
+              color: oppVote ? '#fff' : '#9ca3af',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: oppVote ? `0 2px 0 #0a0a0a, 0 0 12px ${OPP_COLOR}66` : '0 2px 0 #0a0a0a',
+            }}
+          >
+            <span style={{ fontSize: 11 }}>{oppVote ? '✓' : '○'}</span>
+            <span>Opp</span>
+          </span>
+          {bothVoted && (
+            <span
+              className="ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+              style={{
+                background: sameGame
+                  ? 'linear-gradient(180deg,#10b981,#047857)'
+                  : 'linear-gradient(180deg,#fb923c,#c2410c)',
+                color: '#fff',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 2px 0 #0a0a0a',
+              }}
+            >
+              {sameGame ? 'Locked!' : 'Host wins'}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Cards. We cap to 3 cartoon-themed live game cards — each shows
+          the away/home matchup, the live score in big type, and any
+          checkmark badges in the picker's identity color so the user
+          sees instantly whether the two of you agree. */}
+      <div className="px-5 pb-2 space-y-2.5">
+        {noLive && (
+          <div
+            className="rounded-2xl p-4 text-center"
+            style={{
+              background: 'linear-gradient(180deg,rgba(239,68,68,0.16),rgba(239,68,68,0.04))',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 4px 0 #0a0a0a',
+            }}
+          >
+            <div className="text-2xl mb-1" aria-hidden="true">⚡</div>
+            <div className="text-white font-extrabold text-sm mb-1">No live games right now</div>
+            <div className="text-[11px] text-gray-400 leading-snug">
+              Rush props come from a live game. Hang tight for tip-off — voting auto-resolves at the timer.
+            </div>
+          </div>
+        )}
+
+        {liveGames.map((g) => {
+          const gid = String(g.id);
+          const iPicked = String(myVote?.gameId) === gid;
+          const oppPicked = String(oppVote?.gameId) === gid;
+          const isPending = pendingVoteId === gid;
+          const disabled = !!myVote || !!pendingVoteId;
+          return (
+            <RushVoteCard
+              key={`${g.sport_key}::${gid}`}
+              game={g}
+              iPicked={iPicked}
+              oppPicked={oppPicked}
+              disabled={disabled}
+              loading={isPending}
+              onPick={() => onVote(g)}
+            />
+          );
+        })}
+      </div>
+
+      {error && (
+        <div className="px-5 pb-2 text-[11px] text-red-300 text-center">{error}</div>
+      )}
+
+      {bothVoted && (
+        <div className="px-5 pb-2">
+          <div
+            className="rounded-2xl px-3 py-2.5 text-center"
+            style={{
+              background: 'linear-gradient(180deg,rgba(16,185,129,0.18),rgba(16,185,129,0.04))',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 3px 0 #0a0a0a',
+            }}
+          >
+            <div className="text-[11px] uppercase tracking-wider font-extrabold text-emerald-300">
+              {sameGame ? 'Both locked the same game!' : 'Both locked in — host\u2019s pick wins'}
+            </div>
+            <div className="text-[10px] text-gray-400 mt-0.5">Generating 6 props…</div>
+          </div>
+        </div>
+      )}
+
+      <div className="px-5 pb-5 pt-1 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[10px] text-gray-500 hover:text-gray-300 underline underline-offset-2"
+        >
+          Open full match view
+        </button>
+        <div className="text-[10px] text-gray-600 font-mono">
+          {liveGames.length} live · max {RUSH_VOTE_GAME_LIMIT}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RushVoteCard({ game, iPicked, oppPicked, disabled, loading, onPick }) {
+  const home = game.home_team;
+  const away = game.away_team;
+  const hs = game?.scores?.home?.total ?? 0;
+  const as = game?.scores?.away?.total ?? 0;
+  const someonePicked = iPicked || oppPicked;
+
+  // Selected card glow blends the picker colors when both picked it,
+  // otherwise uses just the picker's color so the difference between
+  // "we agree" and "we disagree" is impossible to miss.
+  let glow = 'none';
+  let borderInset = 'transparent';
+  if (iPicked && oppPicked) {
+    glow = `0 4px 0 #0a0a0a, 0 0 22px ${SELF_COLOR}99, 0 0 22px ${OPP_COLOR}99`;
+    borderInset = `linear-gradient(135deg, ${SELF_COLOR}, ${OPP_COLOR})`;
+  } else if (iPicked) {
+    glow = `0 4px 0 #0a0a0a, 0 0 22px ${SELF_COLOR}99`;
+    borderInset = SELF_COLOR;
+  } else if (oppPicked) {
+    glow = `0 4px 0 #0a0a0a, 0 0 22px ${OPP_COLOR}99`;
+    borderInset = OPP_COLOR;
+  } else {
+    glow = '0 4px 0 #0a0a0a';
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={disabled || loading}
+      onClick={onPick}
+      className="rv-card w-full text-left rounded-2xl px-3.5 py-3 transition-transform active:scale-[0.98]"
+      style={{
+        background: someonePicked
+          ? 'linear-gradient(180deg,#1a1a1a,#0a0a0a)'
+          : 'linear-gradient(180deg,#141414,#0a0a0a)',
+        border: '2.5px solid #0a0a0a',
+        boxShadow: glow,
+        opacity: disabled && !someonePicked ? 0.55 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        position: 'relative',
+      }}
+    >
+      {/* Inner accent ring — gives selected cards a colored "second
+          border" without fighting the cartoon black outer border. */}
+      {someonePicked && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          style={{
+            background: typeof borderInset === 'string' && borderInset.startsWith('linear')
+              ? borderInset
+              : undefined,
+            backgroundColor: typeof borderInset === 'string' && !borderInset.startsWith('linear') ? borderInset : undefined,
+            padding: 2,
+            WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+          }}
+        />
+      )}
+
+      <div className="flex items-center justify-between gap-3 relative">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span
+              className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-md"
+              style={{
+                background: 'linear-gradient(180deg,#fbbf24,#d97706)',
+                color: '#1a0a00',
+                border: '2px solid #0a0a0a',
+                boxShadow: '0 2px 0 #0a0a0a',
+              }}
+            >
+              {game.sport_title || 'LIVE'}
+            </span>
+            {game.isLive && (
+              <span
+                className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-md inline-flex items-center gap-1"
+                style={{
+                  background: 'linear-gradient(180deg,#ef4444,#b91c1c)',
+                  color: '#fff',
+                  border: '2px solid #0a0a0a',
+                  boxShadow: '0 2px 0 #0a0a0a',
+                }}
+              >
+                <span
+                  style={{
+                    width: 5, height: 5, borderRadius: '50%',
+                    background: '#fff', boxShadow: '0 0 6px #fff',
+                  }}
+                />
+                LIVE
+              </span>
+            )}
+          </div>
+          <div className="text-white font-extrabold text-[13px] truncate" style={{ letterSpacing: '0.01em' }}>
+            {away}
+          </div>
+          <div className="text-gray-500 text-[10px] my-0.5 font-bold uppercase tracking-wider">vs</div>
+          <div className="text-white font-extrabold text-[13px] truncate" style={{ letterSpacing: '0.01em' }}>
+            {home}
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1.5 font-mono">
+            {game.formatted_time || game.status || 'In progress'}
+          </div>
+        </div>
+
+        {/* Big cartoon-style score block */}
+        <div
+          className="flex flex-col items-center justify-center px-3 py-2 rounded-xl shrink-0"
+          style={{
+            background: 'linear-gradient(180deg,#0c1a35,#050a15)',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 3px 0 #0a0a0a',
+            minWidth: 64,
+          }}
+        >
+          <div className="text-white font-black text-2xl tabular-nums leading-none">{as}</div>
+          <div className="text-gray-600 font-black text-[10px] my-0.5">—</div>
+          <div className="text-white font-black text-2xl tabular-nums leading-none">{hs}</div>
+        </div>
+      </div>
+
+      {/* Picker-colored checkmark badges — stacked when both players
+          chose the same game so the agree/disagree state is visible
+          at a glance. */}
+      {(iPicked || oppPicked) && (
+        <div className="flex items-center gap-1.5 mt-2.5">
+          {iPicked && (
+            <div
+              className="rv-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+              style={{
+                background: `linear-gradient(180deg,${SELF_COLOR},${SELF_COLOR_DEEP})`,
+                color: '#fff',
+                border: '2px solid #0a0a0a',
+                boxShadow: '0 2px 0 #0a0a0a',
+              }}
+            >
+              <span style={{ fontSize: 11 }}>✓</span>
+              <span>You</span>
+            </div>
+          )}
+          {oppPicked && (
+            <div
+              className="rv-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+              style={{
+                background: `linear-gradient(180deg,${OPP_COLOR},${OPP_COLOR_DEEP})`,
+                color: '#fff',
+                border: '2px solid #0a0a0a',
+                boxShadow: '0 2px 0 #0a0a0a',
+              }}
+            >
+              <span style={{ fontSize: 11 }}>✓</span>
+              <span>Opp</span>
+            </div>
+          )}
+          {loading && (
+            <div className="ml-auto text-[10px] text-gray-400 font-bold">Sending…</div>
+          )}
+        </div>
+      )}
+    </button>
+  );
+}
+
+function RushRulesSlide({ onClose }) {
+  const rules = [
+    { icon: '🏀', label: '6 quick props', sub: 'from your live game' },
+    { icon: '⏱️', label: '15s per question', sub: 'tap fast — clock runs hot' },
+    { icon: '🎯', label: 'Most correct wins', sub: 'tiebreak: fastest answers' },
+  ];
+  return (
+    <div className="relative">
+      <style>{`
+        @keyframes rrSlamIn {
+          0% { opacity: 0; transform: scale(0.7) translateY(20px); }
+          60% { opacity: 1; transform: scale(1.05) translateY(-2px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes rrRowIn {
+          0% { opacity: 0; transform: translateX(-12px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes rrBoltSwing {
+          0%, 100% { transform: rotate(-8deg) scale(1); }
+          50% { transform: rotate(8deg) scale(1.15); }
+        }
+        .rr-title { animation: rrSlamIn 360ms cubic-bezier(0.34,1.56,0.64,1) both; }
+        .rr-row { animation: rrRowIn 320ms cubic-bezier(0.22,1,0.36,1) both; }
+        .rr-row:nth-child(1) { animation-delay: 200ms; }
+        .rr-row:nth-child(2) { animation-delay: 320ms; }
+        .rr-row:nth-child(3) { animation-delay: 440ms; }
+        .rr-bolt { animation: rrBoltSwing 1.2s ease-in-out infinite; display: inline-block; }
+        @media (prefers-reduced-motion: reduce) {
+          .rr-title, .rr-row, .rr-bolt { animation: none !important; }
+        }
+      `}</style>
+
+      <div className="px-6 pt-7 pb-3 text-center">
+        <div className="rr-title inline-flex items-center gap-2 px-4 py-2 rounded-2xl"
+          style={{
+            background: `linear-gradient(180deg,#fbbf24,#d97706)`,
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(251,191,36,0.45)',
+          }}
+        >
+          <span className="rr-bolt" aria-hidden="true" style={{ fontSize: 24 }}>⚡</span>
+          <h2 className="font-black uppercase" style={{ color: '#1a0a00', fontSize: 22, letterSpacing: '0.08em' }}>
+            How Rush Works
+          </h2>
+        </div>
+        <p className="mt-3 text-[11px] text-gray-400 font-bold uppercase tracking-widest">
+          Get ready — locks in 3 seconds
+        </p>
+      </div>
+
+      <div className="px-5 pb-5 space-y-2.5">
+        {rules.map((r, i) => (
+          <div
+            key={i}
+            className="rr-row flex items-center gap-3 p-3 rounded-2xl"
+            style={{
+              background: 'linear-gradient(180deg,#141414,#0a0a0a)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 3px 0 #0a0a0a',
+            }}
+          >
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{
+                background: 'linear-gradient(180deg,#0c1a35,#050a15)',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 2px 0 #0a0a0a',
+                fontSize: 22,
+              }}
+              aria-hidden="true"
+            >
+              {r.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-white font-extrabold text-sm">{r.label}</div>
+              <div className="text-gray-500 text-[11px] mt-0.5">{r.sub}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="px-5 pb-5 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[10px] text-gray-500 hover:text-gray-300 underline underline-offset-2"
+        >
+          Open full match view
+        </button>
+        <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-amber-300 uppercase tracking-wider">
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }} />
+          Starting…
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RushCountdownSlide({ num }) {
+  // num: 3, 2, 1, then 0 (rendered as "GO!"). Each tick is its own
+  // mount/unmount so the slam-in animation re-fires every second.
+  const isGo = num === 0;
+  const display = isGo ? 'GO!' : String(num);
+  const accent = isGo ? '#10b981' : num === 1 ? '#ef4444' : num === 2 ? '#fbbf24' : SELF_COLOR;
+
+  return (
+    <div className="relative">
+      <style>{`
+        @keyframes rcSlam {
+          0% { opacity: 0; transform: scale(0.2) rotate(-12deg); filter: blur(8px); }
+          50% { opacity: 1; transform: scale(1.25) rotate(6deg); filter: blur(0); }
+          80% { transform: scale(0.92) rotate(-3deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
+        }
+        @keyframes rcRing {
+          0% { opacity: 0.7; transform: scale(0.6); }
+          100% { opacity: 0; transform: scale(2.2); }
+        }
+        @keyframes rcGoFlash {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+        .rc-num { animation: rcSlam 360ms cubic-bezier(0.34,1.56,0.64,1) both; }
+        .rc-ring { animation: rcRing 700ms ease-out both; }
+        .rc-go-glow { animation: rcGoFlash 0.5s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .rc-num, .rc-ring, .rc-go-glow { animation: none !important; }
+        }
+      `}</style>
+
+      <div className="py-12 px-6 flex flex-col items-center justify-center" style={{ minHeight: 320 }}>
+        <p className="text-[11px] text-gray-400 font-extrabold uppercase tracking-widest mb-6">
+          {isGo ? 'Lock in!' : 'Get ready'}
+        </p>
+        <div className="relative flex items-center justify-center" style={{ width: 220, height: 220 }}>
+          {/* Expanding ring on each tick */}
+          <div
+            key={`ring-${num}`}
+            className="rc-ring absolute inset-0 rounded-full"
+            style={{
+              border: `4px solid ${accent}`,
+              boxShadow: `0 0 32px ${accent}`,
+            }}
+            aria-hidden="true"
+          />
+          {/* Glow disc behind the digit */}
+          <div
+            className={isGo ? 'rc-go-glow absolute inset-6 rounded-full' : 'absolute inset-6 rounded-full'}
+            style={{
+              background: `radial-gradient(circle, ${accent}55 0%, transparent 70%)`,
+            }}
+            aria-hidden="true"
+          />
+          {/* Big slam digit */}
+          <div
+            key={`num-${num}`}
+            className="rc-num font-black tabular-nums select-none"
+            style={{
+              fontSize: isGo ? 84 : 132,
+              lineHeight: 1,
+              color: '#fff',
+              textShadow: `0 4px 0 #0a0a0a, 0 0 28px ${accent}, 0 0 60px ${accent}88`,
+              letterSpacing: isGo ? '0.04em' : 0,
+            }}
+          >
+            {display}
+          </div>
+        </div>
+        <p className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest mt-8">
+          {isGo ? 'Loading match…' : 'Rush · 6 props · 15s each'}
+        </p>
+      </div>
+    </div>
   );
 }
