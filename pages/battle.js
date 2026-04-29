@@ -1882,7 +1882,73 @@ export default function BattlePage() {
             </div>
           )}
 
+          {/* Slim active-battle banner. The full hero VS card already lives
+              on the dashboard; here we just want a single compact strip that
+              tells the user "you're in a battle" and gets out of the way of
+              the social feed below. */}
           {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (() => {
+            const startBal = parseFloat(activeMatchup.startingBalance || 0);
+            const myBal = matchupData?.myBalance ?? startBal;
+            const oppBal = matchupData?.opponentBalance ?? startBal;
+            const opp = matchupData?.opponent;
+            const oppName = opp?.username || opp?.displayName || 'Opponent';
+            const oppAvatar = opp?.avatar;
+            const oppFrameId = opp?.equippedFrame;
+            const endsAt = activeMatchup.endsAt;
+            const timeLeft = endsAt ? Math.max(0, new Date(endsAt).getTime() - Date.now()) : null;
+            const winning = myBal > oppBal;
+            const losing = myBal < oppBal;
+            const formatTime = (ms) => {
+              if (!ms || ms <= 0) return 'Ended';
+              const s = Math.floor(ms / 1000);
+              const m = Math.floor(s / 60);
+              const h = Math.floor(m / 60);
+              const d = Math.floor(h / 24);
+              if (d > 0) return `${d}d ${h % 24}h left`;
+              if (h > 0) return `${h}h ${m % 60}m left`;
+              if (m > 0) return `${m}m left`;
+              return `${s}s left`;
+            };
+
+            return (
+              <div
+                className="mb-4 rounded-xl overflow-hidden cursor-pointer flex items-center gap-3 px-3 py-2.5 max-w-[1080px] mx-auto"
+                style={{ backgroundColor: '#0d0d0d', border: '1px solid rgba(34,197,94,0.25)' }}
+                onClick={() => router.push('/')}
+                role="button"
+                aria-label="You're in a live battle — go to dashboard"
+              >
+                <span className="inline-flex items-center gap-1.5 flex-shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-green-400">Live battle</span>
+                </span>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <FramedAvatar
+                    avatar={oppAvatar}
+                    username={oppName}
+                    frameId={oppFrameId}
+                    size={28}
+                    bgColor="#1a1a1a"
+                    isOnline={!!opp?.isOnline && opp?.isReal !== false}
+                    onlineDotBorderColor="#0d0d0d"
+                  />
+                  <div className="min-w-0 text-[12px] truncate" style={{ color: textPrimary }}>
+                    vs <span className="font-semibold">{oppName}</span>
+                    <span className={`ml-2 font-semibold ${winning ? 'text-green-400' : losing ? 'text-red-400' : 'text-gray-400'}`}>
+                      ${formatMoney(myBal, 0)} – ${formatMoney(oppBal, 0)}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] flex-shrink-0" style={{ color: textSecondary }}>{formatTime(timeLeft)}</span>
+                <span className="text-blue-400 text-[11px] font-semibold flex-shrink-0 hidden sm:inline">Go to Dashboard →</span>
+              </div>
+            );
+          })()}
+
+          {/* DEAD CODE BELOW — left in place to avoid renumbering during this
+              redesign pass; the remaining IIFE branches are guarded by an
+              always-false condition so the bundler tree-shakes them. */}
+          {false && activeMatchup && (() => {
             const startBal = parseFloat(activeMatchup.startingBalance || 0);
             const myBal = matchupData?.myBalance ?? startBal;
             const oppBal = matchupData?.opponentBalance ?? startBal;
