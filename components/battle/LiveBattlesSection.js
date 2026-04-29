@@ -2644,11 +2644,43 @@ function YouVsCard({
                 </div>
               </div>
 
+              {/* Center fill — when sibling cards in the same row
+                  expand (showing player picks), this card stretches
+                  to match. Without a flex-1 middle, the area between
+                  the fighter row and the prize plate grows into a
+                  large empty void. This block absorbs that space and
+                  surfaces the live time-remaining as a hero callout
+                  so the middle reads as intentional, not broken.
+                  When the card is at its short minHeight (no sibling
+                  expansion), the block collapses gracefully because
+                  min-h-0 lets flex-1 shrink below content size. */}
+              <div className="relative flex flex-1 flex-col items-center justify-center gap-0.5 px-3 min-h-0">
+                <span
+                  className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em]"
+                  style={{ color: 'rgba(167, 243, 208, 0.85)' }}
+                >
+                  Time Left
+                </span>
+                <span
+                  className="text-xl sm:text-3xl font-black leading-none tabular-nums whitespace-nowrap"
+                  style={{
+                    color: '#fff',
+                    WebkitTextStroke: '1.25px #0d0d0d',
+                    textShadow:
+                      '2px 2px 0 #0d0d0d, 0 0 18px rgba(16,185,129,0.45)',
+                    letterSpacing: '-0.01em',
+                    fontFamily: 'Impact, "Arial Black", sans-serif',
+                  }}
+                >
+                  {timeLeftMs > 0 ? formatTimeRemaining(timeLeftMs) : 'LIVE'}
+                </span>
+              </div>
+
               {/* Prize plate — pot styled as a prize callout so a
                   glance reads "this match is worth $X". Falls back to
                   a green "Live now" plate if no pot data is available
                   so the bottom of the arena is never empty. */}
-              <div className="relative flex justify-center mt-auto pb-2 pt-1.5">
+              <div className="relative flex justify-center pb-2 pt-1.5">
                 {pot != null ? (
                   <div
                     className="hero-prize relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
