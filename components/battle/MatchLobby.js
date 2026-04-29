@@ -9,6 +9,40 @@ const MODE_THEMES = {
   tournament: { color: '#10b981', rgb: '16,185,129', label: 'TOURNAMENT', icon: '👑' },
 };
 
+// Mode-specific pregame walkthrough — surfaced in the lobby so the
+// player knows what to expect once the countdown hits zero. Each entry
+// is intentionally short (3 bullets, ≤ 1 line each) so it never pushes
+// the countdown below the fold on small screens.
+const MODE_EXPLAINERS = {
+  rush: {
+    headline: 'How Rush works',
+    subline: 'Speed + instinct. No bets.',
+    bullets: [
+      { icon: '🎯', text: '6 props from one live game' },
+      { icon: '⏱️', text: '15s per question · server clock' },
+      { icon: '🏁', text: 'Most correct wins · ties go to fastest' },
+    ],
+  },
+  original: {
+    headline: 'How Original works',
+    subline: 'Bigger bankroll wins the day.',
+    bullets: [
+      { icon: '💰', text: 'Start with 10,000 coins each' },
+      { icon: '🧠', text: 'Bet today\u2019s slate · any sport' },
+      { icon: '🏆', text: 'Highest balance at the end takes it' },
+    ],
+  },
+  tournament: {
+    headline: 'How Tournament works',
+    subline: '3-day grind, biggest pot.',
+    bullets: [
+      { icon: '👑', text: '100,000 starting coins · big leagues' },
+      { icon: '📅', text: '3 days of bets across the slate' },
+      { icon: '🥇', text: 'Highest balance after day 3 wins' },
+    ],
+  },
+};
+
 function getGameMode(matchup) {
   if (matchup?.durationType) return matchup.durationType;
   const dm = matchup?.durationMinutes;
@@ -244,6 +278,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
 
   const mode = getGameMode(matchup);
   const theme = MODE_THEMES[mode] || MODE_THEMES.original;
+  const explainer = MODE_EXPLAINERS[mode] || MODE_EXPLAINERS.original;
 
   const buyIn = matchup.startingBalance || (isUser1 ? matchup.user1Balance : matchup.user2Balance);
   const potSize = matchup.potSize;
@@ -499,6 +534,55 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
               <span className="text-[10px] mt-2 font-extrabold uppercase tracking-wider" style={{ color: '#0a0a0a' }}>🏆 Winner takes all · 10% fee 🏆</span>
             </div>
           </div>
+
+          {!showBattle && explainer && (
+            <div
+              className="lobby-prize mb-5 mx-auto text-left rounded-2xl px-4 py-3.5"
+              style={{
+                maxWidth: 420,
+                background: `linear-gradient(180deg, rgba(${theme.rgb},0.16) 0%, rgba(10,10,10,0.55) 100%)`,
+                border: '2.5px solid #0a0a0a',
+                boxShadow: `0 4px 0 #0a0a0a, 0 0 24px rgba(${theme.rgb},0.18)`,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <span
+                  className="inline-flex items-center justify-center rounded-lg text-base"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    background: `linear-gradient(180deg, ${theme.color}, rgba(${theme.rgb},0.7))`,
+                    border: '2px solid #0a0a0a',
+                    boxShadow: '0 2px 0 #0a0a0a',
+                  }}
+                >
+                  {theme.icon}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div
+                    className="text-[13px] md:text-sm font-black text-white leading-tight truncate"
+                    style={{ textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}
+                  >
+                    {explainer.headline}
+                  </div>
+                  <div className="text-[10px] md:text-[11px] font-bold text-gray-300 leading-tight truncate" style={{ letterSpacing: '0.02em' }}>
+                    {explainer.subline}
+                  </div>
+                </div>
+              </div>
+              <ul className="space-y-1 mt-2">
+                {explainer.bullets.map((b, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 text-[11px] md:text-[12px] font-semibold text-gray-100 leading-snug"
+                  >
+                    <span className="shrink-0" style={{ width: 16, textAlign: 'center' }}>{b.icon}</span>
+                    <span className="flex-1">{b.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {!showBattle && (
             <div className="mb-4 flex flex-col items-center">
