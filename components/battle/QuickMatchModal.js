@@ -287,7 +287,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
 
       if (cancelledRef.current) return;
 
-      if (attempts < 16) {
+      // Scan real eligible players for ~16s (8 polls × 2s) before
+      // handing off to the bot pool. Combined with the initial 2s
+      // wait this keeps total wait under 20s as designed.
+      if (attempts < 8) {
         pollRef.current = setTimeout(poll, 2000);
       } else {
         try {
@@ -749,11 +752,90 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
             </>
           )}
 
-          {step === 'searching' && (
+          {step === 'searching' && (() => {
+            // Mode-themed searching container — every accent color
+            // (banner, opponent glow, phase pill, payout card, loading
+            // dots, footer timer) is derived from the selected mode so
+            // the loader visually matches the mode the user picked.
+            const modeColor = selectedMode?.color || '#3b82f6';
+            const mHex = modeColor.replace('#', '');
+            const mR = parseInt(mHex.substring(0, 2), 16);
+            const mG = parseInt(mHex.substring(2, 4), 16);
+            const mB = parseInt(mHex.substring(4, 6), 16);
+            const modeGlow = `rgba(${mR},${mG},${mB},0.45)`;
+            const modeTint = `rgba(${mR},${mG},${mB},0.18)`;
+            const modeSoft = `rgba(${mR},${mG},${mB},0.06)`;
+            const modeStrong = `rgba(${mR},${mG},${mB},0.65)`;
+
+            // Phase derived from elapsed seconds so the user always
+            // sees forward motion: scanning real players → expanding
+            // the net → bringing in a challenger from the bot pool.
+            // Aligns with the polling logic above (~16s real scan,
+            // then bot fallback).
+            let phase;
+            if (searchTime < 8) {
+              phase = { label: 'Scanning live players', dotColor: '#10b981' };
+            } else if (searchTime < 15) {
+              phase = { label: 'Expanding the net', dotColor: '#22d3ee' };
+            } else {
+              phase = { label: 'Bringing in a challenger', dotColor: '#fbbf24' };
+            }
+
+            return (
             <div className="relative overflow-hidden" style={{
-              background: 'transparent',
+              background: `radial-gradient(ellipse at top, ${modeSoft} 0%, transparent 60%)`,
             }}>
-              <div className="flex items-center justify-center gap-4 md:gap-8 relative px-4" style={{ minHeight: '280px' }}>
+              {/* Cartoon mode banner — anchors the loader to the mode
+                  and surfaces buy-in + max payout up top so there's
+                  no negative space at the start of the popup. */}
+              <div className="px-4 pt-4 pb-3">
+                <div
+                  className="rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2"
+                  style={{
+                    background: `linear-gradient(180deg, ${modeTint}, ${modeSoft})`,
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: `0 4px 0 #0a0a0a, 0 0 18px ${modeStrong}`,
+                  }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-base"
+                      style={{
+                        background: `linear-gradient(180deg, ${modeColor}, ${modeColor}cc)`,
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 2px 0 #0a0a0a',
+                      }}
+                      aria-hidden="true"
+                    >
+                      {selectedMode?.icon}
+                    </span>
+                    <div className="min-w-0">
+                      <div
+                        className="text-[9px] font-extrabold uppercase tracking-[0.2em] truncate"
+                        style={{ color: modeColor }}
+                      >
+                        {selectedMode?.label} Match
+                      </div>
+                      <div className="text-white text-[11px] font-extrabold truncate">
+                        ${buyIn} Buy-In · ${potSize} Pot
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="flex flex-col items-end px-2.5 py-1 rounded-xl flex-shrink-0"
+                    style={{
+                      background: '#0a0a0a',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
+                    }}
+                  >
+                    <span className="text-[8px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#9ca3af' }}>Win Up To</span>
+                    <span className="text-white text-sm font-black leading-none">${payout}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-4 md:gap-8 relative px-4" style={{ minHeight: '220px' }}>
                 <div className="flex flex-col items-center justify-center">
                   <div className="relative mb-2">
                     <div
@@ -818,13 +900,16 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 <div className="flex flex-col items-center justify-center">
                   <div className="relative mb-2" style={{ perspective: '400px' }}>
                     <div
-                      className="absolute -inset-3 rounded-full border border-orange-500/20"
-                      style={{ animation: 'qm-ring-spin 3s linear infinite' }}
+                      className="absolute -inset-3 rounded-full"
+                      style={{
+                        border: `1px solid ${modeGlow}`,
+                        animation: 'qm-ring-spin 3s linear infinite',
+                      }}
                     />
                     <div
                       className="absolute -inset-3 rounded-full"
                       style={{
-                        background: 'conic-gradient(from 0deg, transparent 0deg, rgba(251,146,60,0.25) 40deg, transparent 80deg)',
+                        background: `conic-gradient(from 0deg, transparent 0deg, ${modeStrong} 40deg, transparent 80deg)`,
                         animation: 'qm-ring-spin 2s linear infinite',
                       }}
                     />
@@ -840,14 +925,13 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                         style={{
                           border: '3.5px solid #0a0a0a',
                           background: th.avatarBg2,
-                          boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(251,146,60,0.45), inset 0 0 0 2.5px #fb923c',
-                          animation: 'qm-opp-glow 2s ease-in-out infinite',
+                          boxShadow: `0 3px 0 #0a0a0a, 0 0 22px ${modeGlow}, inset 0 0 0 2.5px ${modeColor}`,
                         }}
                       >
                         {currentAvatar ? (
                           <img src={currentAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-2xl md:text-3xl text-orange-300/60">?</span>
+                          <span className="text-2xl md:text-3xl" style={{ color: modeColor, opacity: 0.6 }}>?</span>
                         )}
                       </div>
                     </div>
@@ -865,7 +949,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                       >
                         {currentName}
                       </p>
-                      <p className="text-orange-300 text-[10px] font-extrabold mt-1" style={{ letterSpacing: '0.1em' }}>({currentRecord})</p>
+                      <p className="text-[10px] font-extrabold mt-1" style={{ color: modeColor, letterSpacing: '0.1em' }}>({currentRecord})</p>
                     </div>
                   ) : (
                     <p
@@ -884,8 +968,9 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     {[0, 1, 2].map(i => (
                       <div
                         key={i}
-                        className="w-1 h-1 rounded-full bg-orange-400"
+                        className="w-1 h-1 rounded-full"
                         style={{
+                          backgroundColor: modeColor,
                           animation: 'qm-bolt-flicker 1s ease-in-out infinite',
                           animationDelay: `${i * 0.25}s`,
                         }}
@@ -895,27 +980,32 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 </div>
               </div>
 
-              <div className="text-center pb-2 pt-1 px-4">
-                <div className="flex items-center justify-center gap-1 mb-2">
-                  <span className="text-[10px]">{selectedMode?.icon}</span>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{selectedMode?.label}</span>
-                </div>
+              {/* Phase status pill — gives the user feedback that the
+                  matchmaker is doing something specific (vs. a generic
+                  spinner) and visibly progresses through phases so the
+                  wait feels short. */}
+              <div className="px-4 pt-2 pb-1 flex justify-center">
                 <div
-                  className="inline-flex flex-col items-center rounded-2xl px-6 py-2"
+                  key={phase.label}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
                   style={{
-                    background: 'linear-gradient(180deg, #f59e0b 0%, #b45309 100%)',
+                    background: 'linear-gradient(180deg,#111,#0a0a0a)',
                     border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 4px 0 #0a0a0a, 0 0 24px rgba(250,204,21,0.28)',
+                    boxShadow: '0 3px 0 #0a0a0a',
+                    animation: 'qm-tip-fade-in 0.3s ease-out',
                   }}
                 >
-                  <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] mb-0.5" style={{ color: '#0a0a0a' }}>Win Up To</span>
                   <span
-                    className="text-2xl md:text-3xl font-black leading-none text-white"
+                    className="w-2 h-2 rounded-full"
                     style={{
-                      textShadow: '0 2px 0 #0a0a0a, 0 0 18px rgba(255,255,255,0.18)',
+                      backgroundColor: phase.dotColor,
+                      boxShadow: `0 0 8px ${phase.dotColor}`,
+                      animation: 'qm-bolt-flicker 0.9s ease-in-out infinite',
                     }}
-                  >
-                    ${payout}
+                    aria-hidden="true"
+                  />
+                  <span className="text-white text-[11px] font-extrabold uppercase" style={{ letterSpacing: '0.14em' }}>
+                    {phase.label}
                   </span>
                 </div>
               </div>
@@ -946,8 +1036,17 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     boxShadow: '0 2px 0 #0a0a0a',
                   }}
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  <span className="text-cyan-300 text-[11px] font-extrabold font-mono" style={{ animation: 'qm-timer-tick 1s ease-in-out infinite' }}>
+                  <div
+                    className="w-1.5 h-1.5 rounded-full animate-pulse"
+                    style={{ backgroundColor: modeColor }}
+                  />
+                  <span
+                    className="text-[11px] font-extrabold font-mono"
+                    style={{
+                      color: modeColor,
+                      animation: 'qm-timer-tick 1s ease-in-out infinite',
+                    }}
+                  >
                     {searchTime}s
                   </span>
                 </div>
@@ -965,7 +1064,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 </button>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {step === 'found' && (
             <div className="relative overflow-hidden" style={{
