@@ -378,8 +378,8 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
           transition: 'border-color 200ms ease',
         }}
       >
-        <div className="p-2 sm:p-3.5 flex flex-col flex-1">
-          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+        <div className="p-1.5 sm:p-2.5 flex flex-col flex-1">
+          <div className="flex items-center justify-between mb-1 sm:mb-1.5">
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-green-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
@@ -389,7 +389,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
               <span className="text-gray-600 text-[10px]">{formatTimeRemaining(timeLeft)}</span>
             </div>
           </div>
-          <div className="flex items-center justify-between mb-1.5 sm:mb-3">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
               <PlayerAvatar user={user1} isWinning={user1Winning} size={40} bgColor="#1e40af" />
               <div className="min-w-0">
@@ -426,7 +426,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
           </div>
 
           {picks ? (
-            <div className="flex gap-1 mb-1 sm:mb-2" style={{ minHeight: '32px' }}>
+            <div className="flex gap-1 mb-0.5 sm:mb-1" style={{ minHeight: '24px' }}>
               <div className="flex-1 min-w-0">
                 {picks.user1.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
               </div>
@@ -436,12 +436,12 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
               </div>
             </div>
           ) : picksLocked ? (
-            <div className="mb-1 sm:mb-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '32px' }}>
+            <div className="mb-0.5 sm:mb-1 flex items-center gap-1.5 px-2 py-1 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '24px' }}>
               <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
               <span className="text-[9px] text-gray-500 truncate">{onlyUser1 ? `${user1.username || 'P1'} locked` : `${user2.username || 'P2'} locked`} · awaiting other</span>
             </div>
           ) : (
-            <div className="mb-1 sm:mb-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '32px' }}>
+            <div className="mb-0.5 sm:mb-1 flex items-center gap-1.5 px-2 py-1 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '24px' }}>
               <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
               <span className="text-[9px] text-gray-500">Awaiting picks...</span>
             </div>
@@ -500,13 +500,13 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
             }
             if (chips.length === 0) return null;
             return (
-              <div className="flex items-center gap-1.5 flex-wrap mb-1 sm:mb-2" style={{ minHeight: 22 }}>
+              <div className="flex items-center gap-1.5 flex-wrap mb-0.5 sm:mb-1" style={{ minHeight: 18 }}>
                 {chips}
               </div>
             );
           })()}
 
-          <div className="mt-auto pt-1 sm:pt-1.5">
+          <div className="mt-auto pt-0.5 sm:pt-1">
             {(() => {
               const startedAgo = formatStartedAgo(battle.startsAt);
               const u1Record = formatBattleRecord(user1);
@@ -2254,8 +2254,8 @@ function YouVsCard({
           }
         }
       `}</style>
-      <div className="p-2 sm:p-3.5 flex flex-col flex-1">
-        <div className="flex items-center justify-between mb-1.5 sm:mb-3">
+      <div className="p-1.5 sm:p-2.5 flex flex-col flex-1">
+        <div className="flex items-center justify-between mb-1 sm:mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
               className="text-[9px] font-extrabold uppercase tracking-[0.18em] px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
@@ -2295,7 +2295,7 @@ function YouVsCard({
           // The elapsed-seconds counter stays in the card header
           // (driven by `searchTimer` -> `metaRight`).
           <div
-            className="relative flex flex-1 flex-col items-center justify-center text-center py-2 sm:py-3 select-none min-h-0 sm:min-h-[160px] overflow-hidden"
+            className="relative flex flex-1 flex-col items-center justify-center text-center py-1.5 sm:py-2 select-none min-h-0 sm:min-h-[112px] overflow-hidden"
           >
             {/* Background flair — pulsing rings, swooshes, confetti,
                 sparkles. Pure presentation; no semantics. */}
@@ -2475,9 +2475,9 @@ function YouVsCard({
           // degrade under prefers-reduced-motion via the styles above.
           <>
             <div
-              className="hero-arena relative flex flex-col flex-1 mt-0.5 mb-1.5 sm:mb-2 rounded-lg overflow-hidden"
+              className="hero-arena relative flex flex-col flex-1 mt-0.5 mb-1 sm:mb-1.5 rounded-lg overflow-hidden"
               style={{
-                minHeight: 138,
+                minHeight: 100,
                 background:
                   'radial-gradient(120% 90% at 50% 35%, rgba(16,185,129,0.30) 0%, rgba(6,182,212,0.16) 35%, rgba(13,13,13,0) 70%), radial-gradient(80% 60% at 50% 100%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%), linear-gradient(180deg, #0a1413 0%, #050a0c 100%)',
                 border: '1.5px solid rgba(16,185,129,0.35)',
@@ -2512,7 +2512,7 @@ function YouVsCard({
               <div className="hero-sweep absolute inset-0 pointer-events-none" aria-hidden="true" />
 
               {/* Fighter row */}
-              <div className="relative flex items-start justify-between gap-1 px-2 pt-2.5 sm:pt-3">
+              <div className="relative flex items-start justify-between gap-1 px-2 pt-1.5 sm:pt-2">
                 {/* You — emerald/cyan corner */}
                 <div className="flex flex-col items-center min-w-0 flex-1">
                   <div className="relative" style={{ width: 64, height: 64 }}>
@@ -2681,7 +2681,7 @@ function YouVsCard({
                   glance reads "this match is worth $X". Falls back to
                   a green "Live now" plate if no pot data is available
                   so the bottom of the arena is never empty. */}
-              <div className="relative flex justify-center pb-2 pt-1.5">
+              <div className="relative flex justify-center pb-1.5 pt-1">
                 {pot != null ? (
                   <div
                     className="hero-prize relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
@@ -2889,7 +2889,7 @@ function YouVsCard({
           // per the task contract. Active state has its own hero
           // branch above.
           <>
-            <div className="flex items-center justify-between mb-1.5 sm:mb-3">
+            <div className="flex items-center justify-between mb-1 sm:mb-2">
               <div className="flex items-center gap-2.5 flex-1 min-w-0">
                 <PlayerAvatar user={youUser} isWinning={false} size={40} bgColor="#1e40af" />
                 <div className="min-w-0">
@@ -2961,7 +2961,7 @@ function YouVsCard({
               </div>
             </div>
 
-            <div className="h-1 rounded-full overflow-hidden mb-1 sm:mb-2 mt-auto" style={{ background: '#1a1a1a' }}>
+            <div className="h-1 rounded-full overflow-hidden mb-0.5 sm:mb-1 mt-auto" style={{ background: '#1a1a1a' }}>
               <div
                 className="h-full rounded-full transition-all duration-1000"
                 style={{
