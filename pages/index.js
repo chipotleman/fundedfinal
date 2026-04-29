@@ -12,6 +12,10 @@ import PoolContainer from '../components/PoolContainer';
 import ReferralBonusContainer from '../components/ReferralBonusContainer';
 import MostSharedBadgeContainer from '../components/MostSharedBadgeContainer';
 import RushExplainerContainer from '../components/RushExplainerContainer';
+import PickBattlesContainer from '../components/PickBattlesContainer';
+import PremiumDiscordContainer from '../components/PremiumDiscordContainer';
+import FreePickContainer from '../components/FreePickContainer';
+import TopCappersContainer from '../components/TopCappersContainer';
 import PromoCarousel from '../components/PromoCarousel';
 import { DEFAULT_PROMO_SLOTS, normalizePromoSlots } from '../lib/promoSlots';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
@@ -171,6 +175,10 @@ export default function Dashboard() {
       referral: () => <ReferralBonusContainer />,
       most_shared_badge: () => <MostSharedBadgeContainer />,
       rush_explainer: () => <RushExplainerContainer />,
+      pick_battles: () => <PickBattlesContainer />,
+      premium_discord: () => <PremiumDiscordContainer />,
+      free_pick: () => <FreePickContainer />,
+      top_cappers: () => <TopCappersContainer />,
       empty: () => null,
     };
     return promoSlots

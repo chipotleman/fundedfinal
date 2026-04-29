@@ -157,7 +157,7 @@ export default function AdminSettings() {
             Promo Slots
           </h2>
           <p className="text-gray-400 text-sm mb-6">
-            Configure the four promo containers that auto-rotate at the top of the dashboard. Disabled or empty slots are skipped.
+            Configure the promo containers that auto-rotate at the top of the dashboard. Disabled or empty slots are skipped.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {settings.promoSlots.map((slot, idx) => (
