@@ -614,9 +614,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                               : {
                                   backgroundColor: '#111',
                                   border: '2.5px solid #0a0a0a',
-                                  boxShadow: rushLive
-                                    ? `0 3px 0 #0a0a0a, 0 0 12px ${glow}`
-                                    : '0 3px 0 #0a0a0a',
+                                  boxShadow: '0 3px 0 #0a0a0a',
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 88,
