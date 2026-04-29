@@ -10,7 +10,9 @@ export default function FreePickContainer() {
 
   const handleClick = () => {
     haptic.tap();
-    router.push('/marketplace');
+    if (typeof window !== 'undefined') {
+      window.open('https://instagram.com/piks', '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (

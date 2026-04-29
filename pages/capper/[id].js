@@ -111,10 +111,14 @@ export default function CapperProfile() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Capper Not Found</h1>
           <button
-            onClick={() => router.push('/marketplace')}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.open('https://instagram.com/piks', '_blank', 'noopener,noreferrer');
+              }
+            }}
             className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700"
           >
-            Back to Marketplace
+            Follow @piks on Instagram
           </button>
         </div>
       </div>
