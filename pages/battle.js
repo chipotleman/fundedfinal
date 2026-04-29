@@ -25,6 +25,7 @@ import { formatLastSeen } from '../utils/relativeTime';
 import { readBattleResult, clearBattleResult } from '../utils/battleResultCache';
 import { readLastBuyIn, fetchLastBuyIn, saveLastBuyIn } from '../utils/lastBattleBuyIn';
 import { getBattleStreamClient } from '../lib/battleStreamClient';
+import { navigateToBattleStart } from '../lib/battleStartNavigation';
 
 function UserAvatar({ user, size = 'md' }) {
   const sizeMap = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-12 h-12 text-base' };
@@ -52,15 +53,12 @@ export default function BattlePage() {
   // Rush mode is a dedicated 6-question mini-game with its own gameplay
   // page at /battle/rush/[id]. The original/tournament modes drop the
   // user back on the dashboard (`/?battleStarted=true`) where they place
-  // bets that resolve the matchup. This helper picks the right destination
-  // based on the matchup's mode so every "battle started" navigation in
-  // this file stays consistent.
+  // bets that resolve the matchup. The shared helper in lib/battle-
+  // StartNavigation picks the right destination so every "battle started"
+  // navigation across the whole app stays consistent — see that file for
+  // the full list of call sites.
   const navigateAfterBattleStart = useCallback((matchup) => {
-    if (matchup?.durationType === 'rush' && matchup?.id) {
-      router.push(`/battle/rush/${matchup.id}`);
-    } else {
-      router.push('/?battleStarted=true');
-    }
+    navigateToBattleStart(router, matchup);
   }, [router]);
   const { data: session, status } = useSession();
   const { matchup: globalMatchup, matchupData: globalMatchupData, hasActiveMatchup: globalHasActive, isWaiting: globalIsWaiting, hasAnyMatchup: globalHasAny, refresh: refreshGlobalMatchup } = useMatchup();
@@ -909,10 +907,11 @@ export default function BattlePage() {
     refreshGlobalMatchup();
     // The rematch path always re-creates a matchup of the SAME mode as
     // the original, so the rush-aware nav helper handles routing here too.
+    // When the rematch payload is missing entirely, the helper still falls
+    // back to the dashboard, keeping the original-mode default.
     const newMatchup = rematchState?.rematchMatchup || (showResult?.durationType === 'rush' ? { id: rematchState?.rematchMatchupId, durationType: 'rush' } : null);
     setTimeout(() => {
-      if (newMatchup) navigateAfterBattleStart(newMatchup);
-      else router.push('/?battleStarted=true');
+      navigateAfterBattleStart(newMatchup);
     }, 400);
   }, [rematchState?.rematchMatchupId, rematchState?.rematchMatchup, showResult?.durationType, navigateAfterBattleStart, router, refreshGlobalMatchup]);
 

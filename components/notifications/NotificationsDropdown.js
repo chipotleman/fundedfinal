@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useNotifications } from '../../contexts/NotificationsContext';
+import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import UserAvatar from '../UserAvatar';
 import { formatMoney } from '../../utils/formatMoney';
 import { cacheBattleResult } from '../../utils/battleResultCache';
@@ -147,7 +148,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                       onClick={() => wrap(inv.id, async () => {
                         const data = await ctx.acceptInvite(inv.id);
                         onClose?.();
-                        if (data) router.push('/?battleStarted=true');
+                        if (data) navigateToBattleStart(router, data.matchup);
                       })}
                       className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
                       style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}

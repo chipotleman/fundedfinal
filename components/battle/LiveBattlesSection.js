@@ -11,6 +11,7 @@ import MutualFriendsLine from '../social/MutualFriendsLine';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
+import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import {
   PLAY_NOW_SKIP_CONFIRM_KEY,
   PLAY_NOW_SKIP_CONFIRM_VERSION,
@@ -3107,8 +3108,10 @@ function YouVsCard({
         // a full page reload.
         try { refreshMatchup(); } catch {}
         // Mirror /battle's post-match landing so users go straight
-        // to the dashboard to start picking.
-        setTimeout(() => router.push('/?battleStarted=true'), 1200);
+        // to wherever this matchup's mode lives — RUSH owns its own
+        // gameplay page at /battle/rush/[id], the others land back on
+        // the dashboard so users can start picking.
+        setTimeout(() => navigateToBattleStart(router, matchup), 1200);
       }}
     />
     {/* Legacy stepped pre-match popup. Kept mounted (gated by
@@ -3538,13 +3541,14 @@ export default function LiveBattlesSection({
           onClose={() => setMatchFoundData(null)}
           userId={currentUserId}
           presetMatch={matchFoundData}
-          onMatchFound={() => {
+          onMatchFound={(matchup) => {
             // Continue button on the standard match-found popup
-            // lands the user back on the dashboard so they can
-            // immediately start making picks for their new battle —
-            // mirrors the modal's own default redirect target.
+            // routes to whichever destination the matchup's mode
+            // owns — RUSH gets its dedicated 6-question gameshow
+            // page at /battle/rush/[id]; original/tournament drop
+            // back on the dashboard for the standard pick flow.
             setMatchFoundData(null);
-            router.push('/?battleStarted=true');
+            navigateToBattleStart(router, matchup || matchFoundData);
           }}
         />
       </div>

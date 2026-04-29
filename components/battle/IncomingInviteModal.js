@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
 import { useNotifications } from '../../contexts/NotificationsContext';
+import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import { useSession } from 'next-auth/react';
 
 const INVITE_EXPIRY_HOURS = 24;
@@ -101,7 +102,7 @@ export default function IncomingInviteModal() {
       const data = await ctx.acceptInvite(invite.id);
       ctx.dismissIncomingInvite?.(invite.id);
       if (data) {
-        router.push('/?battleStarted=true');
+        navigateToBattleStart(router, data.matchup);
       }
     } catch {
       setError('Network error. Please try again.');

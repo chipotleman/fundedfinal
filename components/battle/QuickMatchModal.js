@@ -6,6 +6,7 @@ import useRushAvailability from '../../hooks/useRushAvailability';
 import haptic from '../../utils/haptics';
 import UserAvatar from '../UserAvatar';
 import { CartoonChipStyles } from './CartoonChip';
+import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 
 const GAME_MODE_OPTIONS = [
   {
@@ -228,7 +229,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const handleContinue = () => {
     onClose();
     if (onMatchFound && matchedMatchup) onMatchFound(matchedMatchup, matchedOpponent);
-    else router.push('/?battleStarted=true');
+    else navigateToBattleStart(router, matchedMatchup);
   };
 
   const startSearch = async () => {

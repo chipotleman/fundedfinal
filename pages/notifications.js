@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
 import { useNotifications } from '../contexts/NotificationsContext';
+import { navigateToBattleStart } from '../lib/battleStartNavigation';
 import { isUserOnline } from '../components/ActiveStatus';
 import UserAvatar, { UserNameLink } from '../components/UserAvatar';
 import { formatMoney } from '../utils/formatMoney';
@@ -362,7 +363,7 @@ function NotificationsFeed({ ctx, router, filter }) {
                     disabled={busyId === inv.id}
                     onClick={() => wrap(inv.id, async () => {
                       const data = await ctx.acceptInvite(inv.id);
-                      if (data) router.push('/?battleStarted=true');
+                      if (data) navigateToBattleStart(router, data.matchup);
                     })}
                     className="bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-shadow"
                     style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
