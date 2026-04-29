@@ -133,11 +133,59 @@ function GapHistoryStrip({ history, currentGap }) {
   );
 }
 
+// Skeleton placeholder card that mirrors the structure of a real game
+// card on the dashboard. Used when we have no games to show yet (true
+// cold start with no cache and no SSR data) so the surface always has
+// shape and never flashes a spinner or "No Games Available" copy while
+// the first fetch is in flight.
+function GameCardSkeleton() {
+  const cellBg = '#111';
+  return (
+    <div
+      className="rounded-xl overflow-hidden animate-pulse"
+      style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a', boxShadow: 'none' }}
+    >
+      <div className="px-3.5 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="h-3 w-12 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+        </div>
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1">
+            <div className="h-4 w-32 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+            <div className="h-4 w-6 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="h-4 w-32 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+            <div className="h-4 w-6 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex gap-1.5 mb-1">
+            {[0, 1, 2].map(i => (
+              <div key={`hdr-${i}`} className="flex-1 h-2.5 rounded" style={{ backgroundColor: '#1a1a1a', opacity: 0.6 }} />
+            ))}
+          </div>
+          <div className="flex gap-1.5 mb-1.5">
+            {[0, 1, 2].map(i => (
+              <div key={`row-a-${i}`} className="flex-1 rounded-md" style={{ height: 30, backgroundColor: cellBg }} />
+            ))}
+          </div>
+          <div className="flex gap-1.5">
+            {[0, 1, 2].map(i => (
+              <div key={`row-h-${i}`} className="flex-1 rounded-md" style={{ height: 30, backgroundColor: cellBg }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const { user } = useAuth();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
-  const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated, isDemoMode } = useGames();
+  const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, hasFetchedOnce: gamesHasFetchedOnce, error: gamesError, lastUpdated, isDemoMode } = useGames();
   const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('Live');
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
@@ -915,13 +963,27 @@ export default function Dashboard() {
     };
     
     if (selectedSport === 'Live') {
-      return sortChronologically(liveGames);
+      const sortedLive = sortChronologically(liveGames);
+      // Live tab should never appear empty when there are still games to
+      // show — fall back to upcoming so the surface stays populated even
+      // during quiet moments between live games.
+      if (sortedLive.length > 0) return sortedLive;
+      return sortChronologically(upcomingGames);
     }
     
     const sportLiveGames = filterBySport(liveGames, selectedSport);
     const sportUpcomingGames = filterBySport(upcomingGames, selectedSport);
     return sortChronologically([...sportLiveGames, ...sportUpcomingGames]);
   }, [selectedSport, categorizedGames, sportMappings]);
+
+  // True when the Live tab is showing the upcoming-games fallback because
+  // there are no live games at the moment. Used to swap the section header
+  // so we don't claim "Live Now" while rendering scheduled games.
+  const isLiveTabFallbackToUpcoming = useMemo(() => {
+    if (selectedSport !== 'Live') return false;
+    if (games.length === 0) return false;
+    return !games.some(g => g.isLive || g.status === 'IN_PROGRESS');
+  }, [selectedSport, games]);
 
   // Legacy effect to update state for components that depend on it
   useEffect(() => {
@@ -1466,18 +1528,19 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>{selectedSport === 'Live' ? 'Live Now' : getSportLabel(selectedSport)}</h2>
-              {selectedSport === 'Live' && <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>}
+              <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>
+                {selectedSport === 'Live'
+                  ? (isLiveTabFallbackToUpcoming ? 'Upcoming' : 'Live Now')
+                  : getSportLabel(selectedSport)}
+              </h2>
+              {selectedSport === 'Live' && !isLiveTabFallbackToUpcoming && (
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+              )}
             </div>
           </div>
 
           <div className="space-y-2">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="w-10 h-10 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-3"></div>
-                <p className="text-sm" style={{ color: '#6b7280' }}>Loading games...</p>
-              </div>
-            ) : games.length > 0 ? (
+            {games.length > 0 ? (
               games.map(game => {
                 const sport = game.sportName || 'NBA';
                 const isExpanded = expandedGames[game.id];
@@ -1682,6 +1745,18 @@ export default function Dashboard() {
                   </div>
                 );
               })
+            ) : !gamesHasFetchedOnce ? (
+              // Cold start with no SSR data and no cached games yet — render
+              // skeleton cards that mirror the real card layout so the
+              // dashboard always shows *something* instead of a blank flash
+              // or a spinner. Once the first fetch resolves we'll either
+              // have games (handled above) or fall through to the empty
+              // state below.
+              <>
+                {[0, 1, 2, 3].map(i => (
+                  <GameCardSkeleton key={`skeleton-${i}`} />
+                ))}
+              </>
             ) : (
               <div className="text-center py-10">
                 <div className="rounded-xl p-6 max-w-sm mx-auto" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>
