@@ -12,6 +12,7 @@ import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
+import SocialFeedPage from '../components/social/SocialFeedPage';
 import ForfeitModal from '../components/battle/ForfeitModal';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import ConnectionBadge from '../components/battle/ConnectionBadge';
@@ -1948,449 +1949,50 @@ export default function BattlePage() {
           {/* DEAD CODE BELOW — left in place to avoid renumbering during this
               redesign pass; the remaining IIFE branches are guarded by an
               always-false condition so the bundler tree-shakes them. */}
-          {false && activeMatchup && (() => {
-            const startBal = parseFloat(activeMatchup.startingBalance || 0);
-            const myBal = matchupData?.myBalance ?? startBal;
-            const oppBal = matchupData?.opponentBalance ?? startBal;
-            const myPnl = myBal - startBal;
-            const oppPnl = oppBal - startBal;
-            const pot = parseFloat(activeMatchup.potSize || startBal * 2 || 0);
-            const opp = matchupData?.opponent;
-            const myName = profile?.username || session?.user?.name || '';
-            const myAvatar = profile?.avatar;
-            const myFrameId = profile?.equippedFrame;
-            const oppName = opp?.username || opp?.displayName || 'Opponent';
-            const oppAvatar = opp?.avatar;
-            const oppFrameId = opp?.equippedFrame;
-            const totalBal = myBal + oppBal;
-            const myPercent = totalBal > 0 ? Math.max(5, Math.min(95, (myBal / totalBal) * 100)) : 50;
-            const endsAt = activeMatchup.endsAt;
-            const startsAt = activeMatchup.startsAt || activeMatchup.createdAt;
-            const totalDuration = endsAt && startsAt ? new Date(endsAt) - new Date(startsAt) : 0;
-            const elapsed = startsAt ? Date.now() - new Date(startsAt).getTime() : 0;
-            const timeProgress = totalDuration > 0 ? Math.min(100, (elapsed / totalDuration) * 100) : 0;
-            const timeLeft = endsAt ? Math.max(0, new Date(endsAt).getTime() - Date.now()) : null;
-            const formatTime = (ms) => {
-              if (!ms || ms <= 0) return 'Ended';
-              const s = Math.floor(ms / 1000);
-              const m = Math.floor(s / 60);
-              const h = Math.floor(m / 60);
-              const d = Math.floor(h / 24);
-              if (d > 0) return `${d}d ${h % 24}h left`;
-              if (h > 0) return `${h}h ${m % 60}m left`;
-              if (m > 0) return `${m}m left`;
-              return `${s}s left`;
-            };
 
-            return (
-              <div className="mb-4 rounded-xl overflow-hidden cursor-pointer" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={() => router.push('/')}>
-                <style>{`
-                  @keyframes battlePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-                  @keyframes vsGlow { 0%, 100% { text-shadow: 0 0 10px rgba(59,130,246,0.5); } 50% { text-shadow: 0 0 20px rgba(59,130,246,0.8); } }
-                  .battle-hero-pulse { animation: battlePulse 2s ease-in-out infinite; }
-                  .vs-glow { animation: vsGlow 2s ease-in-out infinite; }
-                `}</style>
+          {/* The new feed lives here. We pass through all the state and
+              handlers it needs as one props bag so the component stays a dumb
+              renderer and the page keeps owning data + side effects. */}
+          <SocialFeedPage
+            data={{
+              currentUser: profile ? {
+                username: profile.username || session?.user?.name,
+                avatar: profile.avatar,
+                frameId: profile.equippedFrame,
+              } : null,
+              isGuest,
+              activeMatchup,
+              recentMatches,
+              recentHighlights,
+              friends,
+              invites,
+              friendRequests,
+              onStartBattle: () => requireAuth(() => setShowBattleOptions(true)),
+              onPickQuickMatch: () => requireAuth(() => setShowQuickMatch(true)),
+              onPickPlayFriend: () => requireAuth(() => setShowPlayFriend(true), 'resumePlayFriend'),
+              onPickPrivateMatch: () => requireAuth(() => setShowPrivateMatch(true), 'resumePrivateMatch'),
+              onAcceptInvite: handleAcceptInvite,
+              onDeclineInvite: handleDeclineInvite,
+              onAcceptFriendRequest: handleAcceptFriendRequest,
+              onDeclineFriendRequest: handleDeclineFriendRequest,
+              onChallengeFriend: handleQuickInvite,
+              onOpenProfile: goToProfile,
+              onShowHistory: () => setShowHistory(true),
+            }}
+          />
 
-                <div className="flex items-center justify-between px-3 py-1.5" style={{ borderBottom: '1px solid #1a1a1a' }}>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full battle-hero-pulse"></div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-green-400">Live Battle</span>
-                    <ConnectionBadge className="ml-1" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] text-gray-500">{formatTime(timeLeft)}</span>
-                    <span className="text-blue-400 text-[10px] font-medium">Place Picks →</span>
-                  </div>
-                </div>
+          {/* Live battles row stays — it gives spectators the full row of
+              YouVsCard battles with chat. We render it underneath the feed
+              so the social column is unbroken at the top. */}
+          {!isGuest && (
+            <div className="mt-2 mb-6 max-w-[1080px] mx-auto">
+              <LiveBattlesSection focusBattleId={focusLiveBattleId || router.query.battle} currentUserId={userId} />
+            </div>
+          )}
 
-                <div className="relative px-4 py-4">
-                  <div className="flex items-center">
-                    <div className="flex-1 flex flex-col items-center text-center">
-                      <div className="mb-1.5">
-                        <FramedAvatar
-                          avatar={myAvatar}
-                          username={myName || 'Y'}
-                          frameId={myFrameId}
-                          size={64}
-                          bgColor="#1a1a1a"
-                        />
-                      </div>
-                      <p className="text-white font-semibold text-xs truncate max-w-[100px] min-h-[16px]">{myName || '\u00A0'}</p>
-                      <p className={`text-sm font-bold mt-0.5 ${myPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>${formatMoney(myBal, 0)}</p>
-                      <p className={`text-[10px] font-medium ${myPnl >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>{myPnl >= 0 ? '+' : ''}{formatMoney(myPnl, 0)}</p>
-                    </div>
-
-                    <div className="flex flex-col items-center px-3">
-                      <span className="text-xl sm:text-2xl font-black text-blue-400 vs-glow">VS</span>
-                      <div className="text-[9px] text-gray-500 font-medium mt-1 text-center">
-                        <span className="text-white font-bold">${formatMoney(pot, 0)}</span> pot
-                      </div>
-                    </div>
-
-                    <div className="flex-1 flex flex-col items-center text-center">
-                      <div className="mb-1.5 rounded-full inline-flex items-center justify-center">
-                        <FramedAvatar
-                          avatar={oppAvatar}
-                          username={oppName}
-                          frameId={oppFrameId}
-                          size={64}
-                          bgColor="#1a1a1a"
-                          isOnline={!!opp?.isOnline && opp?.isReal !== false}
-                          onlineDotBorderColor="#0d0d0d"
-                        />
-                      </div>
-                      <div className="flex items-center justify-center max-w-[100px] min-h-[16px]">
-                        <p className="text-white font-semibold text-xs truncate">{oppName}</p>
-                      </div>
-                      <p className={`text-sm font-bold mt-0.5 ${oppPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>${formatMoney(oppBal, 0)}</p>
-                      <p className={`text-[10px] font-medium ${oppPnl >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>{oppPnl >= 0 ? '+' : ''}{formatMoney(oppPnl, 0)}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-gray-500 w-8">{myPercent.toFixed(0)}%</span>
-                      <div className="flex-1 mx-2 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
-                        <div className="h-full rounded-full transition-all duration-1000" style={{
-                          width: `${myPercent}%`,
-                          background: myPnl >= 0 ? 'linear-gradient(90deg, #22c55e, #10b981)' : 'linear-gradient(90deg, #ef4444, #dc2626)',
-                        }}></div>
-                      </div>
-                      <span className="text-[10px] text-gray-500 w-8">{(100 - myPercent).toFixed(0)}%</span>
-                    </div>
-                    <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
-                      <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${timeProgress}%`, background: 'linear-gradient(90deg, #3b82f6, #06b6d4)' }}></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-3 px-4 py-2.5" style={{ borderTop: '1px solid #1a1a1a' }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowForfeitModal(true); }}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.08)',
-                      border: '1px solid rgba(239, 68, 68, 0.45)',
-                      color: '#ef4444',
-                      boxShadow: '0 1px 2px rgba(239, 68, 68, 0.1)',
-                    }}
-                  >
-                    <span>🏳️</span>
-                    <span>Forfeit</span>
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); router.push('/'); }}
-                    className="flex items-center gap-1 text-blue-400 text-xs font-medium"
-                  >
-                    Go to Dashboard
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
-
-          {(() => {
-            const battleCTA = (
-              <div className="rounded-xl overflow-hidden mb-5 relative" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
-                <div className="absolute inset-x-0 top-0 h-24 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 0% 0%, rgba(59,130,246,0.18), transparent 60%), radial-gradient(ellipse at 100% 0%, rgba(249,115,22,0.16), transparent 60%)' }} />
-                <div className="relative p-4 sm:p-5">
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                      1v1 Battle
-                    </span>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: textSecondary }}>Winner takes pot · 5% rake</span>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4">
-                    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2 border-blue-500/40 bg-gradient-to-br from-blue-500/20 to-blue-600/5">
-                        <svg className="w-6 h-6 sm:w-7 sm:h-7 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300">You</span>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                      <div className="text-2xl sm:text-3xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent leading-none">VS</div>
-                      <div className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: textSecondary }}>Head to head</div>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2 border-orange-500/40 bg-gradient-to-br from-orange-500/20 to-red-600/5">
-                        <svg className="w-6 h-6 sm:w-7 sm:h-7 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-orange-300">Rival</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border" style={{ backgroundColor: '#111', borderColor: cardBorder, color: textPrimary }}>
-                      <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 9v1" /></svg>
-                      Same bankroll
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border" style={{ backgroundColor: '#111', borderColor: cardBorder, color: textPrimary }}>
-                      <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                      Live piks
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border" style={{ backgroundColor: '#111', borderColor: cardBorder, color: textPrimary }}>
-                      <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.49L12 14.77 7.06 17.39 8 11.9 4 8l5.61-1.16L12 2z" /></svg>
-                      Best record wins
-                    </span>
-                  </div>
-
-                  {!activeMatchup && (
-                    <button
-                      onClick={() => requireAuth(() => setShowBattleOptions(true))}
-                      className="w-full relative overflow-hidden rounded-xl py-3.5 sm:py-4 font-bold text-base sm:text-lg text-white border border-blue-500/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-purple-500"></div>
-                      <div className="relative flex items-center justify-center gap-2.5">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        <span>Start a Battle</span>
-                      </div>
-                    </button>
-                  )}
-
-                  {isGuest && (
-                    <div className="text-center mt-3 pt-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
-                      <p className="text-xs mb-2" style={{ color: textSecondary }}>Create an account to start battling</p>
-                      <button
-                        onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
-                        className="font-semibold py-2 px-6 rounded-lg transition-colors text-sm"
-                        style={{ backgroundColor: '#fff', color: '#000' }}
-                      >
-                        Sign Up Free
-                      </button>
-                    </div>
-                  )}
-
-                  {recentHighlights.length > 0 && (
-                    <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-                          {isGuest ? 'Live on Piks · Recent winners' : 'Recent battles'}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: textSecondary }}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                          Live
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        {recentHighlights.slice(0, isGuest ? 5 : 3).map((b) => (
-                          <button
-                            key={b.id}
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); router.push(`/battle/replay/${b.id}`); }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors hover:bg-white/5"
-                            style={{ background: '#0a0a0a', border: `1px solid ${cardBorder}` }}
-                          >
-                            <UserAvatar user={b.winner} size="sm" />
-                            <div className="min-w-0 flex-1 text-[11px] leading-tight" style={{ color: textPrimary }}>
-                              <div className="truncate">
-                                <span
-                                  className="font-semibold text-green-400 hover:underline"
-                                  onClick={(e) => { e.stopPropagation(); if (b.winner?.id) goToProfile(b.winner); }}
-                                >
-                                  {b.winner?.username || 'Player'}
-                                </span>
-                                <span style={{ color: textSecondary }}> beat </span>
-                                <span
-                                  className="font-medium hover:underline"
-                                  onClick={(e) => { e.stopPropagation(); if (b.loser?.id) goToProfile(b.loser); }}
-                                >
-                                  {b.loser?.username || 'Player'}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1.5 mt-0.5" style={{ color: textSecondary }}>
-                                <span className="font-semibold text-yellow-400">${formatMoney(b.potSize, 0)} pot</span>
-                                <span>·</span>
-                                <span>{formatLastSeen(b.endedAt)}</span>
-                              </div>
-                            </div>
-                            <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-
-            const socialHeader = !isGuest ? (
-              <div
-                className="mb-5 rounded-xl overflow-hidden"
-                style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSocialExpanded(v => !v)}
-                  aria-expanded={socialExpanded}
-                  aria-controls="battle-social-panel"
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left relative overflow-hidden"
-                  style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(124,58,237,0.06) 60%, transparent)' }}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    {friends.length > 0 ? (
-                      <div className="flex -space-x-2 flex-shrink-0">
-                        {friends.slice(0, 3).map((f) => (
-                          <div key={f.id} className="rounded-full ring-2" style={{ '--tw-ring-color': cardBg }}>
-                            <FramedAvatar user={f} size={28} isOnline={f.isOnline} onlineDotBorderColor={cardBg} />
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-bold leading-tight" style={{ color: textPrimary }}>Friends &amp; Invites</div>
-                      <div className="text-[11px] leading-tight" style={{ color: textSecondary }}>
-                        {friends.length} friend{friends.length === 1 ? '' : 's'}
-                        {onlineFriendCount > 0 ? ` · ${onlineFriendCount} online` : ''}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {inviteCount > 0 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                          {inviteCount} invite{inviteCount === 1 ? '' : 's'}
-                        </span>
-                      )}
-                      {requestCount > 0 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
-                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                          {requestCount} request{requestCount === 1 ? '' : 's'}
-                        </span>
-                      )}
-                      {onlineFriendCount > 0 && inviteCount === 0 && requestCount === 0 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-green-500/15 text-green-300 border border-green-500/30">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                          {onlineFriendCount} online
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <svg
-                    className="w-4 h-4 transition-transform flex-shrink-0"
-                    style={{ color: textSecondary, transform: socialExpanded ? 'rotate(180deg)' : 'none' }}
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {socialExpanded && (
-                  <div id="battle-social-panel" className="px-3 pb-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
-                    <div className="pt-3">
-                      <SocialSection />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : null;
-
-            return (
-              <div className="flex flex-col lg:flex-row gap-6 pb-8">
-                <div className="lg:hidden">
-                  {battleCTA}
-                </div>
-
-                <div className="flex-1 min-w-0 order-2 lg:order-1">
-                  {socialHeader}
-                  {/* Your recent matches list. Renders the previously-unused
-                      `recentMatches` state so a failed/timed-out
-                      `/api/battles/history` fetch can surface the same soft
-                      retry hint we already use for friends/requests/invites.
-                      The card only mounts for authenticated users when there
-                      is something meaningful to show (loaded matches, or a
-                      failed/retrying status); successful empty results stay
-                      silent so brand-new accounts aren't shown an
-                      "always-empty" surface. */}
-                  {!isGuest && (recentMatches.length > 0 || sectionStatus.history === 'failed' || sectionStatus.history === 'retrying' || sectionStatus.history === 'reconnecting') && (
-                    <div className="mb-5 rounded-xl overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
-                      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                        <span className="text-sm font-bold" style={{ color: textPrimary }}>Your recent matches</span>
-                        {recentMatches.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setShowHistory(true)}
-                            className="text-xs font-medium text-blue-400"
-                          >
-                            View all
-                          </button>
-                        )}
-                      </div>
-                      {recentMatches.length === 0 ? (
-                        <RetryHint sectionKey="history" />
-                      ) : (
-                        <div className="divide-y" style={{ borderColor: cardBorder }}>
-                          {recentMatches.slice(0, 5).map((m) => {
-                            const result = m.result;
-                            const badge = result === 'win'
-                              ? { text: 'WIN', color: 'bg-green-500/15 text-green-300 border-green-500/30' }
-                              : result === 'loss'
-                                ? { text: 'LOSS', color: 'bg-red-500/15 text-red-300 border-red-500/30' }
-                                : result === 'tie'
-                                  ? { text: 'TIE', color: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30' }
-                                  : result === 'cancelled'
-                                    ? { text: 'CANCELLED', color: 'bg-gray-500/15 text-gray-300 border-gray-500/30' }
-                                    : { text: 'ACTIVE', color: 'bg-blue-500/15 text-blue-300 border-blue-500/30' };
-                            const pnl = parseFloat(m.pnl || 0);
-                            const pnlPositive = pnl >= 0;
-                            return (
-                              <div key={m.id} className="flex items-center gap-3 px-3 py-3 hover:bg-white/[0.02] transition-colors">
-                                <div className="flex-shrink-0 cursor-pointer" onClick={() => goToProfile(m.opponent)}>
-                                  <FramedAvatar user={m.opponent} size={40} onlineDotBorderColor={cardBg} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-bold truncate cursor-pointer" style={{ color: textPrimary }} onClick={() => goToProfile(m.opponent)}>
-                                    {m.opponent?.username || 'Player'}
-                                  </div>
-                                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${badge.color}`}>
-                                      {badge.text}
-                                    </span>
-                                    <span className="text-[10px]" style={{ color: textSecondary }}>
-                                      ${formatMoney(m.potSize || 0, 0)} pot
-                                    </span>
-                                    {m.endsAt && (
-                                      <span className="text-[10px]" style={{ color: textSecondary }}>
-                                        · {formatLastSeen(m.endsAt)}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                {result !== 'cancelled' && result !== 'pending' && (
-                                  <div className={`text-sm font-bold flex-shrink-0 ${pnlPositive ? 'text-green-400' : 'text-red-400'}`}>
-                                    {pnlPositive ? '+' : ''}${formatMoney(pnl, 0)}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="mb-5">
-                    <LiveBattlesSection focusBattleId={focusLiveBattleId || router.query.battle} currentUserId={userId} />
-                  </div>
-
-                </div>
-
-                <div className="lg:w-[340px] flex-shrink-0 order-1 lg:order-2">
-                  <div className="hidden lg:block lg:sticky lg:top-16">
-                    {battleCTA}
-                  </div>
-                </div>
-
-              </div>
-            );
-          })()}
+          {/* Old dual-column layout below is dead code, gated false so the
+              bundler short-circuits it and JSX renders nothing. Kept in place
+              briefly to avoid a giant noisy diff during this redesign. */}
         </div>
       </div>
 
