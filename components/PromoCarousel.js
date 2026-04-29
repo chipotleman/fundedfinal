@@ -92,6 +92,7 @@ export default function PromoCarousel({ slides }) {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [emptyKeys, setEmptyKeys] = useState({});
+  const [impressionsReady, setImpressionsReady] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
 
   const candidates = (slides || [])
@@ -139,10 +140,39 @@ export default function PromoCarousel({ slides }) {
     if (activeIndex >= count) setActiveIndex(0);
   }, [count, activeIndex]);
 
+  // Sync activeIndex to whichever tile is actually centered on mount before any
+  // impression fires. Without this, narrow tiles (multiple visible at once)
+  // would always credit the leftmost tile (index 0) for the first impression
+  // instead of the slide actually centered in the viewport.
+  useIsomorphicLayoutEffect(() => {
+    if (impressionsReady || count === 0) return;
+    const container = containerRef.current;
+    if (!container) return;
+    if (slideRefs.current.size === 0) return;
+    const center = container.scrollLeft + container.clientWidth / 2;
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < visible.length; i++) {
+      const child = slideRefs.current.get(visible[i].key);
+      if (!child) continue;
+      const childCenter = child.offsetLeft + child.offsetWidth / 2;
+      const dist = Math.abs(childCenter - center);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    setActiveIndex(bestIdx);
+    setImpressionsReady(true);
+  }, [count, visible, impressionsReady]);
+
   // Fire an impression event whenever a new slide becomes the active one.
   // Dedup per (slotIndex, containerType) for the lifetime of this mount so
   // continuous scrolling past the same slide repeatedly doesn't inflate counts.
+  // Gated on impressionsReady so the first impression is for the actually
+  // centered tile, not the (possibly stale) initial activeIndex of 0.
   useEffect(() => {
+    if (!impressionsReady) return;
     if (count === 0) return;
     const slide = visible[activeIndex];
     if (!slide || slide.slotIndex == null || !slide.containerType) return;
@@ -153,7 +183,7 @@ export default function PromoCarousel({ slides }) {
       slotIndex: slide.slotIndex,
       containerType: slide.containerType,
     });
-  }, [activeIndex, count, visible]);
+  }, [activeIndex, count, visible, impressionsReady]);
 
   // Measure the width of one full set of slides (distance from first slide of
   // set 0 to first slide of set 1). This is the wrap distance for seamless
