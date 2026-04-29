@@ -1,8 +1,9 @@
 import { db } from '../../../lib/db';
 import { users, profiles, userChallenges } from '../../../shared/schema';
 import { eq, desc } from 'drizzle-orm';
+import { requireAdmin } from '../../../lib/adminAuth';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const allUsers = await db
@@ -44,3 +45,5 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' });
 }
+
+export default requireAdmin(handler);

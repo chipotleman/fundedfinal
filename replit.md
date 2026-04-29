@@ -26,6 +26,13 @@ The 1v1 Battle System, inspired by Trivia Crack, includes Quick Match, Play a Fr
 #### System Design Choices
 The authentication flow covers beta access, NextAuth.js, JWT sessions, user profiling, and challenge selection. A comprehensive Database Schema supports core functionalities. A Bet Autograding System automatically grades pending bets and updates bankrolls. The API architecture is RESTful. A context-specific balance system ensures accurate user balances tied to active challenges (1v1 or Pik Pool), enforcing mutual exclusivity. Promo slot tracking and item share tracking are implemented for analytics, respecting user opt-out preferences. Server-side checks enforce analytics opt-out. Top-nav click-trap defenses address iOS Safari navigation issues by ensuring modals fully unmount or are properly managed.
 
+#### Security Architecture
+- **Admin auth**: Signed JWTs (HS256) issued by `lib/adminAuth.js`, signing key from `ADMIN_JWT_SECRET` (falls back to `NEXTAUTH_SECRET`). 7-day TTL, issuer `piks-admin`. Tokens carry id/email/type (`admin` | `staff`)/role/permissions. Every request is re-validated against `admin_users`/`admin_staff` to honor deactivation.
+- **Endpoint coverage**: Every `/api/admin-panel/*` route is wrapped with `requireAdmin(handler)`. `staff.js` and other multi-permission endpoints additionally check `req.admin.permissions`.
+- **Bootstrap admin**: `pages/api/admin-panel/seed.js` returns 410 in production, requires `ADMIN_SETUP_SECRET` env var (no default), and accepts the password from the request body (min 12 chars). Existing seeded admin can be migrated via `node scripts/rotate-admin-password.js` (`ADMIN_EMAIL`, `ADMIN_NEW_PASSWORD` env vars; `ADMIN_TABLE` toggles `admin_users` vs `admin_staff`).
+- **Atomic money flow**: Bet placement (`pages/api/bets/place.js`) and withdrawal creation (`pages/api/withdrawals/index.ts`) deduct balance via a conditional `UPDATE … SET col = col - $stake WHERE … AND col >= $stake RETURNING col`. Concurrent requests cannot both pass when only one stake fits. Bet inserts run after the deduction; on insert failure, the deduction is reversed via a compensating UPDATE.
+- **Secrets hygiene**: `.env.local` is ignored. After deploy, anyone who had checked-in `.env.local` should run `git rm --cached .env.local` once.
+
 ### External Dependencies
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM

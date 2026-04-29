@@ -2,27 +2,22 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../../lib/db";
 import { withdrawals, profiles, users } from "../../../shared/schema";
 import { eq, desc } from "drizzle-orm";
+// @ts-ignore - JS module without types
+import { requireAdmin } from "../../../lib/adminAuth";
 
-function decodeToken(authHeader: string | undefined) {
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-  const token = authHeader.split(" ")[1];
-  try {
-    const decoded = JSON.parse(Buffer.from(token, "base64").toString());
-    return decoded;
-  } catch {
-    return null;
-  }
-}
-
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const admin = decodeToken(req.headers.authorization);
-  if (!admin) {
-    return res.status(401).json({ message: "Unauthorized" });
+  // Per-method permission gating: GET needs withdrawals:read, mutating
+  // verbs need withdrawals:write. Top-level admins (`type === 'admin'`) and
+  // staff with the `all` permission bypass these checks via the helper.
+  const adminCtx = (req as any).admin;
+  const requiredPerm = req.method === "GET" ? "withdrawals:read" : "withdrawals:write";
+  const isFullAdmin = adminCtx?.type === "admin" || adminCtx?.role === "admin";
+  const perms: string[] = adminCtx?.permissions || [];
+  if (!isFullAdmin && !perms.includes("all") && !perms.includes(requiredPerm)) {
+    return res.status(403).json({ message: "Forbidden: missing permission" });
   }
 
   if (req.method === "GET") {
@@ -88,7 +83,7 @@ export default async function handler(
       let newStatus = withdrawal.status;
       let updateData: any = {
         updatedAt: new Date(),
-        reviewedBy: admin.id,
+        reviewedBy: (req as any).admin?.id,
         reviewedAt: new Date(),
       };
 
@@ -117,7 +112,7 @@ export default async function handler(
       statusHistory.push({
         status: newStatus,
         timestamp: new Date().toISOString(),
-        by: admin.email,
+        by: (req as any).admin?.email,
         note: action === "deny" ? denialReason : `Status changed to ${newStatus}`,
       });
 
@@ -139,3 +134,5 @@ export default async function handler(
 
   return res.status(405).json({ message: "Method not allowed" });
 }
+
+export default requireAdmin(handler);

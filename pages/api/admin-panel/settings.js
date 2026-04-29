@@ -1,5 +1,6 @@
 import { verifyAdminAuth } from '../../../lib/adminAuth';
 import { getSetting, setSetting } from '../../../lib/settingsStore';
+import { requireAdmin } from '../../../lib/adminAuth';
 import {
   PROMO_SLOT_KEY,
   DEFAULT_PROMO_SLOTS,
@@ -36,7 +37,7 @@ function hasSettingsPermission(admin) {
   return perms.includes('all') || perms.includes('settings');
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const auth = await verifyAdminAuth(req);
   if (!auth.valid) {
     return res.status(401).json({ error: auth.error || 'Unauthorized' });
@@ -72,3 +73,5 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' });
 }
+
+export default requireAdmin(handler);

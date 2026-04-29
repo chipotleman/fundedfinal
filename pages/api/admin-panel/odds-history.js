@@ -2,8 +2,9 @@ import { db } from '../../../lib/db';
 import { oddsHistoryPulls } from '../../../shared/schema';
 import { desc, eq } from 'drizzle-orm';
 import * as XLSX from 'xlsx';
+import { requireAdmin } from '../../../lib/adminAuth';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'GET') {
     const { action, pullId } = req.query;
 
@@ -121,3 +122,5 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' });
 }
+
+export default requireAdmin(handler);

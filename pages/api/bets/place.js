@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { userBets, profiles, fakeOpponents, fakeOpponentBets, matchups, poolParticipants, pikPools, poolBets } from '../../../shared/schema';
-import { eq, and, or, inArray } from 'drizzle-orm';
+import { eq, and, or, inArray, sql } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { calculatePayout, americanToDecimal } from '../../../utils/odds';
@@ -114,20 +114,58 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No active battle. Piks can only be placed using battle coins.' });
     }
 
+    // ---- Validate & normalize stakes BEFORE computing totalStake -----------
+    // Reject negative / non-finite stakes, sub-cent stakes, and oversized
+    // stakes up front so we cannot end up debiting less than the sum of the
+    // actually-inserted bets (e.g. mixing a positive stake with a negative
+    // one would otherwise reduce totalStake while still inserting the
+    // positive bet, and sub-cent stakes would round to a $0.00 debit while
+    // still recording a real bet row).
+    const MAX_STAKE = 10_000_000;
+    const MIN_STAKE = 0.01;
+
+    // Round to cents and validate. Returns null if invalid.
+    const normalizeStake = (val) => {
+      const n = Number(val);
+      if (!Number.isFinite(n) || n < MIN_STAKE || n > MAX_STAKE) return null;
+      const cents = Math.round(n * 100);
+      return cents / 100;
+    };
+
     let totalStake = 0;
+    let normalizedParlayStake = null;
 
     if (betType === 'parlay' && parlayStake > 0) {
-      totalStake = parlayStake;
+      normalizedParlayStake = normalizeStake(parlayStake);
+      if (normalizedParlayStake === null) {
+        return res.status(400).json({ error: 'Invalid parlay stake' });
+      }
+      totalStake = normalizedParlayStake;
     } else {
-      totalStake = bets.reduce((sum, bet) => sum + (parseFloat(bet.stake) || 0), 0);
+      for (const bet of bets) {
+        const norm = normalizeStake(bet?.stake);
+        if (norm === null) {
+          return res.status(400).json({ error: 'Invalid bet stake' });
+        }
+        bet.stake = norm; // store normalized value for downstream insert
+        totalStake += norm;
+      }
+      // Re-round the sum to avoid 0.1 + 0.2 style float drift before debit.
+      totalStake = Math.round(totalStake * 100) / 100;
     }
 
-    if (totalStake > currentBankroll) {
-      return res.status(400).json({ error: 'Insufficient balance' });
+    if (!(totalStake >= MIN_STAKE) || !Number.isFinite(totalStake)) {
+      return res.status(400).json({ error: 'Stake must be at least $0.01' });
     }
 
-    const insertedBets = [];
+    // Replace any later use of the raw user-supplied parlayStake with the
+    // normalized value so persisted rows match what was debited.
+    const effectiveParlayStake = normalizedParlayStake ?? parlayStake;
 
+    // ---- Pre-compute parlay aggregates BEFORE we touch any balance ---------
+    // Any user-input validation that can fail must run before the debit so we
+    // never end up with money taken and no bet recorded.
+    let parlayPrecomputed = null;
     if (betType === 'parlay' && parlayStake > 0) {
       let invalidLegOdds = false;
       const parlayDecimal = bets.reduce((acc, bet) => {
@@ -142,72 +180,178 @@ export default async function handler(req, res) {
       if (invalidLegOdds) {
         return res.status(400).json({ error: 'Invalid odds on parlay leg' });
       }
-      const americanOdds = parlayDecimal >= 2 ? Math.round((parlayDecimal - 1) * 100) : Math.round(-100 / (parlayDecimal - 1));
-      const potentialPayout = parlayStake * parlayDecimal;
+      const americanOdds = parlayDecimal >= 2
+        ? Math.round((parlayDecimal - 1) * 100)
+        : Math.round(-100 / (parlayDecimal - 1));
+      parlayPrecomputed = {
+        americanOdds,
+        potentialPayout: effectiveParlayStake * parlayDecimal,
+        legsData: bets.map(b => ({
+          selection: b.selection,
+          matchup: b.matchup,
+          betType: b.betType,
+          odds: typeof b.odds === 'object' ? b.odds.odds || b.odds.value || 0 : parseInt(b.odds),
+          homeTeamFull: b.homeTeamFull,
+          awayTeamFull: b.awayTeamFull,
+          homeTeam: b.homeTeam,
+          awayTeam: b.awayTeam,
+          gameId: b.gameId
+        })),
+      };
+    }
 
-      const legsData = bets.map(b => ({
-        selection: b.selection,
-        matchup: b.matchup,
-        betType: b.betType,
-        odds: typeof b.odds === 'object' ? b.odds.odds || b.odds.value || 0 : parseInt(b.odds),
-        homeTeamFull: b.homeTeamFull,
-        awayTeamFull: b.awayTeamFull,
-        homeTeam: b.homeTeam,
-        awayTeam: b.awayTeam,
-        gameId: b.gameId
-      }));
+    // ---- Atomic balance reservation ----------------------------------------
+    // Deduct from the relevant balance row using a conditional UPDATE so two
+    // concurrent requests can never both pass when only one stake fits.
+    // If the row was not updated (insufficient funds or row vanished) we bail
+    // out with 409 before inserting any bet records.
+    const stakeStr = totalStake.toFixed(2);
+    let newBankroll = 0;
+    let refundDeduction = null; // () => Promise — call to undo the deduction
+
+    if (isFakeOpponent && activeMatchup) {
+      const debited = await db
+        .update(matchups)
+        .set({
+          user2Balance: sql`${matchups.user2Balance} - ${stakeStr}`,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(matchups.id, activeMatchup.id),
+            sql`${matchups.user2Balance} >= ${stakeStr}`
+          )
+        )
+        .returning({ user2Balance: matchups.user2Balance });
+
+      if (debited.length === 0) {
+        return res.status(409).json({ error: 'Insufficient balance' });
+      }
+      newBankroll = parseFloat(debited[0].user2Balance) || 0;
+      refundDeduction = async () => {
+        await db
+          .update(matchups)
+          .set({
+            user2Balance: sql`${matchups.user2Balance} + ${stakeStr}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(matchups.id, activeMatchup.id));
+      };
+    } else if (challengeType === '1v1' && activeChallenge) {
+      const isUser1 = activeChallenge.user1Id === userId;
+      const balanceCol = isUser1 ? matchups.user1Balance : matchups.user2Balance;
+      const debited = await db
+        .update(matchups)
+        .set({
+          ...(isUser1
+            ? { user1Balance: sql`${matchups.user1Balance} - ${stakeStr}` }
+            : { user2Balance: sql`${matchups.user2Balance} - ${stakeStr}` }),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(matchups.id, activeChallenge.id),
+            sql`${balanceCol} >= ${stakeStr}`
+          )
+        )
+        .returning({
+          user1Balance: matchups.user1Balance,
+          user2Balance: matchups.user2Balance,
+        });
+
+      if (debited.length === 0) {
+        return res.status(409).json({ error: 'Insufficient balance' });
+      }
+      newBankroll = parseFloat(
+        isUser1 ? debited[0].user1Balance : debited[0].user2Balance
+      ) || 0;
+      refundDeduction = async () => {
+        await db
+          .update(matchups)
+          .set({
+            ...(isUser1
+              ? { user1Balance: sql`${matchups.user1Balance} + ${stakeStr}` }
+              : { user2Balance: sql`${matchups.user2Balance} + ${stakeStr}` }),
+            updatedAt: new Date(),
+          })
+          .where(eq(matchups.id, activeChallenge.id));
+      };
+    } else if (challengeType === 'pool' && activeChallenge) {
+      const debited = await db
+        .update(poolParticipants)
+        .set({ balance: sql`${poolParticipants.balance} - ${stakeStr}` })
+        .where(
+          and(
+            eq(poolParticipants.id, activeChallenge.participant.id),
+            sql`${poolParticipants.balance} >= ${stakeStr}`
+          )
+        )
+        .returning({ balance: poolParticipants.balance });
+
+      if (debited.length === 0) {
+        return res.status(409).json({ error: 'Insufficient balance' });
+      }
+      newBankroll = parseFloat(debited[0].balance) || 0;
+      refundDeduction = async () => {
+        await db
+          .update(poolParticipants)
+          .set({ balance: sql`${poolParticipants.balance} + ${stakeStr}` })
+          .where(eq(poolParticipants.id, activeChallenge.participant.id));
+      };
+    } else {
+      // No active battle and no fake opponent — already rejected above, but
+      // guard defensively.
+      return res.status(400).json({ error: 'No active battle' });
+    }
+
+    // currentBankroll == balance BEFORE this deduction, used for the
+    // balanceBefore/balanceAfter audit fields recorded on each bet row.
+    currentBankroll = newBankroll + totalStake;
+
+    const insertedBets = [];
+
+    // Build all rows up-front so we can insert them in a single statement.
+    // A single multi-row INSERT is atomic in Postgres — either all rows land
+    // or none do — which closes the partial-insert / free-bet loophole.
+    const fakeRows = [];
+    const poolRows = [];
+    const userRows = [];
+
+    if (parlayPrecomputed) {
+      const { americanOdds, potentialPayout, legsData } = parlayPrecomputed;
+      const baseParlay = {
+        matchupName: `${bets.length}-Leg Parlay`,
+        marketType: 'parlay',
+        selection: bets.map(b => b.selection).join(', '),
+        odds: americanOdds.toString(),
+        stake: effectiveParlayStake.toString(),
+        potentialPayout: potentialPayout.toFixed(2),
+        status: 'pending',
+        legs: legsData,
+      };
 
       if (isFakeOpponent && activeMatchup) {
-        const fakeParlayBet = {
+        fakeRows.push({
+          ...baseParlay,
           matchupId: activeMatchup.id,
           fakeOpponentId: fakeOpponentEntry.id,
-          matchupName: `${bets.length}-Leg Parlay`,
-          marketType: 'parlay',
-          selection: bets.map(b => b.selection).join(', '),
-          odds: americanOdds.toString(),
-          stake: parlayStake.toString(),
-          potentialPayout: potentialPayout.toFixed(2),
-          status: 'pending',
-          legs: legsData,
-        };
-        const [insertedParlay] = await db.insert(fakeOpponentBets).values(fakeParlayBet).returning();
-        insertedBets.push(insertedParlay);
-        console.log('[Place Bet] Fake opponent parlay saved to fakeOpponentBets:', insertedParlay.id);
+        });
       } else if (challengeType === 'pool' && activeChallenge) {
-        const poolBet = {
+        poolRows.push({
+          ...baseParlay,
           poolId: activeChallenge.pool.id,
           userId,
-          matchupName: `${bets.length}-Leg Parlay`,
-          marketType: 'parlay',
-          selection: bets.map(b => b.selection).join(', '),
-          odds: americanOdds.toString(),
-          stake: parlayStake.toString(),
-          potentialPayout: potentialPayout.toFixed(2),
-          status: 'pending',
           balanceBefore: currentBankroll.toFixed(2),
-          balanceAfter: (currentBankroll - parlayStake).toFixed(2),
-          legs: legsData,
-        };
-        const [insertedParlay] = await db.insert(poolBets).values(poolBet).returning();
-        insertedBets.push(insertedParlay);
-        console.log('[Place Bet] Pool parlay saved to poolBets:', insertedParlay.id);
+          balanceAfter: (currentBankroll - effectiveParlayStake).toFixed(2),
+        });
       } else {
-        const parlayBet = {
+        userRows.push({
+          ...baseParlay,
           userId,
           ...(challengeType === '1v1' && activeChallenge ? { matchupId: activeChallenge.id } : {}),
-          matchupName: `${bets.length}-Leg Parlay`,
-          marketType: 'parlay',
-          selection: bets.map(b => b.selection).join(', '),
-          odds: americanOdds.toString(),
-          stake: parlayStake.toString(),
-          potentialPayout: potentialPayout.toFixed(2),
-          status: 'pending',
           balanceBefore: currentBankroll.toFixed(2),
-          balanceAfter: (currentBankroll - parlayStake).toFixed(2),
-          legs: legsData,
-        };
-        const [insertedParlay] = await db.insert(userBets).values(parlayBet).returning();
-        insertedBets.push(insertedParlay);
+          balanceAfter: (currentBankroll - effectiveParlayStake).toFixed(2),
+        });
       }
     } else {
       for (const bet of bets) {
@@ -217,7 +361,7 @@ export default async function handler(req, res) {
         const potentialPayout = calculatePayout(oddsValue, bet.stake);
 
         if (isFakeOpponent && activeMatchup) {
-          const fakeBet = {
+          fakeRows.push({
             matchupId: activeMatchup.id,
             fakeOpponentId: fakeOpponentEntry.id,
             matchupName: bet.matchup,
@@ -229,12 +373,9 @@ export default async function handler(req, res) {
             status: 'pending',
             homeTeamFull: bet.homeTeamFull,
             awayTeamFull: bet.awayTeamFull,
-          };
-          const [insertedBet] = await db.insert(fakeOpponentBets).values(fakeBet).returning();
-          insertedBets.push(insertedBet);
-          console.log('[Place Bet] Fake opponent bet saved to fakeOpponentBets:', insertedBet.id);
+          });
         } else if (challengeType === 'pool' && activeChallenge) {
-          const poolBet = {
+          poolRows.push({
             poolId: activeChallenge.pool.id,
             userId,
             matchupName: bet.matchup,
@@ -248,12 +389,9 @@ export default async function handler(req, res) {
             balanceAfter: (currentBankroll - bet.stake).toFixed(2),
             homeTeamFull: bet.homeTeamFull,
             awayTeamFull: bet.awayTeamFull,
-          };
-          const [insertedBet] = await db.insert(poolBets).values(poolBet).returning();
-          insertedBets.push(insertedBet);
-          console.log('[Place Bet] Pool bet saved:', insertedBet.id);
+          });
         } else {
-          const newBet = {
+          userRows.push({
             userId,
             ...(challengeType === '1v1' && activeChallenge ? { matchupId: activeChallenge.id } : {}),
             matchupName: bet.matchup,
@@ -267,52 +405,65 @@ export default async function handler(req, res) {
             balanceAfter: (currentBankroll - bet.stake).toFixed(2),
             homeTeamFull: bet.homeTeamFull,
             awayTeamFull: bet.awayTeamFull,
-          };
-          const [insertedBet] = await db.insert(userBets).values(newBet).returning();
-          insertedBets.push(insertedBet);
+          });
         }
       }
     }
 
-    const newBankroll = currentBankroll - totalStake;
-    
-    if (isFakeOpponent && activeMatchup) {
-      const currentMatchupBalance = parseFloat(activeMatchup.user2Balance || activeMatchup.startingBalance || '0');
-      const newMatchupBalance = currentMatchupBalance - totalStake;
-      const [updatedMatchup] = await db
-        .update(matchups)
-        .set({ 
-          user2Balance: newMatchupBalance.toFixed(2),
-          updatedAt: new Date()
-        })
-        .where(eq(matchups.id, activeMatchup.id))
-        .returning();
-      console.log('[Place Bet] Updated matchup user2Balance:', newMatchupBalance.toFixed(2));
+    try {
+      // Each branch writes to exactly one table and runs a single atomic
+      // multi-row INSERT. If it fails, no rows were written and the refund
+      // simply reverses the up-front debit.
+      if (fakeRows.length > 0) {
+        const inserted = await db.insert(fakeOpponentBets).values(fakeRows).returning();
+        insertedBets.push(...inserted);
+        console.log('[Place Bet] Fake opponent bets saved:', inserted.length);
+      }
+      if (poolRows.length > 0) {
+        const inserted = await db.insert(poolBets).values(poolRows).returning();
+        insertedBets.push(...inserted);
+        console.log('[Place Bet] Pool bets saved:', inserted.length);
+      }
+      if (userRows.length > 0) {
+        const inserted = await db.insert(userBets).values(userRows).returning();
+        insertedBets.push(...inserted);
+      }
+
+      if (insertedBets.length === 0) {
+        // Defensive: nothing was inserted (e.g. all stakes were filtered
+        // out). Refund and reject so the caller sees a clean error.
+        throw new Error('No bets to insert');
+      }
+    } catch (insertErr) {
+      // Bet insertion failed after we deducted balance — refund.
       try {
-        publishMatchupPnlUpdate(updatedMatchup || activeMatchup, { reason: 'bet:placed', byUserId: userId });
+        if (refundDeduction) await refundDeduction();
+      } catch (refundErr) {
+        console.error('[Place Bet] Refund after insert failure FAILED:', refundErr);
+      }
+      throw insertErr;
+    }
+
+    // Balance was already deducted atomically above; here we only need to
+    // publish the live PnL update for the opponent UI. Build a "best effort"
+    // matchup snapshot by patching the new balance onto the row we already
+    // loaded — it's all the consumer needs for the broadcast.
+    if (isFakeOpponent && activeMatchup) {
+      const updatedMatchup = { ...activeMatchup, user2Balance: newBankroll.toFixed(2) };
+      try {
+        publishMatchupPnlUpdate(updatedMatchup, { reason: 'bet:placed', byUserId: userId });
       } catch (e) { console.error('[Place Bet] publishMatchupPnlUpdate error:', e); }
     } else if (challengeType === '1v1' && activeChallenge) {
       const isUser1 = activeChallenge.user1Id === userId;
-      const [updatedMatchup] = await db
-        .update(matchups)
-        .set({ 
-          ...(isUser1 ? { user1Balance: newBankroll.toFixed(2) } : { user2Balance: newBankroll.toFixed(2) }),
-          updatedAt: new Date()
-        })
-        .where(eq(matchups.id, activeChallenge.id))
-        .returning();
-      console.log('[Place Bet] Updated 1v1 balance for user:', newBankroll.toFixed(2));
+      const updatedMatchup = {
+        ...activeChallenge,
+        ...(isUser1
+          ? { user1Balance: newBankroll.toFixed(2) }
+          : { user2Balance: newBankroll.toFixed(2) }),
+      };
       try {
-        publishMatchupPnlUpdate(updatedMatchup || activeChallenge, { reason: 'bet:placed', byUserId: userId });
+        publishMatchupPnlUpdate(updatedMatchup, { reason: 'bet:placed', byUserId: userId });
       } catch (e) { console.error('[Place Bet] publishMatchupPnlUpdate error:', e); }
-    } else if (challengeType === 'pool' && activeChallenge) {
-      await db
-        .update(poolParticipants)
-        .set({
-          balance: newBankroll.toFixed(2),
-        })
-        .where(eq(poolParticipants.id, activeChallenge.participant.id));
-      console.log('[Place Bet] Updated pool participant balance:', newBankroll.toFixed(2));
     }
 
     await db

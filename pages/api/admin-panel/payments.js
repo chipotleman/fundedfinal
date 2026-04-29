@@ -1,7 +1,8 @@
 import { db } from '../../../lib/db';
 import { profiles } from '../../../shared/schema';
+import { requireAdmin } from '../../../lib/adminAuth';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -40,3 +41,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to fetch payments' });
   }
 }
+
+export default requireAdmin(handler);

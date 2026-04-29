@@ -1,11 +1,12 @@
 import { verifyAdminAuth } from '../../../../lib/adminAuth';
+import { requireAdmin } from '../../../../lib/adminAuth';
 import {
   FIRST_DEPOSIT_MATCH_CAP,
   grantFirstDepositMatch,
   revokeFirstDepositMatch,
 } from '../../../../lib/firstDepositMatch';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST' && req.method !== 'DELETE') {
     res.setHeader('Allow', 'POST, DELETE');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -76,3 +77,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: error.message || 'Internal server error' });
   }
 }
+
+export default requireAdmin(handler);

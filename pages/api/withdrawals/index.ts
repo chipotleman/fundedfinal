@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../lib/auth";
 import { db } from "../../../lib/db";
 import { withdrawals, profiles, paymentMethods } from "../../../shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 const FEES: Record<string, number | ((amount: number) => number)> = {
   bank_transfer: 0,
@@ -95,6 +95,8 @@ export default async function handler(
       const userSplit = challengeData?.userSplit || 80;
       const availableToWithdraw = Math.floor(profit * (userSplit / 100));
 
+      // Pre-flight check (gives a precise error message). The real enforcement
+      // happens atomically below — we still need this for nicer UX.
       if (amountNum > availableToWithdraw) {
         return res.status(400).json({ message: `Insufficient funds. Available to withdraw: $${availableToWithdraw}` });
       }
@@ -117,37 +119,74 @@ export default async function handler(
         return res.status(400).json({ message: "Amount too low after fees" });
       }
 
-      const [newWithdrawal] = await db
-        .insert(withdrawals)
-        .values({
-          userId,
-          paymentMethodId,
-          methodType,
-          amount: amountNum.toFixed(2),
-          fee: fee.toFixed(2),
-          netAmount: netAmount.toFixed(2),
-          status: "under_review",
-          statusHistory: [
-            {
-              status: "under_review",
-              timestamp: new Date().toISOString(),
-              note: "Withdrawal request submitted",
-            },
-          ],
-          paymentDetails,
-        })
-        .returning();
-
-      // Deduct amount from user's bankroll
-      const newBankroll = (currentBalance - amountNum).toFixed(2);
-      await db
+      // Atomically deduct from bankroll AND enforce the profit-split cap in
+      // the same statement. The cap rule is:
+      //   amount <= floor((bankroll - startingBalance) * userSplit / 100)
+      // To dodge floating-point and floor() ambiguity we encode it as integer
+      // math:
+      //   amount * 100 <= (bankroll - startingBalance) * userSplit
+      // This closes the TOCTOU window where two concurrent requests could
+      // each pass the JS pre-check on a stale balance and together exceed
+      // the user's allowed withdrawable profit.
+      const amountStr = amountNum.toFixed(2);
+      const startingBalanceStr = String(startingBalance);
+      const splitStr = String(userSplit);
+      const debitRows = await db
         .update(profiles)
-        .set({ bankroll: newBankroll })
-        .where(eq(profiles.id, userId));
+        .set({ bankroll: sql`${profiles.bankroll} - ${amountStr}` })
+        .where(
+          and(
+            eq(profiles.id, userId),
+            sql`${profiles.bankroll} >= ${amountStr}`,
+            sql`(${amountStr}::numeric * 100) <= ((${profiles.bankroll} - ${startingBalanceStr}::numeric) * ${splitStr}::numeric)`
+          )
+        )
+        .returning({ bankroll: profiles.bankroll });
 
-      return res.status(201).json({ 
-        withdrawal: newWithdrawal, 
-        newBankroll 
+      if (debitRows.length === 0) {
+        return res.status(409).json({
+          message:
+            "Insufficient funds (or another withdrawal is in flight). Please refresh and try again.",
+        });
+      }
+
+      const newBankroll = debitRows[0].bankroll;
+
+      let newWithdrawal;
+      try {
+        const inserted = await db
+          .insert(withdrawals)
+          .values({
+            userId,
+            paymentMethodId,
+            methodType,
+            amount: amountNum.toFixed(2),
+            fee: fee.toFixed(2),
+            netAmount: netAmount.toFixed(2),
+            status: "under_review",
+            statusHistory: [
+              {
+                status: "under_review",
+                timestamp: new Date().toISOString(),
+                note: "Withdrawal request submitted",
+              },
+            ],
+            paymentDetails,
+          })
+          .returning();
+        newWithdrawal = inserted[0];
+      } catch (insertErr) {
+        // Compensating refund: balance was deducted but withdrawal row failed.
+        await db
+          .update(profiles)
+          .set({ bankroll: sql`${profiles.bankroll} + ${amountNum.toFixed(2)}` })
+          .where(eq(profiles.id, userId));
+        throw insertErr;
+      }
+
+      return res.status(201).json({
+        withdrawal: newWithdrawal,
+        newBankroll,
       });
     } catch (error) {
       console.error("Error creating withdrawal:", error);

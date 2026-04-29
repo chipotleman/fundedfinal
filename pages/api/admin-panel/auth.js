@@ -2,13 +2,14 @@ import bcrypt from 'bcryptjs';
 import { db } from '../../../lib/db';
 import { adminUsers, adminStaff } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';
+import { signAdminToken, verifyAdminAuth } from '../../../lib/adminAuth';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { action, email, password } = req.body;
+  const { action, email, password } = req.body || {};
 
   try {
     if (action === 'login') {
@@ -34,6 +35,8 @@ export default async function handler(req, res) {
           .set({ lastLogin: new Date() })
           .where(eq(adminUsers.id, admin.id));
 
+        const token = signAdminToken({ id: admin.id, type: 'admin', email: admin.email });
+
         return res.status(200).json({
           success: true,
           admin: {
@@ -42,12 +45,7 @@ export default async function handler(req, res) {
             name: admin.name,
             type: 'admin',
           },
-          token: Buffer.from(JSON.stringify({
-            id: admin.id,
-            email: admin.email,
-            type: 'admin',
-            exp: Date.now() + (7 * 24 * 60 * 60 * 1000)
-          })).toString('base64'),
+          token,
         });
       }
 
@@ -77,6 +75,8 @@ export default async function handler(req, res) {
         .where(eq(adminStaff.id, staff.id));
 
       const staffPermissions = Array.isArray(staff.permissions) ? staff.permissions : [];
+      const token = signAdminToken({ id: staff.id, type: 'staff', email: staff.email });
+
       return res.status(200).json({
         success: true,
         admin: {
@@ -87,77 +87,22 @@ export default async function handler(req, res) {
           role: staff.role,
           permissions: staffPermissions,
         },
-        token: Buffer.from(JSON.stringify({
-          id: staff.id,
-          email: staff.email,
-          type: 'staff',
-          permissions: staffPermissions,
-          exp: Date.now() + (7 * 24 * 60 * 60 * 1000)
-        })).toString('base64'),
+        token,
       });
     }
 
     if (action === 'verify') {
-      const { token } = req.body;
+      const { token } = req.body || {};
       if (!token) {
         return res.status(401).json({ error: 'No token provided' });
       }
-
-      try {
-        const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-        if (decoded.exp < Date.now()) {
-          return res.status(401).json({ error: 'Token expired' });
-        }
-
-        // Check admin_users first
-        if (decoded.type === 'admin' || !decoded.type) {
-          const [admin] = await db
-            .select()
-            .from(adminUsers)
-            .where(eq(adminUsers.id, decoded.id))
-            .limit(1);
-
-          if (admin) {
-            return res.status(200).json({
-              valid: true,
-              admin: {
-                id: admin.id,
-                email: admin.email,
-                name: admin.name,
-                type: 'admin',
-              },
-            });
-          }
-        }
-
-        // Check admin_staff
-        if (decoded.type === 'staff' || !decoded.type) {
-          const [staff] = await db
-            .select()
-            .from(adminStaff)
-            .where(eq(adminStaff.id, decoded.id))
-            .limit(1);
-
-          if (staff && staff.isActive) {
-            const staffPermissions = Array.isArray(staff.permissions) ? staff.permissions : [];
-            return res.status(200).json({
-              valid: true,
-              admin: {
-                id: staff.id,
-                email: staff.email,
-                name: staff.name,
-                type: 'staff',
-                role: staff.role,
-                permissions: staffPermissions,
-              },
-            });
-          }
-        }
-
-        return res.status(401).json({ error: 'User not found' });
-      } catch {
-        return res.status(401).json({ error: 'Invalid token' });
+      // Re-use the central verifier so token format and trust rules stay in sync.
+      const proxyReq = { headers: { authorization: `Bearer ${token}` }, cookies: {} };
+      const result = await verifyAdminAuth(proxyReq);
+      if (!result.valid) {
+        return res.status(401).json({ error: result.error || 'Invalid token' });
       }
+      return res.status(200).json({ valid: true, admin: result.admin });
     }
 
     return res.status(400).json({ error: 'Invalid action' });
