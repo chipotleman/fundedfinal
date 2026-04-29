@@ -57,6 +57,14 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
     const handleClick = (e) => {
       if (ref.current && ref.current.contains(e.target)) return;
       if (anchorRef?.current && anchorRef.current.contains(e.target)) return;
+      // Defensive: if the click target was removed from the document
+      // between the click event and this handler running (e.g. the user
+      // clicked Dismiss inside a row, the row unmounted on the React
+      // re-render, and the bubbled document-level click now sees a
+      // detached node), treat it as an in-dropdown action and skip
+      // close. Without this, dismissing/acking a row inside the popup
+      // would also dismiss the popup itself.
+      if (typeof document !== 'undefined' && !document.contains(e.target)) return;
       onClose?.();
     };
     const handleKey = (e) => { if (e.key === 'Escape') onClose?.(); };

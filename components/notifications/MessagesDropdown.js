@@ -99,6 +99,11 @@ export default function MessagesDropdown({ open, onClose, anchorRef, onSelectCon
     const handleClick = (e) => {
       if (ref.current && ref.current.contains(e.target)) return;
       if (anchorRef?.current && anchorRef.current.contains(e.target)) return;
+      // Defensive: if the click target was removed from the document
+      // between the click event and this handler running (e.g. a row
+      // unmounted on the React re-render after an in-popup action),
+      // treat it as an in-dropdown action and skip close.
+      if (typeof document !== 'undefined' && !document.contains(e.target)) return;
       onClose?.();
     };
     const handleKey = (e) => { if (e.key === 'Escape') onClose?.(); };
