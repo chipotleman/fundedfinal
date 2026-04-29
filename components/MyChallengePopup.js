@@ -238,7 +238,7 @@ export default function MyChallengePopup({ isOpen, onClose }) {
               onClick={handleGoToLab}
               className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all"
             >
-              Go to The Lab
+              Go to Battle
             </button>
             {isFunded && (
               <button

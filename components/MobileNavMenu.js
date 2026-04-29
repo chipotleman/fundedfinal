@@ -299,7 +299,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 onClick={onClose}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
-                The Lab
+                Battle
               </Link>
               <Link
                 href="/bet-history"
@@ -322,7 +322,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 onClick={onClose}
                 className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
-                <span>Battle</span>
+                <span>Social</span>
                 {alertsBadge > 0 && (
                   <span className="ml-2 min-w-[20px] h-[20px] px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
                     {alertsBadge > 9 ? '9+' : alertsBadge}
@@ -388,7 +388,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 onClick={onClose}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
-                Battle
+                Social
               </Link>
               <Link
                 href="/leaderboard"

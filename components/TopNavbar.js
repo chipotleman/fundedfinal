@@ -605,10 +605,10 @@ export default function TopNavbar({
               {isLoggedIn ? (
                 <>
                   <Link href="/dashboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
-                    The Lab
-                  </Link>
-                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: '#d1d5db' }}>
                     Battle
+                  </Link>
+                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" style={{ color: '#d1d5db' }}>
+                    Social
                   </Link>
                   <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
                     Leaderboard
@@ -616,8 +616,8 @@ export default function TopNavbar({
                 </>
               ) : (
                 <>
-                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: '#d1d5db' }}>
-                    Battle
+                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" style={{ color: '#d1d5db' }}>
+                    Social
                   </Link>
                   <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
                     Leaderboard
@@ -897,7 +897,7 @@ export default function TopNavbar({
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                               </svg>
-                              <span className="font-medium">The Lab</span>
+                              <span className="font-medium">Battle</span>
                             </Link>
 
                             <Link

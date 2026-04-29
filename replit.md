@@ -8,6 +8,7 @@ Piks is a Next.js sports betting platform enabling competitive 1v1 betting battl
 - No hover effects on mobile/iPad — use `@media (hover: none)` to disable hover states on touch devices.
 - High-end aesthetic — should look like a billion-dollar company is behind it. Clean, minimal, professional.
 - "Cancel Friend Request" not "Withdraw Request" for cancelling sent friend requests.
+- Navigation labels: `/dashboard` is labeled **"Battle"** (the place to start a battle, formerly "The Lab"); `/battle` is labeled **"Social"** (a feed/social view of live battles, no longer the entry point for starting a battle). Routes are unchanged — only labels.
 
 ### System Architecture
 
