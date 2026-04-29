@@ -36,15 +36,15 @@ export default function DepositMatchContainer() {
 
   return (
     <div
-      className="w-[254px] md:w-[326px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
+      className="w-[187px] md:w-[240px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
       style={{ backgroundColor: '#000' }}
       onClick={handleClick}
       role="button"
       aria-label={isReturning ? 'Claim reload deposit match' : 'Claim first deposit match'}
     >
-      {/* Container width matches the trimmed banner aspect (1392×768 ≈ 1.81)
-          at the unified carousel height (140/180), so the bordered card
-          fills the tile edge-to-edge with no padding. */}
+      {/* Container is 4:3 to match the source banner art (1448×1086).
+          object-cover gives a perfect edge-to-edge fill with no
+          letterboxing or cropping. */}
       <img
         src="/promos/reload-match.png"
         alt="Reload Match — 50% bonus, up to $50 free on your next deposit"
