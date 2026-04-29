@@ -628,20 +628,45 @@ export default function TopNavbar({
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
             <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 sm:relative sm:right-0">
-              {/* Desktop Balances - Cash (always) + Coins (only when in active battle) */}
+              {/* Desktop Balances — Cash (always) + Coins (only when in active
+                  battle). Both use the cartoon-chip aesthetic shared with the
+                  Featured Battles cards: chunky rounded-full pill, thick dark
+                  outline, vivid gradient fill, soft colored glow, dark text on
+                  the bright background, and color-emoji forced via the
+                  variation selector + emoji font stack so iOS Safari and
+                  Android Chrome cannot fall back to monochrome glyphs. */}
               {isLoggedIn && hasActiveChallenge && userProfile && (
                 <div className="hidden sm:flex items-center gap-2">
                   <button
                     onClick={() => setExplainerType('cash')}
                     title="Real cash balance — click for details"
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-2 transition-colors hover:brightness-110"
+                    className="cartoon-balance-pill"
                     style={{
-                      background: 'linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(21,128,61,0.08) 100%)',
-                      border: '1px solid rgba(34,197,94,0.45)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '5px 12px 5px 10px',
+                      borderRadius: 999,
+                      background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
+                      border: '1.5px solid #0d0d0d',
+                      boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
+                      color: '#022c1f',
+                      cursor: 'pointer',
                     }}
                   >
-                    <span className="text-base leading-none">💵</span>
-                    <span className="font-bold text-sm" style={{ color: '#86efac' }}>
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        fontSize: 16,
+                        lineHeight: 1,
+                        fontFamily:
+                          '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
+                        color: 'initial',
+                      }}
+                    >
+                      {`💵\uFE0F`}
+                    </span>
+                    <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
                       ${formatMoney(parseFloat(userProfile.bankroll), 0)}
                     </span>
                   </button>
@@ -649,14 +674,33 @@ export default function TopNavbar({
                     <button
                       onClick={() => setExplainerType('coins')}
                       title="In-battle play coins — click for details"
-                      className="flex items-center gap-1.5 rounded-lg px-3 py-2 transition-colors hover:brightness-110"
+                      className="cartoon-balance-pill"
                       style={{
-                        background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
-                        border: '1px solid rgba(251,146,60,0.45)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '5px 12px 5px 10px',
+                        borderRadius: 999,
+                        background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
+                        border: '1.5px solid #0d0d0d',
+                        boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(249,115,22,0.55)',
+                        color: '#2a1404',
+                        cursor: 'pointer',
                       }}
                     >
-                      <span className="text-base leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                      <span className="font-bold text-sm" style={{ color: '#fed7aa' }}>
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          fontSize: 16,
+                          lineHeight: 1,
+                          fontFamily:
+                            '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
+                          color: 'initial',
+                        }}
+                      >
+                        {`⚔\uFE0F`}
+                      </span>
+                      <span style={{ fontWeight: 900, fontSize: 14, color: '#2a1404', letterSpacing: '0.02em', lineHeight: 1.1 }}>
                         {formatMoney(parseFloat(matchupBalance), 0)}
                       </span>
                     </button>
@@ -741,7 +785,10 @@ export default function TopNavbar({
                 </div>
               )}
 
-              {/* Mobile Balances - sword/battle-coins pill only (cash lives in drawer) */}
+              {/* Mobile Balances - sword/battle-coins pill only (cash lives
+                  in drawer). Cartoon-chip aesthetic mirrors the desktop
+                  pills above so the look is identical across breakpoints —
+                  just sized down for the cramped mobile right rail. */}
               {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
                 <div
                   className="sm:hidden flex items-center gap-1"
@@ -749,15 +796,33 @@ export default function TopNavbar({
                 >
                   <button
                     onClick={() => setExplainerType('coins')}
-                    className="flex items-center gap-1 rounded-md px-2 py-1.5"
                     style={{
-                      background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
-                      border: '1px solid rgba(251,146,60,0.45)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '4px 10px 4px 8px',
+                      borderRadius: 999,
+                      background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
+                      border: '1.5px solid #0d0d0d',
+                      boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(249,115,22,0.55)',
+                      color: '#2a1404',
+                      cursor: 'pointer',
                     }}
                     aria-label="Battle coins details"
                   >
-                    <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                    <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#fed7aa' }}>
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        fontSize: 13,
+                        lineHeight: 1,
+                        fontFamily:
+                          '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
+                        color: 'initial',
+                      }}
+                    >
+                      {`⚔\uFE0F`}
+                    </span>
+                    <span style={{ fontWeight: 900, fontSize: 12, color: '#2a1404', letterSpacing: '0.02em', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
                       {formatMoney(parseFloat(matchupBalance), 0)}
                     </span>
                   </button>
