@@ -28,11 +28,12 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
   // Rush requires a live game — lock the row when none are available.
+  // We deliberately do NOT auto-downgrade rush → original here: doing so
+  // silently turned an intended Rush private match into a 24-hour
+  // Original bet-balance battle whenever live games briefly disappeared.
+  // Instead we keep the user's selection and block at submit time below
+  // with a visible error.
   const rushAvailable = useRushAvailability(isOpen);
-  useEffect(() => {
-    if (!isOpen) return;
-    if (rushAvailable === false && gameMode === 'rush') setGameMode('original');
-  }, [isOpen, rushAvailable, gameMode]);
   const [generatedCode, setGeneratedCode] = useState('');
   const [matchupId, setMatchupId] = useState(null);
   const [joinCode, setJoinCode] = useState('');
@@ -91,6 +92,13 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
 
   const createMatch = async () => {
     haptic.tap && haptic.tap();
+    // Hard guard: don't let a stale "Rush" selection silently fall back
+    // to an Original 24-hour battle when no live games are available.
+    if (gameMode === 'rush' && rushAvailable === false) {
+      setError('Rush needs a live game in progress. Pick another mode or try again when one tips off.');
+      haptic.warning && haptic.warning();
+      return;
+    }
     setLoading(true);
     setError('');
     try {

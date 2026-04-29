@@ -99,15 +99,13 @@ export default function PreMatchPopup({
     }
   }, [isOpen, initialBuyIn, initialGameMode]);
 
-  // If the user's saved default mode is Rush but no live games are
-  // available, silently bump them onto Original so the popup doesn't
-  // open with a mode they can't actually pick.
-  useEffect(() => {
-    if (!isOpen) return;
-    if (rushAvailable === false && gameMode === 'rush') {
-      setGameMode('original');
-    }
-  }, [isOpen, rushAvailable, gameMode]);
+  // We deliberately do NOT auto-downgrade rush → original here. Doing so
+  // silently turned a user's intended Rush match into an Original
+  // 24-hour bet-balance battle whenever live games briefly disappeared
+  // (the rush-availability poll fails open in production but returns
+  // false when the live-games list is genuinely empty). Instead the
+  // chip is locked in the picker UI below and the confirm handler
+  // surfaces a clear error so the user picks another mode intentionally.
 
   // Mirror the YouVsCard's persistence path: write the local cache
   // synchronously (so guests still benefit) and, when signed in,
@@ -139,7 +137,17 @@ export default function PreMatchPopup({
   const pot = buyIn * 2;
   const winnerTakes = Math.round(pot * 0.9 * 100) / 100;
 
+  const [confirmError, setConfirmError] = useState('');
+
   const handleConfirm = () => {
+    // Hard guard: don't let a stale "Rush" selection silently fall back
+    // to an Original 24-hour battle when no live games are available.
+    if (gameMode === 'rush' && rushAvailable === false) {
+      setConfirmError('Rush needs a live game in progress. Pick another mode or try again when one tips off.');
+      haptic.warning && haptic.warning();
+      return;
+    }
+    setConfirmError('');
     if (dontAsk) setPlayNowConfirmSkipped(true);
     haptic.tap();
     onConfirm({ buyIn, gameMode });
@@ -515,6 +523,20 @@ export default function PreMatchPopup({
                     Need ${formatMoney(balanceShortfall)}
                   </span>
                 )}
+              </div>
+            )}
+
+            {confirmError && (
+              <div
+                role="alert"
+                className="rounded-xl px-3 py-2 text-[12px] leading-snug"
+                style={{
+                  background: 'rgba(239,68,68,0.12)',
+                  border: '1.5px solid rgba(239,68,68,0.45)',
+                  color: '#fecaca',
+                }}
+              >
+                {confirmError}
               </div>
             )}
 

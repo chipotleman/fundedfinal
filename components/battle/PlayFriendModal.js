@@ -48,11 +48,12 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const [buyIn, setBuyIn] = useState(rememberedBuyIn);
   const [gameMode, setGameMode] = useState(rememberedMode);
   // Rush requires a live game — lock the mode tile when none are available.
+  // We deliberately do NOT auto-downgrade rush → original here: doing so
+  // silently turned an intended Rush invite into a 24-hour Original
+  // bet-balance battle whenever live games briefly disappeared. Instead
+  // we keep the user's selection and block at submit time below with a
+  // visible error so they can pick another mode intentionally.
   const rushAvailable = useRushAvailability(isOpen);
-  useEffect(() => {
-    if (!isOpen) return;
-    if (rushAvailable === false && gameMode === 'rush') setGameMode('original');
-  }, [isOpen, rushAvailable, gameMode]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -201,6 +202,12 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     if (!selectedFriend) return;
     if (hasActiveMatchup) {
       setError(ACTIVE_BATTLE_BLOCK_MESSAGE);
+      return;
+    }
+    // Hard guard: don't let a stale "Rush" selection silently fall back
+    // to an Original 24-hour battle when no live games are available.
+    if (gameMode === 'rush' && rushAvailable === false) {
+      setError('Rush needs a live game in progress. Pick another mode or try again when one tips off.');
       return;
     }
     setSending(true);

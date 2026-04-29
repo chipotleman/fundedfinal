@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import useRushAvailability from '../../hooks/useRushAvailability';
+import haptic from '../../utils/haptics';
 import UserAvatar from '../UserAvatar';
 import { CartoonChipStyles } from './CartoonChip';
 
@@ -72,11 +73,13 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
   // Rush requires a live game — lock the chip when none are available.
+  // We deliberately do NOT auto-downgrade rush → original here: doing so
+  // silently turned a user's intended Rush match into a 24-hour Original
+  // bet-balance battle whenever live games briefly disappeared. Instead
+  // we keep the user's selection and block at submit time below with a
+  // visible error so they can pick a different mode (or wait for a
+  // live game) intentionally.
   const rushAvailable = useRushAvailability(isOpen);
-  useEffect(() => {
-    if (!isOpen) return;
-    if (rushAvailable === false && gameMode === 'rush') setGameMode('original');
-  }, [isOpen, rushAvailable, gameMode]);
   const [searchTime, setSearchTime] = useState(0);
   const [error, setError] = useState('');
   const [avatars, setAvatars] = useState([]);
@@ -229,6 +232,15 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   };
 
   const startSearch = async () => {
+    // Hard guard: if the user has Rush selected but no live games are
+    // available right now, abort with a visible error instead of letting
+    // the queue silently start an Original-mode battle.
+    if (gameMode === 'rush' && rushAvailable === false) {
+      setError('Rush needs a live game in progress. Pick another mode or try again when one tips off.');
+      haptic.warning && haptic.warning();
+      return;
+    }
+
     cancelledRef.current = false;
     setStep('searching');
     setSearchTime(0);
