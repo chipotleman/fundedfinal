@@ -92,7 +92,7 @@ export default function DepositMatchAppliedBanner() {
       `}</style>
 
       <div
-        className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden relative h-[120px] md:h-[150px]"
+        className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden relative h-[140px] md:h-[180px]"
         style={{
           background:
             'linear-gradient(135deg, #022c22 0%, #064e3b 30%, #047857 65%, #065f46 100%)',
