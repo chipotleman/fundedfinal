@@ -31,7 +31,7 @@ export default function DepositMatchContainer() {
 
   const handleClick = () => {
     haptic.tap();
-    router.push('/packages');
+    router.push('/withdrawal');
   };
 
   return (
