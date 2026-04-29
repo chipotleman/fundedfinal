@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import TopNavbar from '../../../components/TopNavbar';
 import UserAvatar from '../../../components/UserAvatar';
 import { getBattleStreamClient } from '../../../lib/battleStreamClient';
+import { useGames } from '../../../contexts/GamesContext';
+import { CartoonChipStyles } from '../../../components/battle/CartoonChip';
 
 const QUESTION_DURATION_MS = 15000;
 
@@ -31,28 +33,71 @@ function LiveGameCard({ game, selected, voted, onPick, disabled }) {
       type="button"
       disabled={disabled}
       onClick={() => onPick(game)}
-      className="w-full text-left rounded-2xl px-4 py-3 transition-all"
+      className="w-full text-left rounded-2xl px-3.5 py-3 transition-all rush-vote-card"
       style={{
-        background: selected ? 'rgba(251,146,60,0.18)' : '#0c1a35',
-        border: selected ? '2px solid #fb923c' : '1px solid rgba(255,255,255,0.08)',
-        boxShadow: selected ? '0 0 20px rgba(251,146,60,0.35)' : 'none',
+        background: selected
+          ? 'linear-gradient(135deg, rgba(251,191,36,0.18) 0%, rgba(249,115,22,0.18) 100%)'
+          : 'rgba(0,0,0,0.4)',
+        border: selected
+          ? '2px solid rgba(251,191,36,0.65)'
+          : '1.5px solid rgba(255,255,255,0.08)',
+        boxShadow: selected
+          ? '0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(251,146,60,0.45)'
+          : '0 2px 0 rgba(0,0,0,0.55)',
         opacity: disabled && !selected ? 0.5 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
       }}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-wider font-bold text-orange-300/80">
-            {game.sport_title} {game.isLive ? '· LIVE' : ''}
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span
+              className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-full"
+              style={{
+                background: 'rgba(251,191,36,0.15)',
+                color: '#fbbf24',
+                border: '1px solid rgba(251,191,36,0.3)',
+              }}
+            >
+              {game.sport_title}
+            </span>
+            {game.isLive && (
+              <span
+                className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-full inline-flex items-center gap-1"
+                style={{
+                  background: 'rgba(239,68,68,0.18)',
+                  color: '#fca5a5',
+                  border: '1px solid rgba(239,68,68,0.4)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: '50%',
+                    background: '#ef4444',
+                    boxShadow: '0 0 6px #ef4444',
+                  }}
+                />
+                LIVE
+              </span>
+            )}
           </div>
-          <div className="text-white font-bold text-sm truncate">{away} @ {home}</div>
-          <div className="text-xs text-gray-400 mt-0.5">
+          <div className="text-white font-extrabold text-sm truncate">{away} @ {home}</div>
+          <div className="text-xs text-gray-400 mt-0.5 tabular-nums">
             {as} – {hs} · {game.formatted_time || game.status}
           </div>
         </div>
         {voted && (
-          <div className="shrink-0 px-2 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(251,146,60,0.25)', color: '#fb923c' }}>
-            VOTED
+          <div
+            className="shrink-0 px-2 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+            style={{
+              background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
+              color: '#2a1404',
+              boxShadow: '0 2px 0 rgba(0,0,0,0.5)',
+            }}
+          >
+            ✓ Voted
           </div>
         )}
       </div>
@@ -68,13 +113,44 @@ export default function RushBattlePage() {
 
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-  const [liveGames, setLiveGames] = useState([]);
+  const [serverLiveGames, setServerLiveGames] = useState([]);
   const [liveLoading, setLiveLoading] = useState(false);
   const [pendingVote, setPendingVote] = useState(null);
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [pickedAnswer, setPickedAnswer] = useState(null);
   const [forfeiting, setForfeiting] = useState(false);
   const lastQuestionIdRef = useRef(null);
+
+  // Pull live games straight from the dashboard's source of truth
+  // (GamesContext) so demo / simulated live games show up here too.
+  // The Rush availability hook already ORs in this same signal — if
+  // we only relied on /api/goalserve/live the user would see "no live
+  // games" on the voting screen even when the dashboard is showing
+  // demo live games. `useGames()` returns `undefined` when called
+  // outside its provider, so a null-safe read is enough here.
+  const games = useGames();
+  const apiGames = games?.apiGames;
+
+  // Merge server and client lists, deriving the merged result directly
+  // from the raw `apiGames` reference so this memo's deps stay stable
+  // across renders (a separate filtered `clientLiveGames` would be a
+  // brand new array each render and defeat the memo).
+  const liveGames = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    const push = (g) => {
+      if (!g) return;
+      const key = `${g.sport_key || ''}::${g.id ?? ''}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(g);
+    };
+    serverLiveGames.forEach(push);
+    if (Array.isArray(apiGames)) {
+      apiGames.forEach((g) => { if (g && g.isLive) push(g); });
+    }
+    return out;
+  }, [serverLiveGames, apiGames]);
 
   const fetchState = useCallback(async () => {
     if (!matchupId) return;
@@ -126,7 +202,9 @@ export default function RushBattlePage() {
     return () => { try { unsub?.(); } catch {} };
   }, [matchupId, fetchState]);
 
-  // Load live games when in voting phase.
+  // Load live games from the API when in voting phase. We merge the
+  // result with the client-side GamesContext list (see liveGames memo
+  // above) so demo / simulated live games surface here too.
   useEffect(() => {
     if (data?.rush?.phase !== 'voting') return;
     let cancelled = false;
@@ -135,7 +213,7 @@ export default function RushBattlePage() {
       .then(r => r.json())
       .then(j => {
         if (cancelled) return;
-        setLiveGames(j?.games || []);
+        setServerLiveGames(j?.games || []);
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLiveLoading(false); });
@@ -247,6 +325,32 @@ export default function RushBattlePage() {
   const matchup = data.matchup;
   const isUser1 = matchup.user1Id === userId;
   const opponentId = isUser1 ? matchup.user2Id : matchup.user1Id;
+  const isVoting = rush.phase === 'voting';
+
+  // While voting, render as a full-screen cartoon-themed overlay so the
+  // experience feels like a continuation of the PreMatchPopup the user
+  // just came from. The TopNavbar and battle chrome step aside until
+  // both players lock in a game and the playing phase begins.
+  if (isVoting) {
+    return (
+      <>
+        <Head><title>Rush · Pick a Game · Piks</title></Head>
+        <RushVotingOverlay
+          rush={rush}
+          matchup={matchup}
+          userId={userId}
+          opponentId={opponentId}
+          isHost={rush.hostUserId === userId}
+          liveGames={liveGames}
+          liveLoading={liveLoading}
+          pendingVote={pendingVote}
+          onVote={submitVote}
+          onForfeit={forfeit}
+          error={error}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -265,20 +369,6 @@ export default function RushBattlePage() {
               Pot ${parseFloat(matchup.potSize).toFixed(0)} · Pays ${parseFloat(matchup.winnerPayout).toFixed(0)}
             </div>
           </div>
-
-          {rush.phase === 'voting' && (
-            <RushVotingPhase
-              rush={rush}
-              userId={userId}
-              opponentId={opponentId}
-              isHost={rush.hostUserId === userId}
-              liveGames={liveGames}
-              liveLoading={liveLoading}
-              pendingVote={pendingVote}
-              onVote={submitVote}
-              onForfeit={forfeit}
-            />
-          )}
 
           {rush.phase === 'playing' && (
             <RushPlayingPhase
@@ -311,63 +401,211 @@ export default function RushBattlePage() {
   );
 }
 
-function RushVotingPhase({ rush, userId, opponentId, isHost, liveGames, liveLoading, pendingVote, onVote, onForfeit }) {
+function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGames, liveLoading, pendingVote, onVote, onForfeit, error }) {
   const myVote = rush.gameVotes?.[userId];
   const oppVote = rush.gameVotes?.[opponentId];
-  const now = useNow(500);
+  const now = useNow(250);
   const deadline = rush.voteDeadline ? new Date(rush.voteDeadline).getTime() : null;
   const remaining = deadline ? Math.max(0, deadline - now) : null;
+  const pot = parseFloat(matchup?.potSize || 0);
+  const winnerTakes = parseFloat(matchup?.winnerPayout || 0);
+  const noGames = !liveLoading && liveGames.length === 0;
+  const bothVoted = !!myVote && !!oppVote;
 
   return (
-    <div>
-      <div className="text-center mb-5">
-        <div className="text-2xl font-black mb-1">Pick a Live Game</div>
-        <div className="text-sm text-gray-400">
-          {isHost
-            ? "You're the host — your pick wins ties."
-            : "Pick fast — host's pick wins ties."}
-        </div>
-        {remaining !== null && (
-          <div className="mt-2 text-xs text-orange-300">
-            {formatSeconds(remaining)}s to vote · You {myVote ? '✓' : '…'} · Opponent {oppVote ? '✓' : '…'}
+    <div
+      data-allow-fixed-overlay="true"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Rush — pick a live game"
+    >
+      <CartoonChipStyles />
+      <style>{`
+        @keyframes rushPopupIn {
+          0% { transform: scale(0.96); opacity: 0; }
+          60% { transform: scale(1.02); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes rushBoltBounce {
+          0%, 100% { transform: translateY(0) rotate(-8deg) scale(1); filter: drop-shadow(0 0 6px rgba(251,191,36,0.7)); }
+          50% { transform: translateY(-3px) rotate(8deg) scale(1.08); filter: drop-shadow(0 0 14px rgba(251,191,36,1)); }
+        }
+        @keyframes rushTimerPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        @keyframes rushVoteCardIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .rush-popup-card { animation: rushPopupIn 280ms cubic-bezier(0.22,1,0.36,1); }
+        .rush-popup-bolt { animation: rushBoltBounce 1.4s ease-in-out infinite; transform-origin: center; display: inline-block; }
+        .rush-popup-timer-urgent { animation: rushTimerPulse 0.6s ease-in-out infinite; }
+        .rush-vote-card { animation: rushVoteCardIn 260ms ease-out both; }
+        .rush-vote-card:nth-child(1) { animation-delay: 40ms; }
+        .rush-vote-card:nth-child(2) { animation-delay: 90ms; }
+        .rush-vote-card:nth-child(3) { animation-delay: 140ms; }
+        .rush-vote-card:nth-child(4) { animation-delay: 190ms; }
+        .rush-vote-card:nth-child(5) { animation-delay: 240ms; }
+        .rush-vote-card:nth-child(6) { animation-delay: 290ms; }
+        @media (prefers-reduced-motion: reduce) {
+          .rush-popup-card,
+          .rush-popup-bolt,
+          .rush-popup-timer-urgent,
+          .rush-vote-card { animation: none !important; }
+        }
+      `}</style>
+
+      <div
+        className="rush-popup-card rounded-2xl max-w-md w-full overflow-hidden my-auto"
+        style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}
+      >
+        {/* Header — mirrors PreMatchPopup step header */}
+        <div className="p-5" style={{ borderBottom: '1px solid #1a1a1a' }}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <span className="rush-popup-bolt" aria-hidden="true" style={{ fontSize: 22 }}>⚡</span>
+              <span>Rush · Pick a Game</span>
+            </h2>
+            {remaining !== null && (
+              <div
+                className={`text-sm font-black tabular-nums px-2.5 py-1 rounded-full ${remaining < 5000 ? 'rush-popup-timer-urgent' : ''}`}
+                style={{
+                  background: remaining < 5000 ? 'rgba(239,68,68,0.18)' : 'rgba(251,191,36,0.18)',
+                  color: remaining < 5000 ? '#fca5a5' : '#fbbf24',
+                  border: `1px solid ${remaining < 5000 ? 'rgba(239,68,68,0.4)' : 'rgba(251,191,36,0.4)'}`,
+                }}
+                aria-label={`${formatSeconds(remaining)} seconds to vote`}
+              >
+                {formatSeconds(remaining)}s
+              </div>
+            )}
           </div>
-        )}
-      </div>
+          <p className="text-xs text-gray-400 mt-2">
+            {isHost
+              ? "You're the host — your pick wins ties."
+              : "Pick fast — host's pick wins ties."}
+          </p>
 
-      {liveLoading && (
-        <div className="text-center text-gray-400 text-sm py-8">Loading live games...</div>
-      )}
-
-      {!liveLoading && liveGames.length === 0 && (
-        <div className="rounded-xl p-6 text-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>
-          <div className="text-red-300 font-bold text-sm mb-2">No live games available right now.</div>
-          <div className="text-xs text-gray-400 mb-4">Rush requires a live game to generate questions.</div>
-          <button onClick={onForfeit} className="px-4 py-2 rounded-lg bg-red-500/20 text-red-200 font-bold text-sm">
-            Cancel Match
-          </button>
+          {/* Vote status pills + pot chip */}
+          <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+            <span
+              className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full"
+              style={{
+                background: myVote ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.06)',
+                color: myVote ? '#34d399' : 'rgba(229,231,235,0.7)',
+                border: `1px solid ${myVote ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.1)'}`,
+              }}
+            >
+              You {myVote ? '✓' : '…'}
+            </span>
+            <span
+              className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full"
+              style={{
+                background: oppVote ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.06)',
+                color: oppVote ? '#34d399' : 'rgba(229,231,235,0.7)',
+                border: `1px solid ${oppVote ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.1)'}`,
+              }}
+            >
+              Opp {oppVote ? '✓' : '…'}
+            </span>
+            <span
+              className="ml-auto text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full"
+              style={{
+                background: 'rgba(251,191,36,0.18)',
+                color: '#fbbf24',
+                border: '1px solid rgba(251,191,36,0.35)',
+              }}
+            >
+              Pot ${pot.toFixed(0)} · Pays ${winnerTakes.toFixed(0)}
+            </span>
+          </div>
         </div>
-      )}
 
-      <div className="space-y-2">
-        {liveGames.map(g => (
-          <LiveGameCard
-            key={`${g.sport_key}_${g.id}`}
-            game={g}
-            selected={myVote?.gameId === String(g.id)}
-            voted={myVote?.gameId === String(g.id)}
-            disabled={!!myVote || pendingVote != null}
-            onPick={onVote}
-          />
-        ))}
-      </div>
+        {/* Body */}
+        <div className="p-5">
+          {liveLoading && (
+            <div className="text-center text-gray-400 text-sm py-8">
+              <div className="inline-block animate-pulse">Loading live games…</div>
+            </div>
+          )}
 
-      {liveGames.length > 0 && (
-        <div className="mt-6 text-center">
-          <button onClick={onForfeit} className="text-xs text-gray-500 hover:text-red-400 underline">
-            Forfeit match
-          </button>
+          {noGames && (
+            <div
+              className="rounded-xl p-5 text-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(239,68,68,0.10) 0%, rgba(249,115,22,0.10) 100%)',
+                border: '1px solid rgba(239,68,68,0.35)',
+              }}
+            >
+              <div className="text-3xl mb-2" aria-hidden="true">⚡</div>
+              <div className="text-white font-extrabold text-sm mb-1">No live games right now</div>
+              <div className="text-xs text-gray-400 mb-4 leading-snug">
+                Rush pulls its 6 prop questions from a live game in progress.
+                Hang tight for the next tip-off, or cancel out of this match.
+              </div>
+              <button
+                type="button"
+                onClick={onForfeit}
+                className="px-4 py-2 rounded-xl text-sm font-bold transition-transform active:scale-95"
+                style={{
+                  background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+                  color: '#fff',
+                  boxShadow: '0 3px 0 rgba(0,0,0,0.55)',
+                }}
+              >
+                Cancel match
+              </button>
+            </div>
+          )}
+
+          {!liveLoading && liveGames.length > 0 && (
+            <div className="space-y-2">
+              {liveGames.map(g => (
+                <LiveGameCard
+                  key={`${g.sport_key}_${g.id}`}
+                  game={g}
+                  selected={myVote?.gameId === String(g.id)}
+                  voted={myVote?.gameId === String(g.id)}
+                  disabled={!!myVote || pendingVote != null}
+                  onPick={onVote}
+                />
+              ))}
+            </div>
+          )}
+
+          {bothVoted && (
+            <div
+              className="mt-4 rounded-xl px-3 py-2.5 text-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(6,182,212,0.12) 100%)',
+                border: '1px solid rgba(16,185,129,0.35)',
+              }}
+            >
+              <div className="text-[11px] uppercase tracking-wider font-extrabold text-emerald-300">
+                Both locked in — generating props…
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-3 text-xs text-red-300 text-center">{error}</div>
+          )}
+
+          {liveGames.length > 0 && (
+            <div className="mt-5 text-center">
+              <button
+                type="button"
+                onClick={onForfeit}
+                className="text-[11px] text-gray-500 hover:text-red-400 underline underline-offset-2"
+              >
+                Forfeit match
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
