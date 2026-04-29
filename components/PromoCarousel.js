@@ -4,7 +4,7 @@ import { trackPromoEvent } from '../lib/promoTracking';
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
-const SCROLL_SPEED_PX_PER_SEC = 30;
+const SCROLL_SPEED_PX_PER_SEC = 45;
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -113,7 +113,11 @@ export default function PromoCarousel({ slides }) {
 
   const visible = candidates.filter((s) => !emptyKeys[s.key]);
   const count = visible.length;
-  const showLoop = count > 1 && !reducedMotion;
+  // Auto-scroll runs whenever there's more than one slide. We intentionally
+  // do NOT gate on `prefersReducedMotion` because many iOS users have OS-level
+  // Reduce Motion enabled by default; respecting it here was making the promo
+  // strip appear static and forcing users to swipe (per user feedback).
+  const showLoop = count > 1;
 
   const reportContent = useCallback((key, isEmpty) => {
     setEmptyKeys((prev) => {
@@ -247,8 +251,10 @@ export default function PromoCarousel({ slides }) {
   // Continuous slow horizontal scroll using rAF, with seamless wraparound.
   // The tick also retries measurement if setWidth is still 0, so the loop
   // self-heals once slides settle into their final size (post image/font load).
+  // We deliberately ignore `reducedMotion` here so the strip auto-scrolls even
+  // when the user's device has OS-level Reduce Motion enabled (per feedback).
   useEffect(() => {
-    if (reducedMotion || !showLoop) return;
+    if (!showLoop) return;
     let raf;
     const tick = (time) => {
       if (lastTimeRef.current === 0) lastTimeRef.current = time;
@@ -383,8 +389,13 @@ export default function PromoCarousel({ slides }) {
           ))}
       </div>
 
+      {/* Pagination dots are hidden on mobile because the strip auto-scrolls
+          continuously — the dots both wasted vertical space and produced a
+          visibly large gap between the promo cards and the sport-pill row
+          beneath. They remain on tablet/desktop (sm+) where they double as a
+          click-to-jump affordance. */}
       {count > 1 && (
-        <div className="flex justify-center items-center gap-1.5 mt-1 sm:mt-3">
+        <div className="hidden sm:flex justify-center items-center gap-1.5 mt-2">
           {visible.map((_, i) => (
             <button
               key={i}
