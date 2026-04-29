@@ -1227,7 +1227,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                             }
                           }}
                           title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
-                          className={`pfm-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative ${rushLive ? 'pfm-rush-live' : ''}`}
+                          className="pfm-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative"
                           style={
                             selected
                               ? {
@@ -1241,9 +1241,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               : {
                                   backgroundColor: elevatedBg,
                                   border: '2.5px solid #0a0a0a',
-                                  boxShadow: rushLive
-                                    ? `0 3px 0 #0a0a0a, 0 0 12px ${glow}`
-                                    : '0 3px 0 #0a0a0a',
+                                  boxShadow: '0 3px 0 #0a0a0a',
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 88,
