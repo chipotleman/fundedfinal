@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -961,4 +962,45 @@ export const appSettings = pgTable("app_settings", {
 
 export type AppSetting = typeof appSettings.$inferSelect;
 export type InsertAppSetting = typeof appSettings.$inferInsert;
+
+// Social feed posts — free-form text posts users write on the /battle Social tab.
+export const socialPosts = pgTable("social_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  body: text("body").notNull(),
+  likeCount: integer("like_count").default(0).notNull(),
+  commentCount: integer("comment_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  createdAtIdx: index("social_posts_created_at_idx").on(table.createdAt),
+  userIdIdx: index("social_posts_user_id_idx").on(table.userId),
+}));
+
+export const socialPostComments = pgTable("social_post_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  postIdIdx: index("social_post_comments_post_id_idx").on(table.postId),
+  createdAtIdx: index("social_post_comments_created_at_idx").on(table.createdAt),
+}));
+
+export const socialPostLikes = pgTable("social_post_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  postIdIdx: index("social_post_likes_post_id_idx").on(table.postId),
+  uniqueLike: uniqueIndex("social_post_likes_unique_idx").on(table.postId, table.userId),
+}));
+
+export type SocialPost = typeof socialPosts.$inferSelect;
+export type InsertSocialPost = typeof socialPosts.$inferInsert;
+export type SocialPostComment = typeof socialPostComments.$inferSelect;
+export type InsertSocialPostComment = typeof socialPostComments.$inferInsert;
+export type SocialPostLike = typeof socialPostLikes.$inferSelect;
+export type InsertSocialPostLike = typeof socialPostLikes.$inferInsert;
 

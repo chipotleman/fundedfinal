@@ -148,12 +148,83 @@ function StoriesRail({ battles, onSpectate, onStartBattle, currentUser, isGuest 
 }
 
 // =============================================================================
-// Composer — Facebook-style "what's on your mind" except it triggers a battle.
+// PostComposer — Facebook-style "share something" textarea that publishes a
+// post to the social feed. Collapsed state is a single placeholder pill;
+// tapping/focusing expands into a full textarea with a Post button. The
+// existing battle shortcuts are kept as a thin secondary footer so battle
+// entry from this page isn't lost.
 // =============================================================================
-function Composer({ currentUser, onStartBattle, onPickQuickMatch, onPickPlayFriend, onPickPrivateMatch, isGuest }) {
+const POST_MAX = 500;
+
+function PostComposer({
+  currentUser,
+  isGuest,
+  onPickQuickMatch,
+  onPickPlayFriend,
+  onPickPrivateMatch,
+  onPosted,
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [body, setBody] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (expanded && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [expanded]);
+
+  const handleExpand = () => {
+    if (isGuest) return;
+    setExpanded(true);
+  };
+
+  const handleCancel = () => {
+    setExpanded(false);
+    setBody('');
+    setError(null);
+  };
+
+  const handleSubmit = async () => {
+    const trimmed = body.trim();
+    if (!trimmed || submitting) return;
+    if (trimmed.length > POST_MAX) {
+      setError(`Posts must be under ${POST_MAX} characters`);
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/social/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: trimmed }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || 'Failed to post');
+      }
+      const json = await res.json();
+      if (json?.post) onPosted?.(json.post);
+      setBody('');
+      setExpanded(false);
+    } catch (e) {
+      setError(e.message || 'Failed to post');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const remaining = POST_MAX - body.length;
+  const placeholder = isGuest
+    ? 'Sign up to share something with the league…'
+    : 'Share something with the league…';
+
   return (
     <div className="rounded-2xl mb-4 p-3" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <FramedAvatar
           avatar={currentUser?.avatar}
           username={currentUser?.username || 'Y'}
@@ -161,18 +232,80 @@ function Composer({ currentUser, onStartBattle, onPickQuickMatch, onPickPlayFrie
           size={40}
           bgColor="#1a1a1a"
         />
-        <button
-          type="button"
-          onClick={onStartBattle}
-          className="flex-1 text-left rounded-full px-4 py-2.5 text-sm transition-colors"
-          style={{
-            backgroundColor: '#111',
-            border: `1px solid ${border}`,
-            color: textSecondary,
-          }}
-        >
-          {isGuest ? 'Sign up to start a battle…' : 'Who do you want to challenge?'}
-        </button>
+        <div className="flex-1 min-w-0">
+          {!expanded ? (
+            <button
+              type="button"
+              onClick={handleExpand}
+              disabled={isGuest}
+              className="w-full text-left rounded-full px-4 py-2.5 text-sm transition-colors"
+              style={{
+                backgroundColor: '#111',
+                border: `1px solid ${border}`,
+                color: textSecondary,
+                cursor: isGuest ? 'not-allowed' : 'pointer',
+                opacity: isGuest ? 0.6 : 1,
+              }}
+            >
+              {placeholder}
+            </button>
+          ) : (
+            <>
+              <textarea
+                ref={textareaRef}
+                value={body}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  if (error) setError(null);
+                }}
+                placeholder={placeholder}
+                rows={3}
+                maxLength={POST_MAX + 50}
+                className="w-full rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-blue-500"
+                style={{
+                  backgroundColor: '#111',
+                  border: `1px solid ${border}`,
+                  color: textPrimary,
+                  minHeight: 80,
+                }}
+              />
+              <div className="flex items-center justify-between mt-2 gap-2">
+                <div className="text-[11px]" style={{ color: remaining < 0 ? '#f87171' : textMuted }}>
+                  {remaining} left
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={submitting}
+                    className="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors hover:bg-white/5"
+                    style={{ color: textSecondary }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={!body.trim() || submitting || remaining < 0}
+                    className="px-4 py-1.5 rounded-md text-[12px] font-bold text-white transition-transform"
+                    style={{
+                      background: !body.trim() || remaining < 0
+                        ? '#374151'
+                        : 'linear-gradient(135deg, #2563eb, #06b6d4)',
+                      cursor: !body.trim() || submitting || remaining < 0 ? 'not-allowed' : 'pointer',
+                      opacity: submitting ? 0.7 : 1,
+                    }}
+                  >
+                    {submitting ? 'Posting…' : 'Post'}
+                  </button>
+                </div>
+              </div>
+              {error && (
+                <div className="mt-1 text-[11px] text-red-400">{error}</div>
+              )}
+            </>
+          )}
+        </div>
       </div>
       {!isGuest && (
         <div className="grid grid-cols-3 gap-1.5 mt-3 pt-3" style={{ borderTop: `1px solid ${border}` }}>
@@ -203,6 +336,203 @@ function Composer({ currentUser, onStartBattle, onPickQuickMatch, onPickPlayFrie
             <Icon.Trophy size={14} className="text-orange-400" />
             <span>Private</span>
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// PostCard — a user-authored post in the feed: avatar/name/time + body, with
+// like + comment toggle. Tapping comment expands an inline thread (lazy loaded
+// on first expand) plus a comment composer.
+// =============================================================================
+function PostCard({ post, currentUser, isGuest, onOpenProfile }) {
+  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const [liked, setLiked] = useState(!!post.likedByMe);
+  const [likePending, setLikePending] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.commentCount || 0);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [commentDraft, setCommentDraft] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+  const author = post.author || {};
+
+  const handleLike = async () => {
+    if (isGuest || likePending) return;
+    setLikePending(true);
+    const wasLiked = liked;
+    // Optimistic
+    setLiked(!wasLiked);
+    setLikeCount((c) => Math.max(0, c + (wasLiked ? -1 : 1)));
+    try {
+      const res = await fetch(`/api/social/posts/${post.id}/like`, {
+        method: 'POST',
+      });
+      if (!res.ok) throw new Error('Like failed');
+      const json = await res.json();
+      if (typeof json.likeCount === 'number') setLikeCount(json.likeCount);
+      if (typeof json.liked === 'boolean') setLiked(json.liked);
+    } catch {
+      // Revert
+      setLiked(wasLiked);
+      setLikeCount((c) => Math.max(0, c + (wasLiked ? 1 : -1)));
+    } finally {
+      setLikePending(false);
+    }
+  };
+
+  const loadComments = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/social/posts/${post.id}/comments`);
+      if (!res.ok) return;
+      const json = await res.json();
+      setComments(Array.isArray(json.comments) ? json.comments : []);
+      setCommentsLoaded(true);
+    } catch {}
+  }, [post.id]);
+
+  const handleToggleComments = async () => {
+    const next = !commentsOpen;
+    setCommentsOpen(next);
+    if (next && !commentsLoaded) {
+      await loadComments();
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    const trimmed = commentDraft.trim();
+    if (!trimmed || commentSubmitting || isGuest) return;
+    setCommentSubmitting(true);
+    try {
+      const res = await fetch(`/api/social/posts/${post.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: trimmed }),
+      });
+      if (!res.ok) throw new Error('Comment failed');
+      const json = await res.json();
+      if (json?.comment) {
+        setComments((prev) => [...prev, json.comment]);
+        setCommentCount((c) => c + 1);
+        setCommentDraft('');
+      }
+    } catch {} finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl mb-4 overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
+      <div className="flex items-center gap-3 px-4 pt-3">
+        <button type="button" onClick={() => onOpenProfile?.(author)} className="flex-shrink-0">
+          <FramedAvatar avatar={author.avatar} username={author.username || 'P'} frameId={author.equippedFrame} size={36} bgColor="#1a1a1a" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <button type="button" onClick={() => onOpenProfile?.(author)} className="text-[13px] font-semibold hover:underline" style={{ color: textPrimary }}>
+            {author.username || 'Player'}
+          </button>
+          <div className="text-[10px]" style={{ color: textMuted }}>{timeAgo(post.createdAt)}</div>
+        </div>
+      </div>
+      <div className="px-4 py-3">
+        <div className="text-[14px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>
+          {post.body}
+        </div>
+      </div>
+      {(likeCount > 0 || commentCount > 0) && (
+        <div className="px-4 pb-2 flex items-center gap-3 text-[11px]" style={{ color: textMuted }}>
+          {likeCount > 0 && <span>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>}
+          {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
+        <button
+          type="button"
+          onClick={handleLike}
+          disabled={isGuest || likePending}
+          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
+          style={{ color: liked ? '#f87171' : textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
+        >
+          <svg viewBox="0 0 24 24" width={14} height={14} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          {liked ? 'Liked' : 'Like'}
+        </button>
+        <button
+          type="button"
+          onClick={handleToggleComments}
+          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
+          style={{ color: textPrimary }}
+        >
+          <Icon.Chat size={14} />
+          Comment
+        </button>
+      </div>
+      {commentsOpen && (
+        <div style={{ borderTop: `1px solid ${border}` }}>
+          <div className="px-4 py-3 space-y-3">
+            {!commentsLoaded ? (
+              <div className="text-[11px]" style={{ color: textMuted }}>Loading comments…</div>
+            ) : comments.length === 0 ? (
+              <div className="text-[11px]" style={{ color: textMuted }}>Be the first to comment.</div>
+            ) : (
+              comments.map((c) => {
+                const ca = c.author || {};
+                return (
+                  <div key={c.id} className="flex items-start gap-2.5">
+                    <button type="button" onClick={() => onOpenProfile?.(ca)} className="flex-shrink-0 mt-0.5">
+                      <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor="#1a1a1a" />
+                    </button>
+                    <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: '#111' }}>
+                      <button type="button" onClick={() => onOpenProfile?.(ca)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
+                        {ca.username || 'Player'}
+                      </button>
+                      <div className="text-[13px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>{c.body}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: textMuted }}>{timeAgo(c.createdAt)}</div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            {!isGuest && (
+              <div className="flex items-start gap-2.5 pt-1">
+                <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor="#1a1a1a" />
+                <div className="flex-1 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={commentDraft}
+                    onChange={(e) => setCommentDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitComment();
+                      }
+                    }}
+                    placeholder="Write a comment…"
+                    maxLength={300}
+                    className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    style={{ backgroundColor: '#111', border: `1px solid ${border}`, color: textPrimary }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSubmitComment}
+                    disabled={!commentDraft.trim() || commentSubmitting}
+                    className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
+                    style={{
+                      background: commentDraft.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
+                      cursor: commentDraft.trim() && !commentSubmitting ? 'pointer' : 'not-allowed',
+                      opacity: commentSubmitting ? 0.7 : 1,
+                    }}
+                  >
+                    {commentSubmitting ? '…' : 'Send'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -652,6 +982,7 @@ export default function SocialFeedPage({ data }) {
   // wants a different visual treatment — circular story avatars at the top
   // and Instagram-style post cards inline.
   const [liveBattles, setLiveBattles] = useState([]);
+  const [posts, setPosts] = useState([]);
   const sseRef = useRef(null);
 
   const loadLive = useCallback(async () => {
@@ -665,6 +996,31 @@ export default function SocialFeedPage({ data }) {
       const list = Array.isArray(json?.battles) ? json.battles : (Array.isArray(json) ? json : []);
       setLiveBattles(list);
     } catch {}
+  }, []);
+
+  const loadPosts = useCallback(async () => {
+    try {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch('/api/social/posts', { signal: controller.signal });
+      clearTimeout(t);
+      if (!res.ok) return;
+      const json = await res.json();
+      setPosts(Array.isArray(json?.posts) ? json.posts : []);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    loadPosts();
+    const onFocus = () => loadPosts();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', onFocus);
+      return () => window.removeEventListener('focus', onFocus);
+    }
+  }, [loadPosts]);
+
+  const handlePosted = useCallback((post) => {
+    setPosts((prev) => [post, ...prev]);
   }, []);
 
   useEffect(() => {
@@ -714,8 +1070,14 @@ export default function SocialFeedPage({ data }) {
       key: `mine-${m.id}`,
       data: m,
     }));
-    return [...live, ...results, ...mine].sort((a, b) => b.ts - a.ts);
-  }, [liveBattles, recentHighlights, recentMatches]);
+    const postItems = (posts || []).map((p) => ({
+      kind: 'post',
+      ts: new Date(p.createdAt || 0).getTime(),
+      key: `post-${p.id}`,
+      data: p,
+    }));
+    return [...live, ...results, ...mine, ...postItems].sort((a, b) => b.ts - a.ts);
+  }, [liveBattles, recentHighlights, recentMatches, posts]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 pb-8 max-w-[1080px] mx-auto">
@@ -728,13 +1090,13 @@ export default function SocialFeedPage({ data }) {
           currentUser={currentUser}
           isGuest={isGuest}
         />
-        <Composer
+        <PostComposer
           currentUser={currentUser}
-          onStartBattle={onStartBattle}
+          isGuest={isGuest}
           onPickQuickMatch={onPickQuickMatch}
           onPickPlayFriend={onPickPlayFriend}
           onPickPrivateMatch={onPickPrivateMatch}
-          isGuest={isGuest}
+          onPosted={handlePosted}
         />
         <PendingPile
           invites={invites}
@@ -772,6 +1134,17 @@ export default function SocialFeedPage({ data }) {
                   highlight={item.data}
                   onOpenProfile={onOpenProfile}
                   onReplay={handleReplay}
+                />
+              );
+            }
+            if (item.kind === 'post') {
+              return (
+                <PostCard
+                  key={item.key}
+                  post={item.data}
+                  currentUser={currentUser}
+                  isGuest={isGuest}
+                  onOpenProfile={onOpenProfile}
                 />
               );
             }
