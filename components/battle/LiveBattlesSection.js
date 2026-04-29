@@ -3201,18 +3201,15 @@ export default function LiveBattlesSection({
     }
   }, [youVsIsIdle]);
 
-  // Force every BattleCard in the carousel to render its expanded preview
-  // when the row is already tall — either because the user explicitly
-  // toggled Preview on any card, or because the YouVsCard is in an active
-  // matchmaking/in-battle state and is pushing the row height up on its
-  // own. This keeps the row visually full instead of leaving large empty
-  // gaps below short, un-expanded peer cards.
-  const battleCardsExpanded = battlesExpanded || !youVsIsIdle;
+  // All BattleCards in the carousel share a single expansion flag, so
+  // clicking Preview on any one card expands every peer at the same time
+  // and the row never has tall stretched cards sitting next to short
+  // un-expanded ones. Cards default to collapsed and only open when the
+  // user explicitly clicks Preview.
+  const battleCardsExpanded = battlesExpanded;
   // BattleCard forwards the desired next value (true to expand, false to
-  // collapse) so we can record the user's exact preference. While
-  // YouVsCard is non-idle the visible state stays forced-expanded, but
-  // the recorded preference still applies the moment YouVsCard returns
-  // to idle.
+  // collapse) so we set the row to that exact value rather than blindly
+  // inverting.
   const setBattleCardsExpanded = useCallback((next) => {
     setBattlesExpanded(Boolean(next));
   }, []);
