@@ -11,7 +11,7 @@ export default function TopCappersContainer() {
 
   const handleClick = () => {
     haptic.tap();
-    router.push('/marketplace');
+    router.push('/leaderboard');
   };
 
   return (

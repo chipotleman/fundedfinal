@@ -11,7 +11,7 @@ export default function RushExplainerContainer() {
 
   const handleClick = () => {
     haptic.tap();
-    router.push('/battle');
+    router.push('/battle?openChooser=1');
   };
 
   return (

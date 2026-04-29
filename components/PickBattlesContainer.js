@@ -10,7 +10,7 @@ export default function PickBattlesContainer() {
 
   const handleClick = () => {
     haptic.tap();
-    router.push('/dashboard');
+    router.push('/battle?openChooser=1');
   };
 
   return (
