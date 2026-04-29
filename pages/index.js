@@ -1223,6 +1223,14 @@ export default function Dashboard() {
             seenIds.add(id);
             gameCount += 1;
           }
+          // On desktop the condensed bar has plenty of room, so we
+          // expand condensed pills to look like inline pills (full
+          // label + inline count) and hide the cramped absolute
+          // game-count badge. On mobile they stay emoji-only with the
+          // floating superscript count.
+          const condensedClass = isCondensed
+            ? 'gap-0 md:gap-2 px-2.5 py-[5px] md:px-4 md:py-2.5 text-[12px] md:text-[14px]'
+            : '';
           return (
             <TapSurface
               key={pill.key}
@@ -1234,16 +1242,21 @@ export default function Dashboard() {
               inactiveTextColor={'#9ca3af'}
               aria-label={labelList}
               title={isCondensed ? labelList : undefined}
+              className={condensedClass}
               style={{
                 flexShrink: 0,
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: isCondensed ? 0 : '8px',
-                padding: isCondensed ? '5px 10px' : pillPadding,
+                ...(isCondensed
+                  ? {}
+                  : {
+                      gap: '8px',
+                      padding: pillPadding,
+                      fontSize: pillFontSize,
+                    }),
                 borderRadius: '9999px',
-                fontSize: pillFontSize,
                 fontWeight: '500',
                 borderWidth: '1px',
                 borderStyle: 'solid',
@@ -1261,6 +1274,16 @@ export default function Dashboard() {
             >
               <span style={{ fontSize: isCondensed ? '18px' : iconSize, lineHeight: 1 }}>{pill.icon}</span>
               {!isCondensed && <span>{getSportLabel(pill.sports[0])}</span>}
+              {isCondensed && (
+                // Desktop-only inline label (+ count) for condensed
+                // pills. On mobile this stays hidden and the absolute
+                // game-count badge below provides the at-a-glance
+                // count instead.
+                <span className="hidden md:inline">
+                  {getSportLabel(pill.sports[0])}
+                  {gameCount > 0 ? ` (${gameCount})` : ''}
+                </span>
+              )}
               {isCondensed && gameCount > 0 && (
                 // Game-count badge — was previously the *league*
                 // count (only shown on bundled pills). Per user
@@ -1268,8 +1291,11 @@ export default function Dashboard() {
                 // total for this pill on every condensed pill that
                 // has at least one game. Absolutely positioned so
                 // it doesn't change the pill's hit area or layout.
+                // Hidden on desktop (md+) where the inline label
+                // above already includes the count.
                 <span
                   aria-hidden="true"
+                  className="md:hidden"
                   style={{
                     position: 'absolute',
                     top: -2,
