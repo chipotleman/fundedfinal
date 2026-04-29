@@ -2339,6 +2339,7 @@ export default function BattlePage() {
       <QuickMatchModal
         isOpen={showQuickMatch}
         onClose={() => setShowQuickMatch(false)}
+        onBack={() => { setShowQuickMatch(false); setShowBattleOptions(true); }}
         userId={userId}
         onMatchFound={(matchup, opponent) => {
           setShowQuickMatch(false);

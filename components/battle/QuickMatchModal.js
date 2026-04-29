@@ -66,7 +66,7 @@ const TIPS = [
   'Live betting can turn a losing battle around',
 ];
 
-export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound, presetMatch = null }) {
+export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMatchFound, presetMatch = null }) {
   useModalScrollLock(isOpen);
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
@@ -451,36 +451,48 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
                   that changes between them is the title copy and the
                   "challenging" card below. */}
               <div className="px-5 pt-5 pb-0 flex-shrink-0">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2
-                      id="qm-title"
-                      className="font-black uppercase"
-                      style={{
-                        color: '#fff',
-                        fontSize: '20px',
-                        lineHeight: 1.05,
-                        letterSpacing: '0.06em',
-                        textShadow: '0 2px 0 #000',
-                      }}
-                    >
-                      Quick Match
-                    </h2>
-                    <p
-                      className="mt-1 font-extrabold uppercase"
-                      style={{
-                        color: '#60a5fa',
-                        fontSize: '10px',
-                        letterSpacing: '0.18em',
-                      }}
-                    >
-                      Find a random opponent instantly
-                    </p>
+                <div className="flex items-center justify-between mb-4 gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {onBack && (
+                      <button
+                        aria-label="Back"
+                        onClick={onBack}
+                        className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: '#111', border: '2.5px solid #0a0a0a', boxShadow: '0 3px 0 #0a0a0a' }}
+                      >
+                        <svg className="w-4 h-4" style={{ color: '#fff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+                      </button>
+                    )}
+                    <div className="min-w-0">
+                      <h2
+                        id="qm-title"
+                        className="font-black uppercase"
+                        style={{
+                          color: '#fff',
+                          fontSize: '20px',
+                          lineHeight: 1.05,
+                          letterSpacing: '0.06em',
+                          textShadow: '0 2px 0 #000',
+                        }}
+                      >
+                        Quick Match
+                      </h2>
+                      <p
+                        className="mt-1 font-extrabold uppercase"
+                        style={{
+                          color: '#60a5fa',
+                          fontSize: '10px',
+                          letterSpacing: '0.18em',
+                        }}
+                      >
+                        Find a random opponent instantly
+                      </p>
+                    </div>
                   </div>
                   <button
                     aria-label="Close"
                     onClick={onClose}
-                    className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center"
+                    className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: '#111', border: '2.5px solid #0a0a0a', boxShadow: '0 3px 0 #0a0a0a' }}
                   >
                     <svg className="w-4 h-4" style={{ color: '#fff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
