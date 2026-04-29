@@ -16,7 +16,7 @@ export default function TrendingBetContainer() {
 
   return (
     <div
-      className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[48px] md:h-[64px] hover:scale-[1.02] active:scale-[0.98]"
+      className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
       style={{ backgroundColor: '#000' }}
       onClick={handleClick}
       role="button"
@@ -25,7 +25,7 @@ export default function TrendingBetContainer() {
       <img
         src="/promos/trending-picks.png"
         alt="Trending now — 1.6k picks on PUR ML -133 with 78% public confidence"
-        className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
+        className="absolute inset-0 w-full h-full object-contain object-center select-none pointer-events-none"
         draggable={false}
         loading="lazy"
       />
