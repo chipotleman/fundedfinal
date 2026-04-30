@@ -22,7 +22,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../../lib/auth';
 import { db } from '../../../../../lib/db';
 import { matchups } from '../../../../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 const {
   buildInitialRushState,
   resolveVotingIfReady,
@@ -31,10 +31,13 @@ const {
   advanceIfReady,
   gradeAnswer,
   publicView,
+  shouldCancelStaleReady,
+  cancelStaleMatchup,
   BOT_READY_DELAY_MS,
   QUESTION_DURATION_MS,
 } = require('../../../../../lib/rush');
 const { settleRushMatchup } = require('../../../../../lib/rushSettlement');
+const { publishBattleEvent } = require('../../../../../lib/battle-events');
 
 // Bot answer delay window — randomized so the bot doesn't always
 // answer instantly (which would feel rigged) but still answers fast
@@ -133,6 +136,16 @@ export default async function handler(req, res) {
       await db.update(matchups).set({ rushState: state, updatedAt: new Date() }).where(eq(matchups.id, matchupId));
     }
 
+    // Backfill: very old ready_check states from before stale-cancel
+    // shipped may not have a readyStartedAt timestamp. Without it the
+    // stale-cancel timer never starts, so a user could still be stuck
+    // forever. If we land in ready_check with no startedAt, set it now
+    // so the timer begins from this poll instead of never. New states
+    // get this set inside resolveVotingIfReady.
+    if (state.phase === 'ready_check' && !state.readyStartedAt) {
+      state = { ...state, readyStartedAt: new Date().toISOString() };
+    }
+
     // Roll forward through any expired phases. All helpers are pure and
     // idempotent — running them on every read is cheap.
     let next = resolveVotingIfReady(state, ctx);
@@ -140,8 +153,56 @@ export default async function handler(req, res) {
     next = resolveReadyIfReady(next, ctx);
     next = applyBotAutomation(next, matchup);
     next = advanceIfReady(next, ctx);
+    // Hard escape: if the ready_check has been stuck for too long
+    // (opponent ghosted), auto-cancel so the user isn't trapped on the
+    // ready screen forever. Bot opponents auto-ready well before this
+    // fires, so this only matters for human-vs-human.
+    const wantsCancel = shouldCancelStaleReady(next);
+    if (wantsCancel) {
+      next = cancelStaleMatchup(next);
+    }
 
-    if (JSON.stringify(next) !== JSON.stringify(state)) {
+    const stateChanged = JSON.stringify(next) !== JSON.stringify(state);
+
+    if (wantsCancel) {
+      // Race-safe cancellation: only commit if the on-disk row is still
+      // in ready_check (i.e. a concurrent /ready POST hasn't just
+      // advanced us to 'playing'). The conditional WHERE prevents us
+      // from clobbering a legitimate playing/completed/cancelled row
+      // with a stale snapshot. If the row already moved on, we re-read
+      // and use that as the source of truth.
+      const updated = await db
+        .update(matchups)
+        .set({ rushState: next, status: 'cancelled', endsAt: new Date(), updatedAt: new Date() })
+        .where(and(
+          eq(matchups.id, matchupId),
+          sql`${matchups.rushState}->>'phase' = 'ready_check'`,
+        ))
+        .returning({ id: matchups.id });
+      if (updated.length > 0) {
+        state = next;
+        // Reflect the persisted status locally so the JSON response
+        // we build below is internally consistent (rush.phase ===
+        // 'cancelled' AND matchup.status === 'cancelled').
+        matchup.status = 'cancelled';
+        try {
+          const recipients = [matchup.user1Id, matchup.user2Id].filter(Boolean);
+          publishBattleEvent(recipients, {
+            type: 'matchup:rush:update',
+            matchupId,
+            phase: 'cancelled',
+          });
+        } catch (_e) {}
+      } else {
+        // Concurrent advance won — re-read and use that.
+        const [fresh] = await db.select().from(matchups).where(eq(matchups.id, matchupId));
+        if (fresh) {
+          matchup.status = fresh.status;
+          matchup.rushState = fresh.rushState;
+          state = fresh.rushState || state;
+        }
+      }
+    } else if (stateChanged) {
       await db.update(matchups).set({ rushState: next, updatedAt: new Date() }).where(eq(matchups.id, matchupId));
       state = next;
     }

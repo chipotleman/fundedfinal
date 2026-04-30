@@ -350,6 +350,21 @@ export default function RushBattlePage() {
   const opponentId = isUser1 ? matchup.user2Id : matchup.user1Id;
   const isVoting = rush.phase === 'voting';
   const isReadyCheck = rush.phase === 'ready_check';
+  // Stale-ready safety net: server flips phase to 'cancelled' (and
+  // matchup.status to 'cancelled') after READY_STALE_CANCEL_MS when
+  // an opponent ghosts the ready check. We render a brief "match
+  // cancelled" overlay and route back to /battle so the user isn't
+  // trapped on the ready screen.
+  const isCancelled = rush.phase === 'cancelled' || matchup.status === 'cancelled';
+
+  if (isCancelled) {
+    return (
+      <>
+        <Head><title>Rush · Cancelled · Piks</title></Head>
+        <RushCancelledOverlay onExit={exit} />
+      </>
+    );
+  }
 
   // While voting, render as a full-screen cartoon-themed overlay so the
   // experience feels like a continuation of the PreMatchPopup the user
@@ -440,6 +455,70 @@ export default function RushBattlePage() {
         </div>
       </div>
     </>
+  );
+}
+
+function RushCancelledOverlay({ onExit }) {
+  // Auto-exit after a short beat so the user always lands back on the
+  // social feed instead of being stuck on this screen. They can also
+  // tap the button to exit immediately.
+  useEffect(() => {
+    const t = setTimeout(() => onExit && onExit(), 4000);
+    return () => clearTimeout(t);
+  }, [onExit]);
+
+  return (
+    <div className="min-h-screen bg-[#050a15] text-white relative overflow-hidden" style={{
+      backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.14) 0%, transparent 60%)',
+    }}>
+      <style>{`
+        @keyframes rcoSlamIn {
+          0% { opacity: 0; transform: scale(0.8) translateY(16px); }
+          60% { opacity: 1; transform: scale(1.04) translateY(-2px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .rco-card { animation: rcoSlamIn 360ms cubic-bezier(0.34,1.56,0.64,1) both; }
+        @media (prefers-reduced-motion: reduce) {
+          .rco-card { animation: none !important; }
+        }
+      `}</style>
+
+      <div className="max-w-md mx-auto px-5 py-10 flex flex-col items-center min-h-screen justify-center text-center">
+        <div className="rco-card w-full p-6 rounded-2xl"
+          style={{
+            background: 'linear-gradient(180deg,#0f172a,#0a0f1c)',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 4px 0 #0a0a0a, 0 0 24px rgba(59,130,246,0.25)',
+          }}
+        >
+          <div className="text-4xl mb-3" aria-hidden="true">🕒</div>
+          <h1 className="font-black uppercase mb-2" style={{ fontSize: 22, letterSpacing: '0.06em', color: '#e2e8f0' }}>
+            Match cancelled
+          </h1>
+          <p className="text-sm text-gray-400 mb-1">
+            Your opponent didn't ready up in time.
+          </p>
+          <p className="text-xs text-gray-500 mb-5">
+            No worries — your stake is safe and nothing counts against your record.
+          </p>
+
+          <button
+            type="button"
+            onClick={onExit}
+            className="w-full py-3 rounded-xl font-black uppercase text-white transition-transform active:scale-95"
+            style={{
+              background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 4px 0 #0a0a0a',
+              letterSpacing: '0.12em',
+              fontSize: 14,
+            }}
+          >
+            Back to Battle
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -459,6 +459,24 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  // Stale ready-check escape: server flips rushState.phase to
+  // 'cancelled' after READY_STALE_CANCEL_MS when an opponent ghosts
+  // the ready check. Close the in-popup ritual and route back to
+  // /battle so the user isn't stranded — no penalty, no payout.
+  useEffect(() => {
+    const inRushSubStep =
+      step === 'rush-vote' ||
+      step === 'rush-ready' ||
+      step === 'rush-countdown' ||
+      step === 'rush-playing';
+    if (!inRushSubStep) return;
+    if (rushState?.phase !== 'cancelled') return;
+    if (cancelledRef.current) return;
+    onClose();
+    router.push('/battle?rushCancelled=1');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, rushState?.phase]);
+
   // Live games for the vote slide. Merge server list + GamesContext
   // (mirrors the routed rush page's logic) so demo / simulated live
   // games surface here too. Cap at RUSH_VOTE_GAME_LIMIT so the slide
