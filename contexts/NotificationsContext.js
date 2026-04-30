@@ -606,12 +606,17 @@ export function NotificationsProvider({ children }) {
     return () => timers.forEach(clearTimeout);
   }, [toasts, dismissToast]);
 
-  const setSuppress = useCallback((key, active) => {
+  const setSuppress = useCallback((key, active, options) => {
     if (!key) return;
     if (active) {
       suppressRef.current.add(key);
-      // Drop any visible toasts for this surface immediately.
-      setToasts(prev => prev.filter(t => t.suppressKey !== key));
+      // Drop any visible toasts for this surface immediately, EXCEPT
+      // the one that triggered the suppression (if the caller passed
+      // its own toast id). Without this exclusion, expanding the
+      // inline reply on a message toast would suppress and unmount
+      // the very toast hosting the composer.
+      const keepId = options?.excludeToastId;
+      setToasts(prev => prev.filter(t => t.suppressKey !== key || (keepId && t.id === keepId)));
     } else {
       suppressRef.current.delete(key);
     }

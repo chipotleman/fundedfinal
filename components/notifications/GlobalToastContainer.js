@@ -271,12 +271,14 @@ function MessageToast({ toast, ctx, router, baseStyle }) {
 
   // Suppress further toasts for this conversation while expanded so a fast
   // back-and-forth doesn't stack new toasts on top of the open reply.
+  // We pass excludeToastId so the suppression filter doesn't drop the
+  // very toast hosting the composer.
   useEffect(() => {
     if (!expanded || !sender.id) return undefined;
     const key = `message:${sender.id}`;
-    ctx.setSuppress?.(key, true);
+    ctx.setSuppress?.(key, true, { excludeToastId: toast.id });
     return () => ctx.setSuppress?.(key, false);
-  }, [expanded, sender.id, ctx]);
+  }, [expanded, sender.id, ctx, toast.id]);
 
   const handleChange = (e) => {
     const v = e.target.value;
@@ -334,16 +336,51 @@ function MessageToast({ toast, ctx, router, baseStyle }) {
     }
   };
 
+  // Tap-anywhere-to-reply: on mobile especially, users instinctively
+  // tap the message preview itself (avatar/name/text) expecting a reply
+  // composer to open. Previously only the small "Reply" button worked,
+  // so the toast felt broken. Now any tap on the preview row expands
+  // the inline reply so users can respond immediately without losing
+  // what they were doing — matching the "easy, click and reply" intent.
+  const openReply = () => {
+    if (expanded || sent) return;
+    setExpanded(true);
+    if (sender.id) ctx.markMessagesRead?.([sender.id]);
+  };
+
   return (
     <div
       className="bg-gradient-to-r from-emerald-900/95 to-emerald-800/95 border border-emerald-500/50 rounded-xl p-3"
       style={baseStyle}
     >
       <div className="flex items-center gap-3">
-        <Avatar sender={sender} />
-        <div className="flex-1 min-w-0">
-          <div className="text-white text-sm font-bold truncate">{sender.username || 'Someone'}</div>
-          <div className="text-gray-300 text-xs truncate">{preview}</div>
+        {/* Tap-to-reply target. Using a div with role="button" instead of
+            a real <button> because Avatar/UserAvatar render block-level
+            children (divs/imgs), which would be invalid inside a <button>.
+            Keyboard semantics (Enter/Space) are added explicitly. */}
+        <div
+          role={expanded || sent ? undefined : 'button'}
+          tabIndex={expanded || sent ? -1 : 0}
+          onClick={openReply}
+          onKeyDown={(e) => {
+            if (expanded || sent) return;
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openReply();
+            }
+          }}
+          className="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg -m-1 p-1 outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+          style={{
+            cursor: expanded || sent ? 'default' : 'pointer',
+            WebkitTapHighlightColor: 'rgba(16,185,129,0.25)',
+          }}
+          aria-label={expanded || sent ? undefined : `Reply to ${sender.username || 'message'}`}
+        >
+          <Avatar sender={sender} />
+          <div className="flex-1 min-w-0">
+            <div className="text-white text-sm font-bold truncate">{sender.username || 'Someone'}</div>
+            <div className="text-gray-300 text-xs truncate">{preview}</div>
+          </div>
         </div>
         <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
       </div>
@@ -351,16 +388,17 @@ function MessageToast({ toast, ctx, router, baseStyle }) {
       {!expanded && !sent && (
         <div className="flex gap-2 mt-2">
           <button
-            onClick={() => {
-              setExpanded(true);
-              if (sender.id) ctx.markMessagesRead?.([sender.id]);
-            }}
+            onClick={openReply}
             className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 rounded-lg"
           >Reply</button>
           <button
             onClick={() => {
               ctx.dismissToast(toast.id);
-              router.push(`/notifications?chat=${sender.id}`);
+              // Route straight to /messenger (the actual chat UI). The
+              // old /notifications?chat=… path required a client-side
+              // re-redirect there which felt slow and sometimes left
+              // users on the notifications page.
+              router.push(`/messenger?chat=${sender.id}`);
             }}
             className="px-3 bg-emerald-900/60 hover:bg-emerald-900/80 text-emerald-100 text-xs font-medium py-1.5 rounded-lg"
             title="Open full chat"
