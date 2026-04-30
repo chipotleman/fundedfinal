@@ -58,12 +58,15 @@ const EMPTY = {
   unreadMessages: [],
   gameResults: [],
   pendingRematches: [],
+  // Likes / comments on the user's own social posts. Surfaced on the bell
+  // and as pink toasts so they're visually distinct from battle activity.
+  socialActivity: [],
   // Lingering "you've earned new badges you haven't seen yet" signal,
   // independent of the pop-up celebration queue. Drives the small unread
   // dot on the Profile tab + Achievements section header until the user
   // actually opens the section (see markAchievementsViewed below).
   unviewedAchievementCount: 0,
-  counts: { battleInvites: 0, friendRequests: 0, unreadMessages: 0, gameResults: 0, pendingRematches: 0, total: 0 },
+  counts: { battleInvites: 0, friendRequests: 0, unreadMessages: 0, gameResults: 0, pendingRematches: 0, socialActivity: 0, total: 0 },
 };
 
 const TYPING_TTL_MS = 4000;
@@ -289,6 +292,7 @@ export function NotificationsProvider({ children }) {
       const unreadMessages = json.unreadMessages || [];
       const gameResults = json.gameResults || [];
       const pendingRematches = json.pendingRematches || [];
+      const socialActivity = json.socialActivity || [];
       const pendingAchievementUnlocks = Array.isArray(json.pendingAchievementUnlocks)
         ? json.pendingAchievementUnlocks
         : [];
@@ -301,9 +305,10 @@ export function NotificationsProvider({ children }) {
         unreadMessages: unreadMessages.length,
         gameResults: gameResults.length,
         pendingRematches: pendingRematches.length,
-        total: battleInvites.length + friendRequests.length + unreadMessages.length + gameResults.length + pendingRematches.length,
+        socialActivity: socialActivity.length,
+        total: battleInvites.length + friendRequests.length + unreadMessages.length + gameResults.length + pendingRematches.length + socialActivity.length,
       };
-      setData({ battleInvites, outgoingBattleInvites, friendRequests, unreadMessages, gameResults, pendingRematches, unviewedAchievementCount, counts });
+      setData({ battleInvites, outgoingBattleInvites, friendRequests, unreadMessages, gameResults, pendingRematches, socialActivity, unviewedAchievementCount, counts });
 
       // Catch-up path: if the API found a recent forfeit win that the SSE push
       // may have missed, dispatch it so MatchupContext can surface the modal.
@@ -380,6 +385,7 @@ export function NotificationsProvider({ children }) {
         for (const it of friendRequests) seenRef.current.add(`friend:${it.id}`);
         for (const it of unreadMessages) seenRef.current.add(`message:${it.id}`);
         for (const it of pendingRematches) seenRef.current.add(`rematch:${it.matchupId}`);
+        for (const it of socialActivity) seenRef.current.add(`social:${it.id}`);
         writeSeen(seenRef.current);
       } else {
         // Catch-up path for the full-screen invite modal: if a pending
@@ -414,6 +420,19 @@ export function NotificationsProvider({ children }) {
             type: 'rematch',
             sender: it.opponent,
             payload: it,
+          });
+        }
+        // Social activity (likes / comments) — surfaced as pink-accented
+        // toasts that route to /battle on tap. Distinct from battle/friend
+        // toasts so users who care less about social can mute them at a
+        // glance via the dedicated push category.
+        for (const it of socialActivity) {
+          enqueueToast({
+            id: `social:${it.id}`,
+            type: it.type === 'comment' ? 'social_comment' : 'social_like',
+            sender: it.actor,
+            payload: it,
+            suppressKey: 'social_activity',
           });
         }
       }
@@ -677,7 +696,8 @@ export function NotificationsProvider({ children }) {
             prev.counts.friendRequests +
             remaining.length +
             (prev.counts.gameResults || 0) +
-            (prev.counts.pendingRematches || 0),
+            (prev.counts.pendingRematches || 0) +
+            (prev.counts.socialActivity || 0),
         },
       };
     });
@@ -718,7 +738,8 @@ export function NotificationsProvider({ children }) {
             prev.counts.friendRequests +
             prev.counts.unreadMessages +
             remaining.length +
-            (prev.counts.pendingRematches || 0),
+            (prev.counts.pendingRematches || 0) +
+            (prev.counts.socialActivity || 0),
         },
       };
     });
@@ -756,7 +777,8 @@ export function NotificationsProvider({ children }) {
             prev.counts.friendRequests +
             prev.counts.unreadMessages +
             (prev.counts.gameResults || 0) +
-            remaining.length,
+            remaining.length +
+            (prev.counts.socialActivity || 0),
         },
       };
     });
@@ -801,6 +823,77 @@ export function NotificationsProvider({ children }) {
     }
   }, [isAuthed, refresh]);
 
+  // Mark one or more social activity entries (likes / comments on this
+  // user's posts) as read. Optimistically removes them from local state so
+  // the bell + dropdown clear instantly, then POSTs to the server. On
+  // failure we re-sync from the API so the UI reflects ground truth.
+  const ackSocial = useCallback(async (ids) => {
+    const list = Array.isArray(ids) ? ids.filter(Boolean) : [];
+    if (list.length === 0) return;
+    const idSet = new Set(list);
+    setData((prev) => {
+      const remaining = (prev.socialActivity || []).filter((s) => !idSet.has(s.id));
+      if (remaining.length === (prev.socialActivity || []).length) return prev;
+      return {
+        ...prev,
+        socialActivity: remaining,
+        counts: {
+          ...prev.counts,
+          socialActivity: remaining.length,
+          total:
+            prev.counts.battleInvites +
+            prev.counts.friendRequests +
+            prev.counts.unreadMessages +
+            (prev.counts.gameResults || 0) +
+            (prev.counts.pendingRematches || 0) +
+            remaining.length,
+        },
+      };
+    });
+    try {
+      const res = await fetch('/api/notifications/social-ack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ids: list }),
+      });
+      if (!res.ok) refresh();
+    } catch {
+      refresh();
+    }
+  }, [refresh]);
+
+  const ackAllSocial = useCallback(async () => {
+    setData((prev) => {
+      if ((prev.socialActivity || []).length === 0) return prev;
+      return {
+        ...prev,
+        socialActivity: [],
+        counts: {
+          ...prev.counts,
+          socialActivity: 0,
+          total:
+            prev.counts.battleInvites +
+            prev.counts.friendRequests +
+            prev.counts.unreadMessages +
+            (prev.counts.gameResults || 0) +
+            (prev.counts.pendingRematches || 0),
+        },
+      };
+    });
+    try {
+      const res = await fetch('/api/notifications/social-ack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ all: true }),
+      });
+      if (!res.ok) refresh();
+    } catch {
+      refresh();
+    }
+  }, [refresh]);
+
   const declineFriend = useCallback(async (id) => {
     try {
       await fetch(`/api/friends/${id}`, {
@@ -831,6 +924,8 @@ export function NotificationsProvider({ children }) {
     declineFriend,
     declineRematch,
     ackGameResult,
+    ackSocial,
+    ackAllSocial,
     markMessagesRead,
     markAchievementsViewed,
     typingSenderIds,
@@ -869,6 +964,8 @@ export function useNotifications() {
       acceptFriend: async () => {},
       declineFriend: async () => {},
       declineRematch: async () => {},
+      ackSocial: async () => {},
+      ackAllSocial: async () => {},
       markMessagesRead: async () => 0,
       markAchievementsViewed: async () => {},
       typingSenderIds: new Set(),

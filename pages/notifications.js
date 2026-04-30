@@ -84,6 +84,10 @@ const FILTERS = [
   { key: 'rematch', label: 'Rematches', accent: NOTIF_TYPES.rematch.accent },
   { key: 'result', label: 'Results', accent: NOTIF_TYPES.result_won.accent },
   { key: 'friend', label: 'Friends', accent: NOTIF_TYPES.friend_request.accent },
+  // Pink "Social" pill — distinct from every battle/friend/result accent
+  // so users can either focus on social activity or filter it out
+  // entirely. Matches the toast + bell row colour.
+  { key: 'social', label: 'Social', accent: NOTIF_TYPES.social_like.accent },
 ];
 
 function hexToRgb(hex) {
@@ -164,6 +168,7 @@ const BULK_ACTIONS = {
   rematch: { label: 'Decline all', confirmTitle: 'Decline every rematch request?', destructive: true },
   result: { label: 'Dismiss all', confirmTitle: null, destructive: false },
   friend: { label: 'Decline all', confirmTitle: 'Decline every friend request?', destructive: true },
+  social: { label: 'Dismiss all', confirmTitle: null, destructive: false },
 };
 
 function NotificationsFeed({ ctx, router, filter }) {
@@ -171,6 +176,7 @@ function NotificationsFeed({ ctx, router, filter }) {
   const allFriendRequests = ctx.friendRequests || [];
   const allGameResults = ctx.gameResults || [];
   const allPendingRematches = ctx.pendingRematches || [];
+  const allSocialActivity = ctx.socialActivity || [];
   const [busyId, setBusyId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -184,17 +190,20 @@ function NotificationsFeed({ ctx, router, filter }) {
   const showRematch = filter === 'all' || filter === 'rematch';
   const showResult = filter === 'all' || filter === 'result';
   const showFriend = filter === 'all' || filter === 'friend';
+  const showSocial = filter === 'all' || filter === 'social';
 
   const battleInvites = showInvite ? allBattleInvites : [];
   const pendingRematches = showRematch ? allPendingRematches : [];
   const gameResults = showResult ? allGameResults : [];
   const friendRequests = showFriend ? allFriendRequests : [];
+  const socialActivity = showSocial ? allSocialActivity : [];
 
   const totalNew =
     battleInvites.length +
     friendRequests.length +
     gameResults.length +
-    pendingRematches.length;
+    pendingRematches.length +
+    socialActivity.length;
   const empty = totalNew === 0;
 
   // Hide the confirmation strip if the user changes filter or the visible
@@ -216,6 +225,13 @@ function NotificationsFeed({ ctx, router, filter }) {
       for (const fr of friendRequests) tasks.push(ctx.declineFriend(fr.id));
       for (const rm of pendingRematches) tasks.push(ctx.declineRematch(rm.matchupId));
       for (const r of gameResults) tasks.push(ctx.ackGameResult(r.matchupId));
+      // Social: a single ackAllSocial call clears every visible social row
+      // server-side in one round-trip (vs. one POST per row). Only used
+      // when the social filter is active OR we're on All — in both cases
+      // every visible social item is meant to clear.
+      if (socialActivity.length > 0) {
+        tasks.push(ctx.ackAllSocial?.());
+      }
       await Promise.allSettled(tasks);
     } finally {
       setBulkBusy(false);
@@ -498,6 +514,56 @@ function NotificationsFeed({ ctx, router, filter }) {
           </div>
         </div>
       )}
+
+      {socialActivity.length > 0 && (
+        <div>
+          <SectionHeader type="social_like" title="Social Activity" />
+          {socialActivity.map((s) => {
+            const isComment = s.type === 'comment';
+            const rowType = isComment ? 'social_comment' : 'social_like';
+            return (
+              <TypedRow
+                key={`social:${s.id}`}
+                type={rowType}
+                time={timeAgo(s.createdAt)}
+                avatar={<Avatar user={s.actor} onlineDotBorderColor={cardBg} />}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <TypeChip type={rowType} />
+                </div>
+                <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
+                  <UserNameLink user={s.actor} fallback="Someone" />{' '}
+                  {isComment ? 'commented on your post' : 'liked your post'}
+                </div>
+                {(isComment ? s.commentPreview : s.postPreview) && (
+                  <div className="text-xs truncate" style={{ color: textSecondary }}>
+                    {isComment ? s.commentPreview : s.postPreview}
+                  </div>
+                )}
+                <div className="flex gap-2 mt-2">
+                  <button
+                    disabled={busyId === s.id}
+                    onClick={() => wrap(s.id, async () => {
+                      router.push('/battle');
+                      ctx.ackSocial?.([s.id]);
+                    })}
+                    className="text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                    style={{
+                      backgroundColor: '#ec4899',
+                      boxShadow: '0 0 12px rgba(236,72,153,0.45)',
+                    }}
+                  >View</button>
+                  <button
+                    disabled={busyId === s.id}
+                    onClick={() => wrap(s.id, () => ctx.ackSocial?.([s.id]))}
+                    className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+                  >Dismiss</button>
+                </div>
+              </TypedRow>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -594,11 +660,13 @@ export default function NotificationsPage() {
       (ctx.battleInvites?.length || 0) +
       (ctx.pendingRematches?.length || 0) +
       (ctx.gameResults?.length || 0) +
-      (ctx.friendRequests?.length || 0),
+      (ctx.friendRequests?.length || 0) +
+      (ctx.socialActivity?.length || 0),
     invite: ctx.battleInvites?.length || 0,
     rematch: ctx.pendingRematches?.length || 0,
     result: ctx.gameResults?.length || 0,
     friend: ctx.friendRequests?.length || 0,
+    social: ctx.socialActivity?.length || 0,
   };
 
   // Defensive: mirror the messenger page — proactively release any leftover

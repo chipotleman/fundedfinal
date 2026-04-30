@@ -4,9 +4,12 @@ import { db } from '../../../../../lib/db';
 import {
   socialPosts,
   socialPostComments,
+  socialNotifications,
   profiles,
 } from '../../../../../shared/schema';
 import { asc, eq, inArray, sql } from 'drizzle-orm';
+const { publishBattleEvent } = require('../../../../../lib/battle-events');
+const { sendPushToUsers } = require('../../../../../lib/web-push');
 
 const MAX_BODY = 300;
 
@@ -77,7 +80,7 @@ export default async function handler(req, res) {
     }
     try {
       const [post] = await db
-        .select({ id: socialPosts.id })
+        .select({ id: socialPosts.id, userId: socialPosts.userId })
         .from(socialPosts)
         .where(eq(socialPosts.id, postId))
         .limit(1);
@@ -103,6 +106,34 @@ export default async function handler(req, res) {
         .from(profiles)
         .where(eq(profiles.id, session.user.id))
         .limit(1);
+
+      // Notify the post owner about the new comment. Skip self-comments.
+      // Each comment is its own row (unlike likes, which dedupe) — every
+      // comment is a distinct event the owner may want to see.
+      if (post.userId && post.userId !== session.user.id) {
+        try {
+          await db.insert(socialNotifications).values({
+            recipientId: post.userId,
+            actorId: session.user.id,
+            type: 'comment',
+            postId,
+            commentId: row.id,
+            commentPreview: body.slice(0, 140),
+          });
+          try { publishBattleEvent(post.userId, { type: 'notification:refresh' }); } catch {}
+          const actorName = author?.username || 'Someone';
+          sendPushToUsers(post.userId, {
+            category: 'social',
+            title: 'New comment on your post',
+            body: `${actorName}: ${body.slice(0, 80)}`,
+            url: '/battle',
+            tag: `social:comment:${postId}:${row.id}`,
+            data: { type: 'social_comment', postId, commentId: row.id, actorId: session.user.id },
+          }).catch(() => {});
+        } catch (e) {
+          console.error('[social/comment notify] error', e);
+        }
+      }
 
       return res.status(201).json({
         comment: {

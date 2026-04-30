@@ -4,8 +4,12 @@ import { db } from '../../../../../lib/db';
 import {
   socialPosts,
   socialPostLikes,
+  socialNotifications,
+  profiles,
 } from '../../../../../shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
+const { publishBattleEvent } = require('../../../../../lib/battle-events');
+const { sendPushToUsers } = require('../../../../../lib/web-push');
 
 export default async function handler(req, res) {
   const { id: postId } = req.query;
@@ -27,7 +31,7 @@ export default async function handler(req, res) {
 
   try {
     const [post] = await db
-      .select({ id: socialPosts.id })
+      .select({ id: socialPosts.id, userId: socialPosts.userId })
       .from(socialPosts)
       .where(eq(socialPosts.id, postId))
       .limit(1);
@@ -80,6 +84,54 @@ export default async function handler(req, res) {
       .where(eq(socialPosts.id, postId))
       .returning({ likeCount: socialPosts.likeCount });
     const likeCount = Number(updated?.likeCount) || 0;
+
+    // Notify the post owner — only on toggle ON, never on self-like, and
+    // never if a notification row for this (recipient, actor, post) already
+    // exists. The dedupe means a user who unlikes and re-likes does NOT
+    // spam the post owner with repeat alerts.
+    if (liked && post.userId && post.userId !== userId) {
+      try {
+        const existing = await db
+          .select({ id: socialNotifications.id })
+          .from(socialNotifications)
+          .where(and(
+            eq(socialNotifications.recipientId, post.userId),
+            eq(socialNotifications.actorId, userId),
+            eq(socialNotifications.postId, postId),
+            eq(socialNotifications.type, 'like'),
+          ))
+          .limit(1);
+        if (existing.length === 0) {
+          await db.insert(socialNotifications).values({
+            recipientId: post.userId,
+            actorId: userId,
+            type: 'like',
+            postId,
+          });
+          // Real-time signal so the owner's bell + dropdown re-fetch.
+          try { publishBattleEvent(post.userId, { type: 'notification:refresh' }); } catch {}
+          // Best-effort web push for offline owners.
+          try {
+            const [actor] = await db
+              .select({ username: profiles.username })
+              .from(profiles)
+              .where(eq(profiles.id, userId))
+              .limit(1);
+            const actorName = actor?.username || 'Someone';
+            sendPushToUsers(post.userId, {
+              category: 'social',
+              title: 'New like on your post',
+              body: `${actorName} liked your post`,
+              url: '/battle',
+              tag: `social:like:${postId}:${userId}`,
+              data: { type: 'social_like', postId, actorId: userId },
+            }).catch(() => {});
+          } catch {}
+        }
+      } catch (e) {
+        console.error('[social/like notify] error', e);
+      }
+    }
 
     return res.status(200).json({ liked, likeCount });
   } catch (err) {

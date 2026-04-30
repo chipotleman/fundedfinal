@@ -943,6 +943,7 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   catResults: boolean("cat_results").default(true).notNull(),
   catFriendsLive: boolean("cat_friends_live").default(true).notNull(),
   catRematch: boolean("cat_rematch").default(true).notNull(),
+  catSocial: boolean("cat_social").default(true).notNull(),
   enabled: boolean("enabled").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastSeen: timestamp("last_seen").defaultNow().notNull(),
@@ -1003,4 +1004,29 @@ export type SocialPostComment = typeof socialPostComments.$inferSelect;
 export type InsertSocialPostComment = typeof socialPostComments.$inferInsert;
 export type SocialPostLike = typeof socialPostLikes.$inferSelect;
 export type InsertSocialPostLike = typeof socialPostLikes.$inferInsert;
+
+// Persistent notification rows for social activity (likes / comments) on a
+// user's posts. Mirrors the messages-table pattern used by the existing
+// /api/notifications aggregator: rows are inserted by the like/comment APIs
+// and the bell + dropdown query for unread (readAt IS NULL) rows. Likes are
+// deduped per (recipient, actor, post) so a toggle-off-then-on doesn't spam
+// the post owner; comments always create a new row since each comment is a
+// distinct event the owner may want to read.
+export const socialNotifications = pgTable("social_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recipientId: varchar("recipient_id").notNull(),
+  actorId: varchar("actor_id").notNull(),
+  type: varchar("type", { length: 16 }).notNull(),
+  postId: varchar("post_id").notNull(),
+  commentId: varchar("comment_id"),
+  commentPreview: varchar("comment_preview", { length: 140 }),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  recipientIdx: index("social_notifications_recipient_idx").on(table.recipientId, table.readAt, table.createdAt),
+  postIdx: index("social_notifications_post_idx").on(table.postId),
+}));
+
+export type SocialNotification = typeof socialNotifications.$inferSelect;
+export type InsertSocialNotification = typeof socialNotifications.$inferInsert;
 

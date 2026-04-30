@@ -187,6 +187,12 @@ function Toast({ toast, ctx, router }) {
     );
   }
 
+  if (toast.type === 'social_like' || toast.type === 'social_comment') {
+    return (
+      <SocialActivityToast toast={toast} ctx={ctx} router={router} baseStyle={baseStyle} />
+    );
+  }
+
   if (toast.type === 'voice_send_error') {
     return (
       <VoiceSendErrorToast toast={toast} ctx={ctx} baseStyle={baseStyle} />
@@ -436,6 +442,105 @@ function MessageToast({ toast, ctx, router, baseStyle }) {
           Reply sent ✓
         </div>
       )}
+    </div>
+  );
+}
+
+// Pink-accented toast for social activity (likes / comments on the
+// user's posts). Visually distinct from the emerald MessageToast and
+// blue battle alerts so users can tell at a glance that the ping is
+// "social, not battle". Tap routes to /battle (the social feed) and
+// acks the underlying social_notifications row so the bell badge clears.
+function SocialActivityToast({ toast, ctx, router, baseStyle }) {
+  const sender = toast.sender || {};
+  const isComment = toast.type === 'social_comment';
+  const headline = isComment
+    ? `${sender.username || 'Someone'} commented on your post`
+    : `${sender.username || 'Someone'} liked your post`;
+  const subtitle = isComment
+    ? (toast.payload?.commentPreview || toast.payload?.postPreview || 'Tap to view')
+    : (toast.payload?.postPreview || 'Tap to view');
+
+  const open = () => {
+    if (toast.payload?.id) {
+      try { ctx.ackSocial?.([toast.payload.id]); } catch {}
+    }
+    ctx.dismissToast(toast.id);
+    router.push('/battle');
+  };
+
+  return (
+    <div
+      className="rounded-xl p-3 border"
+      style={{
+        ...baseStyle,
+        background: 'linear-gradient(to right, rgba(131,24,67,0.95), rgba(157,23,77,0.95))',
+        borderColor: 'rgba(236,72,153,0.55)',
+      }}
+    >
+      <div className="flex items-center gap-3">
+        {/* Tap target — div+role, not <button>, because Avatar renders
+            block-level children which would be invalid inside a button. */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={open}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              open();
+            }
+          }}
+          className="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg -m-1 p-1 outline-none focus-visible:ring-2"
+          style={{
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'rgba(236,72,153,0.25)',
+          }}
+          aria-label={headline}
+        >
+          <div className="relative flex-shrink-0">
+            <Avatar sender={sender} />
+            {/* Pink badge with heart / comment icon overlapping the
+                avatar's bottom-right — instantly readable as "social". */}
+            <div
+              className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border"
+              style={{
+                background: '#ec4899',
+                borderColor: 'rgba(0,0,0,0.6)',
+                boxShadow: '0 2px 6px rgba(236,72,153,0.45)',
+              }}
+              aria-hidden="true"
+            >
+              {isComment ? (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+              ) : (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              )}
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-pink-200 text-[10px] uppercase tracking-wider font-bold">
+              {isComment ? 'New Comment' : 'New Like'}
+            </div>
+            <div className="text-white text-sm font-bold truncate">{headline}</div>
+            {subtitle ? (
+              <div className="text-pink-100/85 text-xs truncate">{subtitle}</div>
+            ) : null}
+          </div>
+        </div>
+        <CloseBtn
+          onClick={() => {
+            if (toast.payload?.id) {
+              try { ctx.ackSocial?.([toast.payload.id]); } catch {}
+            }
+            ctx.dismissToast(toast.id);
+          }}
+        />
+      </div>
     </div>
   );
 }

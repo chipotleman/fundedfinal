@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { messages, friendships, battleInvites, profiles, users, matchups, fakeOpponents } from '../../../shared/schema';
+import { messages, friendships, battleInvites, profiles, users, matchups, fakeOpponents, socialNotifications, socialPosts } from '../../../shared/schema';
 import { eq, and, or, desc, lt, inArray, gte, isNotNull, isNull } from 'drizzle-orm';
 const { sendPushToUsers } = require('../../../lib/web-push');
 const { publishBattleEvent } = require('../../../lib/battle-events');
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
       }
     } catch (_e) {}
 
-    const [pendingInvites, pendingFriends, unreadMsgs, outgoingPendingInvitesRows] = await Promise.all([
+    const [pendingInvites, pendingFriends, unreadMsgs, outgoingPendingInvitesRows, unreadSocialRows] = await Promise.all([
       db.select().from(battleInvites)
         .where(and(eq(battleInvites.receiverId, userId), eq(battleInvites.status, 'pending')))
         .orderBy(desc(battleInvites.createdAt))
@@ -84,6 +84,10 @@ export default async function handler(req, res) {
         .where(and(eq(battleInvites.senderId, userId), eq(battleInvites.status, 'pending')))
         .orderBy(desc(battleInvites.createdAt))
         .limit(20),
+      db.select().from(socialNotifications)
+        .where(and(eq(socialNotifications.recipientId, userId), isNull(socialNotifications.readAt)))
+        .orderBy(desc(socialNotifications.createdAt))
+        .limit(50),
     ]);
 
     const senderIds = [...new Set([
@@ -91,6 +95,7 @@ export default async function handler(req, res) {
       ...pendingFriends.map(f => f.userId),
       ...unreadMsgs.map(m => m.senderId),
       ...outgoingPendingInvitesRows.map(i => i.receiverId),
+      ...unreadSocialRows.map(s => s.actorId),
     ].filter(Boolean))];
 
     const profMap = new Map();
@@ -288,11 +293,38 @@ export default async function handler(req, res) {
       });
     }
 
+    // Social activity (likes / comments on this user's posts). Pulls a
+    // small post-body snippet so the bell row can show the original post
+    // ("you posted: …") next to the actor name. Comment notifications also
+    // carry a comment preview captured at insert time.
+    const socialPostIds = [...new Set(unreadSocialRows.map(s => s.postId).filter(Boolean))];
+    const socialPostMap = new Map();
+    if (socialPostIds.length > 0) {
+      try {
+        const socialPostRows = await db
+          .select({ id: socialPosts.id, body: socialPosts.body })
+          .from(socialPosts)
+          .where(inArray(socialPosts.id, socialPostIds));
+        socialPostRows.forEach(p => socialPostMap.set(p.id, p));
+      } catch (_e) {}
+    }
+    const socialActivityOut = unreadSocialRows.map(s => ({
+      id: s.id,
+      type: s.type,
+      postId: s.postId,
+      commentId: s.commentId || null,
+      commentPreview: s.commentPreview || null,
+      postPreview: (socialPostMap.get(s.postId)?.body || '').slice(0, 100),
+      createdAt: s.createdAt,
+      actor: buildSender(s.actorId),
+    }));
+
     const counts = {
       battleInvites: battleInvitesOut.length,
       friendRequests: friendRequestsOut.length,
       unreadMessages: messagesOut.length,
-      total: battleInvitesOut.length + friendRequestsOut.length + messagesOut.length,
+      socialActivity: socialActivityOut.length,
+      total: battleInvitesOut.length + friendRequestsOut.length + messagesOut.length + socialActivityOut.length,
     };
 
     // Catch-up: surface any pending forfeit win for this user. Backed by
@@ -512,6 +544,7 @@ export default async function handler(req, res) {
       outgoingBattleInvites: outgoingPendingInvites,
       friendRequests: friendRequestsOut,
       unreadMessages: messagesOut,
+      socialActivity: socialActivityOut,
       gameResults,
       pendingRematches,
       pendingAchievementUnlocks,

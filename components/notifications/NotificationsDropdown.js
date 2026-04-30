@@ -45,7 +45,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
   const friendRequests = ctx.friendRequests || [];
   const gameResults = ctx.gameResults || [];
   const pendingRematches = ctx.pendingRematches || [];
-  const total = battleInvites.length + friendRequests.length + gameResults.length + pendingRematches.length;
+  const socialActivity = ctx.socialActivity || [];
+  const total = battleInvites.length + friendRequests.length + gameResults.length + pendingRematches.length + socialActivity.length;
 
   useEffect(() => {
     if (!open) return;
@@ -271,6 +272,48 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                 />
               ))}
             </div>
+          </Section>
+        )}
+
+        {socialActivity.length > 0 && (
+          <Section type="social_like" title="Social Activity">
+            {socialActivity.map((s) => {
+              const isComment = s.type === 'comment';
+              const rowType = isComment ? 'social_comment' : 'social_like';
+              return (
+                <Row key={s.id} type={rowType} sender={s.actor} time={s.createdAt}>
+                  <div className="text-white text-sm font-semibold truncate">
+                    {(s.actor?.username || 'Someone')}{' '}
+                    {isComment ? 'commented on your post' : 'liked your post'}
+                  </div>
+                  {(isComment ? s.commentPreview : s.postPreview) && (
+                    <div className="text-gray-400 text-xs truncate">
+                      {isComment ? s.commentPreview : s.postPreview}
+                    </div>
+                  )}
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      disabled={busyId === s.id}
+                      onClick={() => wrap(s.id, async () => {
+                        onClose?.();
+                        router.push('/battle');
+                        ctx.ackSocial?.([s.id]);
+                      })}
+                      className="flex-1 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      style={{
+                        backgroundColor: '#ec4899',
+                        boxShadow: '0 0 12px rgba(236,72,153,0.45)',
+                      }}
+                    >View</button>
+                    <button
+                      disabled={busyId === s.id}
+                      onClick={() => wrap(s.id, async () => { await ctx.ackSocial?.([s.id]); })}
+                      className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
+                    >Dismiss</button>
+                  </div>
+                </Row>
+              );
+            })}
           </Section>
         )}
       </div>
