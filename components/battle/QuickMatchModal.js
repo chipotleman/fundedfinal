@@ -830,7 +830,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
           100% { background-position: 100% 100%; }
         }
       `}</style>
-      <div data-allow-fixed-overlay="true" className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => {
+      <div data-allow-fixed-overlay="true" className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 overflow-y-auto`} onClick={() => {
         // 'found' is a hard pause — clicks outside don't dismiss it.
         // The new rush sub-steps are also non-dismissable on backdrop
         // click since the user is already in an active matchup; the
@@ -840,8 +840,17 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
         if (step === 'searching') { cancelSearch(); }
         onClose();
       }}>
+        {/* Inner wrapper handles centering. We use min-h-full + flex so that
+            when the modal is shorter than the viewport it stays vertically
+            centered, but when the modal is TALLER than the viewport (very
+            common on iPhone with the iOS browser chrome eating ~150px of
+            vertical space) the wrapper grows with the content and the
+            outer overlay scrolls naturally. Without this split the classic
+            `items-center` flexbox bug clips the top of the modal and makes
+            the header unreachable on small viewports. */}
+        <div className="min-h-full flex items-center justify-center p-4">
         <div
-          className="rounded-2xl max-w-md w-full overflow-hidden my-auto"
+          className="rounded-2xl max-w-md w-full overflow-hidden"
           style={{
             background: 'linear-gradient(180deg, #141414 0%, #0a0a0a 100%)',
             border: '2.5px solid #0a0a0a',
@@ -1713,6 +1722,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
               }}
             />
           )}
+        </div>
         </div>
       </div>
     </>
