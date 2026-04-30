@@ -12,6 +12,11 @@
  * SSE matchup:end fan-out fired) so the existing /battle page result
  * popup picks up the rush completion through the same plumbing as
  * regular matchups.
+ *
+ * Bot opponents are also driven from this endpoint: if the matchup is
+ * against a fake opponent, the bot is auto-readied (3s after the
+ * ready_check phase opens) and auto-answers each question after a
+ * randomized 4–12s delay so the human never sits waiting on a stub.
  */
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../../lib/auth';
@@ -21,10 +26,82 @@ import { eq } from 'drizzle-orm';
 const {
   buildInitialRushState,
   resolveVotingIfReady,
+  markReady,
+  resolveReadyIfReady,
   advanceIfReady,
+  gradeAnswer,
   publicView,
+  BOT_READY_DELAY_MS,
+  QUESTION_DURATION_MS,
 } = require('../../../../../lib/rush');
 const { settleRushMatchup } = require('../../../../../lib/rushSettlement');
+
+// Bot answer delay window — randomized so the bot doesn't always
+// answer instantly (which would feel rigged) but still answers fast
+// enough that the human isn't sitting on the deadline every time.
+const BOT_ANSWER_MIN_MS = 4000;
+const BOT_ANSWER_MAX_MS = 12000;
+
+function applyBotAutomation(state, matchup) {
+  if (!matchup?.isFakeOpponent) return state;
+  const botId = matchup.user2Id;
+  if (!botId) return state;
+
+  // Auto-ready the bot 3s after ready_check began.
+  if (state.phase === 'ready_check') {
+    const startedAt = state.readyStartedAt
+      ? new Date(state.readyStartedAt).getTime()
+      : Date.now();
+    if (Date.now() - startedAt >= BOT_READY_DELAY_MS && !state.readyVotes?.[botId]) {
+      return markReady(state, botId);
+    }
+    return state;
+  }
+
+  // Auto-answer the current question after a randomized delay.
+  if (state.phase === 'playing') {
+    const idx = state.currentQuestionIndex;
+    const question = state.questions?.[idx];
+    if (!question) return state;
+    const existing = state.answers?.[botId]?.[question.id];
+    if (existing) return state;
+
+    const startedAt = state.questionStartedAt
+      ? new Date(state.questionStartedAt).getTime()
+      : Date.now();
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < BOT_ANSWER_MIN_MS) return state;
+
+    // Deterministic delay per question so multiple state reads agree
+    // on when the bot "answers" — derived from the question id so it
+    // doesn't shift between polls on the same question.
+    const seed = (question.id || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const rng = (seed % 1000) / 1000; // 0..1
+    const delay = BOT_ANSWER_MIN_MS + rng * (BOT_ANSWER_MAX_MS - BOT_ANSWER_MIN_MS);
+    if (elapsed < delay) return state;
+
+    const optionKeys = (question.options || []).map(o => o.key);
+    if (optionKeys.length === 0) return state;
+    // Bot picks "randomly" — but seeded per question id so multiple
+    // reads on the same question pick the same answer (preventing
+    // race-condition flickering between polls).
+    const pickIdx = (seed + 7) % optionKeys.length;
+    const botPick = optionKeys[pickIdx];
+    const graded = gradeAnswer(question, botPick, elapsed);
+    return {
+      ...state,
+      answers: {
+        ...state.answers,
+        [botId]: {
+          ...(state.answers?.[botId] || {}),
+          [question.id]: graded,
+        },
+      },
+    };
+  }
+
+  return state;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -51,16 +128,17 @@ export default async function handler(req, res) {
     let state = matchup.rushState;
 
     // Lazy-init: the rushState column is null until the first state read.
-    // Anchoring init here (rather than at matchup creation) keeps the
-    // matchmaking endpoints untouched.
     if (!state) {
       state = buildInitialRushState({ hostUserId: matchup.user1Id });
       await db.update(matchups).set({ rushState: state, updatedAt: new Date() }).where(eq(matchups.id, matchupId));
     }
 
-    // Roll forward through any expired phases. Both helpers are pure and
+    // Roll forward through any expired phases. All helpers are pure and
     // idempotent — running them on every read is cheap.
     let next = resolveVotingIfReady(state, ctx);
+    next = applyBotAutomation(next, matchup);
+    next = resolveReadyIfReady(next, ctx);
+    next = applyBotAutomation(next, matchup);
     next = advanceIfReady(next, ctx);
 
     if (JSON.stringify(next) !== JSON.stringify(state)) {

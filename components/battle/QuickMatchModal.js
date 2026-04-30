@@ -11,17 +11,19 @@ import { useGames } from '../../contexts/GamesContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
 
 // Rush in-popup flow constants. The modal carries the user all the way
-// from "MATCH FOUND" through live-game voting → rules → countdown so the
-// experience feels like a single trivia-crack-style ritual instead of a
-// page swap. Once the 3-2-1-GO countdown ends we hand off to
-// /battle/rush/[id] for the question gameplay (which is its own routed
-// page so refreshes/back-button still work).
+// from "MATCH FOUND" → live-game voting → ready check → 3-2-1 countdown →
+// the actual 6-question gameplay → result, so the experience feels like
+// a single trivia-crack-style ritual instead of a page swap. The
+// /battle/rush/[id] routed page still exists as a fallback for
+// refresh / back / deep-link, but the popup is the primary surface.
 const RUSH_VOTE_GAME_LIMIT = 3;
 const RUSH_FOUND_TO_VOTE_DELAY_MS = 1400;
-const RUSH_RULES_DURATION_MS = 2800;
 const RUSH_COUNTDOWN_TICK_MS = 800;
 const RUSH_GO_DURATION_MS = 600;
 const RUSH_STATE_POLL_MS = 750;
+// How long the result slide stays visible before we route the user
+// back to /battle (where the result popup picks up via SSE plumbing).
+const RUSH_RESULT_AUTO_EXIT_MS = 12000;
 
 const GAME_MODE_OPTIONS = [
   {
@@ -115,6 +117,11 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const [pendingVoteId, setPendingVoteId] = useState(null);
   const [countdownNum, setCountdownNum] = useState(3);
   const [voteDeadlineTick, setVoteDeadlineTick] = useState(0);
+  const [pendingReady, setPendingReady] = useState(false);
+  const [readyError, setReadyError] = useState('');
+  const [pickedAnswer, setPickedAnswer] = useState(null); // { questionId, answerKey }
+  const [submittingAnswer, setSubmittingAnswer] = useState(false);
+  const lastQuestionIdRef = useRef(null);
   const games = useGames();
   const apiGames = games?.apiGames;
   const { data: session } = useSession();
@@ -187,6 +194,11 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
       setRushVoteError('');
       setPendingVoteId(null);
       setCountdownNum(3);
+      setPendingReady(false);
+      setReadyError('');
+      setPickedAnswer(null);
+      setSubmittingAnswer(false);
+      lastQuestionIdRef.current = null;
     }
     return () => { cleanupAllTimers(); };
     // `presetMatch` is included so a fresh hand-off (new opponent +
@@ -277,7 +289,12 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   // flip and the opponent's vote landing.
   useEffect(() => {
     if (!isOpen) return;
-    const inRushFlow = step === 'rush-vote' || step === 'rush-rules' || step === 'rush-countdown';
+    const inRushFlow =
+      step === 'rush-vote' ||
+      step === 'rush-ready' ||
+      step === 'rush-countdown' ||
+      step === 'rush-playing' ||
+      step === 'rush-completed';
     if (!inRushFlow) return;
     const matchupId = matchedMatchup?.id;
     if (!matchupId) return;
@@ -334,11 +351,15 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     return () => { cancelled = true; };
   }, [step]);
 
-  // Detect server-side voting resolution → advance to rules slide.
+  // Detect server-side voting resolution → advance to ready slide.
   useEffect(() => {
     if (step !== 'rush-vote') return;
-    if (rushState?.phase === 'playing' || rushState?.phase === 'completed') {
-      setStep('rush-rules');
+    if (
+      rushState?.phase === 'ready_check' ||
+      rushState?.phase === 'playing' ||
+      rushState?.phase === 'completed'
+    ) {
+      setStep('rush-ready');
     }
   }, [step, rushState?.phase]);
 
@@ -368,19 +389,20 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     router.push(`/battle/rush/${matchupId}`);
   }, [step, rushState, matchedMatchup?.id, matchedOpponent?.id, userId, voteDeadlineTick, onClose, router]);
 
-  // Rules slide auto-advances into the 3-2-1 countdown.
+  // Ready slide → 3-2-1 countdown. Both players have to tap "Ready"
+  // (the bot is auto-readied server-side after 3s); the moment the
+  // server flips phase to 'playing' we kick the countdown.
   useEffect(() => {
-    if (step !== 'rush-rules') return;
-    setCountdownNum(3);
-    const t = setTimeout(() => {
-      if (cancelledRef.current) return;
+    if (step !== 'rush-ready') return;
+    if (rushState?.phase === 'playing' || rushState?.phase === 'completed') {
+      setCountdownNum(3);
       setStep('rush-countdown');
-    }, RUSH_RULES_DURATION_MS);
-    return () => clearTimeout(t);
-  }, [step]);
+    }
+  }, [step, rushState?.phase]);
 
-  // 3-2-1-GO countdown ticker. After the GO! flash we hand off to the
-  // dedicated /battle/rush/[id] page where the question gameplay lives.
+  // 3-2-1-GO countdown ticker. After the GO! flash we transition to
+  // the in-popup gameplay step (the routed /battle/rush/[id] page is
+  // still available as a fallback for refresh / deep-link).
   useEffect(() => {
     if (step !== 'rush-countdown') return;
     if (countdownNum > 0) {
@@ -391,19 +413,51 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
       }, RUSH_COUNTDOWN_TICK_MS);
       return () => clearTimeout(t);
     }
-    // countdownNum === 0 → show "GO!" briefly, then route to gameplay.
+    // countdownNum === 0 → show "GO!" briefly, then advance to the
+    // in-popup playing slide.
     const t = setTimeout(() => {
+      if (cancelledRef.current) return;
       const matchupId = matchedMatchup?.id;
       if (!matchupId) return;
-      // Bypass the parent's onMatchFound for rush — the modal owns the
-      // entire pre-game ritual, so we navigate straight to the gameplay
-      // page instead of bubbling the match up to the page-level handler.
-      onClose();
-      router.push(`/battle/rush/${matchupId}`);
+      setStep('rush-playing');
     }, RUSH_GO_DURATION_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, countdownNum, matchedMatchup?.id]);
+
+  // Reset the locally-picked answer whenever the question rolls over so
+  // the "your pick" highlight doesn't bleed across questions.
+  useEffect(() => {
+    if (step !== 'rush-playing') return;
+    const currQ = rushState?.questions?.[rushState?.currentQuestionIndex];
+    if (currQ && currQ.id !== lastQuestionIdRef.current) {
+      lastQuestionIdRef.current = currQ.id;
+      setPickedAnswer(null);
+    }
+  }, [step, rushState?.questions, rushState?.currentQuestionIndex]);
+
+  // Detect server-side completion → flip to result slide. We pick this
+  // up from rushState.phase rather than waiting on the answer POST so
+  // a deadline expiry on the final question still triggers the result.
+  useEffect(() => {
+    if (step !== 'rush-playing') return;
+    if (rushState?.phase === 'completed') {
+      setStep('rush-completed');
+    }
+  }, [step, rushState?.phase]);
+
+  // Result slide auto-exits to /battle after a beat so the user lands
+  // back where the result-popup SSE plumbing can take over.
+  useEffect(() => {
+    if (step !== 'rush-completed') return;
+    const t = setTimeout(() => {
+      if (cancelledRef.current) return;
+      onClose();
+      router.push('/battle');
+    }, RUSH_RESULT_AUTO_EXIT_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   // Live games for the vote slide. Merge server list + GamesContext
   // (mirrors the routed rush page's logic) so demo / simulated live
@@ -466,7 +520,66 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     }
   };
 
-  const isInRushFlow = step === 'rush-vote' || step === 'rush-rules' || step === 'rush-countdown';
+  const submitRushReady = async () => {
+    const matchupId = matchedMatchup?.id;
+    if (!matchupId || pendingReady) return;
+    setPendingReady(true);
+    setReadyError('');
+    haptic.tap?.();
+    try {
+      const res = await fetch(`/api/battles/rush/${matchupId}/ready`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        // 409 = phase already past ready_check; harmless.
+        if (res.status !== 409) setReadyError(j.error || 'Failed to ready up');
+      }
+      // Refetch immediately so the local state reflects our ready
+      // without waiting for the next 750ms poll tick.
+      try {
+        const j = await fetch(`/api/battles/rush/${matchupId}/state`).then(r => r.json());
+        setRushState(j.rush || null);
+      } catch {}
+    } catch (err) {
+      setReadyError(err?.message || 'Network error');
+    } finally {
+      setPendingReady(false);
+    }
+  };
+
+  const submitRushAnswer = async (questionId, answerKey) => {
+    const matchupId = matchedMatchup?.id;
+    if (!matchupId || submittingAnswer) return;
+    setSubmittingAnswer(true);
+    setPickedAnswer({ questionId, answerKey });
+    haptic.tap?.();
+    try {
+      const res = await fetch(`/api/battles/rush/${matchupId}/answer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId, answerKey }),
+      });
+      if (!res.ok && res.status !== 409) {
+        // 409 just means the server already advanced — not an error.
+        // No-op; the next poll will resync.
+      }
+      try {
+        const j = await fetch(`/api/battles/rush/${matchupId}/state`).then(r => r.json());
+        setRushState(j.rush || null);
+      } catch {}
+    } finally {
+      setSubmittingAnswer(false);
+    }
+  };
+
+  const isInRushFlow =
+    step === 'rush-vote' ||
+    step === 'rush-ready' ||
+    step === 'rush-countdown' ||
+    step === 'rush-playing' ||
+    step === 'rush-completed';
 
   // Closing the modal mid-rush would orphan the user in an active
   // matchup. Instead, hand them off to the routed gameplay page so
@@ -1560,12 +1673,45 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
             />
           )}
 
-          {step === 'rush-rules' && (
-            <RushRulesSlide onClose={handleClose} />
+          {step === 'rush-ready' && (
+            <RushReadySlide
+              rushState={rushState}
+              userId={session?.user?.id}
+              opponent={matchedOpponent}
+              pendingReady={pendingReady}
+              onReady={submitRushReady}
+              onClose={handleClose}
+              error={readyError}
+            />
           )}
 
           {step === 'rush-countdown' && (
             <RushCountdownSlide num={countdownNum} />
+          )}
+
+          {step === 'rush-playing' && (
+            <RushPlayingSlide
+              rushState={rushState}
+              userId={session?.user?.id}
+              opponent={matchedOpponent}
+              pickedAnswer={pickedAnswer}
+              submittingAnswer={submittingAnswer}
+              onAnswer={submitRushAnswer}
+              onOpenFullView={handleClose}
+            />
+          )}
+
+          {step === 'rush-completed' && (
+            <RushCompletedSlide
+              rushState={rushState}
+              matchup={matchedMatchup}
+              userId={session?.user?.id}
+              opponent={matchedOpponent}
+              onExit={() => {
+                onClose();
+                router.push('/battle');
+              }}
+            />
           )}
         </div>
       </div>
@@ -1973,12 +2119,17 @@ function RushVoteCard({ game, iPicked, oppPicked, disabled, loading, onPick }) {
   );
 }
 
-function RushRulesSlide({ onClose }) {
+function RushReadySlide({ rushState, userId, opponent, pendingReady, onReady, onClose, error }) {
+  const opponentId = opponent?.id;
+  const myReady = userId ? !!rushState?.readyVotes?.[userId] : false;
+  const oppReady = opponentId ? !!rushState?.readyVotes?.[opponentId] : false;
+
   const rules = [
-    { icon: '🏀', label: '6 quick props', sub: 'from your live game' },
+    { icon: '🏀', label: '6 quick props', sub: 'sealed at the buzzer' },
     { icon: '⏱️', label: '15s per question', sub: 'tap fast — clock runs hot' },
     { icon: '🎯', label: 'Most correct wins', sub: 'tiebreak: fastest answers' },
   ];
+
   return (
     <div className="relative">
       <style>{`
@@ -1995,18 +2146,29 @@ function RushRulesSlide({ onClose }) {
           0%, 100% { transform: rotate(-8deg) scale(1); }
           50% { transform: rotate(8deg) scale(1.15); }
         }
+        @keyframes rrReadyPulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 4px 0 #0a0a0a, 0 0 22px rgba(16,185,129,0.45); }
+          50% { transform: scale(1.04); box-shadow: 0 4px 0 #0a0a0a, 0 0 32px rgba(16,185,129,0.7); }
+        }
+        @keyframes rrCheckPop {
+          0% { transform: scale(0); }
+          60% { transform: scale(1.25); }
+          100% { transform: scale(1); }
+        }
         .rr-title { animation: rrSlamIn 360ms cubic-bezier(0.34,1.56,0.64,1) both; }
         .rr-row { animation: rrRowIn 320ms cubic-bezier(0.22,1,0.36,1) both; }
-        .rr-row:nth-child(1) { animation-delay: 200ms; }
-        .rr-row:nth-child(2) { animation-delay: 320ms; }
-        .rr-row:nth-child(3) { animation-delay: 440ms; }
+        .rr-row:nth-child(1) { animation-delay: 160ms; }
+        .rr-row:nth-child(2) { animation-delay: 240ms; }
+        .rr-row:nth-child(3) { animation-delay: 320ms; }
         .rr-bolt { animation: rrBoltSwing 1.2s ease-in-out infinite; display: inline-block; }
+        .rr-ready-btn { animation: rrReadyPulse 1.4s ease-in-out infinite; }
+        .rr-check-pop { animation: rrCheckPop 320ms cubic-bezier(0.34,1.56,0.64,1) both; }
         @media (prefers-reduced-motion: reduce) {
-          .rr-title, .rr-row, .rr-bolt { animation: none !important; }
+          .rr-title, .rr-row, .rr-bolt, .rr-ready-btn, .rr-check-pop { animation: none !important; }
         }
       `}</style>
 
-      <div className="px-6 pt-7 pb-3 text-center">
+      <div className="px-6 pt-6 pb-2 text-center">
         <div className="rr-title inline-flex items-center gap-2 px-4 py-2 rounded-2xl"
           style={{
             background: `linear-gradient(180deg,#fbbf24,#d97706)`,
@@ -2014,21 +2176,18 @@ function RushRulesSlide({ onClose }) {
             boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(251,191,36,0.45)',
           }}
         >
-          <span className="rr-bolt" aria-hidden="true" style={{ fontSize: 24 }}>⚡</span>
-          <h2 className="font-black uppercase" style={{ color: '#1a0a00', fontSize: 22, letterSpacing: '0.08em' }}>
+          <span className="rr-bolt" aria-hidden="true" style={{ fontSize: 22 }}>⚡</span>
+          <h2 className="font-black uppercase" style={{ color: '#1a0a00', fontSize: 20, letterSpacing: '0.08em' }}>
             How Rush Works
           </h2>
         </div>
-        <p className="mt-3 text-[11px] text-gray-400 font-bold uppercase tracking-widest">
-          Get ready — locks in 3 seconds
-        </p>
       </div>
 
-      <div className="px-5 pb-5 space-y-2.5">
+      <div className="px-5 pt-2 pb-3 space-y-2">
         {rules.map((r, i) => (
           <div
             key={i}
-            className="rr-row flex items-center gap-3 p-3 rounded-2xl"
+            className="rr-row flex items-center gap-3 p-2.5 rounded-2xl"
             style={{
               background: 'linear-gradient(180deg,#141414,#0a0a0a)',
               border: '2.5px solid #0a0a0a',
@@ -2036,12 +2195,12 @@ function RushRulesSlide({ onClose }) {
             }}
           >
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{
                 background: 'linear-gradient(180deg,#0c1a35,#050a15)',
                 border: '2.5px solid #0a0a0a',
                 boxShadow: '0 2px 0 #0a0a0a',
-                fontSize: 22,
+                fontSize: 20,
               }}
               aria-hidden="true"
             >
@@ -2055,7 +2214,52 @@ function RushRulesSlide({ onClose }) {
         ))}
       </div>
 
-      <div className="px-5 pb-5 flex items-center justify-between">
+      {/* Ready status + button */}
+      <div className="px-5 pb-5">
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <ReadyBadge label="YOU" ready={myReady} color={SELF_COLOR} colorDeep={SELF_COLOR_DEEP} />
+          <ReadyBadge
+            label={(opponent?.username || 'OPP').toUpperCase()}
+            ready={oppReady}
+            color={OPP_COLOR}
+            colorDeep={OPP_COLOR_DEEP}
+          />
+        </div>
+
+        <button
+          type="button"
+          disabled={myReady || pendingReady}
+          onClick={onReady}
+          className={`w-full py-3.5 rounded-2xl font-black uppercase text-white transition-transform active:scale-95 ${
+            myReady || pendingReady ? '' : 'rr-ready-btn'
+          }`}
+          style={{
+            background: myReady
+              ? 'linear-gradient(180deg,#10b981,#047857)'
+              : 'linear-gradient(180deg,#10b981,#059669)',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 4px 0 #0a0a0a',
+            letterSpacing: '0.14em',
+            fontSize: 15,
+            opacity: pendingReady && !myReady ? 0.7 : 1,
+            cursor: myReady ? 'default' : pendingReady ? 'wait' : 'pointer',
+          }}
+        >
+          {myReady
+            ? oppReady
+              ? "Both ready — let's go!"
+              : 'Waiting for opponent…'
+            : pendingReady
+              ? 'Locking in…'
+              : "I'm Ready"}
+        </button>
+
+        {error && (
+          <div className="mt-2 text-[11px] text-red-300 text-center">{error}</div>
+        )}
+      </div>
+
+      <div className="px-5 pb-4 flex items-center justify-between">
         <button
           type="button"
           onClick={onClose}
@@ -2065,8 +2269,417 @@ function RushRulesSlide({ onClose }) {
         </button>
         <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-amber-300 uppercase tracking-wider">
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }} />
-          Starting…
+          Ready up to start
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ReadyBadge({ label, ready, color, colorDeep }) {
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-2 rounded-xl"
+      style={{
+        background: ready
+          ? `linear-gradient(180deg, ${color}33, ${colorDeep}33)`
+          : 'linear-gradient(180deg,#141414,#0a0a0a)',
+        border: ready ? `2.5px solid ${color}` : '2.5px solid #0a0a0a',
+        boxShadow: ready ? `0 3px 0 #0a0a0a, 0 0 14px ${color}55` : '0 3px 0 #0a0a0a',
+        transition: 'all 200ms ease',
+      }}
+    >
+      <div
+        className={ready ? 'rr-check-pop' : ''}
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: '50%',
+          background: ready ? color : 'rgba(255,255,255,0.06)',
+          border: ready ? '2px solid #0a0a0a' : '2px solid rgba(255,255,255,0.12)',
+          color: '#0a0a0a',
+          fontSize: 13,
+          fontWeight: 900,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+        aria-hidden="true"
+      >
+        {ready ? '✓' : ''}
+      </div>
+      <div className="min-w-0">
+        <div
+          className="font-black uppercase truncate"
+          style={{ color: ready ? color : 'rgba(229,231,235,0.7)', fontSize: 11, letterSpacing: '0.1em' }}
+        >
+          {label}
+        </div>
+        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: ready ? '#86efac' : 'rgba(156,163,175,0.7)' }}>
+          {ready ? 'Ready' : 'Waiting…'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RushPlayingSlide({ rushState, userId, opponent, pickedAnswer, submittingAnswer, onAnswer, onOpenFullView }) {
+  const opponentId = opponent?.id;
+  const idx = rushState?.currentQuestionIndex ?? 0;
+  const total = rushState?.numQuestions || rushState?.questions?.length || 6;
+  const question = rushState?.questions?.[idx];
+  const questionDurationMs = rushState?.questionDurationMs || 15000;
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 100);
+    return () => clearInterval(t);
+  }, []);
+
+  const deadline = rushState?.questionDeadline ? new Date(rushState.questionDeadline).getTime() : null;
+  const remaining = deadline ? Math.max(0, deadline - now) : questionDurationMs;
+  const remainingPct = Math.max(0, Math.min(100, (remaining / questionDurationMs) * 100));
+  const remainingSec = Math.ceil(remaining / 1000);
+  const urgent = remaining < 5000;
+  const timeOut = remaining <= 0;
+
+  const myAnswers = rushState?.answers?.[userId] || {};
+  const oppAnswers = opponentId ? (rushState?.answers?.[opponentId] || {}) : {};
+  const myAnswerForCurrent = question ? myAnswers[question.id] : null;
+  const oppAnswerForCurrent = question ? oppAnswers[question.id] : null;
+
+  const myCorrectSoFar = useMemo(
+    () => Object.values(myAnswers).filter(a => a?.correct).length,
+    [myAnswers]
+  );
+  const oppCorrectSoFar = useMemo(
+    () => Object.values(oppAnswers).filter(a => a?.correct).length,
+    [oppAnswers]
+  );
+
+  const lockedKey = pickedAnswer?.questionId === question?.id
+    ? pickedAnswer.answerKey
+    : myAnswerForCurrent?.key;
+  const locked = !!myAnswerForCurrent || timeOut || submittingAnswer;
+
+  if (!question) {
+    return (
+      <div className="px-6 py-12 text-center text-gray-400 text-sm">Loading question…</div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <style>{`
+        @keyframes rpQuestionIn {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes rpOptionIn {
+          0% { opacity: 0; transform: translateX(-8px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes rpUrgentPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.06); }
+        }
+        .rp-question { animation: rpQuestionIn 280ms cubic-bezier(0.22,1,0.36,1) both; }
+        .rp-option { animation: rpOptionIn 240ms cubic-bezier(0.22,1,0.36,1) both; }
+        .rp-option:nth-child(1) { animation-delay: 60ms; }
+        .rp-option:nth-child(2) { animation-delay: 110ms; }
+        .rp-option:nth-child(3) { animation-delay: 160ms; }
+        .rp-option:nth-child(4) { animation-delay: 210ms; }
+        .rp-urgent { animation: rpUrgentPulse 0.6s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .rp-question, .rp-option, .rp-urgent { animation: none !important; }
+        }
+      `}</style>
+
+      {/* Header — progress dots + Q-of-N */}
+      <div className="px-5 pt-5 pb-3">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: total }).map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 22,
+                  height: 6,
+                  borderRadius: 999,
+                  background: i < idx ? '#fb923c' : i === idx ? 'rgba(251,146,60,0.5)' : 'rgba(255,255,255,0.1)',
+                  border: i === idx ? '1px solid rgba(251,146,60,0.6)' : 'none',
+                  transition: 'background 150ms ease',
+                }}
+              />
+            ))}
+          </div>
+          <div className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+            Q{idx + 1}/{total}
+          </div>
+        </div>
+
+        {/* Live score row */}
+        <div className="grid grid-cols-2 gap-2">
+          <ScoreChip label="YOU" correct={myCorrectSoFar} answered={!!myAnswerForCurrent} color={SELF_COLOR} />
+          <ScoreChip
+            label={(opponent?.username || 'OPP').toUpperCase()}
+            correct={oppCorrectSoFar}
+            answered={!!oppAnswerForCurrent}
+            color={OPP_COLOR}
+          />
+        </div>
+      </div>
+
+      {/* Question card */}
+      <div className="px-5 pb-3">
+        <div
+          key={question.id}
+          className="rp-question rounded-2xl p-4"
+          style={{
+            background: 'linear-gradient(180deg,#0c1a35,#050a15)',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 3px 0 #0a0a0a',
+          }}
+        >
+          {/* Timer row */}
+          <div className="flex items-center justify-between mb-3">
+            <div
+              className={`text-3xl font-black tabular-nums ${urgent ? 'rp-urgent' : ''}`}
+              style={{
+                color: urgent ? '#ef4444' : '#fb923c',
+                textShadow: urgent ? '0 0 12px rgba(239,68,68,0.6)' : '0 0 10px rgba(251,146,60,0.5)',
+              }}
+            >
+              {remainingSec}s
+            </div>
+            <div
+              className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+              style={{
+                background: 'rgba(251,191,36,0.15)',
+                color: '#fbbf24',
+                border: '1px solid rgba(251,191,36,0.35)',
+              }}
+            >
+              ⚡ Rush
+            </div>
+          </div>
+
+          {/* Timer bar */}
+          <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div
+              style={{
+                width: `${remainingPct}%`,
+                height: '100%',
+                background: urgent
+                  ? 'linear-gradient(90deg,#ef4444,#f59e0b)'
+                  : 'linear-gradient(90deg,#fb923c,#facc15)',
+                transition: 'width 100ms linear',
+              }}
+            />
+          </div>
+
+          {/* Prompt */}
+          <div className="text-base md:text-lg font-extrabold text-white text-center mb-4 leading-snug">
+            {question.prompt}
+          </div>
+
+          {/* Options */}
+          <div className="space-y-2">
+            {question.options?.map((opt) => {
+              const isPicked = lockedKey === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => onAnswer(question.id, opt.key)}
+                  className="rp-option w-full text-left px-4 py-3 rounded-xl font-extrabold transition-all"
+                  style={{
+                    background: isPicked
+                      ? `linear-gradient(180deg, ${SELF_COLOR}33, ${SELF_COLOR_DEEP}33)`
+                      : 'linear-gradient(180deg,#10203d,#0a1428)',
+                    border: isPicked ? `2.5px solid ${SELF_COLOR}` : '2.5px solid #0a0a0a',
+                    boxShadow: isPicked
+                      ? `0 3px 0 #0a0a0a, 0 0 14px ${SELF_COLOR}55`
+                      : '0 3px 0 #0a0a0a',
+                    color: isPicked ? '#dbeafe' : 'white',
+                    fontSize: 14,
+                    cursor: locked && !isPicked ? 'not-allowed' : locked ? 'default' : 'pointer',
+                    opacity: locked && !isPicked ? 0.55 : 1,
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {!myAnswerForCurrent && timeOut && (
+            <div className="mt-3 text-center text-[11px] text-red-300 font-bold">
+              Time's up — moving on…
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="px-5 pb-4 text-center">
+        <button
+          type="button"
+          onClick={onOpenFullView}
+          className="text-[10px] text-gray-500 hover:text-gray-300 underline underline-offset-2"
+        >
+          Open full match view
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ScoreChip({ label, correct, answered, color }) {
+  return (
+    <div
+      className="flex items-center justify-between px-3 py-2 rounded-xl"
+      style={{
+        background: 'linear-gradient(180deg,#141414,#0a0a0a)',
+        border: '2.5px solid #0a0a0a',
+        boxShadow: '0 2px 0 #0a0a0a',
+      }}
+    >
+      <div className="min-w-0">
+        <div
+          className="font-black uppercase truncate"
+          style={{ color, fontSize: 10, letterSpacing: '0.1em' }}
+        >
+          {label}
+        </div>
+        <div className="text-[9px] font-bold uppercase tracking-wider text-gray-500">
+          {answered ? 'Locked in' : 'Picking…'}
+        </div>
+      </div>
+      <div className="text-xl font-black tabular-nums text-white">
+        {correct}
+      </div>
+    </div>
+  );
+}
+
+function RushCompletedSlide({ rushState, matchup, userId, opponent, onExit }) {
+  const opponentId = opponent?.id;
+  const myScore = rushState?.scores?.[userId] || { correct: 0, totalTimeMs: 0 };
+  const oppScore = (opponentId && rushState?.scores?.[opponentId]) || { correct: 0, totalTimeMs: 0 };
+  const winnerType = rushState?.winnerType;
+  const isWinner = rushState?.winnerUserId === userId;
+  const isTie = winnerType === 'tie';
+  const total = rushState?.numQuestions || rushState?.questions?.length || 6;
+  const winnerPayout = matchup?.winnerPayout ? parseFloat(matchup.winnerPayout) : 0;
+
+  const headline = isTie ? "It's a Tie" : isWinner ? 'You Won!' : 'You Lost';
+  const headlineColor = isTie ? '#06b6d4' : isWinner ? '#facc15' : '#ef4444';
+  const subline = isTie
+    ? 'Stake refunded to both players'
+    : isWinner
+      ? `+$${winnerPayout.toFixed(2)} to your bankroll`
+      : 'Better luck next round';
+
+  return (
+    <div className="relative">
+      <style>{`
+        @keyframes rcoSlam {
+          0% { opacity: 0; transform: scale(0.6) rotate(-6deg); }
+          60% { opacity: 1; transform: scale(1.1) rotate(2deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0); }
+        }
+        @keyframes rcoCardIn {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .rco-headline { animation: rcoSlam 460ms cubic-bezier(0.34,1.56,0.64,1) both; }
+        .rco-card { animation: rcoCardIn 360ms cubic-bezier(0.22,1,0.36,1) both; }
+        .rco-card:nth-child(1) { animation-delay: 200ms; }
+        .rco-card:nth-child(2) { animation-delay: 280ms; }
+        @media (prefers-reduced-motion: reduce) {
+          .rco-headline, .rco-card { animation: none !important; }
+        }
+      `}</style>
+
+      <div className="px-6 pt-7 pb-3 text-center">
+        <div
+          className="rco-headline inline-block font-black"
+          style={{
+            color: headlineColor,
+            fontSize: 38,
+            letterSpacing: '0.02em',
+            textShadow: `0 4px 0 #0a0a0a, 0 0 28px ${headlineColor}88`,
+          }}
+        >
+          {headline}
+        </div>
+        <div className="mt-2 text-xs font-bold text-gray-300">{subline}</div>
+      </div>
+
+      <div className="px-5 pb-4 grid grid-cols-2 gap-2">
+        <div
+          className="rco-card rounded-2xl p-4 text-center"
+          style={{
+            background: `linear-gradient(180deg, ${SELF_COLOR}22, ${SELF_COLOR_DEEP}22)`,
+            border: `2.5px solid ${SELF_COLOR}`,
+            boxShadow: '0 3px 0 #0a0a0a',
+          }}
+        >
+          <div
+            className="text-[10px] font-black uppercase tracking-widest mb-1"
+            style={{ color: SELF_COLOR }}
+          >
+            You
+          </div>
+          <div className="text-3xl font-black text-white tabular-nums">
+            {myScore.correct}
+            <span className="text-sm text-gray-500">/{total}</span>
+          </div>
+          <div className="text-[10px] text-gray-500 mt-1">
+            {Math.round(myScore.totalTimeMs / 100) / 10}s total
+          </div>
+        </div>
+        <div
+          className="rco-card rounded-2xl p-4 text-center"
+          style={{
+            background: `linear-gradient(180deg, ${OPP_COLOR}22, ${OPP_COLOR_DEEP}22)`,
+            border: `2.5px solid ${OPP_COLOR}`,
+            boxShadow: '0 3px 0 #0a0a0a',
+          }}
+        >
+          <div
+            className="text-[10px] font-black uppercase tracking-widest mb-1 truncate"
+            style={{ color: OPP_COLOR }}
+          >
+            {opponent?.username || 'Opponent'}
+          </div>
+          <div className="text-3xl font-black text-white tabular-nums">
+            {oppScore.correct}
+            <span className="text-sm text-gray-500">/{total}</span>
+          </div>
+          <div className="text-[10px] text-gray-500 mt-1">
+            {Math.round(oppScore.totalTimeMs / 100) / 10}s total
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 pb-5">
+        <button
+          type="button"
+          onClick={onExit}
+          className="w-full py-3.5 rounded-2xl font-black uppercase text-white transition-transform active:scale-95"
+          style={{
+            background: 'linear-gradient(180deg,#fb923c,#c2410c)',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(251,146,60,0.4)',
+            letterSpacing: '0.14em',
+            fontSize: 14,
+          }}
+        >
+          Back to Battle
+        </button>
       </div>
     </div>
   );

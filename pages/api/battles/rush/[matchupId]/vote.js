@@ -17,6 +17,7 @@ import { eq } from 'drizzle-orm';
 const {
   buildInitialRushState,
   resolveVotingIfReady,
+  resolveReadyIfReady,
   advanceIfReady,
 } = require('../../../../../lib/rush');
 const { publishBattleEvent } = require('../../../../../lib/battle-events');
@@ -54,16 +55,31 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: 'Voting phase already ended' });
     }
 
-    state = {
-      ...state,
-      gameVotes: {
-        ...(state.gameVotes || {}),
-        [userId]: { gameId: String(gameId), gameSnapshot, votedAt: new Date().toISOString() },
-      },
+    const newVotes = {
+      ...(state.gameVotes || {}),
+      [userId]: { gameId: String(gameId), gameSnapshot, votedAt: new Date().toISOString() },
     };
+
+    // Bot opponents auto-vote for the same live game the human picked,
+    // so the matchup never stalls in the voting phase against a fake
+    // opponent. The human is always user1 for matchmaking-assigned
+    // bots, so user2Id is the bot id.
+    if (matchup.isFakeOpponent) {
+      const botId = matchup.user2Id;
+      if (botId && botId !== userId && !newVotes[botId]) {
+        newVotes[botId] = {
+          gameId: String(gameId),
+          gameSnapshot,
+          votedAt: new Date().toISOString(),
+        };
+      }
+    }
+
+    state = { ...state, gameVotes: newVotes };
 
     const ctx = { user1Id: matchup.user1Id, user2Id: matchup.user2Id };
     state = resolveVotingIfReady(state, ctx);
+    state = resolveReadyIfReady(state, ctx);
     state = advanceIfReady(state, ctx);
 
     await db.update(matchups).set({ rushState: state, updatedAt: new Date() }).where(eq(matchups.id, matchupId));

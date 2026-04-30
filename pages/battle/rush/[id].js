@@ -119,6 +119,8 @@ export default function RushBattlePage() {
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [pickedAnswer, setPickedAnswer] = useState(null);
   const [forfeiting, setForfeiting] = useState(false);
+  const [pendingReady, setPendingReady] = useState(false);
+  const [readyError, setReadyError] = useState('');
   const lastQuestionIdRef = useRef(null);
 
   // Pull live games straight from the dashboard's source of truth
@@ -272,6 +274,27 @@ export default function RushBattlePage() {
     }
   }, [matchupId, submittingAnswer, fetchState]);
 
+  const submitReady = useCallback(async () => {
+    if (!matchupId || pendingReady) return;
+    setPendingReady(true);
+    setReadyError('');
+    try {
+      const res = await fetch(`/api/battles/rush/${matchupId}/ready`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        if (res.status !== 409) setReadyError(j.error || 'Failed to ready up');
+      }
+      await fetchState();
+    } catch (err) {
+      setReadyError(err?.message || 'Network error');
+    } finally {
+      setPendingReady(false);
+    }
+  }, [matchupId, pendingReady, fetchState]);
+
   const forfeit = useCallback(async () => {
     if (!matchupId || forfeiting) return;
     if (!confirm('Forfeit this Rush match? Your opponent wins the pot.')) return;
@@ -326,6 +349,7 @@ export default function RushBattlePage() {
   const isUser1 = matchup.user1Id === userId;
   const opponentId = isUser1 ? matchup.user2Id : matchup.user1Id;
   const isVoting = rush.phase === 'voting';
+  const isReadyCheck = rush.phase === 'ready_check';
 
   // While voting, render as a full-screen cartoon-themed overlay so the
   // experience feels like a continuation of the PreMatchPopup the user
@@ -347,6 +371,24 @@ export default function RushBattlePage() {
           onVote={submitVote}
           onForfeit={forfeit}
           error={error}
+        />
+      </>
+    );
+  }
+
+  if (isReadyCheck) {
+    return (
+      <>
+        <Head><title>Rush · Ready Up · Piks</title></Head>
+        <RushReadyOverlay
+          rush={rush}
+          matchup={matchup}
+          userId={userId}
+          opponentId={opponentId}
+          pendingReady={pendingReady}
+          onReady={submitReady}
+          onForfeit={forfeit}
+          error={readyError || error}
         />
       </>
     );
@@ -398,6 +440,139 @@ export default function RushBattlePage() {
         </div>
       </div>
     </>
+  );
+}
+
+function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onReady, onForfeit, error }) {
+  const myReady = !!rush.readyVotes?.[userId];
+  const oppReady = !!rush.readyVotes?.[opponentId];
+  const pot = parseFloat(matchup?.potSize || 0);
+  const winnerTakes = parseFloat(matchup?.winnerPayout || 0);
+
+  return (
+    <div className="min-h-screen bg-[#050a15] text-white relative overflow-hidden" style={{
+      backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(251,146,60,0.18) 0%, transparent 60%)',
+    }}>
+      <style>{`
+        @keyframes rroSlamIn {
+          0% { opacity: 0; transform: scale(0.7) translateY(20px); }
+          60% { opacity: 1; transform: scale(1.05) translateY(-2px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes rroReadyPulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 4px 0 #0a0a0a, 0 0 22px rgba(16,185,129,0.45); }
+          50% { transform: scale(1.04); box-shadow: 0 4px 0 #0a0a0a, 0 0 32px rgba(16,185,129,0.7); }
+        }
+        .rro-title { animation: rroSlamIn 360ms cubic-bezier(0.34,1.56,0.64,1) both; }
+        .rro-ready-btn { animation: rroReadyPulse 1.4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .rro-title, .rro-ready-btn { animation: none !important; }
+        }
+      `}</style>
+
+      <div className="max-w-md mx-auto px-5 py-10 flex flex-col items-center min-h-screen justify-center">
+        <div className="rro-title inline-flex items-center gap-2 px-4 py-2 rounded-2xl mb-3"
+          style={{
+            background: `linear-gradient(180deg,#fbbf24,#d97706)`,
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(251,191,36,0.45)',
+          }}
+        >
+          <span style={{ fontSize: 22 }}>⚡</span>
+          <h1 className="font-black uppercase" style={{ color: '#1a0a00', fontSize: 20, letterSpacing: '0.08em' }}>
+            Ready to Rush
+          </h1>
+        </div>
+
+        <div className="text-xs text-gray-400 mb-6">
+          Pot ${pot.toFixed(0)} · Pays ${winnerTakes.toFixed(0)}
+        </div>
+
+        <div className="w-full grid grid-cols-2 gap-3 mb-5">
+          <ReadyCard label="YOU" ready={myReady} color="#3b82f6" />
+          <ReadyCard label="OPP" ready={oppReady} color="#fb923c" />
+        </div>
+
+        <button
+          type="button"
+          disabled={myReady || pendingReady}
+          onClick={onReady}
+          className={`w-full py-4 rounded-2xl font-black uppercase text-white transition-transform active:scale-95 ${
+            myReady || pendingReady ? '' : 'rro-ready-btn'
+          }`}
+          style={{
+            background: 'linear-gradient(180deg,#10b981,#059669)',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 4px 0 #0a0a0a',
+            letterSpacing: '0.14em',
+            fontSize: 16,
+            opacity: pendingReady && !myReady ? 0.7 : 1,
+            cursor: myReady ? 'default' : pendingReady ? 'wait' : 'pointer',
+          }}
+        >
+          {myReady
+            ? oppReady ? "Both ready — let's go!" : 'Waiting for opponent…'
+            : pendingReady ? 'Locking in…' : "I'm Ready"}
+        </button>
+
+        {error && (
+          <div className="mt-3 text-xs text-red-300 text-center">{error}</div>
+        )}
+
+        <button
+          type="button"
+          onClick={onForfeit}
+          className="mt-6 text-[11px] text-gray-500 hover:text-gray-300 underline underline-offset-2"
+        >
+          Forfeit match
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ReadyCard({ label, ready, color }) {
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-3 rounded-xl"
+      style={{
+        background: ready ? `linear-gradient(180deg, ${color}33, ${color}11)` : 'linear-gradient(180deg,#141414,#0a0a0a)',
+        border: ready ? `2.5px solid ${color}` : '2.5px solid #0a0a0a',
+        boxShadow: ready ? `0 3px 0 #0a0a0a, 0 0 14px ${color}55` : '0 3px 0 #0a0a0a',
+        transition: 'all 200ms ease',
+      }}
+    >
+      <div
+        style={{
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          background: ready ? color : 'rgba(255,255,255,0.06)',
+          border: ready ? '2px solid #0a0a0a' : '2px solid rgba(255,255,255,0.12)',
+          color: '#0a0a0a',
+          fontSize: 14,
+          fontWeight: 900,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+        aria-hidden="true"
+      >
+        {ready ? '✓' : ''}
+      </div>
+      <div className="min-w-0">
+        <div
+          className="font-black uppercase truncate"
+          style={{ color: ready ? color : 'rgba(229,231,235,0.7)', fontSize: 12, letterSpacing: '0.1em' }}
+        >
+          {label}
+        </div>
+        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: ready ? '#86efac' : 'rgba(156,163,175,0.7)' }}>
+          {ready ? 'Ready' : 'Waiting…'}
+        </div>
+      </div>
+    </div>
   );
 }
 
