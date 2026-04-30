@@ -23,6 +23,25 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
+// Tailwind's `sm` breakpoint = 640px. Anything below is treated as mobile
+// for the carousel: no auto-scroll, dots are the navigation affordance.
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(min-width: 640px)');
+    const handler = (e) => setIsDesktop(e.matches);
+    setIsDesktop(mq.matches);
+    if (mq.addEventListener) mq.addEventListener('change', handler);
+    else mq.addListener(handler);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', handler);
+      else mq.removeListener(handler);
+    };
+  }, []);
+  return isDesktop;
+}
+
 function SlideHost({
   slideKey,
   isEmpty,
@@ -113,11 +132,14 @@ export default function PromoCarousel({ slides }) {
 
   const visible = candidates.filter((s) => !emptyKeys[s.key]);
   const count = visible.length;
-  // Auto-scroll runs whenever there's more than one slide. We intentionally
-  // do NOT gate on `prefersReducedMotion` because many iOS users have OS-level
-  // Reduce Motion enabled by default; respecting it here was making the promo
-  // strip appear static and forcing users to swipe (per user feedback).
-  const showLoop = count > 1;
+  // Auto-scroll is desktop-only. On mobile the auto-advance felt jittery
+  // and competed with native touch panning, so we let users swipe through
+  // the strip themselves and surface pagination dots as the affordance.
+  // We intentionally do NOT gate desktop on `prefersReducedMotion` because
+  // many iOS users have OS-level Reduce Motion enabled by default; that
+  // was making the promo strip appear static (per user feedback).
+  const isDesktop = useIsDesktop();
+  const showLoop = count > 1 && isDesktop;
 
   const reportContent = useCallback((key, isEmpty) => {
     setEmptyKeys((prev) => {
@@ -389,13 +411,12 @@ export default function PromoCarousel({ slides }) {
           ))}
       </div>
 
-      {/* Pagination dots are hidden on mobile because the strip auto-scrolls
-          continuously — the dots both wasted vertical space and produced a
-          visibly large gap between the promo cards and the sport-pill row
-          beneath. They remain on tablet/desktop (sm+) where they double as a
-          click-to-jump affordance. */}
+      {/* Pagination dots are visible at every breakpoint. On desktop they
+          double as a click-to-jump affordance for the auto-scrolling strip;
+          on mobile (where auto-scroll is disabled) they're the primary
+          orientation cue so users always know where they are in the strip. */}
       {count > 1 && (
-        <div className="hidden sm:flex justify-center items-center gap-1.5 mt-2">
+        <div className="flex justify-center items-center gap-1.5 mt-2">
           {visible.map((_, i) => (
             <button
               key={i}
