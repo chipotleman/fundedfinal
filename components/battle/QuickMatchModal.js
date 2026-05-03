@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
@@ -505,15 +506,18 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     setRushVoteError('');
     haptic.tap?.();
     try {
+      // Normalize across API/Goalserve and simulated/demo shapes so the
+      // server-side question generator (lib/rush.js) always sees populated
+      // team / sport fields regardless of where the live game came from.
       const snapshot = {
         id: game.id,
-        sport_key: game.sport_key,
-        sport_title: game.sport_title,
-        home_team: game.home_team,
-        away_team: game.away_team,
+        sport_key: game.sport_key || game.sport || null,
+        sport_title: game.sport_title || game.sportName || game.sport || 'LIVE',
+        home_team: game.home_team || game.homeTeamFull || game.homeTeam || 'Home',
+        away_team: game.away_team || game.awayTeamFull || game.awayTeam || 'Away',
         scores: game.scores,
         status: game.status,
-        isLive: game.isLive,
+        isLive: !!(game.isLive || game.status === 'IN_PROGRESS' || game.status === 'live'),
       };
       const res = await fetch(`/api/battles/rush/${matchupId}/vote`, {
         method: 'POST',
@@ -770,7 +774,20 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     fallbackText: 'text-white/60',
   };
 
-  return (
+  // Portal the entire modal to <body> so its `fixed inset-0` overlay
+  // always covers the viewport. Without this, callers that mount the
+  // modal inside a CSS-transformed/filtered/contained ancestor (e.g.
+  // YouVsCard inside the dashboard's LiveBattlesSection) would have
+  // the overlay clipped to that ancestor's containing block, making
+  // the popup appear to "fill the card" instead of opening as a real
+  // modal. Every other battle modal (BattleModeChooser,
+  // PlayFriendModal, PrivateMatchModal, PreMatchPopup) already does
+  // this — bringing QuickMatchModal in line.
+  if (typeof window === 'undefined' || !document?.body) {
+    return null;
+  }
+
+  const modalContent = (
     <>
       {/* Ensure the shared cartoon-chip keyframes are present even when
           the modal opens from a page that doesn't render
@@ -1745,6 +1762,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
       </div>
     </>
   );
+
+  return ReactDOM.createPortal(modalContent, document.body);
 }
 
 // ===========================================================================
@@ -1983,10 +2002,30 @@ function RushVoteSlide({
 }
 
 function RushVoteCard({ game, iPicked, oppPicked, disabled, loading, onPick }) {
-  const home = game.home_team;
-  const away = game.away_team;
-  const hs = game?.scores?.home?.total ?? 0;
-  const as = game?.scores?.away?.total ?? 0;
+  // Normalize across the two shapes that flow into the vote slide:
+  //   * API/Goalserve shape — `home_team`, `away_team`, `sport_title`,
+  //     `formatted_time`
+  //   * Simulated demo shape — `homeTeamFull`/`homeTeam`,
+  //     `awayTeamFull`/`awayTeam`, `sportName`, `time`/`elapsedTime`/`period`
+  // The cartoon score block uses the same `scores.home.total` /
+  // `scores.away.total` shape in both, so no extra mapping needed there.
+  const home = game.home_team || game.homeTeamFull || game.homeTeam || 'Home';
+  const away = game.away_team || game.awayTeamFull || game.awayTeam || 'Away';
+  const hs = game?.scores?.home?.total ?? game?.home_score ?? 0;
+  const as = game?.scores?.away?.total ?? game?.away_score ?? 0;
+  const sportLabel = game.sport_title || game.sportName || game.sport || 'LIVE';
+  // Live clock string — try the API field first, fall back to the
+  // demo-game fields. We also surface period when present so users
+  // can tell "Q2 10:05" apart from a generic "In progress".
+  const clockBits = [];
+  if (game.period) clockBits.push(String(game.period));
+  if (game.elapsedTime || game.displayClock) clockBits.push(String(game.elapsedTime || game.displayClock));
+  const liveClock = game.formatted_time
+    || (clockBits.length ? clockBits.join(' ') : '')
+    || game.time
+    || game.status
+    || 'In progress';
+  const isLive = !!(game.isLive || game.status === 'IN_PROGRESS' || game.status === 'live');
   const someonePicked = iPicked || oppPicked;
 
   // Selected card glow blends the picker colors when both picked it,
@@ -2055,9 +2094,9 @@ function RushVoteCard({ game, iPicked, oppPicked, disabled, loading, onPick }) {
                 boxShadow: '0 2px 0 #0a0a0a',
               }}
             >
-              {game.sport_title || 'LIVE'}
+              {sportLabel}
             </span>
-            {game.isLive && (
+            {isLive && (
               <span
                 className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-md inline-flex items-center gap-1"
                 style={{
@@ -2085,7 +2124,7 @@ function RushVoteCard({ game, iPicked, oppPicked, disabled, loading, onPick }) {
             {home}
           </div>
           <div className="text-[10px] text-gray-400 mt-1.5 font-mono">
-            {game.formatted_time || game.status || 'In progress'}
+            {liveClock}
           </div>
         </div>
 

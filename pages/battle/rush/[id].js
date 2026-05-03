@@ -24,10 +24,24 @@ function formatSeconds(ms) {
 }
 
 function LiveGameCard({ game, selected, voted, onPick, disabled }) {
-  const home = game.home_team;
-  const away = game.away_team;
-  const hs = game?.scores?.home?.total ?? 0;
-  const as = game?.scores?.away?.total ?? 0;
+  // Normalize across API/Goalserve shape (home_team / sport_title /
+  // formatted_time) and the simulated/demo-game shape (homeTeamFull /
+  // sportName / time / elapsedTime+period). Without this, demo games
+  // render with blank team names because the API field is undefined.
+  const home = game.home_team || game.homeTeamFull || game.homeTeam || 'Home';
+  const away = game.away_team || game.awayTeamFull || game.awayTeam || 'Away';
+  const hs = game?.scores?.home?.total ?? game?.home_score ?? 0;
+  const as = game?.scores?.away?.total ?? game?.away_score ?? 0;
+  const sportLabel = game.sport_title || game.sportName || game.sport || 'LIVE';
+  const isLive = !!(game.isLive || game.status === 'IN_PROGRESS' || game.status === 'live');
+  const clockBits = [];
+  if (game.period) clockBits.push(String(game.period));
+  if (game.elapsedTime || game.displayClock) clockBits.push(String(game.elapsedTime || game.displayClock));
+  const liveClock = game.formatted_time
+    || (clockBits.length ? clockBits.join(' ') : '')
+    || game.time
+    || game.status
+    || 'In progress';
   return (
     <button
       type="button"
@@ -59,9 +73,9 @@ function LiveGameCard({ game, selected, voted, onPick, disabled }) {
                 border: '1px solid rgba(251,191,36,0.3)',
               }}
             >
-              {game.sport_title}
+              {sportLabel}
             </span>
-            {game.isLive && (
+            {isLive && (
               <span
                 className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-full inline-flex items-center gap-1"
                 style={{
@@ -85,7 +99,7 @@ function LiveGameCard({ game, selected, voted, onPick, disabled }) {
           </div>
           <div className="text-white font-extrabold text-sm truncate">{away} @ {home}</div>
           <div className="text-xs text-gray-400 mt-0.5 tabular-nums">
-            {as} – {hs} · {game.formatted_time || game.status}
+            {as} – {hs} · {liveClock}
           </div>
         </div>
         {voted && (
@@ -226,15 +240,18 @@ export default function RushBattlePage() {
     if (!matchupId || pendingVote) return;
     setPendingVote(game.id);
     try {
+      // Normalize across API/Goalserve and simulated/demo shapes so the
+      // server-side question generator (lib/rush.js) always sees populated
+      // team / sport fields regardless of where the live game came from.
       const snapshot = {
         id: game.id,
-        sport_key: game.sport_key,
-        sport_title: game.sport_title,
-        home_team: game.home_team,
-        away_team: game.away_team,
+        sport_key: game.sport_key || game.sport || null,
+        sport_title: game.sport_title || game.sportName || game.sport || 'LIVE',
+        home_team: game.home_team || game.homeTeamFull || game.homeTeam || 'Home',
+        away_team: game.away_team || game.awayTeamFull || game.awayTeam || 'Away',
         scores: game.scores,
         status: game.status,
-        isLive: game.isLive,
+        isLive: !!(game.isLive || game.status === 'IN_PROGRESS' || game.status === 'live'),
       };
       const res = await fetch(`/api/battles/rush/${matchupId}/vote`, {
         method: 'POST',
