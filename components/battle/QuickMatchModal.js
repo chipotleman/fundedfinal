@@ -353,12 +353,12 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   }, [step]);
 
   // Detect server-side voting resolution → advance to ready slide.
-  // We hold on the vote slide for a short beat (1.8s) once the phase
-  // flips so the user can actually see the opponent's checkmark on
-  // the game card they picked (and the "Locked!" / "Host wins" pill)
-  // before the modal jumps to the rules / ready slide. Without this
-  // delay the transition feels like a snap-cut and the user never
-  // gets to register what their opponent chose.
+  // We hold on the vote slide for 3 full seconds once the phase flips
+  // so the user can actually see the opponent's checkmark on the game
+  // card they picked (and the "Locked!" / "Host wins" pill) before
+  // the modal jumps to the rules / ready slide. The vote slide also
+  // shows a "Continue" button during this window so users can skip
+  // the wait if they've already registered the opponent's pick.
   useEffect(() => {
     if (step !== 'rush-vote') return;
     const phase = rushState?.phase;
@@ -366,7 +366,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     const t = setTimeout(() => {
       if (cancelledRef.current) return;
       setStep('rush-ready');
-    }, 1800);
+    }, 3000);
     return () => clearTimeout(t);
   }, [step, rushState?.phase]);
 
@@ -1731,6 +1731,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
               liveGames={liveGamesForVote}
               pendingVoteId={pendingVoteId}
               onVote={submitRushVote}
+              onAdvance={() => {
+                if (cancelledRef.current) return;
+                setStep('rush-ready');
+              }}
               onClose={handleClose}
               error={rushVoteError}
             />
@@ -1807,6 +1811,7 @@ function RushVoteSlide({
   liveGames,
   pendingVoteId,
   onVote,
+  onAdvance,
   onClose,
   error,
 }) {
@@ -1987,7 +1992,7 @@ function RushVoteSlide({
       )}
 
       {bothVoted && (
-        <div className="px-5 pb-2">
+        <div className="px-5 pb-2 space-y-2">
           <div
             className="rounded-2xl px-3 py-2.5 text-center"
             style={{
@@ -2001,6 +2006,27 @@ function RushVoteSlide({
             </div>
             <div className="text-[10px] text-gray-400 mt-0.5">Generating 6 props…</div>
           </div>
+          {/* Manual-advance escape hatch. Phase has flipped server-side
+              and the modal is on a 3s auto-advance timer; this button
+              lets users skip the wait once they've registered the
+              opponent's pick (visible above as the orange checkmark
+              badge on whichever card they chose). */}
+          {onAdvance && (
+            <button
+              type="button"
+              onClick={onAdvance}
+              className="w-full py-3 rounded-2xl font-black uppercase text-white transition-transform active:scale-95"
+              style={{
+                background: 'linear-gradient(180deg,#10b981,#047857)',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 4px 0 #0a0a0a',
+                letterSpacing: '0.14em',
+                fontSize: 14,
+              }}
+            >
+              Continue →
+            </button>
+          )}
         </div>
       )}
 

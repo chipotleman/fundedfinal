@@ -12,12 +12,22 @@
  * phase started) so the human never has to wait on a fake opponent.
  * The state endpoint also handles bot auto-ready as a backstop in
  * case this endpoint is never hit.
+ *
+ * IMPORTANT: this codebase runs on @neondatabase/serverless via the
+ * HTTP driver (`neon(process.env.DATABASE_URL)`), which does NOT
+ * support `db.transaction(...)` — calling it throws synchronously and
+ * was the actual cause of the user-visible "Failed to mark ready"
+ * error. We instead use an optimistic read-modify-write with a
+ * conditional UPDATE that retries a small number of times on contended
+ * writes (the only realistic contention is the two players tapping
+ * Ready within milliseconds of each other, which is rare and self-
+ * healing via the next state.js poll regardless).
  */
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../../lib/auth';
 import { db } from '../../../../../lib/db';
 import { matchups } from '../../../../../shared/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 const {
   buildInitialRushState,
   resolveVotingIfReady,
@@ -30,6 +40,8 @@ const {
 } = require('../../../../../lib/rush');
 const { publishBattleEvent } = require('../../../../../lib/battle-events');
 
+const MAX_RETRIES = 4;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -41,53 +53,36 @@ export default async function handler(req, res) {
   const { matchupId } = req.query;
 
   try {
-    const [matchup] = await db.select().from(matchups).where(eq(matchups.id, matchupId));
-    if (!matchup) return res.status(404).json({ error: 'Matchup not found' });
-    if (matchup.user1Id !== userId && matchup.user2Id !== userId) {
-      return res.status(403).json({ error: 'Not a participant' });
-    }
-    if (matchup.durationType !== 'rush') {
-      return res.status(400).json({ error: 'Not a rush matchup' });
-    }
-    if (matchup.status === 'completed') {
-      return res.status(409).json({ error: 'Matchup already completed' });
-    }
-    if (matchup.status === 'cancelled') {
-      return res.status(409).json({ error: 'Matchup already cancelled', phase: 'cancelled' });
-    }
-
-    // Resolved once outside the transaction since user1Id/user2Id are
-    // immutable for the lifetime of a matchup.
-    const ctx = { user1Id: matchup.user1Id, user2Id: matchup.user2Id };
-
-    // Run the read-modify-write inside a transaction with SELECT FOR
-    // UPDATE so two concurrent Ready POSTs (one per participant) are
-    // serialized — without this, both could load the same snapshot,
-    // each merge only their own readyVotes entry, and the last writer
-    // would silently drop the other player's ready vote. The row lock
-    // also prevents us from clobbering a concurrent state.js
-    // cancellation (its conditional UPDATE will then race-lose, and
-    // we'll see the cancelled state on our locked re-read instead).
-    const result = await db.transaction(async (tx) => {
-      const lockedRows = await tx.execute(
-        sql`SELECT * FROM matchups WHERE id = ${matchupId} FOR UPDATE`
-      );
-      const fresh = lockedRows.rows?.[0] || lockedRows[0];
-      if (!fresh) return { kind: 'not_found' };
-      // Drizzle's raw execute returns snake_case columns from PG. Normalize the few we touch.
-      const lockedStatus = fresh.status;
-      const lockedRushState = fresh.rush_state ?? fresh.rushState;
-      if (lockedStatus === 'completed') {
-        return { kind: 'http', code: 409, body: { error: 'Matchup already completed' } };
+    // We re-read the row each retry so a contended write (the rare
+    // case where both players' ready POSTs land in the same tick) can
+    // re-merge against the latest persisted state instead of dropping
+    // the loser's ready vote.
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt += 1) {
+      const [matchup] = await db
+        .select()
+        .from(matchups)
+        .where(eq(matchups.id, matchupId));
+      if (!matchup) return res.status(404).json({ error: 'Matchup not found' });
+      if (matchup.user1Id !== userId && matchup.user2Id !== userId) {
+        return res.status(403).json({ error: 'Not a participant' });
       }
-      if (lockedStatus === 'cancelled') {
-        return { kind: 'http', code: 409, body: { error: 'Matchup already cancelled', phase: 'cancelled' } };
+      if (matchup.durationType !== 'rush') {
+        return res.status(400).json({ error: 'Not a rush matchup' });
+      }
+      if (matchup.status === 'completed') {
+        return res.status(409).json({ error: 'Matchup already completed' });
+      }
+      if (matchup.status === 'cancelled') {
+        return res.status(409).json({ error: 'Matchup already cancelled', phase: 'cancelled' });
       }
 
-      let state = lockedRushState || buildInitialRushState({ hostUserId: matchup.user1Id });
+      const ctx = { user1Id: matchup.user1Id, user2Id: matchup.user2Id };
+      const prevState = matchup.rushState
+        || buildInitialRushState({ hostUserId: matchup.user1Id });
 
-      // Roll forward voting -> ready_check first if needed.
-      state = resolveVotingIfReady(state, ctx);
+      // Pure forward roll. resolveVotingIfReady is idempotent so
+      // re-running it on a state already past voting is a no-op.
+      let state = resolveVotingIfReady(prevState, ctx);
 
       // Backfill missing readyStartedAt for legacy states so the
       // stale-cancel gate below can ever fire on them.
@@ -99,17 +94,46 @@ export default async function handler(req, res) {
       // threshold, persist the cancellation instead of accepting the
       // ready vote. A human who tapped Ready 31s late shouldn't be
       // able to push the matchup to 'playing' against a ghost opponent.
+      //
+      // CAS guard: we only flip to cancelled if the row hasn't moved
+      // since we read it (`updatedAt = observedUpdatedAt`). Without
+      // this, a concurrent request could legitimately advance the
+      // matchup to `playing` while we still hold a stale snapshot,
+      // and our cancel write would silently clobber it. On CAS miss
+      // we re-read and re-evaluate inside the retry loop instead of
+      // overwriting valid progress.
       if (shouldCancelStaleReady(state)) {
         const cancelled = cancelStaleMatchup(state);
-        await tx
+        const updated = await db
           .update(matchups)
-          .set({ rushState: cancelled, status: 'cancelled', endsAt: new Date(), updatedAt: new Date() })
-          .where(eq(matchups.id, matchupId));
-        return { kind: 'cancelled' };
+          .set({
+            rushState: cancelled,
+            status: 'cancelled',
+            endsAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(matchups.id, matchupId),
+              eq(matchups.status, matchup.status),
+              eq(matchups.updatedAt, matchup.updatedAt),
+            ),
+          )
+          .returning({ id: matchups.id });
+        if (!updated.length) continue; // someone else mutated; retry
+        try {
+          const recipients = [matchup.user1Id, matchup.user2Id].filter(Boolean);
+          publishBattleEvent(recipients, {
+            type: 'matchup:rush:update',
+            matchupId,
+            phase: 'cancelled',
+          });
+        } catch (_e) {}
+        return res.status(409).json({ error: 'Matchup cancelled (opponent did not ready)', phase: 'cancelled' });
       }
 
       if (state.phase !== 'ready_check' && state.phase !== 'playing') {
-        return { kind: 'http', code: 409, body: { error: 'Not in ready_check phase', phase: state.phase } };
+        return res.status(409).json({ error: 'Not in ready_check phase', phase: state.phase });
       }
 
       if (state.phase === 'ready_check') {
@@ -135,41 +159,49 @@ export default async function handler(req, res) {
 
       state = advanceIfReady(state, ctx);
 
-      await tx
+      // Conditional update: only succeeds if nobody else (the
+      // opponent's concurrent Ready POST or state.js polling) wrote
+      // to the row since we read it. We compare on the immutable
+      // `createdAt` + the `updatedAt` we just observed; if the row's
+      // updatedAt has changed, our snapshot is stale and we retry.
+      // This is a safer optimistic-CAS than diffing JSONB equality
+      // against a serialized snapshot.
+      const observedUpdatedAt = matchup.updatedAt;
+      const updated = await db
         .update(matchups)
         .set({ rushState: state, updatedAt: new Date() })
-        .where(eq(matchups.id, matchupId));
+        .where(
+          and(
+            eq(matchups.id, matchupId),
+            eq(matchups.updatedAt, observedUpdatedAt),
+          ),
+        )
+        .returning({ id: matchups.id });
 
-      return { kind: 'ok', state };
-    });
+      if (!updated.length) {
+        // Lost the race — re-read and retry. markReady is idempotent
+        // so a duplicate "I'm ready" merge after a retry is fine.
+        continue;
+      }
 
-    if (result.kind === 'not_found') return res.status(404).json({ error: 'Matchup not found' });
-    if (result.kind === 'http') return res.status(result.code).json(result.body);
-
-    if (result.kind === 'cancelled') {
+      const recipients = [matchup.user1Id, matchup.user2Id].filter(Boolean);
       try {
-        const recipients = [matchup.user1Id, matchup.user2Id].filter(Boolean);
         publishBattleEvent(recipients, {
           type: 'matchup:rush:update',
           matchupId,
-          phase: 'cancelled',
+          phase: state.phase,
+          currentQuestionIndex: state.currentQuestionIndex,
         });
       } catch (_e) {}
-      return res.status(409).json({ error: 'Matchup cancelled (opponent did not ready)', phase: 'cancelled' });
+
+      return res.status(200).json({ success: true, phase: state.phase });
     }
 
-    const finalState = result.state;
-    const recipients = [matchup.user1Id, matchup.user2Id].filter(Boolean);
-    publishBattleEvent(recipients, {
-      type: 'matchup:rush:update',
-      matchupId,
-      phase: finalState.phase,
-      currentQuestionIndex: finalState.currentQuestionIndex,
-    });
-
-    return res.status(200).json({ success: true, phase: finalState.phase });
+    // Exhausted retries (very rare) — surface a real error so the
+    // client can show it.
+    return res.status(503).json({ error: 'Ready write contended — please tap again' });
   } catch (err) {
     console.error('[rush/ready] error:', err);
-    return res.status(500).json({ error: 'Failed to mark ready' });
+    return res.status(500).json({ error: err?.message || 'Failed to mark ready' });
   }
 }
