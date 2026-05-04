@@ -353,15 +353,21 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   }, [step]);
 
   // Detect server-side voting resolution → advance to ready slide.
+  // We hold on the vote slide for a short beat (1.8s) once the phase
+  // flips so the user can actually see the opponent's checkmark on
+  // the game card they picked (and the "Locked!" / "Host wins" pill)
+  // before the modal jumps to the rules / ready slide. Without this
+  // delay the transition feels like a snap-cut and the user never
+  // gets to register what their opponent chose.
   useEffect(() => {
     if (step !== 'rush-vote') return;
-    if (
-      rushState?.phase === 'ready_check' ||
-      rushState?.phase === 'playing' ||
-      rushState?.phase === 'completed'
-    ) {
+    const phase = rushState?.phase;
+    if (phase !== 'ready_check' && phase !== 'playing' && phase !== 'completed') return;
+    const t = setTimeout(() => {
+      if (cancelledRef.current) return;
       setStep('rush-ready');
-    }
+    }, 1800);
+    return () => clearTimeout(t);
   }, [step, rushState?.phase]);
 
   // Deadlock guard: if the vote deadline has passed and neither player
@@ -549,14 +555,27 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     setReadyError('');
     haptic.tap?.();
     try {
+      // Send an explicit empty body so Next.js' body parser doesn't
+      // hit "Unexpected end of JSON input" on Content-Type:
+      // application/json with no payload (some edge runtimes treat
+      // this as an error and reject the request before our handler
+      // ever runs, which surfaces to the user as "Failed to mark
+      // ready").
       const res = await fetch(`/api/battles/rush/${matchupId}/ready`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: '{}',
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         // 409 = phase already past ready_check; harmless.
-        if (res.status !== 409) setReadyError(j.error || 'Failed to ready up');
+        if (res.status !== 409) {
+          // Surface the real server error (e.g. 'Matchup already
+          // cancelled', 'Not in ready_check phase') instead of a
+          // generic message so we can actually diagnose what went
+          // wrong from the user's screen.
+          setReadyError(j.error || `Ready failed (HTTP ${res.status})`);
+        }
       }
       // Refetch immediately so the local state reflects our ready
       // without waiting for the next 750ms poll tick.

@@ -296,13 +296,20 @@ export default function RushBattlePage() {
     setPendingReady(true);
     setReadyError('');
     try {
+      // Send an explicit empty body so Next.js' body parser doesn't
+      // hit "Unexpected end of JSON input" on Content-Type:
+      // application/json with no payload.
       const res = await fetch(`/api/battles/rush/${matchupId}/ready`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: '{}',
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        if (res.status !== 409) setReadyError(j.error || 'Failed to ready up');
+        // Surface the real server error rather than a generic message
+        // so users can see what actually failed (e.g. cancelled,
+        // wrong phase) instead of "Failed to ready up".
+        if (res.status !== 409) setReadyError(j.error || `Ready failed (HTTP ${res.status})`);
       }
       await fetchState();
     } catch (err) {
