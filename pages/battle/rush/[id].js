@@ -1321,55 +1321,175 @@ function RushCompletedPhase({ rush, matchup, userId, opponentId, onExit }) {
   const winnerType = rush.winnerType;
   const isWinner = rush.winnerUserId === userId;
   const isTie = winnerType === 'tie';
+  const total = rush.numQuestions || rush.questions?.length || 6;
 
   const headline = isTie ? "It's a Tie" : isWinner ? 'You Won!' : 'You Lost';
-  const headlineColor = isTie ? '#06b6d4' : isWinner ? '#facc15' : '#ef4444';
+  // Cartoon palette: cyan tie, emerald win (replaces yellow for cohesion
+  // with the rest of the rush flow), red loss. All headlines use the
+  // chunky 4px black drop-shadow + soft colored glow shared with the
+  // in-popup RushCompletedSlide so the routed page reads the same.
+  const headlineColor = isTie ? '#06b6d4' : isWinner ? '#10b981' : '#ef4444';
+
+  // Match the cartoon palette used in RushPlayingPhase / RushCompletedSlide:
+  // blue (#3b82f6) = YOU, orange (#fb923c) = OPP, deep variants for
+  // gradient bottoms.
+  const SELF = '#3b82f6';
+  const SELF_DEEP = '#1d4ed8';
+  const OPP = '#fb923c';
+  const OPP_DEEP = '#c2410c';
 
   return (
     <div className="text-center">
-      <div className="text-4xl md:text-5xl font-black mb-2" style={{ color: headlineColor, textShadow: `0 0 30px ${headlineColor}55` }}>
+      <style>{`
+        @keyframes rcpHeadline {
+          0% { opacity: 0; transform: scale(0.6) rotate(-6deg); }
+          60% { opacity: 1; transform: scale(1.1) rotate(2deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0); }
+        }
+        @keyframes rcpCardIn {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .rcp-headline { animation: rcpHeadline 460ms cubic-bezier(0.34,1.56,0.64,1) both; display: inline-block; }
+        .rcp-card { animation: rcpCardIn 360ms cubic-bezier(0.22,1,0.36,1) both; }
+        .rcp-card-self { animation-delay: 200ms; }
+        .rcp-card-opp { animation-delay: 280ms; }
+        .rcp-recap { animation: rcpCardIn 360ms cubic-bezier(0.22,1,0.36,1) both; animation-delay: 360ms; }
+        @media (prefers-reduced-motion: reduce) {
+          .rcp-headline, .rcp-card, .rcp-recap { animation: none !important; }
+        }
+      `}</style>
+
+      <div
+        className="rcp-headline font-black mb-2"
+        style={{
+          color: headlineColor,
+          fontSize: 'clamp(34px, 6vw, 52px)',
+          letterSpacing: '0.02em',
+          textShadow: `0 4px 0 #0a0a0a, 0 0 30px ${headlineColor}88`,
+        }}
+      >
         {headline}
       </div>
       {isWinner && (
-        <div className="text-sm text-emerald-300 mb-6">
+        <div className="text-xs sm:text-sm font-bold text-emerald-300 mb-6">
           +${parseFloat(matchup.winnerPayout).toFixed(2)} to your bankroll
         </div>
       )}
       {isTie && (
-        <div className="text-sm text-gray-400 mb-6">Stake refunded to both players</div>
+        <div className="text-xs sm:text-sm font-bold text-gray-300 mb-6">Stake refunded to both players</div>
       )}
       {!isWinner && !isTie && (
-        <div className="text-sm text-gray-400 mb-6">Better luck next round</div>
+        <div className="text-xs sm:text-sm font-bold text-gray-300 mb-6">Better luck next round</div>
       )}
 
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="rounded-xl p-4" style={{ background: '#0c1a35', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-1">You</div>
-          <div className="text-3xl font-black text-white tabular-nums">{myScore.correct}<span className="text-sm text-gray-500">/{rush.numQuestions || 6}</span></div>
-          <div className="text-[10px] text-gray-500 mt-1">{Math.round(myScore.totalTimeMs / 100) / 10}s total</div>
+        <div
+          className="rcp-card rcp-card-self rounded-2xl p-4 text-center"
+          style={{
+            background: `linear-gradient(180deg, ${SELF}22, ${SELF_DEEP}22)`,
+            border: `2.5px solid ${SELF}`,
+            boxShadow: '0 4px 0 #0a0a0a',
+          }}
+        >
+          <div
+            className="text-[10px] font-black uppercase tracking-widest mb-1"
+            style={{ color: SELF }}
+          >
+            You
+          </div>
+          <div className="text-3xl font-black text-white tabular-nums">
+            {myScore.correct}
+            <span className="text-sm text-gray-400">/{total}</span>
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 mt-1">
+            {Math.round(myScore.totalTimeMs / 100) / 10}s total
+          </div>
         </div>
-        <div className="rounded-xl p-4" style={{ background: '#0c1a35', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-1">Opponent</div>
-          <div className="text-3xl font-black text-white tabular-nums">{oppScore.correct}<span className="text-sm text-gray-500">/{rush.numQuestions || 6}</span></div>
-          <div className="text-[10px] text-gray-500 mt-1">{Math.round(oppScore.totalTimeMs / 100) / 10}s total</div>
+        <div
+          className="rcp-card rcp-card-opp rounded-2xl p-4 text-center"
+          style={{
+            background: `linear-gradient(180deg, ${OPP}22, ${OPP_DEEP}22)`,
+            border: `2.5px solid ${OPP}`,
+            boxShadow: '0 4px 0 #0a0a0a',
+          }}
+        >
+          <div
+            className="text-[10px] font-black uppercase tracking-widest mb-1"
+            style={{ color: OPP }}
+          >
+            Opponent
+          </div>
+          <div className="text-3xl font-black text-white tabular-nums">
+            {oppScore.correct}
+            <span className="text-sm text-gray-400">/{total}</span>
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 mt-1">
+            {Math.round(oppScore.totalTimeMs / 100) / 10}s total
+          </div>
         </div>
       </div>
 
-      <div className="rounded-xl p-4 mb-6 text-left" style={{ background: '#0c1a35', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-3">Question Recap</div>
+      <div
+        className="rcp-recap rounded-2xl p-4 mb-6 text-left"
+        style={{
+          background: 'linear-gradient(180deg,#0f172a,#0a0f1c)',
+          border: '2.5px solid #0a0a0a',
+          boxShadow: '0 4px 0 #0a0a0a',
+        }}
+      >
+        <div
+          className="text-[10px] font-black uppercase tracking-widest mb-3"
+          style={{ color: '#3b82f6', textShadow: '0 1px 0 #0a0a0a' }}
+        >
+          Question Recap
+        </div>
         {rush.questions?.map((q, i) => {
           const myA = rush.answers?.[userId]?.[q.id];
           const oppA = rush.answers?.[opponentId]?.[q.id];
+          const myLabel = q.options?.find((o) => o.key === myA?.key)?.label || '—';
+          const oppLabel = q.options?.find((o) => o.key === oppA?.key)?.label || '—';
+          // Chunky cartoon answer badge — emerald for correct, red for
+          // wrong, gray for no-answer. 2px black border + 2px hard
+          // shadow keeps it consistent with the surrounding chrome.
+          const Badge = ({ who, color, label, status }) => {
+            const isOk = status === 'ok';
+            const isMiss = status === 'miss';
+            const bg = isOk
+              ? 'linear-gradient(180deg,#10b981,#047857)'
+              : isMiss
+                ? 'linear-gradient(180deg,#ef4444,#991b1b)'
+                : 'linear-gradient(180deg,#374151,#1f2937)';
+            return (
+              <span
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg font-black text-[10px] text-white"
+                style={{
+                  background: bg,
+                  border: '2px solid #0a0a0a',
+                  boxShadow: '0 2px 0 #0a0a0a',
+                  maxWidth: '100%',
+                }}
+              >
+                <span style={{ color, textShadow: '0 1px 0 #0a0a0a' }}>{who}:</span>
+                <span className="truncate">{label}</span>
+                <span aria-hidden="true">{isOk ? '✓' : isMiss ? '✗' : '–'}</span>
+              </span>
+            );
+          };
+          const myStatus = myA ? (myA.correct ? 'ok' : 'miss') : 'none';
+          const oppStatus = oppA ? (oppA.correct ? 'ok' : 'miss') : 'none';
           return (
-            <div key={q.id} className="py-2 border-t border-white/5 first:border-t-0">
-              <div className="text-xs text-gray-300 mb-1">Q{i + 1}. {q.prompt}</div>
-              <div className="flex justify-between text-[10px]">
-                <span className={`font-bold ${myA?.correct ? 'text-emerald-400' : 'text-red-400'}`}>
-                  You: {q.options?.find(o => o.key === myA?.key)?.label || '—'} {myA?.correct ? '✓' : '✗'}
-                </span>
-                <span className={`font-bold ${oppA?.correct ? 'text-emerald-400' : 'text-red-400'}`}>
-                  Opp: {q.options?.find(o => o.key === oppA?.key)?.label || '—'} {oppA?.correct ? '✓' : '✗'}
-                </span>
+            <div
+              key={q.id}
+              className="py-2.5"
+              style={{ borderTop: i === 0 ? 'none' : '2px solid #0a0a0a' }}
+            >
+              <div className="text-xs font-bold text-gray-200 mb-1.5">
+                Q{i + 1}. {q.prompt}
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-1.5">
+                <Badge who="You" color={SELF} label={myLabel} status={myStatus} />
+                <Badge who="Opp" color={OPP} label={oppLabel} status={oppStatus} />
               </div>
             </div>
           );
@@ -1377,8 +1497,16 @@ function RushCompletedPhase({ rush, matchup, userId, opponentId, onExit }) {
       </div>
 
       <button
+        type="button"
         onClick={onExit}
-        className="px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition-colors"
+        className="w-full sm:w-auto px-8 py-3.5 rounded-2xl font-black uppercase text-white transition-transform active:scale-95"
+        style={{
+          background: 'linear-gradient(180deg,#fb923c,#c2410c)',
+          border: '2.5px solid #0a0a0a',
+          boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(251,146,60,0.4)',
+          letterSpacing: '0.14em',
+          fontSize: 14,
+        }}
       >
         Back to Battle
       </button>
