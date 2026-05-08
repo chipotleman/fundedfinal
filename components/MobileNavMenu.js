@@ -148,9 +148,47 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
     setCashRevealed(false);
   };
 
-  const handleNavigation = (href) => {
+  // Curried click handler used by every menu Link. Closes the menu first
+  // so `useModalScrollLock`'s cleanup releases the body styles, then defers
+  // `router.push` by a frame so the drawer is fully unmounted before the
+  // route change begins. This matters on iOS Safari over pages that pin
+  // the body via position:fixed (e.g. /messenger uses height:100svh +
+  // overflow:hidden so only the chat scrolls). Without the defer, taps on
+  // a Next.js <Link> inside the drawer intermittently failed to navigate
+  // — the body-style cleanup raced the route change and the click was
+  // swallowed, stranding the user on the original page even though the
+  // menu had closed. The piks logo escapes this because it's a plain
+  // <a href="/">, which does a full browser navigation that bypasses
+  // every JS layer.
+  const handleNavigation = (href) => (e) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     onClose();
-    router.push(href);
+    // Blur whatever has focus so iOS dismisses the on-screen keyboard
+    // before the next page mounts (otherwise the keyboard can briefly
+    // stay up over the new page and swallow its first tap).
+    if (typeof document !== 'undefined' && document.activeElement && typeof document.activeElement.blur === 'function') {
+      try { document.activeElement.blur(); } catch (_e) {}
+    }
+    const go = () => {
+      // If client-side navigation fails for any reason (unhandled rejection
+      // from a transitioning page, an in-flight modal cleanup, etc.), fall
+      // back to a hard browser navigation so the user is never stranded.
+      try {
+        const p = router.push(href);
+        if (p && typeof p.catch === 'function') {
+          p.catch(() => { try { window.location.href = href; } catch (_e) {} });
+        }
+      } catch (_e) {
+        try { window.location.href = href; } catch (_e2) {}
+      }
+    };
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(go);
+    } else {
+      go();
+    }
   };
 
   const minSwipeDistance = 50;
@@ -262,7 +300,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     </button>
                     <Link
                       href="/withdrawal"
-                      onClick={onClose}
+                      onClick={handleNavigation('/withdrawal')}
                       className="block w-full text-center px-4 py-2 text-white text-sm font-medium rounded-lg bg-green-500/40 border border-green-500/50 lg:hover:bg-green-500/60 focus:bg-green-500/40 active:bg-green-500/40 focus:outline-none"
                       style={{ WebkitTapHighlightColor: 'transparent', outline: 'none' }}
                     >
@@ -275,7 +313,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               {profileHref && (
                 <Link
                   href={profileHref}
-                  onClick={onClose}
+                  onClick={handleNavigation(profileHref)}
                   className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
                   aria-label={
                     hasUnviewedAchievements
@@ -296,14 +334,14 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               )}
               <Link
                 href="/dashboard"
-                onClick={onClose}
+                onClick={handleNavigation('/dashboard')}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Battle
               </Link>
               <Link
                 href="/bet-history"
-                onClick={onClose}
+                onClick={handleNavigation('/bet-history')}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Battle History
@@ -311,7 +349,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               <Link
                 href="/leaderboard"
                 prefetch={true}
-                onClick={onClose}
+                onClick={handleNavigation('/leaderboard')}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Leaderboard
@@ -319,7 +357,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               <Link
                 href="/battle"
                 prefetch={true}
-                onClick={onClose}
+                onClick={handleNavigation('/battle')}
                 className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 <span>Social</span>
@@ -331,7 +369,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               </Link>
               <Link
                 href="/notifications"
-                onClick={onClose}
+                onClick={handleNavigation('/notifications')}
                 className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 <span>Notifications</span>
@@ -343,7 +381,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               </Link>
               <Link
                 href="/messenger"
-                onClick={onClose}
+                onClick={handleNavigation('/messenger')}
                 className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 <span>Messages</span>
@@ -385,14 +423,14 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
             <div className="space-y-4">
               <Link
                 href="/battle"
-                onClick={onClose}
+                onClick={handleNavigation('/battle')}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Social
               </Link>
               <Link
                 href="/leaderboard"
-                onClick={onClose}
+                onClick={handleNavigation('/leaderboard')}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Leaderboard
