@@ -10,6 +10,26 @@ export default function PickBattlesContainer() {
 
   const handleClick = () => {
     haptic.tap();
+    // Prefer opening the dashboard's existing Battle Mode Chooser inline
+    // via a window event — the YouVsCard mounted on the dashboard listens
+    // for `piks:open-battle-chooser` and pops the same chooser. This keeps
+    // the user on the dashboard so closing Quick Match returns them here
+    // instead of stranding them on /battle (Social).
+    if (typeof window !== 'undefined') {
+      let handled = false;
+      const ack = () => { handled = true; };
+      window.addEventListener('piks:battle-chooser-opened', ack, { once: true });
+      window.dispatchEvent(new CustomEvent('piks:open-battle-chooser'));
+      // If nothing on the page handled the event in the next tick (e.g.
+      // the user opened this promo from a context where YouVsCard isn't
+      // mounted), fall back to routing to /battle so the page-level
+      // chooser still picks it up.
+      setTimeout(() => {
+        window.removeEventListener('piks:battle-chooser-opened', ack);
+        if (!handled) router.push('/battle?openChooser=1');
+      }, 50);
+      return;
+    }
     router.push('/battle?openChooser=1');
   };
 

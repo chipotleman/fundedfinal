@@ -1038,7 +1038,7 @@ export default function SocialFeedPage({ data }) {
 
   const handleSpectate = useCallback((battle) => {
     if (!battle?.id) return;
-    router.push(`/battle?battle=${battle.id}`);
+    router.push(`/battle/spectate/${battle.id}`);
   }, [router]);
 
   const handleReplay = useCallback((highlight) => {

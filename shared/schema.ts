@@ -1030,3 +1030,19 @@ export const socialNotifications = pgTable("social_notifications", {
 export type SocialNotification = typeof socialNotifications.$inferSelect;
 export type InsertSocialNotification = typeof socialNotifications.$inferInsert;
 
+// Spectator chat for live battles. One row per chat message posted to a
+// matchup's spectator stream. Anyone can read; only authenticated users
+// can post. Messages persist so late-arriving spectators see history.
+export const battleSpectatorMessages = pgTable("battle_spectator_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  matchupId: varchar("matchup_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  body: varchar("body", { length: 300 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  matchupIdx: index("battle_spectator_messages_matchup_idx").on(table.matchupId, table.createdAt),
+}));
+
+export type BattleSpectatorMessage = typeof battleSpectatorMessages.$inferSelect;
+export type InsertBattleSpectatorMessage = typeof battleSpectatorMessages.$inferInsert;
+

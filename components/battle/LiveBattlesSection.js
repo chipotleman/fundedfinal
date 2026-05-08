@@ -639,7 +639,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
               <div className="px-3.5 pb-3.5">
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
+                  onClick={(e) => { e.stopPropagation(); router.push(`/battle/spectate/${battle.id}`); }}
                   className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold text-white"
                   style={{
                     background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
@@ -863,7 +863,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                 )}
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
+                onClick={(e) => { e.stopPropagation(); router.push(`/battle/spectate/${battle.id}`); }}
                 className="text-[11px] font-medium text-blue-400 flex-shrink-0"
               >
                 Watch
@@ -1377,6 +1377,21 @@ function YouVsCard({
   // the same Quick Match / Challenge Friend / Private Match options
   // instead of jumping straight into a Quick Match search.
   const [showChooser, setShowChooser] = useState(false);
+
+  // Listen for a global "open battle chooser" request so promo tiles and
+  // other dashboard CTAs can summon the same chooser this card already
+  // owns instead of routing the user to /battle (Social) and stranding
+  // them there after the modal closes.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => {
+      if (!myProfile?.id) return;
+      setShowChooser(true);
+      try { window.dispatchEvent(new CustomEvent('piks:battle-chooser-opened')); } catch {}
+    };
+    window.addEventListener('piks:open-battle-chooser', handler);
+    return () => window.removeEventListener('piks:open-battle-chooser', handler);
+  }, [myProfile?.id]);
   // In-card Quick Match modal. Mirrors the QuickMatchModal opened
   // from the /battle page so picking Quick Match here surfaces the
   // full buy-in / mode picker instead of jumping straight to the
