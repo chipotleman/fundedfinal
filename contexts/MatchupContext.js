@@ -95,8 +95,12 @@ export function MatchupProvider({ children }) {
     // (so quick blips don't cause an immediate fetch on top of the normal
     // reconnect re-fetch), then keep polling at a steady cadence until the
     // stream recovers.
-    const FALLBACK_GRACE_MS = 15000;
-    const FALLBACK_INTERVAL_MS = hasActiveMatchup ? 20000 : (isWaiting || isQueued) ? 10000 : 30000;
+    // Tightened so an SSE blip (or a multi-instance fan-out miss) doesn't
+    // leave a forfeit/match-end notice sitting unseen for 15-20 s. With
+    // the grace at 4 s and the active-battle interval at 6 s, worst-case
+    // detection drops from ~35 s to ~10 s on a flaky stream.
+    const FALLBACK_GRACE_MS = 4000;
+    const FALLBACK_INTERVAL_MS = hasActiveMatchup ? 6000 : (isWaiting || isQueued) ? 6000 : 30000;
 
     let interval = null;
     const grace = setTimeout(() => {

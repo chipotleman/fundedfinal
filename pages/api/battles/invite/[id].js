@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../../lib/auth';
 import { db } from '../../../../lib/db';
 import { battleInvites, matchups, profiles } from '../../../../shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or, ne, inArray, isNotNull } from 'drizzle-orm';
 const { publishBattleEvent, publishMatchupStart } = require('../../../../lib/battle-events');
 const { sendPushToUsers, sendFriendLivePush } = require('../../../../lib/web-push');
 
@@ -138,6 +138,56 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'This invite has expired' });
         }
 
+        // Active-matchup conflict guard. Without this, a recipient who
+        // accepts while the sender is mid-battle (or vice versa) creates
+        // a SECOND active matchup that lies dormant — invisible until the
+        // first battle ends, at which point MatchupContext sees it as
+        // "the active battle" and teleports the user into it. That's the
+        // "phantom auto-accept after a forfeit/end" bug. We cancel the
+        // invite here (rather than leaving it pending) so it can't be
+        // re-accepted later against the same stale state, and we surface
+        // a clear error so the receiver knows why.
+        const conflictCheck = await db
+          .select({ id: matchups.id, user1Id: matchups.user1Id, user2Id: matchups.user2Id })
+          .from(matchups)
+          .where(and(
+            or(
+              eq(matchups.user1Id, battleInvite.senderId),
+              eq(matchups.user2Id, battleInvite.senderId),
+              eq(matchups.user1Id, battleInvite.receiverId),
+              eq(matchups.user2Id, battleInvite.receiverId),
+            ),
+            or(
+              inArray(matchups.status, ['active', 'matched']),
+              and(
+                eq(matchups.status, 'waiting'),
+                isNotNull(matchups.user1Id),
+                isNotNull(matchups.user2Id),
+              ),
+            ),
+          ))
+          .limit(1);
+
+        if (conflictCheck.length > 0) {
+          const conflict = conflictCheck[0];
+          const senderInBattle = conflict.user1Id === battleInvite.senderId || conflict.user2Id === battleInvite.senderId;
+          await db
+            .update(battleInvites)
+            .set({ status: 'cancelled', respondedAt: new Date() })
+            .where(eq(battleInvites.id, id));
+          try {
+            publishBattleEvent(
+              [battleInvite.senderId, battleInvite.receiverId],
+              { type: 'notification:refresh' }
+            );
+          } catch (_e) {}
+          return res.status(409).json({
+            error: senderInBattle
+              ? "The sender is already in another battle. This invite was cancelled."
+              : "You're already in another battle. Finish it before accepting a new one.",
+          });
+        }
+
         const claimed = await db
           .update(battleInvites)
           .set({ status: 'accepted', respondedAt: new Date() })
@@ -207,6 +257,35 @@ export default async function handler(req, res) {
           .update(battleInvites)
           .set({ matchupId: newMatchup.id })
           .where(eq(battleInvites.id, id));
+
+        // Defense-in-depth: now that BOTH parties are committed to this
+        // matchup, auto-cancel any OTHER pending invites either of them
+        // has open. Without this, a sender who has multiple invites out
+        // (or a recipient with stacked invites from other friends) can
+        // still see them auto-accept later. Cancelled invites push a
+        // refresh event so both sides' UIs update instantly.
+        try {
+          const otherPending = await db
+            .update(battleInvites)
+            .set({ status: 'cancelled', respondedAt: new Date() })
+            .where(and(
+              ne(battleInvites.id, id),
+              eq(battleInvites.status, 'pending'),
+              or(
+                eq(battleInvites.senderId, battleInvite.senderId),
+                eq(battleInvites.receiverId, battleInvite.senderId),
+                eq(battleInvites.senderId, battleInvite.receiverId),
+                eq(battleInvites.receiverId, battleInvite.receiverId),
+              ),
+            ))
+            .returning({ id: battleInvites.id, senderId: battleInvites.senderId, receiverId: battleInvites.receiverId });
+          if (otherPending.length > 0) {
+            const affected = [...new Set(otherPending.flatMap(r => [r.senderId, r.receiverId]).filter(Boolean))];
+            if (affected.length > 0) {
+              publishBattleEvent(affected, { type: 'notification:refresh' });
+            }
+          }
+        } catch (_e) {}
 
         const [senderProfile, receiverProfile] = await Promise.all([
           db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar })

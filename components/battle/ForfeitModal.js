@@ -23,36 +23,40 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
   return (
     <>
       <style>{`
-        @keyframes forfeitOverlayIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        @keyframes ffOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ffModalIn {
+          0% { opacity: 0; transform: scale(0.85) translateY(24px); }
+          60% { opacity: 1; transform: scale(1.03) translateY(-2px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
         }
-        @keyframes forfeitModalIn {
-          from { opacity: 0; transform: scale(0.9) translateY(20px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes ffFlagBounce {
+          0%, 100% { transform: rotate(-6deg) translateY(0); }
+          50% { transform: rotate(6deg) translateY(-3px); }
         }
-        @keyframes forfeitShake {
-          0%, 100% { transform: translateX(0); }
-          20% { transform: translateX(-4px); }
-          40% { transform: translateX(4px); }
-          60% { transform: translateX(-3px); }
-          80% { transform: translateX(3px); }
+        @keyframes ffSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .ff-overlay { animation: ffOverlayIn 0.2s ease-out; }
+        .ff-modal { animation: ffModalIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .ff-flag { animation: ffFlagBounce 1.6s ease-in-out infinite; display: inline-block; }
+        .ff-spinner { animation: ffSpin 0.8s linear infinite; }
+        .ff-keep-btn { transition: transform 0.12s ease, box-shadow 0.12s ease; }
+        @media (hover: hover) {
+          .ff-keep-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55); }
         }
-        @keyframes forfeitSpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        .ff-keep-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0a0a0a; }
+        .ff-forfeit-btn { transition: transform 0.12s ease, box-shadow 0.12s ease; }
+        @media (hover: hover) {
+          .ff-forfeit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #0a0a0a; }
         }
-        .forfeit-overlay { animation: forfeitOverlayIn 0.25s ease-out; }
-        .forfeit-modal { animation: forfeitModalIn 0.3s ease-out; }
-        .forfeit-icon { animation: forfeitShake 0.5s ease-in-out 0.3s; }
-        .forfeit-spinner { animation: forfeitSpin 0.8s linear infinite; }
+        .ff-forfeit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0a0a0a; }
       `}</style>
 
       <div
         data-allow-fixed-overlay="true"
-        className="fixed inset-0 z-[9999] flex items-center justify-center px-4 forfeit-overlay overflow-y-auto overscroll-contain"
+        className="fixed inset-0 z-[9999] flex items-center justify-center px-4 ff-overlay overflow-y-auto overscroll-contain"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(127,29,29,0.5) 0%, rgba(0,0,0,0.85) 100%)',
+          background: 'rgba(0,0,0,0.82)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
           paddingTop: 'max(1rem, env(safe-area-inset-top))',
           paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
           minHeight: '100dvh',
@@ -60,55 +64,109 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
         onClick={onCancel}
       >
         <div
-          className="forfeit-modal w-full max-w-sm rounded-2xl overflow-y-auto my-auto"
+          className="ff-modal w-full max-w-sm rounded-3xl overflow-hidden my-auto"
           style={{
-            background: 'linear-gradient(180deg, #1c1917 0%, #0c0a09 100%)',
-            border: `1px solid rgba(239, 68, 68, 0.3)`,
-            boxShadow: '0 0 60px rgba(239, 68, 68, 0.15), 0 25px 50px rgba(0,0,0,0.5)',
+            background: '#0d0d0d',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 8px 0 #0a0a0a, 0 22px 44px rgba(0,0,0,0.6)',
             maxHeight: 'calc(100dvh - max(2rem, env(safe-area-inset-top) + env(safe-area-inset-bottom)))',
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="relative px-6 pt-6 pb-4 text-center" style={{ borderBottom: `1px solid ${'rgba(239, 68, 68, 0.15)'}` }}>
+          <div className="px-6 pt-6 pb-4 text-center">
             <div
-              className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center forfeit-icon"
-              style={{ background: 'rgba(239, 68, 68, 0.15)', border: '2px solid rgba(239, 68, 68, 0.3)' }}
+              className="w-20 h-20 mx-auto mb-3 rounded-2xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(180deg, #fb923c 0%, #f97316 100%)',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 4px 0 #0a0a0a',
+              }}
             >
-              <span className="text-3xl">🏳️</span>
+              <span className="text-4xl ff-flag">🏳️</span>
             </div>
-            <h2 className="text-2xl font-black text-red-500 mb-1">Surrender?</h2>
-            <p className={`text-sm ${'text-gray-500'}`}>This action cannot be undone</p>
+            <div
+              className="text-[11px] font-extrabold uppercase mb-1"
+              style={{ color: '#fb923c', letterSpacing: '0.22em' }}
+            >
+              Surrender?
+            </div>
+            <h2
+              className="font-black uppercase"
+              style={{
+                color: '#fff',
+                fontSize: '24px',
+                letterSpacing: '0.04em',
+                textShadow: '0 2px 0 #000',
+              }}
+            >
+              Forfeit Battle
+            </h2>
+            <p className="text-xs mt-2" style={{ color: '#9ca3af' }}>
+              This action cannot be undone
+            </p>
           </div>
 
-          <div className="px-6 py-4 space-y-2">
-            <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}>
-              <span className="text-base">⚠️</span>
-              <p className={`text-sm ${'text-gray-400'}`}>Your opponent will win</p>
+          <div className="px-5 pb-2 space-y-2">
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3"
+              style={{
+                backgroundColor: '#111',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 3px 0 #0a0a0a',
+              }}
+            >
+              <span className="text-lg">⚠️</span>
+              <p className="text-sm font-semibold" style={{ color: '#e5e7eb' }}>
+                Your opponent will win
+              </p>
             </div>
-            <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}>
-              <span className="text-base">💸</span>
-              <p className={`text-sm ${'text-gray-400'}`}>
-                You will lose your buy-in{buyIn > 0 ? ` ($${formatMoney(buyIn, 0)})` : ''}
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3"
+              style={{
+                backgroundColor: '#111',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 3px 0 #0a0a0a',
+              }}
+            >
+              <span className="text-lg">💸</span>
+              <p className="text-sm font-semibold" style={{ color: '#e5e7eb' }}>
+                You'll lose your buy-in
+                {buyIn > 0 ? <span style={{ color: '#fb923c' }}> (${formatMoney(buyIn, 0)})</span> : ''}
               </p>
             </div>
             {potSize > 0 && (
-              <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}>
-                <span className="text-base">🏆</span>
-                <p className={`text-sm ${'text-gray-400'}`}>
-                  Pot size: <span className={`font-semibold ${'text-white'}`}>${formatMoney(potSize, 0)}</span>
+              <div
+                className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                style={{
+                  backgroundColor: '#111',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 3px 0 #0a0a0a',
+                }}
+              >
+                <span className="text-lg">🏆</span>
+                <p className="text-sm font-semibold" style={{ color: '#e5e7eb' }}>
+                  Pot size:{' '}
+                  <span style={{ color: '#10b981', fontWeight: 800 }}>
+                    ${formatMoney(potSize, 0)}
+                  </span>
                 </p>
               </div>
             )}
           </div>
 
-          <div className="px-6 pb-6 pt-2 flex flex-col gap-3">
+          <div className="px-5 pb-5 pt-4 flex flex-col gap-3">
             <button
               onClick={onCancel}
               disabled={isForfeiting}
-              className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all duration-200 disabled:opacity-50"
+              className="ff-keep-btn w-full py-3.5 rounded-2xl text-sm uppercase disabled:opacity-50"
               style={{
-                background: 'linear-gradient(135deg, #2563eb 0%, #059669 100%)',
-                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)',
+                background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+                color: '#fff',
+                fontWeight: 900,
+                letterSpacing: '0.08em',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.4)',
+                textShadow: '0 1px 0 rgba(0,0,0,0.35)',
               }}
             >
               Keep Fighting 💪
@@ -116,19 +174,22 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
             <button
               onClick={handleConfirm}
               disabled={isForfeiting}
-              className="w-full py-3 rounded-xl text-sm transition-all duration-200 disabled:opacity-50"
+              className="ff-forfeit-btn w-full py-3 rounded-2xl text-sm uppercase disabled:opacity-50"
               style={{
-                background: 'transparent',
-                border: `1px solid ${'#333'}`,
-                color: '#ef4444',
-                fontWeight: 500,
+                background: 'linear-gradient(180deg, #f97316 0%, #ea580c 100%)',
+                color: '#fff',
+                fontWeight: 900,
+                letterSpacing: '0.08em',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 4px 0 #0a0a0a',
+                textShadow: '0 1px 0 rgba(0,0,0,0.35)',
               }}
             >
               {isForfeiting ? (
                 <span className="flex items-center justify-center gap-2">
                   <span
-                    className="w-4 h-4 rounded-full forfeit-spinner"
-                    style={{ border: '2px solid rgba(248,113,113,0.3)', borderTopColor: '#f87171' }}
+                    className="w-4 h-4 rounded-full ff-spinner"
+                    style={{ border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff' }}
                   />
                   Forfeiting...
                 </span>
