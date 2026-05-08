@@ -34,11 +34,21 @@ function LiveGameCard({ game, selected, voted, oppVoted, onPick, disabled }) {
   const as = game?.scores?.away?.total ?? game?.away_score ?? 0;
   const sportLabel = game.sport_title || game.sportName || game.sport || 'LIVE';
   const isLive = !!(game.isLive || game.status === 'IN_PROGRESS' || game.status === 'live');
-  const clockBits = [];
-  if (game.period) clockBits.push(String(game.period));
-  if (game.elapsedTime || game.displayClock) clockBits.push(String(game.elapsedTime || game.displayClock));
+  // Simulated demo games already bake the period into `elapsedTime`
+  // (e.g. "Q3 10:41"), so only prepend `period` when the elapsed-time
+  // string doesn't already start with it — otherwise the card would
+  // render "Q3 Q3 10:41".
+  const elapsed = game.elapsedTime || game.displayClock || '';
+  const period = game.period ? String(game.period) : '';
+  // Match period as a whole token (so "Q1" doesn't false-positive on
+  // "Q10 0:01") — period must be followed by end-of-string or non-word.
+  const elapsedHasPeriod = !!(period && elapsed
+    && new RegExp(`^${period.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\W|$)`).test(elapsed.trim()));
+  const composed = elapsed
+    ? (elapsedHasPeriod ? elapsed : (period ? `${period} ${elapsed}` : elapsed))
+    : period;
   const liveClock = game.formatted_time
-    || (clockBits.length ? clockBits.join(' ') : '')
+    || composed
     || game.time
     || game.status
     || 'In progress';
@@ -177,10 +187,13 @@ export default function RushBattlePage() {
       seen.add(key);
       out.push(g);
     };
-    serverLiveGames.forEach(push);
+    // Pull from GamesContext FIRST so the vote screen shows the same
+    // live games (in the same order) the dashboard surfaces. Server
+    // list is a backstop in case GamesContext hasn't hydrated.
     if (Array.isArray(apiGames)) {
       apiGames.forEach((g) => { if (g && g.isLive) push(g); });
     }
+    serverLiveGames.forEach(push);
     return out;
   }, [serverLiveGames, apiGames]);
 

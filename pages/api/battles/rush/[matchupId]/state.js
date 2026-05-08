@@ -50,6 +50,27 @@ function applyBotAutomation(state, matchup) {
   const botId = matchup.user2Id;
   if (!botId) return state;
 
+  // Apply a delayed bot vote (queued by /vote). The 3–5s pause makes
+  // the bot's pick feel human — the player sees their own check land
+  // first, then the bot's badge animates in a moment later instead of
+  // both flashing in at the same instant.
+  if (state.phase === 'voting' && state.pendingBotVote) {
+    const pv = state.pendingBotVote;
+    const applyAt = pv.applyAt ? new Date(pv.applyAt).getTime() : 0;
+    if (Date.now() >= applyAt && pv.botId === botId && !state.gameVotes?.[botId]) {
+      const newVotes = {
+        ...(state.gameVotes || {}),
+        [botId]: {
+          gameId: pv.gameId,
+          gameSnapshot: pv.gameSnapshot,
+          votedAt: new Date().toISOString(),
+        },
+      };
+      const { pendingBotVote, ...rest } = state;
+      return { ...rest, gameVotes: newVotes };
+    }
+  }
+
   // Auto-ready the bot 3s after ready_check began.
   if (state.phase === 'ready_check') {
     const startedAt = state.readyStartedAt
@@ -150,6 +171,10 @@ export default async function handler(req, res) {
     // idempotent — running them on every read is cheap.
     let next = resolveVotingIfReady(state, ctx);
     next = applyBotAutomation(next, matchup);
+    // The bot vote may have just landed — re-resolve voting so we
+    // transition to ready_check in the same tick instead of waiting
+    // an extra poll cycle.
+    next = resolveVotingIfReady(next, ctx);
     next = resolveReadyIfReady(next, ctx);
     next = applyBotAutomation(next, matchup);
     next = advanceIfReady(next, ctx);

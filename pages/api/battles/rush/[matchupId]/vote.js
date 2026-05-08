@@ -61,21 +61,26 @@ export default async function handler(req, res) {
     };
 
     // Bot opponents auto-vote for the same live game the human picked,
-    // so the matchup never stalls in the voting phase against a fake
-    // opponent. The human is always user1 for matchmaking-assigned
-    // bots, so user2Id is the bot id.
+    // but with a randomized 3–5s delay so the human actually *sees* the
+    // bot make a selection (instead of both badges popping at once,
+    // which feels rigged). The vote isn't recorded here — instead we
+    // stash a `pendingBotVote` payload, and applyBotAutomation in the
+    // /state endpoint applies it once the delay has elapsed.
+    let pendingBotVote = state.pendingBotVote || null;
     if (matchup.isFakeOpponent) {
       const botId = matchup.user2Id;
-      if (botId && botId !== userId && !newVotes[botId]) {
-        newVotes[botId] = {
+      if (botId && botId !== userId && !newVotes[botId] && !pendingBotVote) {
+        const delayMs = 3000 + Math.floor(Math.random() * 2000); // 3000–5000ms
+        pendingBotVote = {
+          botId,
           gameId: String(gameId),
           gameSnapshot,
-          votedAt: new Date().toISOString(),
+          applyAt: new Date(Date.now() + delayMs).toISOString(),
         };
       }
     }
 
-    state = { ...state, gameVotes: newVotes };
+    state = { ...state, gameVotes: newVotes, pendingBotVote };
 
     const ctx = { user1Id: matchup.user1Id, user2Id: matchup.user2Id };
     state = resolveVotingIfReady(state, ctx);
