@@ -246,6 +246,44 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
     }
   }, []);
 
+  // Dev-only kill-switch for stale service workers. PWA is disabled in
+  // development (next.config.js: `disable: NODE_ENV === 'development'`),
+  // but a SW that was previously installed by a production build (or an
+  // earlier dev session before PWA was disabled) keeps living in the
+  // browser and intercepts requests with cached HTML — which then
+  // mismatches the freshly-compiled dev JS bundle and surfaces as a
+  // React hydration error ("Text content does not match server-rendered
+  // HTML"). Auto-unregister any existing SW + nuke its caches on mount
+  // in dev so users don't have to dig through DevTools to recover.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        if (cancelled || regs.length === 0) return;
+        await Promise.all(regs.map(r => r.unregister().catch(() => {})));
+        if (typeof caches !== 'undefined') {
+          try {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k).catch(() => {})));
+          } catch (_e) {}
+        }
+        // One reload to drop any in-flight cached HTML and pick up the
+        // fresh dev bundle. Guarded so we don't reload-loop if the SW
+        // somehow re-registers — sessionStorage flag clears on tab close.
+        try {
+          if (!sessionStorage.getItem('piks_sw_killed')) {
+            sessionStorage.setItem('piks_sw_killed', '1');
+            window.location.reload();
+          }
+        } catch (_e) {}
+      } catch (_e) {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Preload logo image on app mount
   useEffect(() => {
     const img = new Image();
