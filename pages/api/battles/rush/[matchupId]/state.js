@@ -39,11 +39,11 @@ const {
 const { settleRushMatchup } = require('../../../../../lib/rushSettlement');
 const { publishBattleEvent } = require('../../../../../lib/battle-events');
 
-// Bot answer delay window — randomized so the bot doesn't always
-// answer instantly (which would feel rigged) but still answers fast
-// enough that the human isn't sitting on the deadline every time.
-const BOT_ANSWER_MIN_MS = 4000;
-const BOT_ANSWER_MAX_MS = 12000;
+// Bot answer delay window — kept tight so the human isn't watching
+// "OPP …" sit there for 10s after they've already locked in. Bot
+// still takes long enough to feel like it's "thinking" and not auto.
+const BOT_ANSWER_MIN_MS = 1500;
+const BOT_ANSWER_MAX_MS = 4000;
 
 function applyBotAutomation(state, matchup) {
   if (!matchup?.isFakeOpponent) return state;

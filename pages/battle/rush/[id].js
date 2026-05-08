@@ -194,7 +194,10 @@ export default function RushBattlePage() {
       apiGames.forEach((g) => { if (g && g.isLive) push(g); });
     }
     serverLiveGames.forEach(push);
-    return out;
+    // Cap to a tight 3-card pick — same cap as the QuickMatchModal vote
+    // slide. Showing 7+ live games turns the screen into an ugly scroll
+    // and dilutes the choice.
+    return out.slice(0, 3);
   }, [serverLiveGames, apiGames]);
 
   const fetchState = useCallback(async () => {
@@ -1118,6 +1121,8 @@ function RushPlayingPhase({ rush, userId, opponentId, pickedAnswer, submittingAn
   const deadline = rush.questionDeadline ? new Date(rush.questionDeadline).getTime() : null;
   const remaining = deadline ? Math.max(0, deadline - now) : QUESTION_DURATION_MS;
   const remainingPct = Math.max(0, Math.min(100, (remaining / QUESTION_DURATION_MS) * 100));
+  const remainingSec = formatSeconds(remaining);
+  const urgent = remaining < 5000;
   const timeOut = remaining <= 0;
 
   const myAnswers = rush.answers?.[userId] || {};
@@ -1129,88 +1134,150 @@ function RushPlayingPhase({ rush, userId, opponentId, pickedAnswer, submittingAn
   const oppCorrectSoFar = useMemo(() => Object.values(oppAnswers).filter(a => a?.correct).length, [oppAnswers]);
 
   if (!question) {
-    return <div className="text-center text-gray-400 py-12 text-sm">Loading question...</div>;
+    return <div className="text-center text-gray-400 py-12 text-sm">Loading question…</div>;
   }
 
   const lockedKey = pickedAnswer?.questionId === question.id ? pickedAnswer.answerKey : myAnswerForCurrent?.key;
   const locked = !!myAnswerForCurrent || timeOut || submittingAnswer;
+  const SELF = '#3b82f6';
+  const OPP = '#fb923c';
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      <style>{`
+        @keyframes rpQIn { 0%{opacity:0;transform:translateY(8px);} 100%{opacity:1;transform:translateY(0);} }
+        @keyframes rpOIn { 0%{opacity:0;transform:translateX(-8px);} 100%{opacity:1;transform:translateX(0);} }
+        @keyframes rpUrgent { 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
+        .rp-q { animation: rpQIn 280ms cubic-bezier(0.22,1,0.36,1) both; }
+        .rp-o { animation: rpOIn 240ms cubic-bezier(0.22,1,0.36,1) both; }
+        .rp-o:nth-child(1){animation-delay:60ms;} .rp-o:nth-child(2){animation-delay:110ms;}
+        .rp-o:nth-child(3){animation-delay:160ms;} .rp-o:nth-child(4){animation-delay:210ms;}
+        .rp-urgent { animation: rpUrgent 0.6s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .rp-q,.rp-o,.rp-urgent { animation:none !important; } }
+      `}</style>
+
+      {/* Progress dots + Q-of-N */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
           {Array.from({ length: total }).map((_, i) => (
             <div
               key={i}
-              className="w-8 h-1.5 rounded-full"
               style={{
-                background: i < idx ? '#fb923c' : i === idx ? 'rgba(251,146,60,0.5)' : 'rgba(255,255,255,0.1)',
+                width: 22, height: 6, borderRadius: 999,
+                background: i < idx ? OPP : i === idx ? 'rgba(251,146,60,0.5)' : 'rgba(255,255,255,0.1)',
+                border: i === idx ? '1px solid rgba(251,146,60,0.6)' : 'none',
+                transition: 'background 150ms ease',
               }}
             />
           ))}
         </div>
-        <div className="text-xs text-gray-400">Q{idx + 1} of {total}</div>
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+          Q{idx + 1}/{total}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mb-3 text-xs">
-        <div>You: <span className="font-bold text-white">{myCorrectSoFar}</span> correct</div>
-        <div>Opponent: <span className="font-bold text-white">{oppCorrectSoFar}</span> correct</div>
+      {/* Live score chips */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <RushScoreChip label="YOU" correct={myCorrectSoFar} answered={!!myAnswerForCurrent} color={SELF} />
+        <RushScoreChip label="OPP" correct={oppCorrectSoFar} answered={!!oppAnswerForCurrent} color={OPP} />
       </div>
 
-      <div className="rounded-2xl p-5 mb-5" style={{ background: '#0c1a35', border: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Question card — cartoon style */}
+      <div
+        key={question.id}
+        className="rp-q rounded-2xl p-4 mb-4"
+        style={{
+          background: 'linear-gradient(180deg,#0c1a35,#050a15)',
+          border: '2.5px solid #0a0a0a',
+          boxShadow: '0 4px 0 #0a0a0a',
+        }}
+      >
         <div className="flex items-center justify-between mb-3">
-          <div className="text-2xl font-black tabular-nums" style={{ color: remaining < 5000 ? '#ef4444' : '#fb923c' }}>
-            {formatSeconds(remaining)}s
+          <div
+            className={`text-3xl font-black tabular-nums ${urgent ? 'rp-urgent' : ''}`}
+            style={{
+              color: urgent ? '#ef4444' : OPP,
+              textShadow: urgent ? '0 0 12px rgba(239,68,68,0.6)' : '0 0 10px rgba(251,146,60,0.5)',
+            }}
+          >
+            {remainingSec}s
           </div>
-          <div className="flex gap-1.5 text-[10px]">
-            <span className={`px-2 py-0.5 rounded-full font-bold ${myAnswerForCurrent ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-gray-400'}`}>
-              {myAnswerForCurrent ? 'YOU ✓' : 'YOU …'}
-            </span>
-            <span className={`px-2 py-0.5 rounded-full font-bold ${oppAnswerForCurrent ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-gray-400'}`}>
-              {oppAnswerForCurrent ? 'OPP ✓' : 'OPP …'}
-            </span>
+          <div
+            className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+            style={{
+              background: 'linear-gradient(180deg,#fbbf24,#d97706)',
+              color: '#1a0a00',
+              border: '2px solid #0a0a0a',
+              boxShadow: '0 2px 0 #0a0a0a',
+            }}
+          >
+            ⚡ Rush
           </div>
         </div>
-        <div className="h-1 rounded-full mb-5 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+
+        <div className="h-1.5 rounded-full mb-4 overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(0,0,0,0.4)' }}>
           <div
-            className="h-full rounded-full transition-[width] duration-100 linear"
             style={{
               width: `${remainingPct}%`,
-              background: remaining < 5000 ? 'linear-gradient(90deg,#ef4444,#f59e0b)' : 'linear-gradient(90deg,#fb923c,#facc15)',
+              height: '100%',
+              background: urgent ? 'linear-gradient(90deg,#ef4444,#f59e0b)' : 'linear-gradient(90deg,#fb923c,#facc15)',
+              transition: 'width 100ms linear',
             }}
           />
         </div>
 
-        <div className="text-lg md:text-xl font-bold text-white text-center mb-5 leading-snug">
+        <div className="text-base md:text-lg font-extrabold text-white text-center mb-4 leading-snug">
           {question.prompt}
         </div>
 
         <div className="space-y-2">
-          {question.options?.map(opt => {
+          {question.options?.map((opt) => {
             const isPicked = lockedKey === opt.key;
+            const isOver = opt.key === 'over';
+            const isUnder = opt.key === 'under';
+            const accent = isOver ? '#10b981' : isUnder ? '#06b6d4' : SELF;
+            const accentDeep = isOver ? '#047857' : isUnder ? '#0e7490' : '#1d4ed8';
             return (
               <button
                 key={opt.key}
                 type="button"
                 disabled={locked}
                 onClick={() => onAnswer(question.id, opt.key)}
-                className="w-full text-left px-4 py-3 rounded-xl font-semibold transition-all"
+                className="rp-o w-full text-left px-4 py-3 rounded-xl font-extrabold transition-transform active:scale-[0.98]"
                 style={{
-                  background: isPicked ? 'rgba(251,146,60,0.22)' : '#10203d',
-                  border: isPicked ? '2px solid #fb923c' : '1px solid rgba(255,255,255,0.08)',
-                  color: isPicked ? '#fed7aa' : 'white',
+                  background: isPicked
+                    ? `linear-gradient(180deg, ${accent}, ${accentDeep})`
+                    : 'linear-gradient(180deg,#10203d,#0a1428)',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: isPicked
+                    ? `0 4px 0 #0a0a0a, 0 0 18px ${accent}88`
+                    : '0 3px 0 #0a0a0a',
+                  color: '#fff',
+                  fontSize: 14,
                   cursor: locked && !isPicked ? 'not-allowed' : locked ? 'default' : 'pointer',
-                  opacity: locked && !isPicked ? 0.6 : 1,
+                  opacity: locked && !isPicked ? 0.55 : 1,
                 }}
               >
-                {opt.label}
+                <div className="flex items-center justify-between gap-3">
+                  <span>{opt.label}</span>
+                  {isPicked && (
+                    <span
+                      className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+                      style={{ background: '#0a0a0a', color: '#fff', border: '1.5px solid #fff' }}
+                    >
+                      ✓ Locked
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })}
         </div>
 
         {!myAnswerForCurrent && timeOut && (
-          <div className="mt-3 text-center text-xs text-red-300">Time's up — moving on...</div>
+          <div className="mt-3 text-center text-[11px] text-red-300 font-bold">
+            Time's up — moving on…
+          </div>
         )}
       </div>
 
@@ -1218,6 +1285,31 @@ function RushPlayingPhase({ rush, userId, opponentId, pickedAnswer, submittingAn
         <button onClick={onForfeit} className="text-xs text-gray-500 hover:text-red-400 underline">
           Forfeit match
         </button>
+      </div>
+    </div>
+  );
+}
+
+function RushScoreChip({ label, correct, answered, color }) {
+  return (
+    <div
+      className="flex items-center justify-between px-3 py-2 rounded-xl"
+      style={{
+        background: 'linear-gradient(180deg,#141414,#0a0a0a)',
+        border: '2.5px solid #0a0a0a',
+        boxShadow: '0 3px 0 #0a0a0a',
+      }}
+    >
+      <div className="min-w-0">
+        <div className="font-black uppercase truncate" style={{ color, fontSize: 10, letterSpacing: '0.1em' }}>
+          {label}
+        </div>
+        <div className="text-[9px] font-bold uppercase tracking-wider text-gray-500">
+          {answered ? 'Locked in' : 'Picking…'}
+        </div>
+      </div>
+      <div className="text-2xl font-black tabular-nums text-white">
+        {correct}
       </div>
     </div>
   );
