@@ -21,8 +21,8 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../../lib/auth';
 import { db } from '../../../../../lib/db';
-import { matchups } from '../../../../../shared/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { matchups, profiles } from '../../../../../shared/schema';
+import { eq, and, sql, inArray } from 'drizzle-orm';
 const {
   buildInitialRushState,
   resolveVotingIfReady,
@@ -214,6 +214,29 @@ export default async function handler(req, res) {
     }
 
     const view = publicView(state, { ...ctx, viewerId: userId });
+
+    // Surface lightweight player profiles so the rush voting overlay
+    // can render a real "VS lobby" header (avatars + usernames) for
+    // both players. Without this the overlay can only label slots
+    // "YOU"/"OPP" — fine for state badges but bland as a lobby.
+    const playerIds = [matchup.user1Id, matchup.user2Id].filter(Boolean);
+    let player1 = null;
+    let player2 = null;
+    if (playerIds.length > 0) {
+      try {
+        const rows = await db
+          .select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar })
+          .from(profiles)
+          .where(inArray(profiles.id, playerIds));
+        player1 = rows.find(r => r.id === matchup.user1Id) || null;
+        player2 = rows.find(r => r.id === matchup.user2Id) || null;
+      } catch (_e) {}
+    }
+    if (matchup.isFakeOpponent && !player2 && matchup.user2Id) {
+      // Bot opponent fallback — give the lobby something to render.
+      player2 = { id: matchup.user2Id, username: 'Bot Opponent', avatar: null };
+    }
+
     return res.status(200).json({
       matchup: {
         id: matchup.id,
@@ -226,6 +249,9 @@ export default async function handler(req, res) {
         status: state.phase === 'completed' ? 'completed' : matchup.status,
         winnerId: matchup.winnerId,
         winnerType: matchup.winnerType,
+        isFakeOpponent: !!matchup.isFakeOpponent,
+        player1,
+        player2,
       },
       rush: view,
       serverTime: new Date().toISOString(),

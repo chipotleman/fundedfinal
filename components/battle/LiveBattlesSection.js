@@ -3109,9 +3109,15 @@ function YouVsCard({
         try { refreshMatchup(); } catch {}
         // Mirror /battle's post-match landing so users go straight
         // to wherever this matchup's mode lives — RUSH owns its own
-        // gameplay page at /battle/rush/[id], the others land back on
-        // the dashboard so users can start picking.
-        setTimeout(() => navigateToBattleStart(router, matchup), 1200);
+        // gameplay page at /battle/rush/[id] (route immediately so
+        // both players hit the voting screen at the same time), the
+        // others land back on the dashboard after a brief beat so
+        // users can start picking.
+        if (matchup?.durationType === 'rush') {
+          navigateToBattleStart(router, matchup);
+        } else {
+          setTimeout(() => navigateToBattleStart(router, matchup), 1200);
+        }
       }}
     />
     {/* Legacy stepped pre-match popup. Kept mounted (gated by

@@ -25,7 +25,7 @@ import { formatLastSeen } from '../utils/relativeTime';
 import { readBattleResult, clearBattleResult } from '../utils/battleResultCache';
 import { readLastBuyIn, fetchLastBuyIn, saveLastBuyIn } from '../utils/lastBattleBuyIn';
 import { getBattleStreamClient } from '../lib/battleStreamClient';
-import { navigateToBattleStart } from '../lib/battleStartNavigation';
+import { navigateToBattleStart, shouldShowMatchLobbyForMode } from '../lib/battleStartNavigation';
 
 function UserAvatar({ user, size = 'md' }) {
   const sizeMap = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-12 h-12 text-base' };
@@ -59,6 +59,25 @@ export default function BattlePage() {
   // the full list of call sites.
   const navigateAfterBattleStart = useCallback((matchup) => {
     navigateToBattleStart(router, matchup);
+  }, [router]);
+  // Shared "battle just started — enter it" gate. Kept in one place so
+  // the 4 entry points below (invite-refresh, SSE matchup:start, manual
+  // accept-invite handler, QuickMatchModal onMatchFound) can't drift on
+  // timing again. RUSH skips MatchLobby entirely and routes immediately
+  // — the rush page itself is the synchronized multiplayer lobby (vote
+  // → ready_check → playing), so both players land on the SAME screen
+  // at the SAME time. ORIGINAL/TOURNAMENT keep the 2.5s MatchLobby
+  // celebration since that IS their only lobby. The optional
+  // `setLobby` callback lets a caller pre-set its local lobby state
+  // (some sites need that for the non-rush branch).
+  const enterMatchupAfterStart = useCallback((matchup, opts = {}) => {
+    if (!matchup) return;
+    if (!shouldShowMatchLobbyForMode(matchup)) {
+      navigateToBattleStart(router, matchup);
+      return;
+    }
+    if (typeof opts.setLobby === 'function') opts.setLobby(matchup);
+    setTimeout(() => navigateToBattleStart(router, matchup), 2500);
   }, [router]);
   const { data: session, status } = useSession();
   const { matchup: globalMatchup, matchupData: globalMatchupData, hasActiveMatchup: globalHasActive, isWaiting: globalIsWaiting, hasAnyMatchup: globalHasAny, refresh: refreshGlobalMatchup } = useMatchup();
@@ -739,9 +758,8 @@ export default function BattlePage() {
               if (ms === 'active' || ms === 'matched') {
                 setActiveMatchup(matchData.matchup);
                 setMatchupData(matchData);
-                setShowLobby(matchData.matchup);
                 refreshGlobalMatchup();
-                setTimeout(() => navigateAfterBattleStart(matchData.matchup), 2500);
+                enterMatchupAfterStart(matchData.matchup, { setLobby: setShowLobby });
               }
             }
           }
@@ -818,11 +836,10 @@ export default function BattlePage() {
       if (m.status !== 'active' && m.status !== 'matched') return;
       setActiveMatchup(m);
       setMatchupData(data);
-      setShowLobby(m);
       refreshGlobalMatchup();
-      setTimeout(() => navigateAfterBattleStart(m), 2500);
+      enterMatchupAfterStart(m, { setLobby: setShowLobby });
     } catch {}
-  }, [refreshGlobalMatchup, navigateAfterBattleStart]);
+  }, [refreshGlobalMatchup, enterMatchupAfterStart]);
   const openLobbyForStartRef = useRef(openLobbyForStart);
   useEffect(() => { openLobbyForStartRef.current = openLobbyForStart; }, [openLobbyForStart]);
 
@@ -910,9 +927,18 @@ export default function BattlePage() {
     // When the rematch payload is missing entirely, the helper still falls
     // back to the dashboard, keeping the original-mode default.
     const newMatchup = rematchState?.rematchMatchup || (showResult?.durationType === 'rush' ? { id: rematchState?.rematchMatchupId, durationType: 'rush' } : null);
-    setTimeout(() => {
+    // Rush has zero tolerance for entry skew — both peers receive the
+    // same `rematchMatchupId` via SSE and must hit the voting screen on
+    // the same tick. Skip the 400ms result-dismiss pause for rush so
+    // there's no chance of one side getting there first if the other
+    // is mid-render. Non-rush keeps the brief pause for UX continuity.
+    if (newMatchup?.durationType === 'rush') {
       navigateAfterBattleStart(newMatchup);
-    }, 400);
+    } else {
+      setTimeout(() => {
+        navigateAfterBattleStart(newMatchup);
+      }, 400);
+    }
   }, [rematchState?.rematchMatchupId, rematchState?.rematchMatchup, showResult?.durationType, navigateAfterBattleStart, router, refreshGlobalMatchup]);
 
   const consumedDeepLinkRef = useRef(null);
@@ -1053,20 +1079,21 @@ export default function BattlePage() {
         let lobbyMatchup = null;
         if (data.matchup) {
           lobbyMatchup = data.matchup;
-          setShowLobby(data.matchup);
         } else if (data.matchupId) {
           const matchRes = await fetch(`/api/matchups/${data.matchupId}`);
           if (matchRes.ok) {
             const matchData = await matchRes.json();
             lobbyMatchup = matchData.matchup || matchData;
-            setShowLobby(lobbyMatchup);
           } else {
             router.push('/');
           }
         }
         fetchData();
         refreshGlobalMatchup();
-        setTimeout(() => navigateAfterBattleStart(lobbyMatchup), 2500);
+        // RUSH: navigate immediately so both players land on the rush
+        // voting screen together. ORIGINAL/TOURNAMENT: brief MatchLobby
+        // celebration before routing to the dashboard.
+        enterMatchupAfterStart(lobbyMatchup, { setLobby: setShowLobby });
       }
     } catch {}
   };
@@ -2014,10 +2041,9 @@ export default function BattlePage() {
             if (opponent) {
               setMatchupData(prev => ({ ...(prev || {}), opponent }));
             }
-            setShowLobby(matchup);
             refreshGlobalMatchup();
           }
-          setTimeout(() => navigateAfterBattleStart(matchup), 2500);
+          enterMatchupAfterStart(matchup, { setLobby: setShowLobby });
         }}
       />
 

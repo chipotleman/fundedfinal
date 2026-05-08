@@ -23,7 +23,7 @@ function formatSeconds(ms) {
   return Math.max(0, Math.ceil(ms / 1000));
 }
 
-function LiveGameCard({ game, selected, voted, onPick, disabled }) {
+function LiveGameCard({ game, selected, voted, oppVoted, onPick, disabled }) {
   // Normalize across API/Goalserve shape (home_team / sport_title /
   // formatted_time) and the simulated/demo-game shape (homeTeamFull /
   // sportName / time / elapsedTime+period). Without this, demo games
@@ -102,18 +102,34 @@ function LiveGameCard({ game, selected, voted, onPick, disabled }) {
             {as} – {hs} · {liveClock}
           </div>
         </div>
-        {voted && (
-          <div
-            className="shrink-0 px-2 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-            style={{
-              background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-              color: '#2a1404',
-              boxShadow: '0 2px 0 rgba(0,0,0,0.5)',
-            }}
-          >
-            ✓ Voted
-          </div>
-        )}
+        <div className="shrink-0 flex flex-col items-end gap-1">
+          {voted && (
+            <span
+              className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1"
+              style={{
+                background: '#3b82f6',
+                color: '#fff',
+                border: '1.5px solid #0a0a0a',
+                boxShadow: '0 2px 0 #0a0a0a',
+              }}
+            >
+              ✓ YOU
+            </span>
+          )}
+          {oppVoted && (
+            <span
+              className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1"
+              style={{
+                background: '#fb923c',
+                color: '#1a0a00',
+                border: '1.5px solid #0a0a0a',
+                boxShadow: '0 2px 0 #0a0a0a',
+              }}
+            >
+              ✓ OPP
+            </span>
+          )}
+        </div>
       </div>
     </button>
   );
@@ -395,6 +411,8 @@ export default function RushBattlePage() {
   // just came from. The TopNavbar and battle chrome step aside until
   // both players lock in a game and the playing phase begins.
   if (isVoting) {
+    const me = isUser1 ? matchup.player1 : matchup.player2;
+    const opp = isUser1 ? matchup.player2 : matchup.player1;
     return (
       <>
         <Head><title>Rush · Pick a Game · Piks</title></Head>
@@ -410,12 +428,16 @@ export default function RushBattlePage() {
           onVote={submitVote}
           onForfeit={forfeit}
           error={error}
+          me={me}
+          opponent={opp}
         />
       </>
     );
   }
 
   if (isReadyCheck) {
+    const me = isUser1 ? matchup.player1 : matchup.player2;
+    const opp = isUser1 ? matchup.player2 : matchup.player1;
     return (
       <>
         <Head><title>Rush · Ready Up · Piks</title></Head>
@@ -428,6 +450,8 @@ export default function RushBattlePage() {
           onReady={submitReady}
           onForfeit={forfeit}
           error={readyError || error}
+          me={me}
+          opponent={opp}
         />
       </>
     );
@@ -546,11 +570,12 @@ function RushCancelledOverlay({ onExit }) {
   );
 }
 
-function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onReady, onForfeit, error }) {
+function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onReady, onForfeit, error, me, opponent }) {
   const myReady = !!rush.readyVotes?.[userId];
   const oppReady = !!rush.readyVotes?.[opponentId];
   const pot = parseFloat(matchup?.potSize || 0);
   const winnerTakes = parseFloat(matchup?.winnerPayout || 0);
+  const bothReady = myReady && oppReady;
 
   return (
     <div className="min-h-screen bg-[#050a15] text-white relative overflow-hidden" style={{
@@ -587,13 +612,54 @@ function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onR
           </h1>
         </div>
 
-        <div className="text-xs text-gray-400 mb-6">
+        <div className="text-xs text-gray-400 mb-5">
           Pot ${pot.toFixed(0)} · Pays ${winnerTakes.toFixed(0)}
         </div>
 
-        <div className="w-full grid grid-cols-2 gap-3 mb-5">
-          <ReadyCard label="YOU" ready={myReady} color="#3b82f6" />
-          <ReadyCard label="OPP" ready={oppReady} color="#fb923c" />
+        {/* Same VS lobby header used in voting so the screen reads as
+            a continuous shared lobby across both phases. */}
+        <div className="w-full flex items-stretch gap-2 mb-5">
+          <RushLobbyPlayer
+            label="YOU"
+            user={me}
+            voted={myReady}
+            color="#3b82f6"
+            statusReady="Ready"
+            statusWaiting="Waiting…"
+          />
+          <div className="flex flex-col items-center justify-center px-1">
+            <div
+              className="font-black"
+              style={{
+                fontSize: 22,
+                color: bothReady ? '#34d399' : '#fbbf24',
+                textShadow: '0 2px 0 #0a0a0a',
+                lineHeight: 1,
+              }}
+            >
+              VS
+            </div>
+            {bothReady && (
+              <div
+                className="mt-1 px-1.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-wider"
+                style={{
+                  background: '#10b981',
+                  color: '#022c22',
+                  border: '1.5px solid #0a0a0a',
+                }}
+              >
+                Go!
+              </div>
+            )}
+          </div>
+          <RushLobbyPlayer
+            label="OPP"
+            user={opponent}
+            voted={oppReady}
+            color="#fb923c"
+            statusReady="Ready"
+            statusWaiting="Waiting…"
+          />
         </div>
 
         <button
@@ -629,6 +695,108 @@ function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onR
         >
           Forfeit match
         </button>
+      </div>
+    </div>
+  );
+}
+
+// Compact "this player slot" tile used by both the voting overlay
+// and the ready overlay so the rush lobby reads as a single shared
+// space across both phases. `voted` doubles as a generic "this side
+// has done their action" flag — vote in voting, ready in ready_check.
+function RushLobbyPlayer({ label, user, voted, color, isHost, statusReady, statusWaiting }) {
+  const initial = (user?.username || label || '?').toString().trim().charAt(0).toUpperCase() || '?';
+  const username = user?.username || (label === 'YOU' ? 'You' : 'Opponent');
+  const ready = !!voted;
+  return (
+    <div
+      className="flex-1 min-w-0 flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-xl"
+      style={{
+        background: ready
+          ? `linear-gradient(180deg, ${color}26, ${color}0a)`
+          : 'linear-gradient(180deg,#141414,#0a0a0a)',
+        border: ready ? `2.5px solid ${color}` : '2.5px solid #0a0a0a',
+        boxShadow: ready ? `0 3px 0 #0a0a0a, 0 0 14px ${color}55` : '0 3px 0 #0a0a0a',
+        transition: 'all 200ms ease',
+      }}
+    >
+      <div className="relative">
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            border: `2.5px solid ${ready ? color : '#0a0a0a'}`,
+            background: user?.avatar
+              ? `url(${user.avatar}) center/cover no-repeat`
+              : `linear-gradient(135deg, ${color}, ${color}aa)`,
+            color: '#0a0a0a',
+            fontWeight: 900,
+            fontSize: 18,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: `0 2px 0 #0a0a0a${ready ? `, 0 0 12px ${color}88` : ''}`,
+          }}
+          aria-hidden="true"
+        >
+          {!user?.avatar && initial}
+        </div>
+        {ready && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: -4,
+              right: -4,
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              background: '#10b981',
+              border: '2px solid #0a0a0a',
+              color: '#022c22',
+              fontSize: 11,
+              fontWeight: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            aria-hidden="true"
+          >
+            ✓
+          </div>
+        )}
+        {isHost && (
+          <div
+            style={{
+              position: 'absolute',
+              top: -6,
+              left: -6,
+              padding: '1px 4px',
+              borderRadius: 6,
+              background: '#fbbf24',
+              color: '#1a0a00',
+              fontSize: 8,
+              fontWeight: 900,
+              letterSpacing: '0.06em',
+              border: '1.5px solid #0a0a0a',
+            }}
+            aria-label="Host"
+            title="Host (wins ties)"
+          >
+            HOST
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 w-full text-center">
+        <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: ready ? color : 'rgba(229,231,235,0.7)' }}>
+          {label}
+        </div>
+        <div className="text-[11px] font-bold text-white truncate" title={username}>
+          {username}
+        </div>
+        <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: ready ? '#86efac' : 'rgba(156,163,175,0.7)' }}>
+          {ready ? (statusReady || 'Voted') : (statusWaiting || 'Picking…')}
+        </div>
       </div>
     </div>
   );
@@ -679,7 +847,7 @@ function ReadyCard({ label, ready, color }) {
   );
 }
 
-function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGames, liveLoading, pendingVote, onVote, onForfeit, error }) {
+function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGames, liveLoading, pendingVote, onVote, onForfeit, error, me, opponent }) {
   const myVote = rush.gameVotes?.[userId];
   const oppVote = rush.gameVotes?.[opponentId];
   const now = useNow(250);
@@ -689,6 +857,7 @@ function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGame
   const winnerTakes = parseFloat(matchup?.winnerPayout || 0);
   const noGames = !liveLoading && liveGames.length === 0;
   const bothVoted = !!myVote && !!oppVote;
+  const sameGame = bothVoted && myVote.gameId === oppVote.gameId;
 
   return (
     <div
@@ -737,22 +906,36 @@ function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGame
 
       <div
         className="rush-popup-card rounded-2xl max-w-md w-full overflow-hidden my-auto"
-        style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}
+        style={{
+          backgroundColor: '#0d0d0d',
+          border: '2.5px solid #0a0a0a',
+          boxShadow: '0 4px 0 #0a0a0a, 0 0 28px rgba(251,146,60,0.25)',
+        }}
       >
-        {/* Header — mirrors PreMatchPopup step header */}
-        <div className="p-5" style={{ borderBottom: '1px solid #1a1a1a' }}>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span className="rush-popup-bolt" aria-hidden="true" style={{ fontSize: 22 }}>⚡</span>
-              <span>Rush · Pick a Game</span>
-            </h2>
+        {/* Cartoon "Rush · Pick a Game" header pill */}
+        <div className="p-5 pb-3" style={{ borderBottom: '1px solid #1a1a1a' }}>
+          <div className="flex items-center justify-between mb-3">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl"
+              style={{
+                background: 'linear-gradient(180deg,#fbbf24,#d97706)',
+                border: '2.5px solid #0a0a0a',
+                boxShadow: '0 3px 0 #0a0a0a',
+              }}
+            >
+              <span className="rush-popup-bolt" aria-hidden="true" style={{ fontSize: 18 }}>⚡</span>
+              <span className="font-black uppercase" style={{ color: '#1a0a00', fontSize: 13, letterSpacing: '0.08em' }}>
+                Rush · Pick a Game
+              </span>
+            </div>
             {remaining !== null && (
               <div
-                className={`text-sm font-black tabular-nums px-2.5 py-1 rounded-full ${remaining < 5000 ? 'rush-popup-timer-urgent' : ''}`}
+                className={`text-sm font-black tabular-nums px-2.5 py-1 rounded-xl ${remaining < 5000 ? 'rush-popup-timer-urgent' : ''}`}
                 style={{
                   background: remaining < 5000 ? 'rgba(239,68,68,0.18)' : 'rgba(251,191,36,0.18)',
                   color: remaining < 5000 ? '#fca5a5' : '#fbbf24',
-                  border: `1px solid ${remaining < 5000 ? 'rgba(239,68,68,0.4)' : 'rgba(251,191,36,0.4)'}`,
+                  border: `2px solid ${remaining < 5000 ? '#ef4444' : '#fbbf24'}`,
+                  boxShadow: '0 2px 0 #0a0a0a',
                 }}
                 aria-label={`${formatSeconds(remaining)} seconds to vote`}
               >
@@ -760,36 +943,61 @@ function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGame
               </div>
             )}
           </div>
-          <p className="text-xs text-gray-400 mt-2">
-            {isHost
-              ? "You're the host — your pick wins ties."
-              : "Pick fast — host's pick wins ties."}
-          </p>
 
-          {/* Vote status pills + pot chip */}
-          <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+          {/* Multiplayer VS lobby header — both players visible at the
+              same time so the screen reads as a real shared lobby
+              instead of a solo voting page. Blue (#3b82f6) = YOU,
+              orange (#fb923c) = OPP per the platform spec. */}
+          <div className="flex items-stretch gap-2 mb-3">
+            <RushLobbyPlayer
+              label="YOU"
+              user={me}
+              voted={!!myVote}
+              color="#3b82f6"
+              isHost={isHost}
+            />
+            <div className="flex flex-col items-center justify-center px-1">
+              <div
+                className="font-black"
+                style={{
+                  fontSize: 22,
+                  color: bothVoted ? '#34d399' : '#fbbf24',
+                  textShadow: '0 2px 0 #0a0a0a',
+                  lineHeight: 1,
+                }}
+              >
+                VS
+              </div>
+              {bothVoted && (
+                <div
+                  className="mt-1 px-1.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-wider"
+                  style={{
+                    background: '#10b981',
+                    color: '#022c22',
+                    border: '1.5px solid #0a0a0a',
+                  }}
+                >
+                  {sameGame ? 'Locked!' : 'Tiebreak'}
+                </div>
+              )}
+            </div>
+            <RushLobbyPlayer
+              label="OPP"
+              user={opponent}
+              voted={!!oppVote}
+              color="#fb923c"
+              isHost={!isHost}
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] text-gray-400 leading-snug">
+              {isHost
+                ? "You host — your pick wins ties."
+                : "Host's pick wins ties."}
+            </p>
             <span
-              className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full"
-              style={{
-                background: myVote ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.06)',
-                color: myVote ? '#34d399' : 'rgba(229,231,235,0.7)',
-                border: `1px solid ${myVote ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.1)'}`,
-              }}
-            >
-              You {myVote ? '✓' : '…'}
-            </span>
-            <span
-              className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full"
-              style={{
-                background: oppVote ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.06)',
-                color: oppVote ? '#34d399' : 'rgba(229,231,235,0.7)',
-                border: `1px solid ${oppVote ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.1)'}`,
-              }}
-            >
-              Opp {oppVote ? '✓' : '…'}
-            </span>
-            <span
-              className="ml-auto text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full"
+              className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full whitespace-nowrap"
               style={{
                 background: 'rgba(251,191,36,0.18)',
                 color: '#fbbf24',
@@ -846,6 +1054,7 @@ function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGame
                   game={g}
                   selected={myVote?.gameId === String(g.id)}
                   voted={myVote?.gameId === String(g.id)}
+                  oppVoted={oppVote?.gameId === String(g.id)}
                   disabled={!!myVote || pendingVote != null}
                   onPick={onVote}
                 />
