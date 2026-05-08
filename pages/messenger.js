@@ -29,6 +29,56 @@ export default function MessengerPage() {
     setBattleFriend(null);
   }, []);
 
+  // Defensive: proactively release any leftover body / html scroll-lock
+  // styles a previous modal may have left behind, and run a periodic
+  // watchdog while the messenger is mounted. Without this, navigating to
+  // /messenger while a modal was tearing down can leave
+  // `body { overflow: hidden; position: fixed }` in place, which on
+  // iOS Safari (and occasionally desktop Safari) manifests as TopNavbar
+  // links (BATTLE / SOCIAL / LEADERBOARD / piks logo) no longer
+  // navigating until the user hard-refreshes. Mirrors the same defense
+  // installed on /notifications (see pages/notifications.js).
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const releaseLocks = (reason) => {
+      const b = document.body.style;
+      b.overflow = '';
+      b.position = '';
+      b.top = '';
+      b.left = '';
+      b.right = '';
+      b.width = '';
+      b.height = '';
+      b.overscrollBehavior = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.overscrollBehavior = '';
+      if (reason) {
+        try { console.warn('[messenger] released stale body scroll lock:', reason); } catch (_e) {}
+      }
+    };
+    releaseLocks(null);
+
+    // Periodic watchdog: if body has been left scroll-locked but no real
+    // modal is open, clear the lock so top-bar taps register on first try.
+    // The two selectors cover: (a) accessible modals that mark themselves
+    // with role="dialog" + aria-modal (MessagePopup, PlayFriendModal, etc.)
+    // and (b) anything that called useModalScrollLock, which sets the
+    // `data-scroll-lock-owner` attribute on <body>.
+    const interval = setInterval(() => {
+      if (typeof document === 'undefined') return;
+      const b = document.body.style;
+      const isLocked = b.position === 'fixed' || b.overflow === 'hidden';
+      if (!isLocked) return;
+      const hasOpenModal = !!document.querySelector(
+        '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"]'
+      );
+      if (!hasOpenModal) {
+        releaseLocks('no open modal but body lock present');
+      }
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
+
   // Pre-select a conversation from ?chat=<id>.
   useEffect(() => {
     if (!router.isReady) return;
