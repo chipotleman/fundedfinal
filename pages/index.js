@@ -1680,8 +1680,15 @@ export default function Dashboard() {
                                 isActive={isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam)}
                                 activeColor="#2563eb"
                                 inactiveColor={'#111'}
-                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : ('#1a1a1a')}` }}
+                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : ('#1a1a1a')}` }}
                               >
+                                {/* Invisible spacer mirrors the line/point row in
+                                    the spread + total cells so all three cells
+                                    have identical heights and the ML value lines
+                                    up with the odds row of its neighbors —
+                                    flex-centering on a <button> is unreliable
+                                    across browsers, this is bulletproof. */}
+                                <div aria-hidden="true" style={{ fontSize: '11px', visibility: 'hidden' }}>&nbsp;</div>
                                 <div style={{ fontWeight: '600', fontSize: '12px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#fff' : '#3b82f6' }}>
                                   {formatOdds(game.lines.moneyline.away)}
                                 </div>
@@ -1735,8 +1742,11 @@ export default function Dashboard() {
                                 isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}
                                 activeColor="#2563eb"
                                 inactiveColor={'#111'}
-                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : ('#1a1a1a')}` }}
+                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : ('#1a1a1a')}` }}
                               >
+                                {/* See note in away ML — invisible spacer keeps
+                                    cell height in lock-step with spread/total. */}
+                                <div aria-hidden="true" style={{ fontSize: '11px', visibility: 'hidden' }}>&nbsp;</div>
                                 <div style={{ fontWeight: '600', fontSize: '12px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#fff' : '#3b82f6' }}>
                                   {formatOdds(game.lines.moneyline.home)}
                                 </div>
