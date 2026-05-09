@@ -1353,52 +1353,6 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
             <div className="qm-amp relative overflow-hidden" style={{
               background: `radial-gradient(ellipse at top, ${modeSoft} 0%, transparent 60%)`,
             }}>
-              {/* Diagonal lightning streaks sweeping across the loader */}
-              <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="absolute"
-                    style={{
-                      top: `${15 + i * 30}%`,
-                      left: 0,
-                      right: 0,
-                      height: '2px',
-                      background: `linear-gradient(90deg, transparent 0%, ${modeStrong} 50%, transparent 100%)`,
-                      filter: `drop-shadow(0 0 6px ${modeColor})`,
-                      animation: `qm-streak ${2.4 + i * 0.6}s linear ${i * 0.7}s infinite`,
-                    }}
-                  />
-                ))}
-              </div>
-              {/* Twinkling sparks scattered around */}
-              <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-                {[
-                  { t: '12%', l: '18%', d: '0.0s' },
-                  { t: '22%', l: '82%', d: '0.4s' },
-                  { t: '60%', l: '8%',  d: '0.8s' },
-                  { t: '70%', l: '88%', d: '1.2s' },
-                  { t: '38%', l: '52%', d: '0.6s' },
-                ].map((s, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      position: 'absolute',
-                      top: s.t,
-                      left: s.l,
-                      width: 8,
-                      height: 8,
-                      color: modeColor,
-                      animation: `qm-spark-twinkle 1.6s ease-in-out ${s.d} infinite`,
-                      filter: `drop-shadow(0 0 6px ${modeColor})`,
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2l1.8 6.5L20 10l-6.2 1.5L12 18l-1.8-6.5L4 10l6.2-1.5z" />
-                    </svg>
-                  </span>
-                ))}
-              </div>
               {/* Cartoon mode banner — anchors the loader to the mode
                   and surfaces buy-in + max payout up top so there's
                   no negative space at the start of the popup. */}
