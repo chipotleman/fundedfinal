@@ -61,7 +61,7 @@ function GapHistoryStrip({ history, currentGap }) {
   if (!hasUsable) {
     return (
       <div
-        className="mb-2 flex items-center"
+        className="mb-2 flex items-center justify-center"
         style={{ height: RESERVED_HEIGHT }}
       >
         {moneylineLabel}
@@ -91,12 +91,12 @@ function GapHistoryStrip({ history, currentGap }) {
 
   return (
     <div
-      className="mb-2 flex items-center gap-1.5"
+      className="mb-2 flex items-center justify-center gap-2"
       style={{ height: RESERVED_HEIGHT }}
       title={`Recent score gaps: ${points.join(' → ')}`}
     >
       {moneylineLabel}
-      <div className="ml-auto flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5">
         <svg
           width={w}
           height={h}
