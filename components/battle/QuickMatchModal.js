@@ -2480,6 +2480,25 @@ function RushReadySlide({ rushState, userId, opponent, pendingReady, onReady, on
   const myReady = userId ? !!rushState?.readyVotes?.[userId] : false;
   const oppReady = opponentId ? !!rushState?.readyVotes?.[opponentId] : false;
 
+  // Vote-disagreement banner: when both players picked DIFFERENT live
+  // games, the server resolved to the host's pick. Tell the viewer
+  // explicitly so they're not confused why the locked game isn't theirs.
+  const myVote = userId ? rushState?.gameVotes?.[userId] || null : null;
+  const oppVote = opponentId ? rushState?.gameVotes?.[opponentId] || null : null;
+  const selectedGame = rushState?.selectedGame || null;
+  const selectedGameId = selectedGame?.id != null ? String(selectedGame.id) : null;
+  const myVoteId = myVote?.gameId ? String(myVote.gameId) : null;
+  const oppVoteId = oppVote?.gameId ? String(oppVote.gameId) : null;
+  // Require selectedGameId so we never render "overruled" copy with a
+  // blank game label when the server hasn't yet locked a game.
+  const wasContested = !!(
+    myVote && oppVote && myVoteId && oppVoteId && selectedGameId && myVoteId !== oppVoteId
+  );
+  const myVoteOverruled = wasContested && myVoteId !== selectedGameId;
+  const selectedLabel = selectedGame
+    ? `${selectedGame.away_team || 'Away'} @ ${selectedGame.home_team || 'Home'}`
+    : '';
+
   const rules = [
     { icon: '🏀', label: '6 quick props', sub: 'sealed at the buzzer' },
     { icon: '⏱️', label: '15s per question', sub: 'tap fast — clock runs hot' },
@@ -2538,6 +2557,33 @@ function RushReadySlide({ rushState, userId, opponent, pendingReady, onReady, on
           </h2>
         </div>
       </div>
+
+      {wasContested && (
+        <div className="px-5 pt-3 pb-0">
+          <div
+            className="w-full px-3 py-2.5 rounded-xl text-center"
+            style={{
+              background: myVoteOverruled
+                ? 'linear-gradient(180deg, rgba(251,146,60,0.18), rgba(251,146,60,0.06))'
+                : 'linear-gradient(180deg, rgba(59,130,246,0.18), rgba(59,130,246,0.06))',
+              border: `2.5px solid ${myVoteOverruled ? '#fb923c' : '#3b82f6'}`,
+              boxShadow: '0 4px 0 #0a0a0a',
+            }}
+          >
+            <div
+              className="text-[10px] font-black uppercase tracking-widest mb-0.5"
+              style={{ color: myVoteOverruled ? '#fb923c' : '#3b82f6' }}
+            >
+              {myVoteOverruled ? 'Your pick was overruled' : 'You won the tiebreak'}
+            </div>
+            <div className="text-[12px] font-bold text-white leading-snug">
+              {myVoteOverruled
+                ? <>You picked different games — host's pick wins. Going with <span className="text-orange-300">{selectedLabel}</span>.</>
+                : <>You picked different games — as host your pick wins. Going with <span className="text-blue-300">{selectedLabel}</span>.</>}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="px-5 pt-2 pb-3 space-y-2">
         {rules.map((r, i) => (

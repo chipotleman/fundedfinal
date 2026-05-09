@@ -234,8 +234,15 @@ export default async function handler(req, res) {
 
     // If we just transitioned to 'completed' and the matchup hasn't been
     // settled yet, settle it now. settleRushMatchup is idempotent.
+    // CRITICAL: never let a settlement failure 500 the state read — the
+    // client is mid-game and needs the completed-phase payload to render
+    // the result screen. Settlement will be retried on the next poll.
     if (state.phase === 'completed' && matchup.status !== 'completed') {
-      await settleRushMatchup(matchup.id);
+      try {
+        await settleRushMatchup(matchup.id);
+      } catch (settleErr) {
+        console.error('[rush/state] settleRushMatchup failed (non-fatal, will retry):', settleErr?.message || settleErr);
+      }
     }
 
     const view = publicView(state, { ...ctx, viewerId: userId });

@@ -378,9 +378,27 @@ export function NotificationsProvider({ children }) {
       if (isInitial) {
         // Mark current pending items as seen so we don't pop modals/toasts
         // for invites that already existed before the page loaded.
+        // EXCEPTION: brand-new invites (created within the last 20s) are
+        // most likely a friend who just hit "Invite" on us — we want the
+        // full-screen modal to pop INSTANTLY for those, even if the
+        // /api/notifications response beat the SSE push in to the client.
+        // Without this carve-out, a race between SSE delivery and the
+        // initial-load fetch could swallow the modal entirely and leave
+        // the recipient seeing only the bell badge.
+        const FRESH_INVITE_WINDOW_MS = 20 * 1000;
+        const nowTs = Date.now();
         for (const it of battleInvites) {
           seenRef.current.add(`invite:${it.id}`);
-          incomingInviteSeenRef.current.add(it.id);
+          const created = it.createdAt ? new Date(it.createdAt).getTime() : 0;
+          const isFresh = created && (nowTs - created) < FRESH_INVITE_WINDOW_MS;
+          if (isFresh) {
+            // Surface the modal for invites that arrived during this
+            // page load. addIncomingInvite is idempotent via its own
+            // seenRef, so a follow-up SSE push won't double-pop it.
+            addIncomingInvite(it);
+          } else {
+            incomingInviteSeenRef.current.add(it.id);
+          }
         }
         for (const it of friendRequests) seenRef.current.add(`friend:${it.id}`);
         for (const it of unreadMessages) seenRef.current.add(`message:${it.id}`);

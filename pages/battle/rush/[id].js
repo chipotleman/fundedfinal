@@ -593,6 +593,28 @@ function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onR
   const winnerTakes = parseFloat(matchup?.winnerPayout || 0);
   const bothReady = myReady && oppReady;
 
+  // Surface vote disagreement: when both players picked DIFFERENT live
+  // games, the server resolved it to the host's pick. Without this
+  // banner the user has no idea their vote was overruled — they just
+  // see "Ready up" on a game they didn't choose. Compares the viewer's
+  // own vote against the locked selectedGame to decide the message.
+  const myVote = rush.gameVotes?.[userId] || null;
+  const oppVote = rush.gameVotes?.[opponentId] || null;
+  const selectedGame = rush.selectedGame || null;
+  const selectedGameId = selectedGame?.id != null ? String(selectedGame.id) : null;
+  const myVoteId = myVote?.gameId ? String(myVote.gameId) : null;
+  const oppVoteId = oppVote?.gameId ? String(oppVote.gameId) : null;
+  // Require selectedGameId so we never render "overruled" copy with a
+  // blank game label when the server hasn't yet locked a game.
+  const wasContested = !!(
+    myVote && oppVote && myVoteId && oppVoteId && selectedGameId && myVoteId !== oppVoteId
+  );
+  const myVoteOverruled = wasContested && myVoteId !== selectedGameId;
+  const myVoteWon = wasContested && myVoteId === selectedGameId;
+  const selectedLabel = selectedGame
+    ? `${selectedGame.away_team || 'Away'} @ ${selectedGame.home_team || 'Home'}`
+    : '';
+
   return (
     <div className="min-h-screen bg-[#050a15] text-white relative overflow-hidden" style={{
       backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(251,146,60,0.18) 0%, transparent 60%)',
@@ -628,9 +650,34 @@ function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onR
           </h1>
         </div>
 
-        <div className="text-xs text-gray-400 mb-5">
+        <div className="text-xs text-gray-400 mb-3">
           Pot ${pot.toFixed(0)} · Pays ${winnerTakes.toFixed(0)}
         </div>
+
+        {wasContested && (
+          <div
+            className="w-full mb-4 px-3 py-2.5 rounded-xl text-center"
+            style={{
+              background: myVoteOverruled
+                ? 'linear-gradient(180deg, rgba(251,146,60,0.18), rgba(251,146,60,0.06))'
+                : 'linear-gradient(180deg, rgba(59,130,246,0.18), rgba(59,130,246,0.06))',
+              border: `2.5px solid ${myVoteOverruled ? '#fb923c' : '#3b82f6'}`,
+              boxShadow: '0 4px 0 #0a0a0a',
+            }}
+          >
+            <div
+              className="text-[10px] font-black uppercase tracking-widest mb-0.5"
+              style={{ color: myVoteOverruled ? '#fb923c' : '#3b82f6' }}
+            >
+              {myVoteOverruled ? 'Your pick was overruled' : 'You won the tiebreak'}
+            </div>
+            <div className="text-[12px] font-bold text-white leading-snug">
+              {myVoteOverruled
+                ? <>You picked different games — host's pick wins. Going with <span className="text-orange-300">{selectedLabel}</span>.</>
+                : <>You picked different games — as host your pick wins. Going with <span className="text-blue-300">{selectedLabel}</span>.</>}
+            </div>
+          </div>
+        )}
 
         {/* Same VS lobby header used in voting so the screen reads as
             a continuous shared lobby across both phases. */}
