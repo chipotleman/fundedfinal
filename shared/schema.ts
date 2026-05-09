@@ -1005,6 +1005,23 @@ export type InsertSocialPostComment = typeof socialPostComments.$inferInsert;
 export type SocialPostLike = typeof socialPostLikes.$inferSelect;
 export type InsertSocialPostLike = typeof socialPostLikes.$inferInsert;
 
+// Likes on individual battle/matchup pages — same shape as
+// socialPostLikes so a battle can act like a social-feed post (you
+// can comment via battle_spectator_messages and like via this table).
+// Race-safe: uniqueIndex (matchup_id, user_id) blocks double-likes.
+export const battleLikes = pgTable("battle_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  matchupId: varchar("matchup_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  matchupIdIdx: index("battle_likes_matchup_id_idx").on(table.matchupId),
+  uniqueLike: uniqueIndex("battle_likes_unique_idx").on(table.matchupId, table.userId),
+}));
+
+export type BattleLike = typeof battleLikes.$inferSelect;
+export type InsertBattleLike = typeof battleLikes.$inferInsert;
+
 // Persistent notification rows for social activity (likes / comments) on a
 // user's posts. Mirrors the messages-table pattern used by the existing
 // /api/notifications aggregator: rows are inserted by the like/comment APIs
