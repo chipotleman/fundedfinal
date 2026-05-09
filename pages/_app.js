@@ -11,6 +11,7 @@ import { GamesProvider } from '../contexts/GamesContext';
 import { MatchupProvider, useMatchup } from '../contexts/MatchupContext';
 import { NotificationsProvider } from '../contexts/NotificationsContext';
 import { PushNotificationsProvider } from '../contexts/PushNotificationsContext';
+import { UserPreviewProvider } from '../contexts/UserPreviewContext';
 import GlobalToastContainer from '../components/notifications/GlobalToastContainer';
 import AchievementUnlockOverlay from '../components/notifications/AchievementUnlockOverlay';
 import IncomingInviteModal from '../components/battle/IncomingInviteModal';
@@ -649,6 +650,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
                 <MatchupProvider>
                 <NotificationsProvider>
                 <PushNotificationsProvider>
+                <UserPreviewProvider>
                 <ForfeitNoticeOverlay />
                 <AnalyticsTracker />
                 <PresenceHeartbeat isLoggedIn={isLoggedIn} />
@@ -750,6 +752,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
                   currentUser={currentUser}
                   isLoggedIn={isLoggedIn}
                 />
+                </UserPreviewProvider>
                 </PushNotificationsProvider>
                 </NotificationsProvider>
                 </MatchupProvider>

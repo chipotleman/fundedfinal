@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Link from 'next/link';
 import TopNavbar from '../../../components/TopNavbar';
+import UsernameLink from '../../../components/social/UsernameLink';
 
 const BORDER = '#1a1a1a';
 const CARD_BG = '#0d0d0d';
@@ -55,18 +56,37 @@ function PlayerCard({ player, side, isWinning }) {
       }}
     >
       <div className="flex items-center gap-3 mb-3">
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
-          style={{
-            background: player.avatar ? `url(${player.avatar}) center/cover` : accent,
-            border: `2px solid ${accent}`,
-          }}
-        >
-          {!player.avatar && (player.username || '?').charAt(0).toUpperCase()}
-        </div>
+        {player.id && !player.isFake ? (
+          <UsernameLink
+            user={player}
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+            style={{
+              background: player.avatar ? `url(${player.avatar}) center/cover` : accent,
+              border: `2px solid ${accent}`,
+            }}
+          >
+            {!player.avatar && (player.username || '?').charAt(0).toUpperCase()}
+          </UsernameLink>
+        ) : (
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+            style={{
+              background: player.avatar ? `url(${player.avatar}) center/cover` : accent,
+              border: `2px solid ${accent}`,
+            }}
+          >
+            {!player.avatar && (player.username || '?').charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="text-white font-bold truncate text-sm">
-            {player.username || 'Player'}
+            {player.id && !player.isFake ? (
+              <UsernameLink user={player} className="hover:text-blue-300">
+                {player.username || 'Player'}
+              </UsernameLink>
+            ) : (
+              <span>{player.username || 'Player'}</span>
+            )}
             {player.isFake && (
               <span className="ml-1.5 text-[9px] text-gray-500 font-normal">(bot)</span>
             )}
@@ -146,25 +166,44 @@ function PicksList({ picks, side }) {
 }
 
 function ChatMessage({ msg, isOwn }) {
+  const author = msg.author || {};
+  const hasAuthor = !!author.id;
   return (
     <div
       className={`flex gap-2 px-3 py-1.5 ${isOwn ? 'bg-blue-500/5' : ''}`}
     >
-      <div
-        className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
-        style={{
-          background: msg.author?.avatar
-            ? `url(${msg.author.avatar}) center/cover`
-            : '#1f2937',
-        }}
-      >
-        {!msg.author?.avatar && (msg.author?.username || '?').charAt(0).toUpperCase()}
-      </div>
+      {hasAuthor ? (
+        <UsernameLink
+          user={author}
+          className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
+          style={{
+            background: author.avatar ? `url(${author.avatar}) center/cover` : '#1f2937',
+          }}
+        >
+          {!author.avatar && (author.username || '?').charAt(0).toUpperCase()}
+        </UsernameLink>
+      ) : (
+        <div
+          className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
+          style={{ background: '#1f2937' }}
+        >
+          ?
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[11px] font-bold text-blue-300 truncate">
-            {msg.author?.username || 'Spectator'}
-          </span>
+          {hasAuthor ? (
+            <UsernameLink
+              user={author}
+              className="text-[11px] font-bold text-blue-300 truncate hover:text-blue-200"
+            >
+              {author.username || 'Spectator'}
+            </UsernameLink>
+          ) : (
+            <span className="text-[11px] font-bold text-blue-300 truncate">
+              {author.username || 'Spectator'}
+            </span>
+          )}
           <span className="text-[9px] text-gray-600 tabular-nums">{formatTime(msg.createdAt)}</span>
         </div>
         <div className="text-[12px] text-gray-200 break-words">{msg.body}</div>
@@ -342,7 +381,10 @@ export default function SpectatePage() {
       </Head>
       <div className="min-h-screen text-white" style={{ background: '#000' }}>
         <TopNavbar />
-        <div className="max-w-5xl mx-auto px-3 sm:px-5 pt-4 pb-24">
+        {/* pt-6 / sm:pt-8 gives the LIVE pill + back button room to
+            breathe under the sticky TopNavbar (previous pt-4 was
+            visibly clipped on the spectate page). */}
+        <div className="max-w-5xl mx-auto px-3 sm:px-5 pt-6 sm:pt-8 pb-24">
           <div className="flex items-center justify-between mb-4">
             <Link
               href="/battle"
