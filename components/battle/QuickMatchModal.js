@@ -887,6 +887,97 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
           0% { background-position: 0% 0%; }
           100% { background-position: 100% 100%; }
         }
+        /* Gamified amplifiers (cartoon dial-up) */
+        @keyframes qm-streak {
+          0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
+          20%  { opacity: 0.85; }
+          80%  { opacity: 0.85; }
+          100% { transform: translateX(120%) skewX(-20deg); opacity: 0; }
+        }
+        @keyframes qm-spark-twinkle {
+          0%, 100% { transform: scale(0.4) rotate(0deg); opacity: 0; }
+          50%      { transform: scale(1) rotate(180deg);  opacity: 1; }
+        }
+        @keyframes qm-orbit {
+          from { transform: rotate(0deg) translateX(48px) rotate(0deg); }
+          to   { transform: rotate(360deg) translateX(48px) rotate(-360deg); }
+        }
+        @keyframes qm-marquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes qm-banner-bounce {
+          0%   { transform: translateY(-30px) scale(0.6) rotate(-4deg); opacity: 0; }
+          55%  { transform: translateY(8px)   scale(1.08) rotate(2deg);  opacity: 1; }
+          75%  { transform: translateY(-4px)  scale(0.96) rotate(-1deg); }
+          100% { transform: translateY(0)     scale(1)    rotate(0deg);  opacity: 1; }
+        }
+        @keyframes qm-found-flash {
+          0%   { opacity: 0; }
+          20%  { opacity: 0.55; }
+          100% { opacity: 0; }
+        }
+        @keyframes qm-shake {
+          0%, 100% { transform: translate(0, 0); }
+          10% { transform: translate(-3px, 1px); }
+          20% { transform: translate(3px, -1px); }
+          30% { transform: translate(-2px, 2px); }
+          40% { transform: translate(2px, -2px); }
+          50% { transform: translate(-2px, 1px); }
+          60% { transform: translate(2px, 1px); }
+          70% { transform: translate(-1px, -1px); }
+          80% { transform: translate(1px, 1px); }
+          90% { transform: translate(-1px, 0); }
+        }
+        @keyframes qm-slam-from-left {
+          0%   { transform: translateX(-260px) rotate(-18deg) scale(0.6); opacity: 0; }
+          70%  { transform: translateX(14px)   rotate(6deg)   scale(1.08); opacity: 1; }
+          100% { transform: translateX(0)      rotate(0deg)   scale(1);   opacity: 1; }
+        }
+        @keyframes qm-slam-from-right {
+          0%   { transform: translateX(260px) rotate(18deg)  scale(0.6); opacity: 0; }
+          70%  { transform: translateX(-14px) rotate(-6deg)  scale(1.08); opacity: 1; }
+          100% { transform: translateX(0)     rotate(0deg)   scale(1);   opacity: 1; }
+        }
+        @keyframes qm-impact-burst {
+          0%   { transform: scale(0); opacity: 0; }
+          25%  { transform: scale(1); opacity: 1; }
+          100% { transform: scale(2.4); opacity: 0; }
+        }
+        @keyframes qm-impact-line {
+          0%   { transform: scaleX(0); opacity: 0; }
+          30%  { transform: scaleX(1); opacity: 1; }
+          100% { transform: scaleX(1.3); opacity: 0; }
+        }
+        @keyframes qm-vs-explode {
+          0%   { transform: scale(0.2) rotate(-30deg); opacity: 0; }
+          55%  { transform: scale(1.6) rotate(8deg);   opacity: 1; }
+          75%  { transform: scale(0.92) rotate(-3deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes qm-confetti-fall {
+          0%   { transform: translate3d(0, -40px, 0) rotate(0deg);    opacity: 0; }
+          10%  { opacity: 1; }
+          100% { transform: translate3d(var(--qm-x, 0px), 320px, 0) rotate(720deg); opacity: 0; }
+        }
+        @keyframes qm-cta-throb {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            box-shadow: 0 4px 0 #0a0a0a, 0 0 20px rgba(59,130,246,0.45);
+          }
+          50% {
+            transform: translateY(-2px) scale(1.025);
+            box-shadow: 0 6px 0 #0a0a0a, 0 0 36px rgba(59,130,246,0.85);
+          }
+        }
+        @keyframes qm-pot-pop {
+          0%   { transform: scale(0.4); opacity: 0; }
+          60%  { transform: scale(1.25); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .qm-amp, .qm-amp * { animation: none !important; }
+        }
       `}</style>
       <div data-allow-fixed-overlay="true" className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 overflow-y-auto`} onClick={() => {
         // 'found' is a hard pause — clicks outside don't dismiss it.
@@ -1250,10 +1341,64 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
               phase = { label: 'Bringing in a challenger', dotColor: '#fbbf24' };
             }
 
+            // Mock player names that scroll under the avatars to make
+            // the "scanning" feel real. Duplicated to make a seamless
+            // marquee loop with translateX(-50%).
+            const SCAN_NAMES = [
+              'PropKing', 'BetWizard', 'SlipMaster', 'OddsHunter', 'JuiceMan',
+              'SharpEdge', 'LineMover', 'ParlayPro', 'LockSmith', 'StakeKing',
+              'ChalkBuster', 'DimePlayer', 'FadeQueen', 'HotStreak', 'BankrollKid',
+            ];
             return (
-            <div className="relative overflow-hidden" style={{
+            <div className="qm-amp relative overflow-hidden" style={{
               background: `radial-gradient(ellipse at top, ${modeSoft} 0%, transparent 60%)`,
             }}>
+              {/* Diagonal lightning streaks sweeping across the loader */}
+              <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="absolute"
+                    style={{
+                      top: `${15 + i * 30}%`,
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      background: `linear-gradient(90deg, transparent 0%, ${modeStrong} 50%, transparent 100%)`,
+                      filter: `drop-shadow(0 0 6px ${modeColor})`,
+                      animation: `qm-streak ${2.4 + i * 0.6}s linear ${i * 0.7}s infinite`,
+                    }}
+                  />
+                ))}
+              </div>
+              {/* Twinkling sparks scattered around */}
+              <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                {[
+                  { t: '12%', l: '18%', d: '0.0s' },
+                  { t: '22%', l: '82%', d: '0.4s' },
+                  { t: '60%', l: '8%',  d: '0.8s' },
+                  { t: '70%', l: '88%', d: '1.2s' },
+                  { t: '38%', l: '52%', d: '0.6s' },
+                ].map((s, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      position: 'absolute',
+                      top: s.t,
+                      left: s.l,
+                      width: 8,
+                      height: 8,
+                      color: modeColor,
+                      animation: `qm-spark-twinkle 1.6s ease-in-out ${s.d} infinite`,
+                      filter: `drop-shadow(0 0 6px ${modeColor})`,
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l1.8 6.5L20 10l-6.2 1.5L12 18l-1.8-6.5L4 10l6.2-1.5z" />
+                    </svg>
+                  </span>
+                ))}
+              </div>
               {/* Cartoon mode banner — anchors the loader to the mode
                   and surfaces buy-in + max payout up top so there's
                   no negative space at the start of the popup. */}
@@ -1449,6 +1594,42 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 </div>
               </div>
 
+              {/* Scanning ticker — endless scroll of mock player names so
+                  the user feels the matchmaker is actively combing the
+                  global pool, not just spinning. */}
+              <div
+                className="mx-4 mb-2 rounded-xl overflow-hidden"
+                style={{
+                  background: 'linear-gradient(180deg,#0a0a0a,#000)',
+                  border: '2px solid #0a0a0a',
+                  boxShadow: 'inset 0 0 0 1px #1a1a1a, 0 2px 0 #0a0a0a',
+                  height: 22,
+                  position: 'relative',
+                }}
+                aria-hidden="true"
+              >
+                <div
+                  className="absolute inset-y-0 left-0 z-10 w-6"
+                  style={{ background: 'linear-gradient(90deg,#000,transparent)' }}
+                />
+                <div
+                  className="absolute inset-y-0 right-0 z-10 w-6"
+                  style={{ background: 'linear-gradient(270deg,#000,transparent)' }}
+                />
+                <div
+                  className="flex items-center gap-3 whitespace-nowrap will-change-transform py-1"
+                  style={{ animation: 'qm-marquee 16s linear infinite' }}
+                >
+                  {[...SCAN_NAMES, ...SCAN_NAMES].map((n, i) => (
+                    <span key={i} className="inline-flex items-center gap-1.5 text-[9px] font-extrabold uppercase" style={{ letterSpacing: '0.1em' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: modeColor, boxShadow: `0 0 6px ${modeColor}` }} />
+                      <span style={{ color: '#9ca3af' }}>scanning</span>
+                      <span style={{ color: modeColor }}>@{n}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
               {/* Phase status pill — gives the user feedback that the
                   matchmaker is doing something specific (vs. a generic
                   spinner) and visibly progresses through phases so the
@@ -1537,15 +1718,56 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
           })()}
 
           {step === 'found' && (
-            <div className="relative overflow-hidden" style={{
-              background: 'transparent',
-            }}>
+            <div
+              className="qm-amp relative overflow-hidden"
+              style={{
+                background: 'transparent',
+                animation: 'qm-shake 0.6s ease-out 0.05s 1',
+              }}
+            >
+              {/* Full-modal flash on entry — quick gold pulse that sells
+                  the moment of impact. Pointer-events-none so it never
+                  blocks clicks. */}
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none z-40"
                 style={{
-                  background: 'radial-gradient(ellipse at center bottom, rgba(250,204,21,0.10) 0%, transparent 65%)',
+                  background: 'radial-gradient(ellipse at center, rgba(250,204,21,0.55) 0%, rgba(16,185,129,0.25) 45%, transparent 70%)',
+                  animation: 'qm-found-flash 0.55s ease-out forwards',
                 }}
+                aria-hidden="true"
               />
+              {/* Confetti shower — 16 cartoon shards in mode/accent colors
+                  fall and rotate; CSS-only so cheap on the main thread.
+                  Distinct --qm-x per piece spreads them sideways. */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden z-30" aria-hidden="true">
+                {Array.from({ length: 16 }).map((_, i) => {
+                  const colors = ['#10b981', '#facc15', '#3b82f6', '#fb923c', '#06b6d4', '#ef4444'];
+                  const c = colors[i % colors.length];
+                  const left = (i * 7 + 4) % 100;
+                  const dx = ((i * 17) % 80) - 40;
+                  const delay = (i % 6) * 0.07;
+                  const dur = 1.4 + ((i * 13) % 7) * 0.12;
+                  const w = 6 + (i % 3) * 2;
+                  const h = 10 + (i % 3) * 2;
+                  return (
+                    <span
+                      key={i}
+                      style={{
+                        position: 'absolute',
+                        top: -20,
+                        left: `${left}%`,
+                        width: w,
+                        height: h,
+                        background: c,
+                        borderRadius: 2,
+                        boxShadow: `0 0 6px ${c}cc`,
+                        '--qm-x': `${dx}px`,
+                        animation: `qm-confetti-fall ${dur}s ease-in ${delay}s forwards`,
+                      }}
+                    />
+                  );
+                })}
+              </div>
 
               <div className="relative z-10">
                 <div className="pt-5 pb-2 text-center">
@@ -1555,20 +1777,65 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                       color: '#fff',
                       background: 'linear-gradient(180deg,#10b981,#059669)',
                       border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 3px 0 #0a0a0a',
+                      boxShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(16,185,129,0.65)',
                       letterSpacing: '0.16em',
-                      animation: 'qm-matched-slam 0.6s ease-out forwards 0.2s',
-                      opacity: 0,
-                      transform: 'scale(0.3)',
+                      animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.05s both',
                     }}
                   >
-                    MATCH FOUND
+                    MATCH FOUND!
                   </h3>
-                  <p className="text-gray-400 text-[11px] font-bold uppercase mt-2" style={{ letterSpacing: '0.14em' }}>Your opponent is ready</p>
+                  <p className="text-gray-300 text-[11px] font-extrabold uppercase mt-2" style={{ letterSpacing: '0.18em' }}>
+                    🔥 Your opponent is ready 🔥
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-center gap-4 md:gap-8 py-5 px-4">
-                  <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center gap-4 md:gap-8 py-5 px-4 relative">
+                  {/* Cartoon impact burst behind the VS — radiating
+                      lines + ring that explode outward at the moment
+                      the avatars collide. */}
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: '50%',
+                      top: '50%',
+                      width: 140,
+                      height: 140,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 5,
+                    }}
+                    aria-hidden="true"
+                  >
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        border: '4px solid #facc15',
+                        boxShadow: '0 0 30px rgba(250,204,21,0.6)',
+                        animation: 'qm-impact-burst 0.7s ease-out 0.45s forwards',
+                        opacity: 0,
+                      }}
+                    />
+                    {[0, 45, 90, 135].map((deg) => (
+                      <div
+                        key={deg}
+                        className="absolute left-1/2 top-1/2"
+                        style={{
+                          width: 80,
+                          height: 4,
+                          marginTop: -2,
+                          marginLeft: -40,
+                          background: 'linear-gradient(90deg, transparent, #facc15, transparent)',
+                          boxShadow: '0 0 8px rgba(250,204,21,0.8)',
+                          transform: `rotate(${deg}deg) scaleX(0)`,
+                          transformOrigin: 'center',
+                          animation: `qm-impact-line 0.5s ease-out 0.45s forwards`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div
+                    className="flex flex-col items-center relative z-10"
+                    style={{ animation: 'qm-slam-from-left 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}
+                  >
                     <div className="relative mb-2">
                       <div
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
@@ -1600,17 +1867,22 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
 
                   <div className="flex flex-col items-center relative z-20">
                     <div
-                      className="text-2xl md:text-3xl font-black italic text-transparent bg-clip-text"
+                      className="text-3xl md:text-4xl font-black italic text-transparent bg-clip-text"
                       style={{
                         backgroundImage: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
                         WebkitBackgroundClip: 'text',
+                        textShadow: '0 0 24px rgba(250,204,21,0.6)',
+                        animation: 'qm-vs-explode 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.4s both, qm-vs-pulse 1.6s ease-in-out 1.05s infinite',
                       }}
                     >
                       VS
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center">
+                  <div
+                    className="flex flex-col items-center relative z-10"
+                    style={{ animation: 'qm-slam-from-right 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}
+                  >
                     <div className="relative mb-2">
                       <div
                         className="absolute rounded-full border-2 border-emerald-500/40"
@@ -1706,16 +1978,22 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   ) : (
                     <button
                       onClick={handleContinue}
-                      className="msg-cartoon-btn w-full py-3.5 rounded-2xl font-extrabold text-white uppercase"
+                      className="msg-cartoon-btn w-full py-3.5 rounded-2xl font-extrabold text-white uppercase flex items-center justify-center gap-2"
                       style={{
                         background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
                         border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 4px 0 #0a0a0a, 0 0 20px rgba(59,130,246,0.35)',
-                        letterSpacing: '0.14em',
+                        letterSpacing: '0.16em',
                         fontSize: 14,
+                        animation: 'qm-cta-throb 1.4s ease-in-out 0.9s infinite',
                       }}
                     >
-                      Continue to Battle
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.8))' }}>
+                        <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+                      </svg>
+                      <span>Let&apos;s Battle</span>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.8))' }}>
+                        <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+                      </svg>
                     </button>
                   )}
                 </div>
