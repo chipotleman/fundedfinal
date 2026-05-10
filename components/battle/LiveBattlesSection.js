@@ -301,6 +301,9 @@ function PnlBadge({ pnlPercent, size = 'normal' }) {
 }
 
 function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = null }) {
+  // Beta mode: render coin amounts instead of $ since there is no
+  // real money in beta. Player balances and the pot are coin scores.
+  const isBeta = useBetaMode();
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
   const [internalExpanded, setInternalExpanded] = useState(false);
@@ -386,7 +389,9 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
               <span className="text-green-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-400">${formatMoney(potSize, 0)}</span>
+              <span className="text-[10px] font-semibold text-gray-400">
+                {isBeta ? `${formatMoney(potSize, 0)} coins` : `$${formatMoney(potSize, 0)}`}
+              </span>
               <span className="text-gray-600 text-[10px]">{formatTimeRemaining(timeLeft)}</span>
             </div>
           </div>
@@ -677,7 +682,9 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
             <span className="text-green-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-semibold text-gray-400">${formatMoney(potSize, 0)} pot</span>
+            <span className="text-[11px] font-semibold text-gray-400">
+              {isBeta ? `${formatMoney(potSize, 0)} coins` : `$${formatMoney(potSize, 0)} pot`}
+            </span>
             <span className="text-gray-600 text-[11px]">{formatTimeRemaining(timeLeft)}</span>
           </div>
         </div>
@@ -691,7 +698,9 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                 {user1OnFire && <MomentumIcon />}
               </p>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-sm font-bold tabular-nums" style={{ color: '#fff' }}>${formatMoney(user1.balance || 0, 0)}</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: '#fff' }}>
+                  {isBeta ? formatMoney(user1.balance || 0, 0) : `$${formatMoney(user1.balance || 0, 0)}`}
+                </span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <PnlBadge pnlPercent={user1.pnlPercent} />
@@ -720,7 +729,9 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                 {user2.username || 'Player 2'}
               </p>
               <div className="flex items-center gap-2 justify-end mt-0.5">
-                <span className="text-sm font-bold tabular-nums" style={{ color: '#fff' }}>${formatMoney(user2.balance || 0, 0)}</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: '#fff' }}>
+                  {isBeta ? formatMoney(user2.balance || 0, 0) : `$${formatMoney(user2.balance || 0, 0)}`}
+                </span>
               </div>
               <div className="flex items-center gap-2 justify-end mt-0.5">
                 {picks ? (
@@ -1594,10 +1605,14 @@ function YouVsCard({
     topDotColor = '#f59e0b';
     ctaText = 'Open Lobby';
     const lobbyAge = startsAt ? Math.max(0, now - new Date(startsAt).getTime()) : 0;
-    if (pot != null && lobbyAge > 0) {
-      metaRight = `$${formatMoney(pot, 0)} · ${formatElapsed(lobbyAge)}`;
-    } else if (pot != null) {
-      metaRight = `$${formatMoney(pot, 0)} pot`;
+    // Beta has no real money — show coin pot instead of $ amount.
+    const potLabel = pot != null
+      ? (isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`)
+      : null;
+    if (potLabel && lobbyAge > 0) {
+      metaRight = `${potLabel} · ${formatElapsed(lobbyAge)}`;
+    } else if (potLabel) {
+      metaRight = `${potLabel} pot`;
     } else {
       metaRight = 'Awaiting opponent';
     }
@@ -1607,8 +1622,11 @@ function YouVsCard({
     topDotColor = '#06b6d4';
     ctaText = 'View Queue';
     const queueAge = queuedAt ? Math.max(0, now - new Date(queuedAt).getTime()) : 0;
-    if (pot != null && queueAge > 0) {
-      metaRight = `$${formatMoney(pot, 0)} · ${formatElapsed(queueAge)}`;
+    const queuePotLabel = pot != null
+      ? (isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`)
+      : null;
+    if (queuePotLabel && queueAge > 0) {
+      metaRight = `${queuePotLabel} · ${formatElapsed(queueAge)}`;
     } else if (queueAge > 0) {
       metaRight = `Searching ${formatElapsed(queueAge)}`;
     } else {
@@ -2714,13 +2732,15 @@ function YouVsCard({
                       boxShadow:
                         '0 4px 0 rgba(0,0,0,0.55), 0 0 22px rgba(251,191,36,0.65)',
                     }}
-                    aria-label={`Prize pot $${formatMoney(pot, 0)}`}
+                    aria-label={isBeta
+                      ? `Coin pot ${formatMoney(pot, 0)} coins`
+                      : `Prize pot $${formatMoney(pot, 0)}`}
                   >
                     <span
                       className="text-[9px] font-black uppercase tracking-widest"
                       style={{ color: '#2a1404' }}
                     >
-                      Pot
+                      {isBeta ? 'Coins' : 'Pot'}
                     </span>
                     <span
                       className="text-base sm:text-lg font-black tabular-nums"
@@ -2733,7 +2753,7 @@ function YouVsCard({
                         fontFamily: 'Impact, "Arial Black", sans-serif',
                       }}
                     >
-                      ${formatMoney(pot, 0)}
+                      {isBeta ? formatMoney(pot, 0) : `$${formatMoney(pot, 0)}`}
                     </span>
                   </div>
                 ) : (
