@@ -696,7 +696,169 @@ function PickMini({ pick, sideColor, align = 'left' }) {
   );
 }
 
-function LiveBattlePost({ battle, onSpectate, onOpenProfile }) {
+function LiveBattleChatPanel({ matchupId, currentUser }) {
+  // Inline spectator-chat panel that lives inside LiveBattlePost so
+  // spectators can chat without leaving the feed. Mirrors the API
+  // surface of the full /battle/spectate/[id] page (same GET/POST
+  // /api/battles/[id]/messages endpoints) so messages are shared
+  // across both surfaces in real time.
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
+  const scrollerRef = useRef(null);
+  const userId = currentUser?.id;
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/battles/${matchupId}/messages`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setMessages(Array.isArray(data?.messages) ? data.messages : []);
+    } catch {
+      // swallow — keep last known messages on transient failures
+    } finally {
+      setLoading(false);
+    }
+  }, [matchupId]);
+
+  useEffect(() => {
+    if (!matchupId) return;
+    fetchMessages();
+    const t = setInterval(fetchMessages, 3000);
+    return () => clearInterval(t);
+  }, [matchupId, fetchMessages]);
+
+  // Keep the latest message in view as new ones arrive.
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages.length]);
+
+  const handleSend = async (e) => {
+    e?.preventDefault?.();
+    const body = draft.trim();
+    if (!body || sending) return;
+    if (!userId) {
+      setError('Sign in to chat.');
+      return;
+    }
+    setSending(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/battles/${matchupId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error || 'Failed to send.');
+        return;
+      }
+      if (data?.message) setMessages((prev) => [...prev, data.message]);
+      setDraft('');
+    } catch {
+      setError('Network error. Try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      style={{ borderTop: `2px solid ${HH_BORDER}`, background: '#080808' }}
+    >
+      <div
+        ref={scrollerRef}
+        className="overflow-y-auto px-3 py-2"
+        style={{ maxHeight: 220, minHeight: 88 }}
+      >
+        {loading && messages.length === 0 ? (
+          <div className="text-center text-[11px] py-4" style={{ color: textMuted }}>
+            Loading chat…
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="text-center text-[11px] py-4" style={{ color: textMuted }}>
+            Be the first to talk about this battle.
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {messages.map((m) => {
+              const author = m.author || {};
+              const isMe = author.id && author.id === userId;
+              return (
+                <div key={m.id} className="flex items-start gap-2">
+                  <div
+                    className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black text-white"
+                    style={{
+                      background: author.avatar
+                        ? `url(${author.avatar}) center/cover`
+                        : (isMe ? HH_BLUE : '#1f2937'),
+                      border: `1.5px solid ${HH_BORDER}`,
+                    }}
+                  >
+                    {!author.avatar && (author.username || '?').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-1.5">
+                      <span
+                        className="text-[11px] font-bold truncate"
+                        style={{ color: isMe ? '#93c5fd' : textSecondary }}
+                      >
+                        {author.username || 'Spectator'}
+                      </span>
+                    </div>
+                    <div className="text-[12px] break-words" style={{ color: textPrimary }}>
+                      {m.body}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <form
+        onSubmit={handleSend}
+        className="flex items-center gap-1.5 p-2"
+        style={{ borderTop: `1.5px solid ${HH_BORDER}`, background: '#0a0a0a' }}
+      >
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={userId ? 'Say something…' : 'Sign in to chat…'}
+          disabled={!userId || sending}
+          maxLength={300}
+          className="flex-1 rounded-lg px-2.5 py-1.5 text-[13px] text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          style={{ background: '#000', border: `1.5px solid ${HH_BORDER}` }}
+        />
+        <button
+          type="submit"
+          disabled={!userId || sending || !draft.trim()}
+          className="px-2.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-white disabled:opacity-40"
+          style={{
+            background: HH_BLUE,
+            border: `2px solid ${HH_BORDER}`,
+            boxShadow: `2px 2px 0 ${HH_BORDER}`,
+          }}
+        >
+          Send
+        </button>
+      </form>
+      {error && (
+        <div className="px-3 pb-2 text-[10px] text-red-400">{error}</div>
+      )}
+    </div>
+  );
+}
+
+function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
+  // Inline chat lives directly inside the card so spectators can drop
+  // a quick reaction without navigating to /battle/spectate/[id].
+  const [chatOpen, setChatOpen] = useState(false);
   const u1 = battle.user1 || {};
   const u2 = battle.user2 || {};
   const u1Bal = parseFloat(u1.balance || 0);
@@ -994,7 +1156,9 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile }) {
         )}
       </div>
 
-      {/* Action bar */}
+      {/* Action bar — Spectate routes to the full overview page;
+          Chat toggles an inline chat panel below so spectators can
+          drop a quick reaction without navigating away from the feed. */}
       <div
         className="grid grid-cols-2"
         style={{ borderTop: `2px solid ${HH_BORDER}` }}
@@ -1010,14 +1174,22 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile }) {
         </button>
         <button
           type="button"
-          onClick={() => onSpectate?.(battle)}
+          onClick={() => setChatOpen((v) => !v)}
+          aria-expanded={chatOpen}
           className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{ color: textPrimary }}
+          style={{
+            color: chatOpen ? HH_BLUE : textPrimary,
+            background: chatOpen ? 'rgba(59,130,246,0.08)' : 'transparent',
+          }}
         >
           <Icon.Chat size={14} />
-          Chat
+          {chatOpen ? 'Hide Chat' : 'Chat'}
         </button>
       </div>
+
+      {chatOpen && (
+        <LiveBattleChatPanel matchupId={battle.id} currentUser={currentUser} />
+      )}
 
       <style>{`
         @keyframes hhFlamePulse {
@@ -1406,6 +1578,7 @@ export default function SocialFeedPage({ data }) {
                   battle={item.data}
                   onSpectate={handleSpectate}
                   onOpenProfile={onOpenProfile}
+                  currentUser={currentUser}
                 />
               );
             }
