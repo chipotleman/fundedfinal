@@ -87,6 +87,514 @@ const TIPS = [
   'Live betting can turn a losing battle around',
 ];
 
+function rankFromWins(wins) {
+  const w = Number(wins) || 0;
+  if (w >= 100) return { label: 'LEGEND', color: '#10b981', icon: '👑' };
+  if (w >= 50) return { label: 'ELITE', color: '#fb923c', icon: '👑' };
+  if (w >= 10) return { label: 'PRO', color: '#facc15', icon: '👑' };
+  return { label: 'ROOKIE', color: '#3b82f6', icon: '🎯' };
+}
+
+function MatchFoundContent({
+  isBeta,
+  buyIn,
+  potSize,
+  payout,
+  gameMode,
+  selectedMode,
+  userName,
+  userAvatar,
+  userProfile,
+  matchedOpponent,
+  matchedAvatar,
+  th,
+  onContinue,
+  onCancel,
+}) {
+  const CONFIRM_SECONDS = 10;
+  const [secondsLeft, setSecondsLeft] = useState(CONFIRM_SECONDS);
+  const firedRef = useRef(false);
+
+  // Auto-confirm countdown for non-rush modes. Rush has its own
+  // auto-advance into the live-game vote, so don't double-fire.
+  useEffect(() => {
+    if (gameMode === 'rush') return undefined;
+    if (firedRef.current) return undefined;
+    const id = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(id);
+          if (!firedRef.current) {
+            firedRef.current = true;
+            try { onContinue(); } catch (_) {}
+          }
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [gameMode, onContinue]);
+
+  const userWins = Number(userProfile?.battleWins) || 0;
+  const oppWins = Number(matchedOpponent?.battleWins) || 0;
+  const userRank = rankFromWins(userWins);
+  const oppRank = rankFromWins(oppWins);
+  const winStreak = Number(userProfile?.winStreak) || Math.min(userWins, 9);
+  const xpBonus = 50;
+
+  const fmt = (n) => Number(n || 0).toLocaleString();
+  const buyInLabel = isBeta ? `${fmt(buyIn || 10000)} Coin Buy-In` : `$${fmt(buyIn)} Buy-In`;
+  const potLabel = isBeta ? `Win ${fmt((buyIn || 10000) * 2 * 0.9)} Pot` : `Win $${fmt(payout)} Pot`;
+
+  const totalSegments = 10;
+  const filledSegments = Math.max(0, Math.min(totalSegments, Math.ceil((secondsLeft / CONFIRM_SECONDS) * totalSegments)));
+
+  const Bolt = ({ size = 28, delay = 0 }) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      style={{
+        filter: 'drop-shadow(0 0 8px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)',
+        animation: `qm-bolt-flicker 0.8s ease-in-out ${delay}s infinite`,
+      }}
+      aria-hidden="true"
+    >
+      <path
+        d="M13 2L3 14h7l-2 8 11-13h-7l3-7z"
+        fill="#facc15"
+        stroke="#0a0a0a"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
+  return (
+    <div className="relative z-10">
+      {/* Sparkles in the background — cheap dots */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        {Array.from({ length: 14 }).map((_, i) => {
+          const left = (i * 13 + 5) % 100;
+          const top = (i * 19 + 7) % 100;
+          const colors = ['#facc15', '#fb923c', '#3b82f6', '#10b981', '#06b6d4'];
+          const c = colors[i % colors.length];
+          const sz = 4 + (i % 3) * 2;
+          const delay = (i % 7) * 0.18;
+          return (
+            <span
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${left}%`,
+                top: `${top}%`,
+                width: sz,
+                height: sz,
+                background: c,
+                borderRadius: '50%',
+                boxShadow: `0 0 8px ${c}`,
+                opacity: 0.7,
+                animation: `qm-sparkle-twinkle 1.6s ease-in-out ${delay}s infinite`,
+              }}
+            />
+          );
+        })}
+      </div>
+
+      {/* Header — lightning bolts + MATCH FOUND! */}
+      <div className="pt-6 pb-2 text-center relative">
+        <div className="inline-flex items-center justify-center gap-2">
+          <Bolt size={26} delay={0} />
+          <h3
+            className="text-2xl md:text-3xl font-black inline-block px-4 py-1.5 rounded-2xl"
+            style={{
+              color: 'transparent',
+              background: 'linear-gradient(180deg, #fde68a 0%, #fb923c 60%, #c2410c 100%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextStroke: '2px #0a0a0a',
+              textShadow: '0 4px 0 rgba(0,0,0,0.4)',
+              letterSpacing: '0.06em',
+              animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.05s both',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+          >
+            MATCH FOUND!
+          </h3>
+          <Bolt size={26} delay={0.2} />
+        </div>
+      </div>
+
+      {/* Buy-in / pot pill with trophy + coins */}
+      <div className="px-4 pb-2">
+        <div
+          className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2.5"
+          style={{
+            background: 'linear-gradient(180deg, #0f1424 0%, #0a0e1c 100%)',
+            border: '2.5px solid #3b82f6',
+            boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
+            maxWidth: 360,
+          }}
+        >
+          <span style={{ fontSize: 22, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">🏆</span>
+          <span className="text-white font-extrabold text-sm md:text-base" style={{ letterSpacing: '0.02em' }}>
+            <span style={{ color: '#facc15' }}>{buyInLabel}</span>
+            <span className="text-gray-400 mx-1.5">·</span>
+            <span style={{ color: '#facc15' }}>{potLabel}</span>
+          </span>
+          <span style={{ fontSize: 22, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">🪙</span>
+        </div>
+        <div className="mt-2 flex justify-center">
+          <span
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase"
+            style={{
+              background: 'linear-gradient(180deg, #10b981 0%, #047857 100%)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 2px 0 #0a0a0a',
+              color: '#fff',
+              letterSpacing: '0.12em',
+            }}
+          >
+            <span aria-hidden="true">✨</span>
+            +{xpBonus} XP STREAK BONUS
+            <span aria-hidden="true">✨</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Avatars + VS burst */}
+      <div className="flex items-center justify-center gap-4 md:gap-8 py-4 px-4 relative">
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: '50%', top: '50%', width: 140, height: 140,
+            transform: 'translate(-50%, -50%)', zIndex: 5,
+          }}
+          aria-hidden="true"
+        >
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              border: '4px solid #facc15',
+              boxShadow: '0 0 30px rgba(250,204,21,0.6)',
+              animation: 'qm-impact-burst 0.7s ease-out 0.45s forwards',
+              opacity: 0,
+            }}
+          />
+          {[0, 45, 90, 135].map((deg) => (
+            <div
+              key={deg}
+              className="absolute left-1/2 top-1/2"
+              style={{
+                width: 80, height: 4, marginTop: -2, marginLeft: -40,
+                background: 'linear-gradient(90deg, transparent, #facc15, transparent)',
+                boxShadow: '0 0 8px rgba(250,204,21,0.8)',
+                transform: `rotate(${deg}deg) scaleX(0)`,
+                transformOrigin: 'center',
+                animation: `qm-impact-line 0.5s ease-out 0.45s forwards`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* YOU side */}
+        <div
+          className="flex flex-col items-center relative z-10"
+          style={{ animation: 'qm-slam-from-left 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}
+        >
+          <div className="relative mb-2">
+            <div
+              className="absolute rounded-full"
+              style={{
+                top: -6, left: -6, right: -6, bottom: -6,
+                border: '3px solid #3b82f6',
+                boxShadow: '0 0 22px rgba(59,130,246,0.8), inset 0 0 12px rgba(59,130,246,0.4)',
+                animation: 'qm-found-ring-expand 1.2s ease-out forwards',
+              }}
+              aria-hidden="true"
+            />
+            <div
+              className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
+              style={{
+                border: '3.5px solid #0a0a0a',
+                background: th.avatarBg1,
+                boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55), inset 0 0 0 2.5px #3b82f6',
+              }}
+            >
+              <UserAvatar
+                user={{ id: userProfile?.id, username: userName, avatar: userAvatar }}
+                size={96}
+              />
+            </div>
+          </div>
+          <p
+            className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[120px] text-center px-2.5 py-1 rounded-md"
+            style={{
+              background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 2px 0 #0a0a0a',
+              letterSpacing: '0.08em',
+            }}
+          >
+            {userName}
+          </p>
+          <span
+            className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase"
+            style={{
+              background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+              border: `2px solid ${userRank.color}`,
+              boxShadow: `0 2px 0 #0a0a0a, 0 0 8px ${userRank.color}66`,
+              color: userRank.color,
+              letterSpacing: '0.14em',
+            }}
+          >
+            <span aria-hidden="true">{userRank.icon}</span>
+            RANK: {userRank.label}
+          </span>
+        </div>
+
+        {/* VS */}
+        <div className="flex flex-col items-center relative z-20">
+          <div
+            className="text-3xl md:text-5xl font-black italic"
+            style={{
+              background: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #c2410c 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              WebkitTextStroke: '2px #0a0a0a',
+              textShadow: '0 0 24px rgba(250,204,21,0.6)',
+              animation: 'qm-vs-explode 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.4s both, qm-vs-pulse 1.6s ease-in-out 1.05s infinite',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+          >
+            VS
+          </div>
+          {(userWins > 0 || oppWins > 0) && (
+            <div
+              className="mt-1 text-[10px] font-extrabold text-white px-2 py-0.5 rounded-md"
+              style={{
+                background: '#0a0a0a',
+                border: '2px solid #1a1a1a',
+                letterSpacing: '0.1em',
+              }}
+            >
+              ({userWins}-{oppWins})
+            </div>
+          )}
+        </div>
+
+        {/* OPP side */}
+        <div
+          className="flex flex-col items-center relative z-10"
+          style={{ animation: 'qm-slam-from-right 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}
+        >
+          <div className="relative mb-2">
+            <div
+              className="absolute rounded-full"
+              style={{
+                top: -6, left: -6, right: -6, bottom: -6,
+                border: '3px solid #fb923c',
+                boxShadow: '0 0 22px rgba(251,146,60,0.8), inset 0 0 12px rgba(251,146,60,0.4)',
+                animation: 'qm-found-ring-expand 1.2s ease-out forwards',
+              }}
+              aria-hidden="true"
+            />
+            <div
+              className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
+              style={{
+                border: '3.5px solid #0a0a0a',
+                background: th.avatarBg2,
+                boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(251,146,60,0.55), inset 0 0 0 2.5px #fb923c',
+                animation: 'qm-avatar-lock 0.6s ease-out forwards',
+              }}
+            >
+              <UserAvatar
+                user={{
+                  id: matchedOpponent?.id,
+                  username: matchedOpponent?.username || 'Opponent',
+                  avatar: matchedAvatar,
+                }}
+                size={96}
+              />
+            </div>
+          </div>
+          <p
+            className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[120px] text-center px-2.5 py-1 rounded-md"
+            style={{
+              background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 2px 0 #0a0a0a',
+              letterSpacing: '0.08em',
+            }}
+          >
+            {matchedOpponent?.username || 'Opponent'}
+          </p>
+          <span
+            className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase"
+            style={{
+              background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+              border: `2px solid ${oppRank.color}`,
+              boxShadow: `0 2px 0 #0a0a0a, 0 0 8px ${oppRank.color}66`,
+              color: oppRank.color,
+              letterSpacing: '0.14em',
+            }}
+          >
+            <span aria-hidden="true">{oppRank.icon}</span>
+            RANK: {oppRank.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Mini chip row: Win Streak / Bonus XP / Daily Challenge */}
+      <div className="px-4 pb-3">
+        <div className="grid grid-cols-3 gap-2">
+          <div
+            className="rounded-xl px-2 py-2 flex items-center gap-1.5"
+            style={{
+              background: 'linear-gradient(180deg, #1a0b0b, #0a0606)',
+              border: '2.5px solid #ef4444',
+              boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(239,68,68,0.35)',
+            }}
+          >
+            <span style={{ fontSize: 18 }} aria-hidden="true">🔥</span>
+            <div className="min-w-0">
+              <div className="text-[8.5px] font-extrabold uppercase text-red-300 leading-none" style={{ letterSpacing: '0.1em' }}>Win Streak</div>
+              <div className="text-white font-extrabold text-xs mt-0.5 leading-none">{winStreak} {winStreak === 1 ? 'Win' : 'Wins'}</div>
+            </div>
+          </div>
+          <div
+            className="rounded-xl px-2 py-2 flex items-center gap-1.5"
+            style={{
+              background: 'linear-gradient(180deg, #1a1505, #0a0803)',
+              border: '2.5px solid #facc15',
+              boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(250,204,21,0.35)',
+            }}
+          >
+            <span style={{ fontSize: 18 }} aria-hidden="true">⭐</span>
+            <div className="min-w-0">
+              <div className="text-[8.5px] font-extrabold uppercase text-yellow-300 leading-none" style={{ letterSpacing: '0.1em' }}>Bonus XP</div>
+              <div className="text-white font-extrabold text-xs mt-0.5 leading-none">+{xpBonus} XP</div>
+            </div>
+          </div>
+          <div
+            className="rounded-xl px-2 py-2 flex items-center gap-1.5"
+            style={{
+              background: 'linear-gradient(180deg, #052016, #02100a)',
+              border: '2.5px solid #10b981',
+              boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(16,185,129,0.35)',
+            }}
+          >
+            <span style={{ fontSize: 18 }} aria-hidden="true">🎯</span>
+            <div className="min-w-0">
+              <div className="text-[8.5px] font-extrabold uppercase text-emerald-300 leading-none" style={{ letterSpacing: '0.1em' }}>Daily Challenge</div>
+              <div className="text-white font-extrabold text-[10px] mt-0.5 leading-none">In Progress</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirms-in countdown bar */}
+      {gameMode !== 'rush' && (
+        <div className="px-4 pb-3">
+          <div
+            className="rounded-2xl px-3 py-2.5 flex items-center gap-3"
+            style={{
+              background: 'linear-gradient(180deg, #0f1424, #0a0e1c)',
+              border: '2.5px solid #3b82f6',
+              boxShadow: '0 3px 0 #0a0a0a, 0 0 12px rgba(59,130,246,0.35)',
+            }}
+          >
+            <span style={{ fontSize: 16 }} aria-hidden="true">⏱️</span>
+            <span className="text-[10px] font-extrabold uppercase text-blue-200 whitespace-nowrap" style={{ letterSpacing: '0.14em' }}>
+              Match Confirms In:
+            </span>
+            <span className="text-white font-black text-sm" style={{ letterSpacing: '0.04em' }}>
+              {secondsLeft}s
+            </span>
+            <div className="flex-1 flex items-center gap-1 ml-1">
+              {Array.from({ length: totalSegments }).map((_, i) => {
+                const filled = i < filledSegments;
+                return (
+                  <span
+                    key={i}
+                    className="flex-1 rounded-sm"
+                    style={{
+                      height: 10,
+                      background: filled
+                        ? 'linear-gradient(180deg, #60a5fa, #2563eb)'
+                        : '#0a0a0a',
+                      border: '1.5px solid #0a0a0a',
+                      boxShadow: filled ? '0 0 6px rgba(59,130,246,0.7)' : 'none',
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CTA */}
+      <div className="px-4 pb-5">
+        {gameMode === 'rush' ? (
+          <div
+            className="w-full py-3.5 rounded-2xl text-center font-extrabold text-white uppercase flex items-center justify-center gap-2"
+            style={{
+              background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 4px 0 #0a0a0a',
+              letterSpacing: '0.14em',
+              fontSize: 13,
+            }}
+          >
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{ background: '#fbbf24', boxShadow: '0 0 10px #fbbf24', animation: 'qm-bolt-flicker 0.9s ease-in-out infinite' }}
+            />
+            <span style={{ color: '#fbbf24' }}>Loading live games…</span>
+          </div>
+        ) : (
+          <>
+            <div className="text-center mb-2 inline-flex items-center justify-center gap-1.5 w-full">
+              <span style={{ fontSize: 14 }} aria-hidden="true">🚀</span>
+              <span className="text-[10.5px] font-extrabold uppercase text-blue-200" style={{ letterSpacing: '0.16em' }}>
+                Lock in this matchup and earn rewards!
+              </span>
+              <span style={{ fontSize: 14 }} aria-hidden="true">⭐</span>
+            </div>
+            <button
+              onClick={() => { firedRef.current = true; onContinue(); }}
+              className="msg-cartoon-btn w-full py-4 rounded-2xl font-black text-2xl uppercase flex items-center justify-center gap-2"
+              style={{
+                background: 'linear-gradient(180deg, #fde047 0%, #facc15 50%, #ca8a04 100%)',
+                border: '3px solid #0a0a0a',
+                boxShadow: '0 6px 0 #0a0a0a, 0 0 30px rgba(250,204,21,0.55)',
+                letterSpacing: '0.08em',
+                color: '#fff',
+                WebkitTextStroke: '1.5px #0a0a0a',
+                textShadow: '0 3px 0 rgba(0,0,0,0.35)',
+                animation: 'qm-cta-throb 1.4s ease-in-out 0.9s infinite',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              }}
+            >
+              PLAY NOW
+            </button>
+            <button
+              onClick={() => { firedRef.current = true; onCancel?.(); }}
+              className="block mx-auto mt-3 text-gray-400 text-xs font-bold underline-offset-4 hover:text-white hover:underline transition-colors"
+              style={{ background: 'transparent' }}
+            >
+              Maybe later
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMatchFound, presetMatch = null }) {
   useModalScrollLock(isOpen);
   const [step, setStep] = useState('config');
@@ -850,6 +1358,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
         @keyframes qm-bolt-flicker {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.4; }
+        }
+        @keyframes qm-sparkle-twinkle {
+          0%, 100% { opacity: 0.25; transform: scale(0.7); }
+          50% { opacity: 1; transform: scale(1.2); }
         }
         @keyframes qm-ring-spin {
           0% { transform: rotate(0deg); }
@@ -1757,235 +2269,22 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 })}
               </div>
 
-              <div className="relative z-10">
-                <div className="pt-5 pb-2 text-center">
-                  <h3
-                    className="text-xl md:text-2xl font-black mb-1 inline-block px-3 py-1 rounded-xl"
-                    style={{
-                      color: '#fff',
-                      background: 'linear-gradient(180deg,#10b981,#059669)',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(16,185,129,0.65)',
-                      letterSpacing: '0.16em',
-                      animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.05s both',
-                    }}
-                  >
-                    MATCH FOUND!
-                  </h3>
-                  <p className="text-gray-300 text-[11px] font-extrabold uppercase mt-2" style={{ letterSpacing: '0.18em' }}>
-                    🔥 Your opponent is ready 🔥
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-center gap-4 md:gap-8 py-5 px-4 relative">
-                  {/* Cartoon impact burst behind the VS — radiating
-                      lines + ring that explode outward at the moment
-                      the avatars collide. */}
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: '50%',
-                      top: '50%',
-                      width: 140,
-                      height: 140,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex: 5,
-                    }}
-                    aria-hidden="true"
-                  >
-                    <div
-                      className="absolute inset-0 rounded-full"
-                      style={{
-                        border: '4px solid #facc15',
-                        boxShadow: '0 0 30px rgba(250,204,21,0.6)',
-                        animation: 'qm-impact-burst 0.7s ease-out 0.45s forwards',
-                        opacity: 0,
-                      }}
-                    />
-                    {[0, 45, 90, 135].map((deg) => (
-                      <div
-                        key={deg}
-                        className="absolute left-1/2 top-1/2"
-                        style={{
-                          width: 80,
-                          height: 4,
-                          marginTop: -2,
-                          marginLeft: -40,
-                          background: 'linear-gradient(90deg, transparent, #facc15, transparent)',
-                          boxShadow: '0 0 8px rgba(250,204,21,0.8)',
-                          transform: `rotate(${deg}deg) scaleX(0)`,
-                          transformOrigin: 'center',
-                          animation: `qm-impact-line 0.5s ease-out 0.45s forwards`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div
-                    className="flex flex-col items-center relative z-10"
-                    style={{ animation: 'qm-slam-from-left 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}
-                  >
-                    <div className="relative mb-2">
-                      <div
-                        className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
-                        style={{
-                          border: '3.5px solid #0a0a0a',
-                          background: th.avatarBg1,
-                          boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.45), inset 0 0 0 2.5px #3b82f6',
-                        }}
-                      >
-                        <UserAvatar
-                          user={{ id: userProfile?.id, username: userName, avatar: userAvatar }}
-                          size={96}
-                        />
-                      </div>
-                    </div>
-                    <p
-                      className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md"
-                      style={{
-                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 2px 0 #0a0a0a',
-                        letterSpacing: '0.08em',
-                      }}
-                    >
-                      {userName}
-                    </p>
-                    <p className="text-[10px] text-blue-300 font-extrabold uppercase mt-1" style={{ letterSpacing: '0.18em' }}>YOU</p>
-                  </div>
-
-                  <div className="flex flex-col items-center relative z-20">
-                    <div
-                      className="text-3xl md:text-4xl font-black italic text-transparent bg-clip-text"
-                      style={{
-                        backgroundImage: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
-                        WebkitBackgroundClip: 'text',
-                        textShadow: '0 0 24px rgba(250,204,21,0.6)',
-                        animation: 'qm-vs-explode 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.4s both, qm-vs-pulse 1.6s ease-in-out 1.05s infinite',
-                      }}
-                    >
-                      VS
-                    </div>
-                  </div>
-
-                  <div
-                    className="flex flex-col items-center relative z-10"
-                    style={{ animation: 'qm-slam-from-right 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}
-                  >
-                    <div className="relative mb-2">
-                      <div
-                        className="absolute rounded-full border-2 border-emerald-500/40"
-                        style={{ animation: 'qm-found-ring-expand 1.2s ease-out forwards', top: '-8px', left: '-8px', right: '-8px', bottom: '-8px' }}
-                      />
-
-                      <div
-                        className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
-                        style={{
-                          border: '3.5px solid #0a0a0a',
-                          background: th.avatarBg2,
-                          boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(239,68,68,0.45), inset 0 0 0 2.5px #ef4444',
-                          animation: 'qm-avatar-lock 0.6s ease-out forwards',
-                        }}
-                      >
-                        <UserAvatar
-                          user={{
-                            id: matchedOpponent?.id,
-                            username: matchedOpponent?.username || 'Opponent',
-                            avatar: matchedAvatar,
-                          }}
-                          size={96}
-                        />
-                      </div>
-                    </div>
-                    <p
-                      className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md"
-                      style={{
-                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 2px 0 #0a0a0a',
-                        letterSpacing: '0.08em',
-                      }}
-                    >
-                      {matchedOpponent?.username || 'Opponent'}
-                    </p>
-                    <p className="text-[10px] text-red-300 font-extrabold uppercase mt-1" style={{ letterSpacing: '0.18em' }}>OPP</p>
-                  </div>
-                </div>
-
-                <div
-                  className="mx-4 mb-4 rounded-2xl p-3 flex items-center justify-between"
-                  style={{
-                    background: 'linear-gradient(180deg,#111,#0a0a0a)',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 3px 0 #0a0a0a',
-                  }}
-                >
-                  <div>
-                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.14em' }}>Mode</div>
-                    <div className="text-white font-extrabold text-sm flex items-center gap-1 mt-0.5">
-                      <span>{selectedMode?.icon}</span>
-                      <span>{selectedMode?.label}</span>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.14em' }}>Pot</div>
-                    <div className="text-white font-extrabold text-sm mt-0.5">${potSize}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] font-extrabold uppercase text-gray-400" style={{ letterSpacing: '0.14em' }}>Win</div>
-                    <div className="font-extrabold text-sm mt-0.5" style={{
-                      background: 'linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}>${payout}</div>
-                  </div>
-                </div>
-
-                <div className="px-4 pb-5">
-                  {gameMode === 'rush' ? (
-                    // Rush auto-advances into the live-game vote slide
-                    // ~1.4s after MATCH FOUND lands. Show a short hint
-                    // here so the user knows the popup is about to flip
-                    // them into the vote, not just sitting idle.
-                    <div
-                      className="w-full py-3.5 rounded-2xl text-center font-extrabold text-white uppercase flex items-center justify-center gap-2"
-                      style={{
-                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 4px 0 #0a0a0a',
-                        letterSpacing: '0.14em',
-                        fontSize: 13,
-                      }}
-                    >
-                      <span
-                        className="inline-block w-2 h-2 rounded-full"
-                        style={{ background: '#fbbf24', boxShadow: '0 0 10px #fbbf24', animation: 'qm-bolt-flicker 0.9s ease-in-out infinite' }}
-                      />
-                      <span style={{ color: '#fbbf24' }}>Loading live games…</span>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={handleContinue}
-                      className="msg-cartoon-btn w-full py-3.5 rounded-2xl font-extrabold text-white uppercase flex items-center justify-center gap-2"
-                      style={{
-                        background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
-                        border: '2.5px solid #0a0a0a',
-                        letterSpacing: '0.16em',
-                        fontSize: 14,
-                        animation: 'qm-cta-throb 1.4s ease-in-out 0.9s infinite',
-                      }}
-                    >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.8))' }}>
-                        <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-                      </svg>
-                      <span>Let&apos;s Battle</span>
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.8))' }}>
-                        <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
+              <MatchFoundContent
+                isBeta={isBeta}
+                buyIn={buyIn}
+                potSize={potSize}
+                payout={payout}
+                gameMode={gameMode}
+                selectedMode={selectedMode}
+                userName={userName}
+                userAvatar={userAvatar}
+                userProfile={userProfile}
+                matchedOpponent={matchedOpponent}
+                matchedAvatar={matchedAvatar}
+                th={th}
+                onContinue={handleContinue}
+                onCancel={handleClose}
+              />
             </div>
           )}
 
