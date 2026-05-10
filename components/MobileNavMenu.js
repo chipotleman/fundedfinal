@@ -314,7 +314,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 <Link
                   href={profileHref}
                   onClick={handleNavigation(profileHref)}
-                  className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                  aria-current={router.asPath?.startsWith(profileHref) ? 'page' : undefined}
+                  className={`flex items-center justify-between text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                    router.asPath?.startsWith(profileHref)
+                      ? 'text-white font-bold border-l-[#3b82f6]'
+                      : 'text-gray-300 font-light border-l-transparent'
+                  }`}
                   aria-label={
                     hasUnviewedAchievements
                       ? 'My Profile (you have new achievements)'
@@ -335,14 +340,24 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               <Link
                 href="/dashboard"
                 onClick={handleNavigation('/dashboard')}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                aria-current={router.pathname === '/dashboard' ? 'page' : undefined}
+                className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname === '/dashboard'
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
               >
                 Battle
               </Link>
               <Link
                 href="/bet-history"
                 onClick={handleNavigation('/bet-history')}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                aria-current={router.pathname === '/bet-history' ? 'page' : undefined}
+                className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname === '/bet-history'
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
               >
                 Battle History
               </Link>
@@ -350,7 +365,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 href="/leaderboard"
                 prefetch={true}
                 onClick={handleNavigation('/leaderboard')}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                aria-current={router.pathname === '/leaderboard' ? 'page' : undefined}
+                className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname === '/leaderboard'
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
               >
                 Leaderboard
               </Link>
@@ -358,7 +378,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 href="/battle"
                 prefetch={true}
                 onClick={handleNavigation('/battle')}
-                className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                aria-current={router.pathname?.startsWith('/battle') ? 'page' : undefined}
+                className={`flex items-center justify-between text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname?.startsWith('/battle')
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
               >
                 <span>Social</span>
                 {alertsBadge > 0 && (
@@ -370,7 +395,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               <Link
                 href="/notifications"
                 onClick={handleNavigation('/notifications')}
-                className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                aria-current={router.pathname === '/notifications' ? 'page' : undefined}
+                className={`flex items-center justify-between text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname === '/notifications'
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
               >
                 <span>Notifications</span>
                 {notificationsBadge > 0 && (
@@ -382,7 +412,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               <Link
                 href="/messenger"
                 onClick={handleNavigation('/messenger')}
-                className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                aria-current={router.pathname === '/messenger' ? 'page' : undefined}
+                className={`flex items-center justify-between text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname === '/messenger'
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
               >
                 <span>Messages</span>
                 {messagesBadge > 0 && (
@@ -424,14 +459,24 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               <Link
                 href="/battle"
                 onClick={handleNavigation('/battle')}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                aria-current={router.pathname?.startsWith('/battle') ? 'page' : undefined}
+                className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname?.startsWith('/battle')
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
               >
                 Social
               </Link>
               <Link
                 href="/leaderboard"
                 onClick={handleNavigation('/leaderboard')}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                aria-current={router.pathname === '/leaderboard' ? 'page' : undefined}
+                className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname === '/leaderboard'
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
               >
                 Leaderboard
               </Link>

@@ -600,30 +600,54 @@ export default function TopNavbar({
               </a>
             </div>
 
-            {/* Desktop Navigation - Show different links based on auth status */}
+            {/* Desktop Navigation - Show different links based on auth status.
+                The route currently being viewed gets an active treatment: bright
+                white text, bold weight, and a thick blue (#3b82f6) underline
+                accent so it's obvious at a glance which page you're on. */}
             <div className="hidden lg:flex items-center space-x-8">
-              {isLoggedIn ? (
-                <>
-                  <Link href="/dashboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
-                    Battle
-                  </Link>
-                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" style={{ color: '#d1d5db' }}>
-                    Social
-                  </Link>
-                  <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
-                    Leaderboard
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" style={{ color: '#d1d5db' }}>
-                    Social
-                  </Link>
-                  <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
-                    Leaderboard
-                  </Link>
-                </>
-              )}
+              {(() => {
+                const currentPath = router.pathname || '';
+                const isActive = (href) => currentPath === href || currentPath.startsWith(`${href}/`);
+                const renderNavLink = (href, label) => {
+                  const active = isActive(href);
+                  return (
+                    <Link
+                      href={href}
+                      aria-current={active ? 'page' : undefined}
+                      className={`relative font-${active ? 'bold' : 'light'} text-sm uppercase tracking-wider transition-all duration-300 lg:hover:scale-105 lg:hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] py-1`}
+                      style={{ color: active ? '#ffffff' : '#d1d5db' }}
+                    >
+                      {label}
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          bottom: -6,
+                          height: 3,
+                          borderRadius: 2,
+                          background: active ? '#3b82f6' : 'transparent',
+                          boxShadow: active ? '0 0 8px rgba(59,130,246,0.7)' : 'none',
+                          transition: 'background 200ms ease',
+                        }}
+                      />
+                    </Link>
+                  );
+                };
+                return isLoggedIn ? (
+                  <>
+                    {renderNavLink('/dashboard', 'Battle')}
+                    {renderNavLink('/battle', 'Social')}
+                    {renderNavLink('/leaderboard', 'Leaderboard')}
+                  </>
+                ) : (
+                  <>
+                    {renderNavLink('/battle', 'Social')}
+                    {renderNavLink('/leaderboard', 'Leaderboard')}
+                  </>
+                );
+              })()}
             </div>
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
@@ -922,11 +946,19 @@ export default function TopNavbar({
 
                           {/* Menu Items */}
                           <div className="py-1">
-                            {(currentUser?.id || session?.user?.id) && (
+                            {(currentUser?.id || session?.user?.id) && (() => {
+                              const profileHref = `/profile/${currentUser?.id || session?.user?.id}`;
+                              const profileActive = router.asPath?.startsWith(profileHref) || false;
+                              return (
                               <Link
-                                href={`/profile/${currentUser?.id || session?.user?.id}`}
+                                href={profileHref}
                                 onClick={() => setShowUserMenu(false)}
-                                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-blue-400 transition-colors"
+                                aria-current={profileActive ? 'page' : undefined}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 lg:hover:bg-[#1a1a1a] lg:hover:text-blue-400 transition-colors border-l-[3px] ${
+                                  profileActive
+                                    ? 'bg-[#0f1d3a] text-white border-l-[#3b82f6]'
+                                    : 'text-gray-300 border-l-transparent'
+                                }`}
                               >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -940,12 +972,18 @@ export default function TopNavbar({
                                   />
                                 )}
                               </Link>
-                            )}
+                              );
+                            })()}
 
                             <Link
                               href="/bet-history"
                               onClick={() => setShowUserMenu(false)}
-                              className="flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-blue-400 transition-colors"
+                              aria-current={router.pathname === '/bet-history' ? 'page' : undefined}
+                              className={`flex items-center space-x-3 px-4 py-3 lg:hover:bg-[#1a1a1a] lg:hover:text-blue-400 transition-colors border-l-[3px] ${
+                                router.pathname === '/bet-history'
+                                  ? 'bg-[#0f1d3a] text-white border-l-[#3b82f6]'
+                                  : 'text-gray-300 border-l-transparent'
+                              }`}
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -957,7 +995,12 @@ export default function TopNavbar({
                             <Link
                               href="/dashboard"
                               onClick={() => setShowUserMenu(false)}
-                              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-blue-400 transition-colors"
+                              aria-current={router.pathname === '/dashboard' ? 'page' : undefined}
+                              className={`w-full flex items-center space-x-3 px-4 py-3 lg:hover:bg-[#1a1a1a] lg:hover:text-blue-400 transition-colors border-l-[3px] ${
+                                router.pathname === '/dashboard'
+                                  ? 'bg-[#0f1d3a] text-white border-l-[#3b82f6]'
+                                  : 'text-gray-300 border-l-transparent'
+                              }`}
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
@@ -968,7 +1011,12 @@ export default function TopNavbar({
                             <Link
                               href="/settings"
                               onClick={() => setShowUserMenu(false)}
-                              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-blue-400 transition-colors"
+                              aria-current={router.pathname === '/settings' ? 'page' : undefined}
+                              className={`w-full flex items-center space-x-3 px-4 py-3 lg:hover:bg-[#1a1a1a] lg:hover:text-blue-400 transition-colors border-l-[3px] ${
+                                router.pathname === '/settings'
+                                  ? 'bg-[#0f1d3a] text-white border-l-[#3b82f6]'
+                                  : 'text-gray-300 border-l-transparent'
+                              }`}
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
