@@ -20,6 +20,7 @@ import { readLocalOneTapPrefs, writeLocalOneTapPrefs, fetchOneTapPrefs, saveOneT
 import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
 import PreMatchPopup from './PreMatchPopup';
 import haptic from '../../utils/haptics';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -1257,6 +1258,10 @@ function YouVsCard({
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
   const [cancelling, setCancelling] = useState(false);
+  // Beta lockdown: in beta there's no buy-in and only ORIGINAL is
+  // playable, so the meta line drops the "$X" segment and we steer
+  // matchmaking to original regardless of remembered prefs.
+  const isBeta = useBetaMode();
   const status = youVsState?.status || 'idle';
   const myProfile = youVsState?.myProfile || null;
   const opponent = youVsState?.opponent || null;
@@ -1565,7 +1570,9 @@ function YouVsCard({
   let topLabel = 'Play Now';
   let topDotColor = '#fbbf24';
   let ctaText = 'Tap to Start a 1v1';
-  let metaRight = `1v1 · $${buyIn} · ${selectedGameMode.label}`;
+  let metaRight = isBeta
+    ? `1v1 · ORIGINAL · 10K coins`
+    : `1v1 · $${buyIn} · ${selectedGameMode.label}`;
   let progressLabel = 'Tap to start a 1v1';
 
   if (searchState === 'searching') {

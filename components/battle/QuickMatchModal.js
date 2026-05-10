@@ -10,6 +10,7 @@ import { CartoonChipStyles } from './CartoonChip';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import { useGames } from '../../contexts/GamesContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 // Rush in-popup flow constants. The modal carries the user all the way
 // from "MATCH FOUND" → live-game voting → ready check → 3-2-1 countdown →
@@ -91,6 +92,17 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
+  // Beta mode: force every match to ORIGINAL with no real-money buy-in.
+  // The visual chooser still renders, but RUSH / TOURNAMENT are faded
+  // and uninteractive, the buy-in row is hidden, and a beta notice is
+  // shown in its place. Server enforces the same constraints.
+  const isBeta = useBetaMode();
+  useEffect(() => {
+    if (isBeta) {
+      setGameMode('original');
+      setBuyIn(0);
+    }
+  }, [isBeta]);
   // Rush requires a live game — lock the chip when none are available.
   // We deliberately do NOT auto-downgrade rush → original here: doing so
   // silently turned a user's intended Rush match into a 24-hour Original
@@ -1111,7 +1123,25 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   </div>
                 </div>
 
-                {/* Buy-in tiles — identical 5-button grid to PFM. */}
+                {/* Buy-in tiles — hidden during beta (ranking-only, no $). */}
+                {isBeta ? (
+                  <div
+                    className="rounded-2xl p-3 flex items-start gap-3"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 4px 0 #0a0a0a',
+                    }}
+                  >
+                    <span className="text-lg leading-none" aria-hidden="true">🛡️</span>
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#34d399' }}>Beta — Ranking Only</div>
+                      <div className="text-[11px] mt-1" style={{ color: '#cbd5e1', lineHeight: 1.4 }}>
+                        No buy-in during the public beta. Both players start with the same coin stack — winner takes the W on the leaderboard.
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <div>
                   <label className="text-[11px] font-extrabold uppercase tracking-wider mb-2 block" style={{ color: '#6b7280' }}>Buy-In</label>
                   <div className="grid grid-cols-5 gap-2">
@@ -1145,6 +1175,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     })}
                   </div>
                 </div>
+                )}
 
                 {/* Game-mode rich tiles — the high-information layout
                     the user explicitly called out as the better one.
@@ -1158,9 +1189,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   <div className="grid grid-cols-3 gap-2">
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
-                      const locked = mode.id === 'rush' && rushAvailable === false;
+                      const betaLocked = isBeta && mode.id !== 'original';
+                      const locked = betaLocked || (mode.id === 'rush' && rushAvailable === false);
                       const isRush = mode.id === 'rush';
-                      const rushLive = isRush && rushAvailable === true;
+                      const rushLive = !betaLocked && isRush && rushAvailable === true;
                       const hex = (mode.color || '#3b82f6').replace('#', '');
                       const r = parseInt(hex.substring(0, 2), 16);
                       const g = parseInt(hex.substring(2, 4), 16);
@@ -1174,7 +1206,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           onClick={() => { if (!locked) setGameMode(mode.id); }}
                           aria-disabled={locked || undefined}
                           aria-pressed={selected}
-                          title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
+                          title={betaLocked ? 'Available after the public beta — Original is the only mode during beta.' : (locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined)}
                           className="msg-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative"
                           style={
                             selected
@@ -1234,14 +1266,16 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                             <span
                               className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
                               style={{
-                                background: 'linear-gradient(180deg,#374151,#1f2937)',
+                                background: betaLocked
+                                  ? 'linear-gradient(180deg,#10b981,#047857)'
+                                  : 'linear-gradient(180deg,#374151,#1f2937)',
                                 border: '2px solid #0a0a0a',
                                 boxShadow: '0 2px 0 #0a0a0a',
                               }}
                               aria-hidden="true"
                             >
-                              <span style={{ fontSize: 9, lineHeight: 1 }}>🔒</span>
-                              Locked
+                              <span style={{ fontSize: 9, lineHeight: 1 }}>{betaLocked ? '⏳' : '🔒'}</span>
+                              {betaLocked ? 'After Beta' : 'Locked'}
                             </span>
                           )}
                           <span className="text-lg leading-none mb-1">{mode.icon}</span>

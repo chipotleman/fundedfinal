@@ -7,6 +7,8 @@ import {
   normalizePromoSlots,
 } from '../../../lib/promoSlots';
 
+const SITE_FLAGS_KEY = 'site_flags';
+
 const STATIC_DEFAULTS = {
   siteName: 'Piks',
   betaMode: true,
@@ -37,6 +39,23 @@ function hasSettingsPermission(admin) {
   return perms.includes('all') || perms.includes('settings');
 }
 
+function pickSiteFlags(input) {
+  const out = {};
+  if (input && typeof input === 'object') {
+    if (typeof input.siteName === 'string') out.siteName = input.siteName.slice(0, 64);
+    if (typeof input.betaMode === 'boolean') out.betaMode = input.betaMode;
+    if (typeof input.maintenanceMode === 'boolean') out.maintenanceMode = input.maintenanceMode;
+    if (typeof input.demoEnabled === 'boolean') out.demoEnabled = input.demoEnabled;
+    if (input.challengeTiers && typeof input.challengeTiers === 'object') {
+      out.challengeTiers = input.challengeTiers;
+    }
+    if (input.challengeRules && typeof input.challengeRules === 'object') {
+      out.challengeRules = input.challengeRules;
+    }
+  }
+  return out;
+}
+
 async function handler(req, res) {
   const auth = await verifyAdminAuth(req);
   if (!auth.valid) {
@@ -54,7 +73,14 @@ async function handler(req, res) {
     } catch (err) {
       console.error('Failed to load promo slots for admin settings:', err);
     }
-    return res.status(200).json({ ...STATIC_DEFAULTS, promoSlots });
+    let storedFlags = {};
+    try {
+      const stored = await getSetting(SITE_FLAGS_KEY);
+      if (stored && typeof stored === 'object') storedFlags = pickSiteFlags(stored);
+    } catch (err) {
+      console.error('Failed to load site flags for admin settings:', err);
+    }
+    return res.status(200).json({ ...STATIC_DEFAULTS, ...storedFlags, promoSlots });
   }
 
   if (req.method === 'POST') {
@@ -66,6 +92,21 @@ async function handler(req, res) {
         return res
           .status(500)
           .json({ success: false, error: 'Failed to persist promo slots' });
+      }
+    }
+    const flagsPatch = pickSiteFlags(newSettings);
+    if (Object.keys(flagsPatch).length > 0) {
+      let existing = {};
+      try {
+        const stored = await getSetting(SITE_FLAGS_KEY);
+        if (stored && typeof stored === 'object') existing = stored;
+      } catch (_e) {}
+      const merged = { ...existing, ...flagsPatch };
+      const ok = await setSetting(SITE_FLAGS_KEY, merged);
+      if (!ok) {
+        return res
+          .status(500)
+          .json({ success: false, error: 'Failed to persist site flags' });
       }
     }
     return res.status(200).json({ success: true, message: 'Settings saved' });

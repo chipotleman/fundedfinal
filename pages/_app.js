@@ -12,6 +12,7 @@ import { MatchupProvider, useMatchup } from '../contexts/MatchupContext';
 import { NotificationsProvider } from '../contexts/NotificationsContext';
 import { PushNotificationsProvider } from '../contexts/PushNotificationsContext';
 import { UserPreviewProvider } from '../contexts/UserPreviewContext';
+import { SiteConfigProvider } from '../contexts/SiteConfigContext';
 import GlobalToastContainer from '../components/notifications/GlobalToastContainer';
 import AchievementUnlockOverlay from '../components/notifications/AchievementUnlockOverlay';
 import IncomingInviteModal from '../components/battle/IncomingInviteModal';
@@ -641,6 +642,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
     <SessionProvider session={session}>
       {battlePreviewHead}
       {profilePreviewHead}
+      <SiteConfigProvider>
       <AuthProvider>
           <UserPreferencesProvider>
           <BetSlipProvider>
@@ -762,6 +764,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
           </BetSlipProvider>
           </UserPreferencesProvider>
         </AuthProvider>
+      </SiteConfigProvider>
     </SessionProvider>
   );
 }

@@ -9,6 +9,7 @@ import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { saveLastBuyIn } from '../../utils/lastBattleBuyIn';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
@@ -40,6 +41,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   // Seed from the remembered buy-in (which is hydrated server-side and
   // therefore follows the user across devices) so the modal's defaults
   // match whatever the friend-row shortcut would send.
+  const isBeta = useBetaMode();
   const rememberedBuyIn = initialBuyIn && BUY_IN_OPTIONS.includes(Number(initialBuyIn.buyIn))
     ? Number(initialBuyIn.buyIn)
     : 10;
@@ -48,6 +50,14 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     : 'original';
   const [buyIn, setBuyIn] = useState(rememberedBuyIn);
   const [gameMode, setGameMode] = useState(rememberedMode);
+  // Beta lockdown: force ORIGINAL + zero buy-in. UI pickers are also
+  // hidden / faded; this effect keeps state in sync if the flag flips.
+  useEffect(() => {
+    if (isBeta) {
+      setGameMode('original');
+      setBuyIn(0);
+    }
+  }, [isBeta]);
   // Rush requires a live game — lock the mode tile when none are available.
   // We deliberately do NOT auto-downgrade rush → original here: doing so
   // silently turned an intended Rush invite into a 24-hour Original
@@ -1272,6 +1282,24 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   )}
                 </div>
 
+                {isBeta ? (
+                  <div
+                    className="rounded-2xl p-3 flex items-start gap-3"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 4px 0 #0a0a0a',
+                    }}
+                  >
+                    <span className="text-lg leading-none" aria-hidden="true">🛡️</span>
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#34d399' }}>Beta — Ranking Only</div>
+                      <div className="text-[11px] mt-1" style={{ color: '#cbd5e1', lineHeight: 1.4 }}>
+                        No buy-in during the public beta. Both players start with the same coin stack — winner takes the W on the leaderboard.
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <div>
                   <label className="text-[11px] font-extrabold uppercase tracking-wider mb-2 block" style={{ color: textMuted }}>Buy-In</label>
                   <div className="grid grid-cols-5 gap-2">
@@ -1305,6 +1333,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     })}
                   </div>
                 </div>
+                )}
 
                 <div>
                   <div className="flex items-baseline justify-between mb-2 gap-2">
@@ -1349,9 +1378,10 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   <div className="grid grid-cols-3 gap-2">
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
-                      const locked = mode.id === 'rush' && rushAvailable === false;
+                      const betaLocked = isBeta && mode.id !== 'original';
+                      const locked = betaLocked || (mode.id === 'rush' && rushAvailable === false);
                       const isRush = mode.id === 'rush';
-                      const rushLive = isRush && rushAvailable === true;
+                      const rushLive = !betaLocked && isRush && rushAvailable === true;
                       const hex = mode.color.replace('#', '');
                       const r = parseInt(hex.substring(0, 2), 16);
                       const g = parseInt(hex.substring(2, 4), 16);
@@ -1389,7 +1419,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               haptic.warning && haptic.warning();
                             }
                           }}
-                          title={locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined}
+                          title={betaLocked ? 'Available after the public beta — Original is the only mode during beta.' : (locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined)}
                           className="pfm-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative"
                           style={
                             selected

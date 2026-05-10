@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { battleInvites, profiles, friendships, matchups } from '../../../shared/schema';
 import { eq, and, or, lt, gt, inArray, isNotNull } from 'drizzle-orm';
+import { readSiteFlags } from '../site-config';
 const { publishBattleEvent } = require('../../../lib/battle-events');
 const { sendPushToUsers } = require('../../../lib/web-push');
 
@@ -162,7 +163,15 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { receiverId, buyIn, gameMode, duration } = req.body;
+    let { receiverId, buyIn, gameMode, duration } = req.body;
+    // Beta lockdown: force ORIGINAL + zero buy-in regardless of payload.
+    try {
+      const flags = await readSiteFlags();
+      if (flags?.betaMode) {
+        gameMode = 'original';
+        buyIn = 0;
+      }
+    } catch (_e) {}
 
     if (!receiverId) {
       return res.status(400).json({ error: 'Receiver ID is required' });
@@ -178,7 +187,7 @@ export default async function handler(req, res) {
       tournament: { durationMinutes: 4320, durationType: 'tournament', coins: 100000 },
     };
 
-    const parsedBuyIn = parseFloat(buyIn) || 100;
+    const parsedBuyIn = Math.max(0, parseFloat(buyIn) || 0) || (Number(buyIn) === 0 ? 0 : 100);
     const validGameMode = GAME_MODES[gameMode] ? gameMode : 'original';
     const mode = GAME_MODES[validGameMode];
     const parsedDuration = Math.round(mode.durationMinutes / 60);

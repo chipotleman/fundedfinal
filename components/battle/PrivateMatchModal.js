@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import useRushAvailability from '../../hooks/useRushAvailability';
 import haptic from '../../utils/haptics';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
@@ -27,6 +28,13 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
   const [mode, setMode] = useState('choose');
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
+  const isBeta = useBetaMode();
+  useEffect(() => {
+    if (isBeta) {
+      setGameMode('original');
+      setBuyIn(0);
+    }
+  }, [isBeta]);
   // Rush requires a live game — lock the row when none are available.
   // We deliberately do NOT auto-downgrade rush → original here: doing so
   // silently turned an intended Rush private match into a 24-hour
@@ -338,7 +346,26 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
           {/* ---------- CREATE: configure buy-in + game mode ---------- */}
           {mode === 'create' && (
             <div className="space-y-4">
-              {/* Buy-in pills */}
+              {/* Buy-in pills (hidden during beta — ranking only). */}
+              {isBeta && (
+                <div
+                  className="rounded-2xl p-3 flex items-start gap-3"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a',
+                  }}
+                >
+                  <span className="text-lg leading-none" aria-hidden="true">🛡️</span>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#34d399' }}>Beta — Ranking Only</div>
+                    <div className="text-[11px] mt-1" style={{ color: '#cbd5e1', lineHeight: 1.4 }}>
+                      No buy-in during the public beta. Both players start with the same coin stack — winner takes the W on the leaderboard.
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!isBeta && (
               <div>
                 <label
                   className="text-[10px] font-extrabold text-gray-400 uppercase mb-2 block"
@@ -371,6 +398,7 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                   })}
                 </div>
               </div>
+              )}
 
               {/* Game mode rows */}
               <div>
@@ -383,9 +411,10 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                 <div className="space-y-2">
                   {GAME_MODE_OPTIONS.map(m => {
                     const selected = gameMode === m.id;
-                    const locked = m.id === 'rush' && rushAvailable === false;
+                    const betaLocked = isBeta && m.id !== 'original';
+                    const locked = betaLocked || (m.id === 'rush' && rushAvailable === false);
                     const isRush = m.id === 'rush';
-                    const rushLive = isRush && rushAvailable === true;
+                    const rushLive = !betaLocked && isRush && rushAvailable === true;
                     const hex = m.color.replace('#', '');
                     const r = parseInt(hex.substring(0, 2), 16);
                     const g = parseInt(hex.substring(2, 4), 16);
@@ -478,12 +507,14 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                               <span
                                 className="text-[8px] text-white px-1.5 py-0.5 rounded-full font-extrabold uppercase inline-flex items-center gap-1"
                                 style={{
-                                  background: 'linear-gradient(180deg,#374151,#1f2937)',
+                                  background: betaLocked
+                                    ? 'linear-gradient(180deg,#10b981,#047857)'
+                                    : 'linear-gradient(180deg,#374151,#1f2937)',
                                   border: '1.5px solid #0a0a0a',
                                   letterSpacing: '0.12em',
                                 }}
                               >
-                                🔒 Locked
+                                {betaLocked ? '⏳ After Beta' : '🔒 Locked'}
                               </span>
                             )}
                           </div>

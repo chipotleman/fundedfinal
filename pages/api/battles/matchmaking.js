@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchmakingQueue, matchups, profiles } from '../../../shared/schema';
 import { eq, and, ne } from 'drizzle-orm';
+import { readSiteFlags } from '../site-config';
 const { publishMatchupStart } = require('../../../lib/battle-events');
 const { sendFriendLivePush } = require('../../../lib/web-push');
 
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
   }
 
   const userId = session.user.id;
-  const { buyIn, gameMode, duration } = req.body;
+  let { buyIn, gameMode, duration } = req.body;
 
   const GAME_MODES = {
     rush: { durationMinutes: 180, durationType: 'rush', coins: 10000 },
@@ -46,7 +47,22 @@ export default async function handler(req, res) {
     tournament: { durationMinutes: 4320, durationType: 'tournament', coins: 100000 },
   };
 
-  const parsedBuyIn = parseFloat(buyIn) || 100;
+  // Beta mode: lock every match to ORIGINAL with no real-money buy-in.
+  // Battles are ranking-only during the public beta. This is a server-side
+  // enforcement layer — the client UI also hides RUSH/TOURNAMENT and the
+  // dollar buy-in selector, but we re-coerce here so a hand-crafted POST
+  // can't sneak in a different mode.
+  let isBeta = false;
+  try {
+    const flags = await readSiteFlags();
+    isBeta = !!flags?.betaMode;
+  } catch (_e) {}
+  if (isBeta) {
+    gameMode = 'original';
+    buyIn = 0;
+  }
+
+  const parsedBuyIn = isBeta ? 0 : (parseFloat(buyIn) || 100);
   const validGameMode = GAME_MODES[gameMode] ? gameMode : 'original';
   const mode = GAME_MODES[validGameMode];
   const parsedDuration = Math.round(mode.durationMinutes / 60);

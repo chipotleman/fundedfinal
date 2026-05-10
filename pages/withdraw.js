@@ -1,8 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import { leavePage } from '../utils/leavePage';
+import { useSiteConfig } from '../contexts/SiteConfigContext';
+import ComingSoonExplainer from '../components/ComingSoonExplainer';
 
 export default function Withdraw() {
+  const { betaMode } = useSiteConfig();
+  if (betaMode) {
+    return (
+      <>
+        <Head><title>Withdrawals — Coming Soon | Piks</title></Head>
+        <ComingSoonExplainer kind="withdraw" />
+      </>
+    );
+  }
+  return <WithdrawInner />;
+}
+
+function WithdrawInner() {
   const [selectedMethod, setSelectedMethod] = useState('');
   const [amount, setAmount] = useState('');
   const [bankroll, setBankroll] = useState(0);

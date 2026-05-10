@@ -4,6 +4,7 @@ import { authOptions } from "../../../lib/auth";
 import { db } from "../../../lib/db";
 import { withdrawals, profiles, paymentMethods } from "../../../shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
+import { readSiteFlags } from "../site-config";
 
 const FEES: Record<string, number | ((amount: number) => number)> = {
   bank_transfer: 0,
@@ -58,6 +59,13 @@ export default async function handler(
 
   if (req.method === "POST") {
     try {
+      const flags = await readSiteFlags();
+      if (flags?.betaMode) {
+        return res.status(403).json({
+          message: "Withdrawals are disabled during the Piks beta. Battles run on coins for ranking only — real-money cashouts open after launch.",
+          code: "BETA_DISABLED",
+        });
+      }
       const {
         paymentMethodId,
         methodType,

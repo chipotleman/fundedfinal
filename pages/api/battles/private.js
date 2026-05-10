@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, profiles } from '../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
+import { readSiteFlags } from '../site-config';
 const { sendFriendLivePush } = require('../../../lib/web-push');
 
 function generateCode() {
@@ -25,7 +26,7 @@ export default async function handler(req, res) {
   }
 
   const userId = session.user.id;
-  const { action, buyIn, duration, gameMode, code } = req.body;
+  let { action, buyIn, duration, gameMode, code } = req.body;
 
   const GAME_MODES = {
     rush: { durationMinutes: 180, durationType: 'rush', coins: 10000 },
@@ -33,8 +34,19 @@ export default async function handler(req, res) {
     tournament: { durationMinutes: 4320, durationType: 'tournament', coins: 100000 },
   };
 
+  // Beta lockdown: only ORIGINAL is playable, no real-money buy-in.
+  let isBeta = false;
+  try {
+    const flags = await readSiteFlags();
+    isBeta = !!flags?.betaMode;
+  } catch (_e) {}
+  if (isBeta) {
+    gameMode = 'original';
+    buyIn = 0;
+  }
+
   if (action === 'create') {
-    const parsedBuyIn = parseFloat(buyIn) || 10;
+    const parsedBuyIn = isBeta ? 0 : (parseFloat(buyIn) || 10);
     const validGameMode = GAME_MODES[gameMode] ? gameMode : 'original';
     const mode = GAME_MODES[validGameMode];
     const durationMinutes = mode.durationMinutes;

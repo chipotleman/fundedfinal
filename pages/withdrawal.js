@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import Head from 'next/head';
 import { formatMoney } from '../utils/formatMoney';
+import { useSiteConfig } from '../contexts/SiteConfigContext';
+import ComingSoonExplainer from '../components/ComingSoonExplainer';
 
 const withdrawalMethods = [
   {
@@ -89,7 +91,26 @@ const statusLabels = {
   cancelled: 'Cancelled',
 };
 
+// Thin wrapper: in beta we short-circuit to the cartoon explainer
+// BEFORE the inner component (with all its hooks) ever mounts. This
+// keeps the hook order stable across `betaMode` flips — a plain
+// early-return inside a single component would call useSession +
+// useRouter + useSiteConfig, then bail out, then on flip call all of
+// the inner-component hooks too, which violates Rules of Hooks.
 export default function WithdrawalPage() {
+  const { betaMode } = useSiteConfig();
+  if (betaMode) {
+    return (
+      <>
+        <Head><title>Withdrawals — Coming Soon | Piks</title></Head>
+        <ComingSoonExplainer kind="withdraw" />
+      </>
+    );
+  }
+  return <WithdrawalInner />;
+}
+
+function WithdrawalInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [userProfile, setUserProfile] = useState(null);

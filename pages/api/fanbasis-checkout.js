@@ -1,4 +1,5 @@
 import { createCheckoutSession } from '../../lib/fanbasis';
+import { readSiteFlags } from './site-config';
 
 const PRODUCT_ID = 'y8Q3E';
 
@@ -7,6 +8,16 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
+
+  try {
+    const flags = await readSiteFlags();
+    if (flags?.betaMode) {
+      return res.status(403).json({
+        error: 'Deposits are disabled during the Piks beta. Battles run on coins for ranking only — funding opens after launch.',
+        code: 'BETA_DISABLED',
+      });
+    }
+  } catch (_e) {}
 
   try {
     const { 
