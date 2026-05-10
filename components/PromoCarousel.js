@@ -415,45 +415,64 @@ export default function PromoCarousel({ slides }) {
           double as a click-to-jump affordance for the auto-scrolling strip;
           on mobile (where auto-scroll is disabled) they're the primary
           orientation cue so users always know where they are in the strip. */}
-      {count > 1 && (
-        <div className="flex justify-center items-center gap-1.5 mt-2">
-          {visible.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`Go to slide ${i + 1}`}
-              aria-current={i === activeIndex ? 'true' : 'false'}
-              onClick={() => handleDotClick(i)}
-              className="relative flex items-center justify-center cursor-pointer bg-transparent p-0"
-              style={{ border: 0 }}
-            >
-              {/* Extends the tap target without contributing to layout height.
-                  Horizontal extension intentionally large enough to keep dots
-                  comfortably tappable on small phones; adjacent hit areas may
-                  overlap, which is fine — the topmost (later in DOM) button
-                  receives the tap. */}
-              <span
-                aria-hidden="true"
-                className="absolute"
-                style={{ top: -11, bottom: -11, left: -10, right: -10 }}
-              />
-              <span
-                className={`rounded-full block transition-all duration-300 ${
-                  i === activeIndex
-                    ? 'w-[22px] h-[6px]'
-                    : 'w-[6px] h-[6px]'
-                }`}
-                style={{
-                  background:
-                    i === activeIndex
-                      ? 'rgba(255,255,255,0.85)'
-                      : 'rgba(255,255,255,0.28)',
-                }}
-              />
-            </button>
-          ))}
-        </div>
-      )}
+      {count > 1 && (() => {
+        // Always render at most 3 dots so the indicator stays compact and
+        // doesn't visually crowd the sport-filter pills directly below.
+        // When there are more than 3 slides we map the active slide onto
+        // one of three buckets (start / middle / end) and clicking a dot
+        // jumps to that bucket's representative slide.
+        const dotCount = Math.min(3, count);
+        const activeDot = count <= 3
+          ? activeIndex
+          : Math.min(
+              dotCount - 1,
+              Math.floor((activeIndex / count) * dotCount),
+            );
+        const dotToSlide = (i) => {
+          if (count <= 3) return i;
+          if (i === 0) return 0;
+          if (i === dotCount - 1) return count - 1;
+          return Math.round((i / (dotCount - 1)) * (count - 1));
+        };
+        return (
+          <div className="flex justify-center items-center gap-1.5 mt-1.5">
+            {Array.from({ length: dotCount }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Go to slide ${dotToSlide(i) + 1}`}
+                aria-current={i === activeDot ? 'true' : 'false'}
+                onClick={() => handleDotClick(dotToSlide(i))}
+                className="relative flex items-center justify-center cursor-pointer bg-transparent p-0"
+                style={{ border: 0 }}
+              >
+                {/* Tap-target extension. Vertical padding kept tight (-6)
+                    so the hit area doesn't bleed into the sport-filter
+                    pill row underneath; horizontal stays generous for
+                    small-phone tap comfort. */}
+                <span
+                  aria-hidden="true"
+                  className="absolute"
+                  style={{ top: -6, bottom: -6, left: -10, right: -10 }}
+                />
+                <span
+                  className={`rounded-full block transition-all duration-300 ${
+                    i === activeDot
+                      ? 'w-[14px] h-[4px]'
+                      : 'w-[4px] h-[4px]'
+                  }`}
+                  style={{
+                    background:
+                      i === activeDot
+                        ? 'rgba(255,255,255,0.85)'
+                        : 'rgba(255,255,255,0.28)',
+                  }}
+                />
+              </button>
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 }
