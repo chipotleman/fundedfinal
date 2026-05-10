@@ -1982,6 +1982,7 @@ export default function BattlePage() {
           <SocialFeedPage
             data={{
               currentUser: profile ? {
+                id: userId,
                 username: profile.username || session?.user?.name,
                 avatar: profile.avatar,
                 frameId: profile.equippedFrame,
