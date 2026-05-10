@@ -11,10 +11,11 @@ import ProfileEditPanel from '../../components/ProfileEditPanel';
 import MessagePopup from '../../components/messages/MessagePopup';
 import MutualFriendsModal from '../../components/notifications/MutualFriendsModal';
 import MutualFriendsStack from '../../components/notifications/MutualFriendsStack';
+import PlayFriendModal from '../../components/battle/PlayFriendModal';
+import { readLastBuyIn, fetchLastBuyIn } from '../../utils/lastBattleBuyIn';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useProfileCache } from '../../contexts/ProfileCacheContext';
 import { useNotifications } from '../../contexts/NotificationsContext';
-import { formatMoney } from '../../utils/formatMoney';
 import { getFrameById } from '../../lib/profileFrames';
 import {
   trackBadgeShareProfileVisit,
@@ -87,9 +88,23 @@ export default function PublicProfile() {
   const [mutualFriendsPreview, setMutualFriendsPreview] = useState([]);
   const [mutualFriendsOpen, setMutualFriendsOpen] = useState(false);
   const [showBattleInvite, setShowBattleInvite] = useState(false);
-  const [battleInviteLoading, setBattleInviteLoading] = useState(false);
-  const [inviteBuyIn, setInviteBuyIn] = useState(100);
-  const [inviteDuration, setInviteDuration] = useState(24);
+  const [lastBuyIn, setLastBuyIn] = useState(null);
+  const viewerId = session?.user?.id || null;
+  useEffect(() => {
+    if (!viewerId) { setLastBuyIn(null); return; }
+    const cached = readLastBuyIn(viewerId);
+    if (cached) setLastBuyIn(cached);
+    let cancelled = false;
+    fetchLastBuyIn(viewerId).then((fresh) => {
+      if (!cancelled && fresh) setLastBuyIn(fresh);
+    });
+    return () => { cancelled = true; };
+  }, [viewerId]);
+  const refreshLastBuyIn = async () => {
+    if (!viewerId) return;
+    const fresh = await fetchLastBuyIn(viewerId);
+    if (fresh) setLastBuyIn(fresh);
+  };
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState('');
   const [inlineUsernameStatus, setInlineUsernameStatus] = useState({ checking: false, available: null, error: null });
@@ -495,37 +510,6 @@ export default function PublicProfile() {
       console.error('Error removing friend:', error);
     } finally {
       setFriendActionLoading(false);
-    }
-  };
-
-  const handleSendBattleInvite = async () => {
-    setBattleInviteLoading(true);
-    try {
-      const res = await fetch('/api/battles/invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          receiverId: id,
-          buyIn: inviteBuyIn,
-          duration: inviteDuration,
-        }),
-      });
-      if (res.ok) {
-        setShowBattleInvite(false);
-        // Refresh notifications so the CTA flips to "Invite Pending"
-        // immediately instead of waiting on the next polling tick.
-        try { notificationsCtx.refresh?.(); } catch {}
-        alert('Battle invite sent!');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to send invite');
-      }
-    } catch (error) {
-      console.error('Error sending battle invite:', error);
-      alert('Failed to send battle invite');
-    } finally {
-      setBattleInviteLoading(false);
     }
   };
 
@@ -1504,89 +1488,25 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      {showBattleInvite && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-20 p-4">
-          <div 
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setShowBattleInvite(false)}
-          />
-          <div className="relative rounded-2xl p-5 max-w-md w-full" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>
-            <h3 className={`text-lg font-bold mb-4 ${'text-white'}`}>
-              Challenge {profile?.username || 'User'}
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wider">Buy-in</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[50, 100, 250, 500].map(amount => (
-                    <button
-                      key={amount}
-                      onClick={() => setInviteBuyIn(amount)}
-                      className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
-                        inviteBuyIn === amount 
-                          ? 'bg-blue-600 text-white' 
-                          : 'text-gray-300'
-                      }`}
-                      style={inviteBuyIn !== amount ? { backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` } : {}}
-                    >
-                      ${amount}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wider">Duration</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[{ value: 1, label: '1 Hour' }, { value: 24, label: '24 Hours' }, { value: 72, label: '3 Days' }].map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setInviteDuration(opt.value)}
-                      className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
-                        inviteDuration === opt.value 
-                          ? 'bg-blue-600 text-white' 
-                          : 'text-gray-300'
-                      }`}
-                      style={inviteDuration !== opt.value ? { backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` } : {}}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="rounded-lg p-3" style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}>
-                <div className="flex justify-between text-sm mb-1.5">
-                  <span className="text-gray-500">Prize Pool</span>
-                  <span className={`font-bold ${'text-white'}`}>${inviteBuyIn * 2}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Winner Takes (90%)</span>
-                  <span className="text-green-500 font-bold">${formatMoney(inviteBuyIn * 2 * 0.9, 0)}</span>
-                </div>
-              </div>
-              
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => setShowBattleInvite(false)}
-                  className={`flex-1 py-2.5 font-semibold rounded-lg transition-all text-sm ${'text-gray-400'}`}
-                  style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSendBattleInvite}
-                  disabled={battleInviteLoading}
-                  className="flex-1 py-2.5 bg-blue-600 disabled:opacity-40 text-white font-semibold rounded-lg transition-all text-sm"
-                >
-                  {battleInviteLoading ? 'Sending...' : 'Send Challenge'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <PlayFriendModal
+        isOpen={showBattleInvite}
+        onClose={() => setShowBattleInvite(false)}
+        friends={[]}
+        initialBuyIn={lastBuyIn}
+        lockedFriend={id ? {
+          id,
+          username: profile?.username,
+          avatar: profile?.avatar,
+          frameId: profile?.equippedFrame,
+        } : null}
+        currentUser={session?.user ? {
+          id: session.user.id,
+          username: session.user.name,
+          avatar: session.user.image,
+        } : null}
+        onInviteSent={() => { try { notificationsCtx.refresh?.(); } catch {} refreshLastBuyIn(); }}
+        onInviteCancelled={() => { try { notificationsCtx.refresh?.(); } catch {} }}
+      />
       <MessagePopup
         isOpen={messageOpen}
         friend={messageOpen ? { id, username: profile?.username, avatar: profile?.avatar, frameId: profile?.equippedFrame } : null}
