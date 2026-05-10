@@ -4,6 +4,7 @@ import FramedAvatar from '../UserAvatar';
 import { formatMoney } from '../../utils/formatMoney';
 import { formatLastSeen } from '../../utils/relativeTime';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
+import LiveBattleStoryViewer from './LiveBattleStoryViewer';
 
 const surface = '#0d0d0d';
 const surfaceMuted = '#0a0a0a';
@@ -57,7 +58,7 @@ const Icon = {
 // Instagram stories. Each "story" is a stacked pair of avatars under a single
 // circular live ring; tapping spectates that battle.
 // =============================================================================
-function StoriesRail({ battles, onSpectate, onStartBattle, currentUser, isGuest }) {
+function StoriesRail({ battles, onSpectate, onOpenStory, onStartBattle, currentUser, isGuest }) {
   if (!battles?.length) {
     return (
       <div className="rounded-2xl mb-4 px-3 py-3" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
@@ -81,7 +82,7 @@ function StoriesRail({ battles, onSpectate, onStartBattle, currentUser, isGuest 
             Live now · {battles.length}
           </span>
         </div>
-        <span className="text-[10px]" style={{ color: textMuted }}>Tap to spectate</span>
+        <span className="text-[10px]" style={{ color: textMuted }}>Tap to watch</span>
       </div>
       <div className="px-3 pb-3 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <div className="flex items-start gap-3">
@@ -104,7 +105,7 @@ function StoriesRail({ battles, onSpectate, onStartBattle, currentUser, isGuest 
               <span className="text-[10px] font-medium truncate max-w-full" style={{ color: textPrimary }}>Your battle</span>
             </button>
           )}
-          {battles.map((b) => {
+          {battles.map((b, idx) => {
             const u1 = b.user1 || {};
             const u2 = b.user2 || {};
             const label = `${(u1.username || 'P1').slice(0, 8)} vs ${(u2.username || 'P2').slice(0, 8)}`;
@@ -112,7 +113,7 @@ function StoriesRail({ battles, onSpectate, onStartBattle, currentUser, isGuest 
               <button
                 key={b.id}
                 type="button"
-                onClick={() => onSpectate(b)}
+                onClick={() => (onOpenStory ? onOpenStory(idx) : onSpectate(b))}
                 className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[78px] focus:outline-none"
               >
                 <div
@@ -1495,6 +1496,17 @@ export default function SocialFeedPage({ data }) {
     router.push(`/battle/spectate/${battle.id}`);
   }, [router]);
 
+  // Story viewer — opens an Instagram-style highlight reel for a live
+  // battle. Stays in-page; the full /battle/spectate/[id] surface is
+  // still reachable from a CTA inside the viewer.
+  const [storyOpenIdx, setStoryOpenIdx] = useState(null);
+  const handleOpenStory = useCallback((idx) => {
+    setStoryOpenIdx(idx);
+  }, []);
+  const handleCloseStory = useCallback(() => {
+    setStoryOpenIdx(null);
+  }, []);
+
   const handleReplay = useCallback((highlight) => {
     if (!highlight?.id) return;
     router.push(`/battle/replay/${highlight.id}`);
@@ -1540,10 +1552,19 @@ export default function SocialFeedPage({ data }) {
         <StoriesRail
           battles={liveBattles}
           onSpectate={handleSpectate}
+          onOpenStory={handleOpenStory}
           onStartBattle={onStartBattle}
           currentUser={currentUser}
           isGuest={isGuest}
         />
+        {storyOpenIdx !== null && liveBattles?.[storyOpenIdx] && (
+          <LiveBattleStoryViewer
+            battles={liveBattles}
+            startIndex={storyOpenIdx}
+            onClose={handleCloseStory}
+            onSpectate={(b) => { handleCloseStory(); handleSpectate(b); }}
+          />
+        )}
         <PostComposer
           currentUser={currentUser}
           isGuest={isGuest}
