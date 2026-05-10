@@ -626,8 +626,76 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
 }
 
 // =============================================================================
-// LiveBattlePost — Instagram-post-style card for an ongoing battle.
+// LiveBattlePost — gamified HEAD-TO-HEAD card for an ongoing battle.
+// Mirrors the dashboard's BattleCard (LiveBattlesSection) so spectators in
+// the social feed see the same big-VS, dual-avatar, pick-pill, momentum-chip
+// presentation instead of a thin progress-bar update. Uses the cartoon
+// style language: 2.5px #0a0a0a borders, 4px hard shadow, blue (#3b82f6)
+// for the left player / orange (#fb923c) for the right player, green ring
+// override on whoever is currently leading. No purple. Hover utilities
+// gated to lg:hover (touch devices stay flat).
 // =============================================================================
+const HH_BORDER = '#0a0a0a';
+const HH_BLUE = '#3b82f6';
+const HH_ORANGE = '#fb923c';
+const HH_LEAD = '#10b981';
+const HH_SHADOW = '4px 4px 0 #0a0a0a';
+
+function PnlMini({ value, align = 'left' }) {
+  const v = parseFloat(value);
+  if (!Number.isFinite(v)) return null;
+  const pos = v >= 0;
+  return (
+    <span
+      className={`inline-block text-[10px] font-black px-1.5 py-px rounded tabular-nums ${align === 'right' ? 'ml-auto' : ''}`}
+      style={{
+        background: pos ? 'rgba(16,185,129,0.14)' : 'rgba(239,68,68,0.14)',
+        color: pos ? '#34d399' : '#f87171',
+        border: `1px solid ${pos ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}`,
+      }}
+    >
+      {pos ? '+' : ''}{v}%
+    </span>
+  );
+}
+
+function PickMini({ pick, sideColor, align = 'left' }) {
+  if (!pick) return null;
+  const isWon = pick.status === 'won';
+  const isLost = pick.status === 'lost';
+  const accent = isWon ? HH_LEAD : isLost ? '#ef4444' : sideColor;
+  const insetShadow = align === 'right' ? `inset -3px 0 0 0 ${accent}` : `inset 3px 0 0 0 ${accent}`;
+  const oddsColor = isWon ? '#34d399' : isLost ? '#f87171' : '#e5e7eb';
+  return (
+    <div
+      className="px-2.5 py-1.5 rounded-lg flex items-center gap-2 min-w-0"
+      style={{
+        background: '#0d0d0d',
+        border: `1.5px solid ${HH_BORDER}`,
+        boxShadow: insetShadow,
+      }}
+    >
+      <div className={`flex-1 min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
+        <div className="text-[11px] font-black truncate" style={{ color: '#fff' }}>
+          {pick.team}
+        </div>
+        <div
+          className="text-[9px] font-bold uppercase tracking-wider truncate"
+          style={{ color: textMuted }}
+        >
+          {pick.type}
+        </div>
+      </div>
+      <span
+        className="text-[12px] font-black tabular-nums flex-shrink-0"
+        style={{ color: oddsColor }}
+      >
+        {pick.odds}
+      </span>
+    </div>
+  );
+}
+
 function LiveBattlePost({ battle, onSpectate, onOpenProfile }) {
   const u1 = battle.user1 || {};
   const u2 = battle.user2 || {};
@@ -638,7 +706,14 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile }) {
   const pot = parseFloat(battle.potSize) || 0;
   const u1Lead = u1Bal > u2Bal;
   const u2Lead = u2Bal > u1Bal;
-  const [timeLeft, setTimeLeft] = useState(battle.endsAt ? new Date(battle.endsAt).getTime() - Date.now() : 0);
+  const u1OnFire = parseFloat(u1.pnlPercent) > 10;
+  const u2OnFire = parseFloat(u2.pnlPercent) > 10;
+  const u1Ring = u1Lead ? HH_LEAD : HH_BLUE;
+  const u2Ring = u2Lead ? HH_LEAD : HH_ORANGE;
+
+  const [timeLeft, setTimeLeft] = useState(
+    battle.endsAt ? new Date(battle.endsAt).getTime() - Date.now() : 0,
+  );
 
   useEffect(() => {
     if (!battle.endsAt) return;
@@ -649,92 +724,286 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile }) {
   }, [battle.endsAt]);
 
   const picks = battle.picks;
-  const bothPicked = picks && picks.user1?.length > 0 && picks.user2?.length > 0;
-  const totalPicks = (picks?.user1?.length || 0) + (picks?.user2?.length || 0);
+  const u1Picks = picks?.user1 || [];
+  const u2Picks = picks?.user2 || [];
+  const bothPicked = u1Picks.length > 0 && u2Picks.length > 0;
+  const onlyU1Locked = u1Picks.length > 0 && u2Picks.length === 0;
+  const onlyU2Locked = u2Picks.length > 0 && u1Picks.length === 0;
+  const u1PickPreview = u1Picks[0];
+  const u2PickPreview = u2Picks[0];
 
   return (
-    <div className="rounded-2xl mb-4 overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
-      <div className="flex items-center justify-between px-4 py-3">
+    <div
+      className="rounded-2xl mb-4 overflow-hidden"
+      style={{
+        backgroundColor: surface,
+        border: `2.5px solid ${HH_BORDER}`,
+        boxShadow: HH_SHADOW,
+      }}
+    >
+      {/* Top status strip — LIVE pill + pot + countdown */}
+      <div
+        className="flex items-center justify-between px-3.5 py-2"
+        style={{ borderBottom: `2px solid ${HH_BORDER}`, background: '#0a0a0a' }}
+      >
         <div className="flex items-center gap-2 min-w-0">
-          <div className="flex -space-x-2">
-            <button type="button" onClick={() => onOpenProfile?.(u1)} className="rounded-full ring-2" style={{ ringColor: surface }}>
-              <FramedAvatar avatar={u1.avatar} username={u1.username || 'P1'} frameId={u1.equippedFrame} size={32} bgColor="#1e40af" />
-            </button>
-            <button type="button" onClick={() => onOpenProfile?.(u2)} className="rounded-full ring-2" style={{ ringColor: surface }}>
-              <FramedAvatar avatar={u2.avatar} username={u2.username || 'P2'} frameId={u2.equippedFrame} size={32} bgColor="#7c2d12" />
-            </button>
-          </div>
-          <div className="min-w-0">
-            <div className="text-[13px] truncate" style={{ color: textPrimary }}>
-              <button type="button" onClick={() => onOpenProfile?.(u1)} className="font-semibold hover:underline">{u1.username || 'Player 1'}</button>
-              <span style={{ color: textSecondary }}> vs </span>
-              <button type="button" onClick={() => onOpenProfile?.(u2)} className="font-semibold hover:underline">{u2.username || 'Player 2'}</button>
-            </div>
-            <div className="flex items-center gap-1.5 text-[10px]" style={{ color: textMuted }}>
-              <span className="inline-flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-green-400 font-semibold">LIVE</span>
-              </span>
-              {battle.startsAt && <span>· started {timeAgo(battle.startsAt)}</span>}
-            </div>
-          </div>
+          <span
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
+            style={{
+              background: 'rgba(239,68,68,0.18)',
+              border: '1.5px solid rgba(239,68,68,0.5)',
+              color: '#fca5a5',
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            Live
+          </span>
+          {battle.startsAt && (
+            <span className="text-[10px] truncate" style={{ color: textMuted }}>
+              · started {timeAgo(battle.startsAt)}
+            </span>
+          )}
         </div>
-        <div className="text-right flex-shrink-0">
-          <div className="text-sm font-bold" style={{ color: textPrimary }}>${formatMoney(pot, 0)}</div>
-          <div className="text-[10px]" style={{ color: textMuted }}>{formatTimeLeft(timeLeft)}</div>
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <span className="text-[12px] font-black tabular-nums" style={{ color: textPrimary }}>
+            ${formatMoney(pot, 0)}
+          </span>
+          <span className="text-[10px] tabular-nums" style={{ color: textMuted }}>
+            {formatTimeLeft(timeLeft)}
+          </span>
         </div>
       </div>
 
-      {/* Body: scoreboard with progress bar */}
-      <div className="px-4 pb-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className={`text-base font-bold ${u1Lead ? 'text-green-400' : ''}`} style={!u1Lead ? { color: textPrimary } : undefined}>
-              ${formatMoney(u1Bal, 0)}
+      {/* Head-to-Head body */}
+      <div className="px-3.5 pt-3.5 pb-3">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+          {/* LEFT player */}
+          <button
+            type="button"
+            onClick={() => onOpenProfile?.(u1)}
+            className="flex items-center gap-2.5 min-w-0 text-left lg:hover:bg-white/[0.03] rounded-lg p-1 -m-1 transition-colors"
+          >
+            <div className="relative flex-shrink-0">
+              <div
+                className="rounded-full p-[2.5px]"
+                style={{
+                  background: u1Ring,
+                  boxShadow: u1Lead
+                    ? '0 0 14px rgba(16,185,129,0.55)'
+                    : `0 0 10px ${HH_BLUE}55`,
+                }}
+              >
+                <FramedAvatar
+                  avatar={u1.avatar}
+                  username={u1.username || 'P1'}
+                  frameId={u1.equippedFrame}
+                  size={48}
+                  bgColor="#1e40af"
+                />
+              </div>
+              {u1OnFire && (
+                <span className="absolute -top-1 -right-1 text-base hh-flame" aria-label="On fire">
+                  🔥
+                </span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="text-[13px] font-black truncate" style={{ color: textPrimary }}>
+                {u1.username || 'Player 1'}
+              </div>
+              <div
+                className="text-[15px] font-black tabular-nums leading-tight"
+                style={{ color: u1Lead ? '#34d399' : textPrimary }}
+              >
+                ${formatMoney(u1Bal, 0)}
+              </div>
+              <div className="mt-0.5">
+                <PnlMini value={u1.pnlPercent} />
+              </div>
+            </div>
+          </button>
+
+          {/* Center VS chip */}
+          <div className="flex flex-col items-center px-1">
+            <div
+              className="px-2.5 py-1 rounded-md"
+              style={{
+                background: '#000',
+                border: `2px solid ${HH_BORDER}`,
+                boxShadow: '2px 2px 0 #0a0a0a',
+              }}
+            >
+              <span
+                className="text-[15px] font-black text-transparent bg-clip-text leading-none"
+                style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}
+              >
+                VS
+              </span>
+            </div>
+            <span
+              className="text-[8px] mt-1 uppercase tracking-widest font-bold"
+              style={{ color: textMuted }}
+            >
+              1v1
             </span>
-            {u1Lead && <span className="text-[9px] font-bold uppercase tracking-wider text-green-400/80">Leading</span>}
           </div>
-          <div className="flex items-center gap-2 min-w-0 justify-end">
-            {u2Lead && <span className="text-[9px] font-bold uppercase tracking-wider text-green-400/80">Leading</span>}
-            <span className={`text-base font-bold ${u2Lead ? 'text-green-400' : ''}`} style={!u2Lead ? { color: textPrimary } : undefined}>
-              ${formatMoney(u2Bal, 0)}
-            </span>
-          </div>
+
+          {/* RIGHT player */}
+          <button
+            type="button"
+            onClick={() => onOpenProfile?.(u2)}
+            className="flex items-center gap-2.5 min-w-0 justify-end lg:hover:bg-white/[0.03] rounded-lg p-1 -m-1 transition-colors"
+          >
+            <div className="min-w-0 text-right">
+              <div className="text-[13px] font-black truncate" style={{ color: textPrimary }}>
+                {u2.username || 'Player 2'}
+              </div>
+              <div
+                className="text-[15px] font-black tabular-nums leading-tight"
+                style={{ color: u2Lead ? '#34d399' : textPrimary }}
+              >
+                ${formatMoney(u2Bal, 0)}
+              </div>
+              <div className="mt-0.5 flex justify-end">
+                <PnlMini value={u2.pnlPercent} align="right" />
+              </div>
+            </div>
+            <div className="relative flex-shrink-0">
+              <div
+                className="rounded-full p-[2.5px]"
+                style={{
+                  background: u2Ring,
+                  boxShadow: u2Lead
+                    ? '0 0 14px rgba(16,185,129,0.55)'
+                    : `0 0 10px ${HH_ORANGE}55`,
+                }}
+              >
+                <FramedAvatar
+                  avatar={u2.avatar}
+                  username={u2.username || 'P2'}
+                  frameId={u2.equippedFrame}
+                  size={48}
+                  bgColor="#7c2d12"
+                />
+              </div>
+              {u2OnFire && (
+                <span className="absolute -top-1 -left-1 text-base hh-flame" aria-label="On fire">
+                  🔥
+                </span>
+              )}
+            </div>
+          </button>
         </div>
-        <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+
+        {/* Two-tone balance share bar (blue / orange, green-tinted on the leader's side) */}
+        <div
+          className="mt-3 h-2.5 rounded-full overflow-hidden flex"
+          style={{ background: '#000', border: `1.5px solid ${HH_BORDER}` }}
+        >
           <div
-            className="h-full transition-all duration-1000"
             style={{
               width: `${u1Pct}%`,
               background: u1Lead
+                ? 'linear-gradient(90deg, #10b981, #22c55e)'
+                : HH_BLUE,
+              transition: 'width 700ms ease',
+            }}
+          />
+          <div
+            style={{
+              width: `${100 - u1Pct}%`,
+              background: u2Lead
                 ? 'linear-gradient(90deg, #22c55e, #10b981)'
-                : 'linear-gradient(90deg, #3b82f6, #06b6d4)',
+                : HH_ORANGE,
+              transition: 'width 700ms ease',
             }}
           />
         </div>
-        {totalPicks > 0 && (
-          <div className="flex items-center gap-1.5 mt-2.5 text-[10px]" style={{ color: textSecondary }}>
-            <span className="inline-flex items-center gap-1">
-              <Icon.Bolt size={11} className="text-yellow-400" />
-              {totalPicks} {totalPicks === 1 ? 'pick' : 'piks'}
-            </span>
+
+        {/* Picks row — preview each side's top pick once both locked, otherwise status pill */}
+        <div className="mt-3">
+          {bothPicked ? (
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-stretch">
+              <PickMini pick={u1PickPreview} sideColor={HH_BLUE} />
+              <span
+                className="self-center text-[9px] font-black uppercase tracking-widest"
+                style={{ color: textMuted }}
+              >
+                vs
+              </span>
+              <PickMini pick={u2PickPreview} sideColor={HH_ORANGE} align="right" />
+            </div>
+          ) : onlyU1Locked || onlyU2Locked ? (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg"
+              style={{ background: '#0a0a0a', border: `1.5px solid ${HH_BORDER}` }}
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9ca3af' }} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
+                {onlyU1Locked ? `${u1.username || 'P1'} locked` : `${u2.username || 'P2'} locked`}
+                <span className="font-normal normal-case" style={{ color: textMuted }}>
+                  {' '}· awaiting other player
+                </span>
+              </span>
+            </div>
+          ) : (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg"
+              style={{ background: '#0a0a0a', border: `1.5px solid ${HH_BORDER}` }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 hh-pending" />
+              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
+                Awaiting picks from both players
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Cartoon info chips: pik counts when both locked, fire when on a heater */}
+        {(bothPicked || u1OnFire || u2OnFire) && (
+          <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
             {bothPicked && (
-              <>
-                <span>·</span>
-                <span className="text-cyan-300 font-semibold">Both locked in</span>
-              </>
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider"
+                style={{
+                  background: 'rgba(59,130,246,0.14)',
+                  border: `1.5px solid ${HH_BORDER}`,
+                  color: '#93c5fd',
+                  boxShadow: '1.5px 1.5px 0 #0a0a0a',
+                }}
+              >
+                🎯 {u1Picks.length} vs {u2Picks.length} piks
+              </span>
+            )}
+            {(u1OnFire || u2OnFire) && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider"
+                style={{
+                  background: 'rgba(251,146,60,0.16)',
+                  border: `1.5px solid ${HH_BORDER}`,
+                  color: '#fed7aa',
+                  boxShadow: '1.5px 1.5px 0 #0a0a0a',
+                }}
+              >
+                🔥 {(u1OnFire ? (u1.username || 'P1') : (u2.username || 'P2'))} hot
+              </span>
             )}
           </div>
         )}
       </div>
 
       {/* Action bar */}
-      <div className="grid grid-cols-2 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
+      <div
+        className="grid grid-cols-2"
+        style={{ borderTop: `2px solid ${HH_BORDER}` }}
+      >
         <button
           type="button"
           onClick={() => onSpectate?.(battle)}
-          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
-          style={{ color: textPrimary }}
+          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
+          style={{ color: textPrimary, borderRight: `2px solid ${HH_BORDER}` }}
         >
           <Icon.Eye size={14} />
           Spectate
@@ -742,13 +1011,26 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile }) {
         <button
           type="button"
           onClick={() => onSpectate?.(battle)}
-          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
+          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
           style={{ color: textPrimary }}
         >
           <Icon.Chat size={14} />
           Chat
         </button>
       </div>
+
+      <style>{`
+        @keyframes hhFlamePulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.25); }
+        }
+        .hh-flame { display: inline-block; animation: hhFlamePulse 1s ease-in-out infinite; }
+        @keyframes hhPendingPulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
+        .hh-pending { animation: hhPendingPulse 1.5s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 }
