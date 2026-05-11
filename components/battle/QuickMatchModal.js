@@ -143,9 +143,21 @@ function MatchFoundContent({
   const winStreak = Number(userProfile?.winStreak) || Math.min(userWins, 9);
   const xpBonus = 50;
 
+  // Compact label format: "10K" / "1.2M" so the buy-in pill always
+  // fits on a single line even with beta's larger coin numbers. The
+  // long-form "10,000 Coin Buy-In · Win 18,000 Pot" was wrapping to
+  // two lines and crushing the layout vs the cartoon reference.
+  const compact = (n) => {
+    const v = Number(n || 0);
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 ? 1 : 0)}M`;
+    if (v >= 1_000) return `${(v / 1_000).toFixed(v % 1_000 ? 1 : 0)}K`;
+    return String(v);
+  };
   const fmt = (n) => Number(n || 0).toLocaleString();
-  const buyInLabel = isBeta ? `${fmt(buyIn || 10000)} Coin Buy-In` : `$${fmt(buyIn)} Buy-In`;
-  const potLabel = isBeta ? `Win ${fmt((buyIn || 10000) * 2 * 0.9)} Pot` : `Win $${fmt(payout)} Pot`;
+  const betaBuyIn = buyIn || 10000;
+  const betaPot = Math.round(betaBuyIn * 2 * 0.9);
+  const buyInLabel = isBeta ? `${compact(betaBuyIn)} Coins` : `$${fmt(buyIn)} Buy-In`;
+  const potLabel = isBeta ? `Win ${compact(betaPot)}` : `Win $${fmt(payout)} Pot`;
 
   const totalSegments = 10;
   const filledSegments = Math.max(0, Math.min(totalSegments, Math.ceil((secondsLeft / CONFIRM_SECONDS) * totalSegments)));
@@ -202,34 +214,37 @@ function MatchFoundContent({
         })}
       </div>
 
-      {/* Header — lightning bolts + MATCH FOUND! */}
-      <div className="pt-6 pb-2 text-center relative">
-        <div className="inline-flex items-center justify-center gap-2">
-          <Bolt size={26} delay={0} />
+      {/* Header — lightning bolts + MATCH FOUND!
+          Larger, bolder title so it reads as the focal point of the
+          popup like the cartoon reference. */}
+      <div className="pt-5 pb-1 text-center relative">
+        <div className="inline-flex items-center justify-center gap-3">
+          <Bolt size={32} delay={0} />
           <h3
-            className="text-2xl md:text-3xl font-black inline-block px-4 py-1.5 rounded-2xl"
+            className="text-3xl md:text-4xl font-black inline-block"
             style={{
               color: 'transparent',
-              background: 'linear-gradient(180deg, #fde68a 0%, #fb923c 60%, #c2410c 100%)',
+              background: 'linear-gradient(180deg, #fef08a 0%, #facc15 45%, #fb923c 80%, #c2410c 100%)',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
-              WebkitTextStroke: '2px #0a0a0a',
-              textShadow: '0 4px 0 rgba(0,0,0,0.4)',
-              letterSpacing: '0.06em',
+              WebkitTextStroke: '2.5px #0a0a0a',
+              textShadow: '0 5px 0 rgba(0,0,0,0.45)',
+              letterSpacing: '0.04em',
               animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.05s both',
               fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           >
             MATCH FOUND!
           </h3>
-          <Bolt size={26} delay={0.2} />
+          <Bolt size={32} delay={0.2} />
         </div>
       </div>
 
-      {/* Buy-in / pot pill with trophy + coins */}
+      {/* Buy-in / pot pill with trophy + coins.
+          Single-line layout — labels are compacted so they never wrap. */}
       <div className="px-4 pb-2">
         <div
-          className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2.5"
+          className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 whitespace-nowrap"
           style={{
             background: 'linear-gradient(180deg, #0f1424 0%, #0a0e1c 100%)',
             border: '2.5px solid #3b82f6',
@@ -1931,21 +1946,37 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                         {selectedMode?.label} Match
                       </div>
                       <div className="text-white text-[11px] font-extrabold truncate">
-                        ${buyIn} Buy-In · ${potSize} Pot
+                        {isBeta
+                          ? '10K Coins · Win 18K'
+                          : `$${buyIn} Buy-In · $${potSize} Pot`}
                       </div>
                     </div>
                   </div>
-                  <div
-                    className="flex flex-col items-end px-2.5 py-1 rounded-xl flex-shrink-0"
-                    style={{
-                      background: '#0a0a0a',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
-                    }}
-                  >
-                    <span className="text-[8px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#9ca3af' }}>Win Up To</span>
-                    <span className="text-white text-sm font-black leading-none">${payout}</span>
-                  </div>
+                  {isBeta ? (
+                    <div
+                      className="flex flex-col items-end px-2.5 py-1 rounded-xl flex-shrink-0"
+                      style={{
+                        background: '#0a0a0a',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      <span className="text-[8px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#9ca3af' }}>Beta</span>
+                      <span className="text-white text-sm font-black leading-none">No Risk</span>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex flex-col items-end px-2.5 py-1 rounded-xl flex-shrink-0"
+                      style={{
+                        background: '#0a0a0a',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      <span className="text-[8px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#9ca3af' }}>Win Up To</span>
+                      <span className="text-white text-sm font-black leading-none">${payout}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
