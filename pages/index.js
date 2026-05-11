@@ -26,6 +26,7 @@ import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useBetaMode } from '../contexts/SiteConfigContext';
 import { useGames } from '../contexts/GamesContext';
 import { useMatchup } from '../contexts/MatchupContext';
 import haptic from '../utils/haptics';
@@ -184,6 +185,7 @@ function GameCardSkeleton() {
 export default function Dashboard() {
   const router = useRouter();
   const { user } = useAuth();
+  const isBeta = useBetaMode();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, hasFetchedOnce: gamesHasFetchedOnce, error: gamesError, lastUpdated, isDemoMode } = useGames();
   const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup } = useMatchup();
@@ -1807,107 +1809,186 @@ export default function Dashboard() {
 
       <Footer />
 
-      {showBattleWalkthrough && hasActiveMatchup && matchup && (
+      {showBattleWalkthrough && hasActiveMatchup && matchup && (() => {
+        // Cartoon-themed battle walkthrough — visually matches the
+        // QuickMatchModal "MATCH FOUND" reference (yellow/orange title
+        // with bolts, blue-bordered info pill, avatars with colored
+        // rings, big yellow CTA, hover gated). All 3 steps share the
+        // same shell so the walkthrough feels like one cohesive
+        // cartoon flow instead of a plain dark utility popup.
+        const myName = myProfile?.username || user?.username || user?.name || 'You';
+        const oppName = opponent?.username || 'Opponent';
+        const myAvatarUrl = myProfile?.avatar || user?.avatar;
+        const modeLabel = matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT';
+        const potDollars = (() => {
+          const payout = parseFloat(matchup.winnerPayout);
+          if (payout > 0) return payout;
+          const gross = parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000);
+          const fee = parseFloat(matchup.platformFee);
+          return fee > 0 ? gross - fee : gross - gross * 0.10;
+        })();
+        const compact = (n) => {
+          const v = Number(n || 0);
+          if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 ? 1 : 0)}M`;
+          if (v >= 1_000) return `${(v / 1_000).toFixed(v % 1_000 ? 1 : 0)}K`;
+          return String(v);
+        };
+        const potLabel = isBeta ? `${compact(potDollars)} Coins` : `$${potDollars.toLocaleString()}`;
+        const startingBalance = parseFloat(matchup.startingBalance || 10000);
+        const startingLabel = isBeta ? `${compact(startingBalance)} coins` : `$${startingBalance.toLocaleString()}`;
+        const timeLabel = timeRemaining ? (() => {
+          const m = Math.floor(timeRemaining / 60000);
+          const h = Math.floor(m / 60);
+          const d = Math.floor(h / 24);
+          if (d > 0) return `${d}d ${h % 24}h`;
+          if (h > 0) return `${h}h ${m % 60}m`;
+          return `${m}m`;
+        })() : 'Starting';
+        const ctaLabel = walkthroughStep === 0 ? 'How Does It Work?' : walkthroughStep === 1 ? 'Got It, Any Tips?' : 'Start Picking';
+        const Bolt = ({ size = 24, delay = 0 }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{
+            filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)',
+            animation: `wtBolt 0.9s ease-in-out ${delay}s infinite`,
+          }}>
+            <path d="M13 2L3 14h7l-2 8 11-13h-7l3-7z" fill="#facc15" stroke="#0a0a0a" strokeWidth="1.6" strokeLinejoin="round" />
+          </svg>
+        );
+        return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.88)' }}>
           <style>{`
-            @keyframes wtSlideUp {
-              from { opacity: 0; transform: translateY(30px) scale(0.95); }
-              to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes wtPulse {
-              0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.3); }
-              50% { box-shadow: 0 0 40px rgba(59,130,246,0.5); }
-            }
-            @keyframes wtFadeIn {
-              from { opacity: 0; transform: translateY(10px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
+            @keyframes wtSlideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes wtFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes wtBolt { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(0.92); } }
+            @keyframes wtTitleBounce { 0% { transform: scale(0.6) rotate(-6deg); opacity: 0; } 60% { transform: scale(1.08) rotate(2deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+            @keyframes wtCtaThrob { 0%,100% { transform: translateY(0); box-shadow: 0 6px 0 #0a0a0a, 0 0 30px rgba(250,204,21,0.55); } 50% { transform: translateY(-2px); box-shadow: 0 8px 0 #0a0a0a, 0 0 38px rgba(250,204,21,0.75); } }
+            @media (hover: hover) { .wt-back-btn:hover { background: linear-gradient(180deg,#262626,#171717) !important; } }
           `}</style>
-          <div 
+          <div
             className="w-full max-w-[380px] rounded-2xl overflow-hidden flex flex-col"
-            style={{ 
-              background: 'linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%)',
-              border: '2px solid rgba(59, 130, 246, 0.4)',
-              animation: 'wtSlideUp 0.4s ease-out, wtPulse 3s ease-in-out infinite',
-              boxShadow: 'none',
+            style={{
+              background: 'linear-gradient(180deg, #0a1024 0%, #06070d 100%)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 8px 0 #0a0a0a, 0 0 40px rgba(59,130,246,0.35)',
+              animation: 'wtSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both',
               maxHeight: 'calc(100dvh - 2rem)',
             }}
           >
+            {/* Top bar — progress dots + skip */}
             <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
               <div className="flex gap-1.5">
                 {[0, 1, 2].map(i => (
-                  <div key={i} className="h-1 rounded-full transition-all duration-300" style={{ width: walkthroughStep === i ? '24px' : '8px', backgroundColor: walkthroughStep >= i ? '#3b82f6' : ('#333') }}></div>
+                  <div key={i} className="h-1.5 rounded-full transition-all duration-300" style={{
+                    width: walkthroughStep === i ? '28px' : '10px',
+                    background: walkthroughStep >= i ? 'linear-gradient(90deg,#facc15,#fb923c)' : '#1a1a1a',
+                    border: '1.5px solid #0a0a0a',
+                  }} />
                 ))}
               </div>
-              <button onClick={() => { setShowBattleWalkthrough(false); setWalkthroughDismissed(true); setWalkthroughStep(0); }} className="text-gray-600 text-xs">Skip</button>
+              <button onClick={() => { setShowBattleWalkthrough(false); setWalkthroughDismissed(true); setWalkthroughStep(0); }} className="text-gray-500 text-xs font-bold uppercase tracking-wider">Skip</button>
             </div>
 
             <div key={walkthroughStep} className="flex-1 overflow-y-auto min-h-0" style={{ animation: 'wtFadeIn 0.3s ease-out' }}>
               {walkthroughStep === 0 && (
                 <>
-                  <div className="px-5 pt-2 pb-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5 mb-3">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-green-400 text-xs font-bold uppercase tracking-wider">Battle Started</span>
+                  {/* Cartoon title with lightning bolts */}
+                  <div className="pt-3 pb-2 text-center">
+                    <div className="inline-flex items-center justify-center gap-1.5 mb-2 px-3 py-1 rounded-full" style={{
+                      background: 'linear-gradient(180deg,#10b981,#047857)',
+                      border: '2.5px solid #0a0a0a',
+                      boxShadow: '0 2px 0 #0a0a0a',
+                    }}>
+                      <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                      <span className="text-white text-[10px] font-extrabold uppercase tracking-[0.18em]">Battle Started</span>
                     </div>
-                    <h2 className={`text-xl font-bold mb-1 ${'text-white'}`}>You're Matched!</h2>
-                    <p className={`text-sm ${'text-gray-400'}`}>You've been paired for a 1v1 battle.</p>
+                    <div className="inline-flex items-center justify-center gap-2.5">
+                      <Bolt size={26} delay={0} />
+                      <h2 className="text-2xl md:text-3xl font-black inline-block" style={{
+                        color: 'transparent',
+                        background: 'linear-gradient(180deg,#fef08a 0%,#facc15 45%,#fb923c 80%,#c2410c 100%)',
+                        WebkitBackgroundClip: 'text',
+                        backgroundClip: 'text',
+                        WebkitTextStroke: '2.2px #0a0a0a',
+                        textShadow: '0 4px 0 rgba(0,0,0,0.4)',
+                        letterSpacing: '0.03em',
+                        animation: 'wtTitleBounce 0.55s cubic-bezier(0.34,1.56,0.64,1) both',
+                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                      }}>
+                        YOU&apos;RE MATCHED!
+                      </h2>
+                      <Bolt size={26} delay={0.2} />
+                    </div>
+                    <p className="text-gray-400 text-xs font-semibold mt-2">You&apos;ve been paired for a 1v1 battle.</p>
                   </div>
-                  <div className="px-5 py-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col items-center flex-1">
-                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #3b82f6' }}>
-                          {(myProfile?.avatar || user?.avatar) ? (
-                            <img src={myProfile?.avatar || user?.avatar} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className={`font-bold text-lg ${'text-white'}`}>{(myProfile?.username || user?.username || user?.name || '')[0]?.toUpperCase() || 'P'}</span>
-                          )}
-                        </div>
-                        <p className={`text-xs font-semibold truncate max-w-[90px] ${'text-white'}`}>{myProfile?.username || user?.username || user?.name || ''}</p>
-                      </div>
-                      <div className="flex flex-col items-center px-3">
-                        <span className="text-2xl font-black text-blue-400">VS</span>
-                      </div>
-                      <div className="flex flex-col items-center flex-1">
-                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #06b6d4' }}>
-                          {opponent?.avatar ? (
-                            <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className={`font-bold text-lg ${'text-white'}`}>{(opponent?.username || 'O')[0]?.toUpperCase()}</span>
-                          )}
-                        </div>
-                        <p className={`text-xs font-semibold truncate max-w-[90px] ${'text-white'}`}>{opponent?.username || 'Opponent'}</p>
-                      </div>
+
+                  {/* Mode / Pot pill — single line, blue-bordered, trophy + coins */}
+                  <div className="px-5 pb-3">
+                    <div className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 whitespace-nowrap" style={{
+                      background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                      border: '2.5px solid #3b82f6',
+                      boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
+                    }}>
+                      <span style={{ fontSize: 20, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">🏆</span>
+                      <span className="text-white font-extrabold text-sm">
+                        <span style={{ color: '#facc15' }}>{modeLabel}</span>
+                        <span className="text-gray-500 mx-1.5">·</span>
+                        <span style={{ color: '#facc15' }}>Win {potLabel}</span>
+                        <span className="text-gray-500 mx-1.5">·</span>
+                        <span style={{ color: '#facc15' }}>{timeLabel}</span>
+                      </span>
+                      <span style={{ fontSize: 20, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">🪙</span>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-3">
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                        <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Mode</p>
-                        <p className={`font-bold text-sm ${'text-white'}`}>{matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT'}</p>
+                  </div>
+
+                  {/* Avatars with cartoon rings + VS burst */}
+                  <div className="flex items-center justify-center gap-4 px-5 pb-4">
+                    <div className="flex flex-col items-center flex-1 min-w-0">
+                      <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{
+                        background: '#0a0a0a',
+                        border: '3.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.55), inset 0 0 0 2.5px #3b82f6',
+                      }}>
+                        {myAvatarUrl ? (
+                          <img src={myAvatarUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="font-black text-lg text-white">{myName[0]?.toUpperCase() || 'P'}</span>
+                        )}
                       </div>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                        <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                        <p className={`font-bold text-sm ${'text-white'}`}>${(() => {
-                          const payout = parseFloat(matchup.winnerPayout);
-                          if (payout > 0) return payout.toLocaleString();
-                          const gross = parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000);
-                          const fee = parseFloat(matchup.platformFee);
-                          const net = fee > 0 ? gross - fee : gross - gross * 0.10;
-                          return net.toLocaleString();
-                        })()}</p>
+                      <p className="text-white text-[10.5px] font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md" style={{
+                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                        border: '2px solid #0a0a0a',
+                        boxShadow: '0 2px 0 #0a0a0a',
+                        letterSpacing: '0.06em',
+                      }}>{myName}</p>
+                    </div>
+                    <div className="flex flex-col items-center flex-shrink-0">
+                      <div className="text-3xl font-black italic" style={{
+                        color: 'transparent',
+                        background: 'linear-gradient(180deg,#fef08a,#facc15 50%,#c2410c)',
+                        WebkitBackgroundClip: 'text',
+                        backgroundClip: 'text',
+                        WebkitTextStroke: '2px #0a0a0a',
+                        textShadow: '0 0 18px rgba(250,204,21,0.6)',
+                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                      }}>VS</div>
+                    </div>
+                    <div className="flex flex-col items-center flex-1 min-w-0">
+                      <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{
+                        background: '#0a0a0a',
+                        border: '3.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 18px rgba(251,146,60,0.55), inset 0 0 0 2.5px #fb923c',
+                      }}>
+                        {opponent?.avatar ? (
+                          <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="font-black text-lg text-white">{oppName[0]?.toUpperCase() || 'O'}</span>
+                        )}
                       </div>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                        <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Time</p>
-                        <p className={`font-bold text-sm ${'text-white'}`}>
-                          {timeRemaining ? (() => {
-                            const m = Math.floor(timeRemaining / 60000);
-                            const h = Math.floor(m / 60);
-                            const d = Math.floor(h / 24);
-                            if (d > 0) return `${d}d ${h % 24}h`;
-                            if (h > 0) return `${h}h ${m % 60}m`;
-                            return `${m}m`;
-                          })() : 'Starting'}
-                        </p>
-                      </div>
+                      <p className="text-white text-[10.5px] font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md" style={{
+                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                        border: '2px solid #0a0a0a',
+                        boxShadow: '0 2px 0 #0a0a0a',
+                        letterSpacing: '0.06em',
+                      }}>{oppName}</p>
                     </div>
                   </div>
                 </>
@@ -1916,40 +1997,47 @@ export default function Dashboard() {
               {walkthroughStep === 1 && (
                 <div className="px-5 py-4">
                   <div className="text-center mb-4">
-                    <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl">🎯</span>
+                    <div className="inline-flex items-center justify-center gap-2.5">
+                      <Bolt size={22} delay={0} />
+                      <h2 className="text-xl md:text-2xl font-black" style={{
+                        color: 'transparent',
+                        background: 'linear-gradient(180deg,#fef08a 0%,#facc15 50%,#fb923c 100%)',
+                        WebkitBackgroundClip: 'text',
+                        backgroundClip: 'text',
+                        WebkitTextStroke: '2px #0a0a0a',
+                        textShadow: '0 3px 0 rgba(0,0,0,0.4)',
+                        letterSpacing: '0.03em',
+                        animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
+                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                      }}>HOW IT WORKS</h2>
+                      <Bolt size={22} delay={0.2} />
                     </div>
-                    <h2 className={`text-lg font-bold mb-1 ${'text-white'}`}>How It Works</h2>
-                    <p className={`text-sm ${'text-gray-400'}`}>Three simple steps to win</p>
+                    <p className="text-gray-400 text-xs font-semibold mt-1.5">Three simple steps to win</p>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                      <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-blue-400 text-xs font-bold">1</span>
+                  <div className="space-y-2.5">
+                    {[
+                      { n: 1, color: '#3b82f6', glow: 'rgba(59,130,246,0.35)', icon: '🎯', title: 'Place Your Picks', desc: 'Browse games below and add bets to your slip — spreads, moneylines, or totals.' },
+                      { n: 2, color: '#10b981', glow: 'rgba(16,185,129,0.35)', icon: '📈', title: 'Grow Your Balance', desc: `You both start with ${startingLabel}. Winning picks grow your bankroll.` },
+                      { n: 3, color: '#fb923c', glow: 'rgba(251,146,60,0.35)', icon: '🏆', title: 'Highest Balance Wins', desc: 'When time runs out, the player with the higher balance takes 90% of the pot.' },
+                    ].map((s) => (
+                      <div key={s.n} className="flex items-start gap-2.5 rounded-xl p-2.5" style={{
+                        background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                        border: `2.5px solid ${s.color}`,
+                        boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${s.glow}`,
+                      }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
+                          background: `linear-gradient(180deg,${s.color},${s.color}cc)`,
+                          border: '2px solid #0a0a0a',
+                          boxShadow: '0 2px 0 #0a0a0a',
+                        }}>
+                          <span className="text-white text-sm font-black">{s.n}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-white text-sm font-extrabold flex items-center gap-1.5"><span aria-hidden="true">{s.icon}</span>{s.title}</p>
+                          <p className="text-gray-400 text-[11px] mt-0.5 leading-snug">{s.desc}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className={`text-sm font-semibold ${'text-white'}`}>Place Your Picks</p>
-                        <p className="text-gray-500 text-xs">Browse games below and add bets to your slip. Pick spreads, moneylines, or totals.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-emerald-400 text-xs font-bold">2</span>
-                      </div>
-                      <div>
-                        <p className={`text-sm font-semibold ${'text-white'}`}>Grow Your Balance</p>
-                        <p className="text-gray-500 text-xs">You both start with ${parseFloat(matchup.startingBalance || 10000).toLocaleString()}. Winning picks grow your bankroll.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                      <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-orange-400 text-xs font-bold">3</span>
-                      </div>
-                      <div>
-                        <p className={`text-sm font-semibold ${'text-white'}`}>Highest Balance Wins</p>
-                        <p className="text-gray-500 text-xs">When time runs out, the player with the higher balance takes 90% of the pot.</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1957,45 +2045,64 @@ export default function Dashboard() {
               {walkthroughStep === 2 && (
                 <div className="px-5 py-4">
                   <div className="text-center mb-4">
-                    <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl">💡</span>
+                    <div className="inline-flex items-center justify-center gap-2.5">
+                      <Bolt size={22} delay={0} />
+                      <h2 className="text-xl md:text-2xl font-black" style={{
+                        color: 'transparent',
+                        background: 'linear-gradient(180deg,#fef08a 0%,#facc15 50%,#fb923c 100%)',
+                        WebkitBackgroundClip: 'text',
+                        backgroundClip: 'text',
+                        WebkitTextStroke: '2px #0a0a0a',
+                        textShadow: '0 3px 0 rgba(0,0,0,0.4)',
+                        letterSpacing: '0.03em',
+                        animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
+                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                      }}>TIPS TO WIN</h2>
+                      <Bolt size={22} delay={0.2} />
                     </div>
-                    <h2 className={`text-lg font-bold mb-1 ${'text-white'}`}>Tips to Win</h2>
-                    <p className={`text-sm ${'text-gray-400'}`}>Quick strategy guide</p>
+                    <p className="text-gray-400 text-xs font-semibold mt-1.5">Quick strategy guide</p>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                      <span className="text-lg mt-0.5">📊</span>
-                      <div>
-                        <p className={`text-sm font-semibold ${'text-white'}`}>Track the Banner</p>
-                        <p className="text-gray-500 text-xs">Your battle status bar at the top shows both balances and time left in real-time.</p>
+                  <div className="space-y-2.5">
+                    {[
+                      { color: '#3b82f6', glow: 'rgba(59,130,246,0.35)', icon: '📊', title: 'Track the Banner', desc: 'Your battle status bar at the top shows both balances and time left in real-time.' },
+                      { color: '#facc15', glow: 'rgba(250,204,21,0.35)', icon: '🔒', title: 'Hidden Bets', desc: "Your opponent can't see your picks until you've placed at least one bet — and vice versa." },
+                      { color: '#10b981', glow: 'rgba(16,185,129,0.35)', icon: '⚡', title: 'Manage Risk', desc: "Don't go all-in early. Spread your bets across games to build a steady lead." },
+                    ].map((t) => (
+                      <div key={t.title} className="flex items-start gap-2.5 rounded-xl p-2.5" style={{
+                        background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                        border: `2.5px solid ${t.color}`,
+                        boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${t.glow}`,
+                      }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
+                          background: `linear-gradient(180deg,${t.color},${t.color}cc)`,
+                          border: '2px solid #0a0a0a',
+                          boxShadow: '0 2px 0 #0a0a0a',
+                          fontSize: 16,
+                        }} aria-hidden="true">{t.icon}</div>
+                        <div className="min-w-0">
+                          <p className="text-white text-sm font-extrabold">{t.title}</p>
+                          <p className="text-gray-400 text-[11px] mt-0.5 leading-snug">{t.desc}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                      <span className="text-lg mt-0.5">🔒</span>
-                      <div>
-                        <p className={`text-sm font-semibold ${'text-white'}`}>Hidden Bets</p>
-                        <p className="text-gray-500 text-xs">Your opponent can't see your picks until you've placed at least one bet — and vice versa.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
-                      <span className="text-lg mt-0.5">⚡</span>
-                      <div>
-                        <p className={`text-sm font-semibold ${'text-white'}`}>Manage Risk</p>
-                        <p className="text-gray-500 text-xs">Don't go all-in early. Spread your bets across games to build a steady lead.</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="px-5 pb-5 pt-2 flex-shrink-0 flex gap-2">
+            {/* CTA — big yellow cartoon button + Back */}
+            <div className="px-5 pb-5 pt-2 flex-shrink-0 flex gap-2 items-stretch">
               {walkthroughStep > 0 && (
                 <button
                   onClick={() => setWalkthroughStep(walkthroughStep - 1)}
-                  className="py-3 px-5 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
-                  style={{ backgroundColor: '#1a1a1a', color: '#e5e7eb', border: '1px solid #333' }}
+                  className="wt-back-btn py-3 px-4 rounded-2xl text-xs font-extrabold uppercase tracking-wider"
+                  style={{
+                    background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                    color: '#e5e7eb',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a',
+                    letterSpacing: '0.12em',
+                  }}
                 >
                   Back
                 </button>
@@ -2010,15 +2117,27 @@ export default function Dashboard() {
                     setWalkthroughStep(0);
                   }
                 }}
-                className="btn-lift flex-1 py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
-                style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
+                className="flex-1 py-3.5 rounded-2xl font-black uppercase flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(180deg,#fde047 0%,#facc15 50%,#ca8a04 100%)',
+                  border: '3px solid #0a0a0a',
+                  boxShadow: '0 6px 0 #0a0a0a, 0 0 30px rgba(250,204,21,0.55)',
+                  color: '#fff',
+                  WebkitTextStroke: '1.2px #0a0a0a',
+                  textShadow: '0 2px 0 rgba(0,0,0,0.35)',
+                  letterSpacing: '0.06em',
+                  fontSize: 14,
+                  animation: 'wtCtaThrob 1.4s ease-in-out 0.6s infinite',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
               >
-                {walkthroughStep === 0 ? 'How Does It Work?' : walkthroughStep === 1 ? 'Got It, Any Tips?' : 'Start Picking'}
+                {ctaLabel}
               </button>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       <style jsx>{`
         .scrollbar-hide {
