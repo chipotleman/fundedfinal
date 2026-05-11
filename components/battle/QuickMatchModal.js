@@ -1940,41 +1940,45 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     </span>
                     <div className="min-w-0">
                       <div
-                        className="text-[9px] font-extrabold uppercase tracking-[0.2em] truncate"
-                        style={{ color: modeColor }}
+                        className="inline-block text-white text-[9px] font-black uppercase tracking-[0.18em] truncate px-2 py-0.5 rounded-md"
+                        style={{
+                          background: `linear-gradient(180deg, ${modeColor}, ${modeColor}cc)`,
+                          border: '2px solid #0a0a0a',
+                          boxShadow: '0 2px 0 #0a0a0a',
+                        }}
                       >
                         {selectedMode?.label} Match
                       </div>
-                      <div className="text-white text-[11px] font-extrabold truncate">
+                      <div className="text-white text-[12px] font-black truncate mt-1" style={{ letterSpacing: '0.02em' }}>
                         {isBeta
-                          ? '10K Coins · Win 18K'
-                          : `$${buyIn} Buy-In · $${potSize} Pot`}
+                          ? <><span style={{ color: '#facc15' }}>10K Coins</span> <span className="text-gray-400">·</span> <span style={{ color: '#facc15' }}>Win 18K</span></>
+                          : <><span style={{ color: '#facc15' }}>${buyIn} Buy-In</span> <span className="text-gray-400">·</span> <span style={{ color: '#facc15' }}>${potSize} Pot</span></>}
                       </div>
                     </div>
                   </div>
                   {isBeta ? (
                     <div
-                      className="flex flex-col items-end px-2.5 py-1 rounded-xl flex-shrink-0"
+                      className="flex flex-col items-center px-2.5 py-1 rounded-xl flex-shrink-0"
                       style={{
-                        background: '#0a0a0a',
+                        background: 'linear-gradient(180deg,#10b981,#047857)',
                         border: '2.5px solid #0a0a0a',
-                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
+                        boxShadow: '0 3px 0 #0a0a0a',
                       }}
                     >
-                      <span className="text-[8px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#9ca3af' }}>Beta</span>
-                      <span className="text-white text-sm font-black leading-none">No Risk</span>
+                      <span className="text-white text-[8px] font-black uppercase tracking-[0.18em]">Beta</span>
+                      <span className="text-white text-sm font-black leading-none mt-0.5">No Risk</span>
                     </div>
                   ) : (
                     <div
-                      className="flex flex-col items-end px-2.5 py-1 rounded-xl flex-shrink-0"
+                      className="flex flex-col items-center px-2.5 py-1 rounded-xl flex-shrink-0"
                       style={{
-                        background: '#0a0a0a',
+                        background: 'linear-gradient(180deg,#facc15,#ca8a04)',
                         border: '2.5px solid #0a0a0a',
-                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
+                        boxShadow: '0 3px 0 #0a0a0a',
                       }}
                     >
-                      <span className="text-[8px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#9ca3af' }}>Win Up To</span>
-                      <span className="text-white text-sm font-black leading-none">${payout}</span>
+                      <span className="text-[#0a0a0a] text-[8px] font-black uppercase tracking-[0.18em]">Win Up To</span>
+                      <span className="text-[#0a0a0a] text-sm font-black leading-none mt-0.5">${payout}</span>
                     </div>
                   )}
                 </div>
@@ -2009,7 +2013,17 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   >
                     {userName}
                   </p>
-                  <p className="text-blue-300 text-[10px] font-extrabold uppercase mt-1" style={{ letterSpacing: '0.16em' }}>Ready</p>
+                  <p
+                    className="text-white text-[10px] font-black uppercase mt-1.5 px-2 py-0.5 rounded-md"
+                    style={{
+                      background: 'linear-gradient(180deg,#10b981,#047857)',
+                      border: '2px solid #0a0a0a',
+                      boxShadow: '0 2px 0 #0a0a0a',
+                      letterSpacing: '0.16em',
+                    }}
+                  >
+                    Ready
+                  </p>
                 </div>
 
                 <div className="flex flex-col items-center justify-center flex-shrink-0 relative z-20">
@@ -2094,7 +2108,17 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                       >
                         {currentName}
                       </p>
-                      <p className="text-[10px] font-extrabold mt-1" style={{ color: modeColor, letterSpacing: '0.1em' }}>({currentRecord})</p>
+                      <p
+                        className="text-white text-[10px] font-black mt-1 px-2 py-0.5 rounded-md"
+                        style={{
+                          background: '#0a0a0a',
+                          border: `2px solid ${modeColor}`,
+                          boxShadow: `0 2px 0 #0a0a0a, 0 0 8px ${modeColor}66`,
+                          letterSpacing: '0.1em',
+                        }}
+                      >
+                        ({currentRecord})
+                      </p>
                     </div>
                   ) : (
                     <p
@@ -2152,10 +2176,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   style={{ animation: 'qm-marquee 16s linear infinite' }}
                 >
                   {[...SCAN_NAMES, ...SCAN_NAMES].map((n, i) => (
-                    <span key={i} className="inline-flex items-center gap-1.5 text-[9px] font-extrabold uppercase" style={{ letterSpacing: '0.1em' }}>
+                    <span key={i} className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase" style={{ letterSpacing: '0.08em' }}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: modeColor, boxShadow: `0 0 6px ${modeColor}` }} />
-                      <span style={{ color: '#9ca3af' }}>scanning</span>
-                      <span style={{ color: modeColor }}>@{n}</span>
+                      <span style={{ color: '#fff' }}>scanning</span>
+                      <span style={{ color: '#facc15' }}>@{n}</span>
                     </span>
                   ))}
                 </div>
@@ -2168,11 +2192,11 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
               <div className="px-4 pt-2 pb-1 flex justify-center">
                 <div
                   key={phase.label}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full"
                   style={{
-                    background: 'linear-gradient(180deg,#111,#0a0a0a)',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 3px 0 #0a0a0a',
+                    background: `linear-gradient(180deg, ${phase.dotColor}33, ${phase.dotColor}11)`,
+                    border: `2.5px solid ${phase.dotColor}`,
+                    boxShadow: `0 3px 0 #0a0a0a, 0 0 12px ${phase.dotColor}66`,
                     animation: 'qm-tip-fade-in 0.3s ease-out',
                   }}
                 >
@@ -2185,19 +2209,24 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     }}
                     aria-hidden="true"
                   />
-                  <span className="text-white text-[11px] font-extrabold uppercase" style={{ letterSpacing: '0.14em' }}>
+                  <span className="text-white text-[12px] font-black uppercase" style={{ letterSpacing: '0.14em' }}>
                     {phase.label}
                   </span>
                 </div>
               </div>
 
               <div className="px-5 pb-3 pt-1">
-                <div className="flex items-center gap-2 min-h-[36px]">
-                  <svg className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 min-h-[36px]"
+                  style={{
+                    background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                    border: '2.5px solid #06b6d4',
+                    boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(6,182,212,0.35)',
+                  }}
+                >
+                  <span style={{ fontSize: 16, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">💡</span>
                   <p
-                    className="text-gray-500 text-[11px] leading-snug flex-1 transition-opacity duration-300"
+                    className="text-white text-[11px] font-bold leading-snug flex-1 transition-opacity duration-300"
                     style={{
                       opacity: tipFade ? 0 : 1,
                       animation: tipFade ? 'none' : 'qm-tip-fade-in 0.3s ease-out',
@@ -2210,21 +2239,21 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
 
               <div className="px-5 pb-5 flex items-center justify-between">
                 <div
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
                   style={{
-                    background: 'linear-gradient(180deg,#0d0d0d,#0a0a0a)',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 2px 0 #0a0a0a',
+                    background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                    border: `2.5px solid ${modeColor}`,
+                    boxShadow: `0 3px 0 #0a0a0a, 0 0 8px ${modeColor}55`,
                   }}
                 >
                   <div
-                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                    style={{ backgroundColor: modeColor }}
+                    className="w-2 h-2 rounded-full animate-pulse"
+                    style={{ backgroundColor: modeColor, boxShadow: `0 0 6px ${modeColor}` }}
                   />
                   <span
-                    className="text-[11px] font-extrabold font-mono"
+                    className="text-white text-[12px] font-black font-mono"
                     style={{
-                      color: modeColor,
+                      letterSpacing: '0.04em',
                       animation: 'qm-timer-tick 1s ease-in-out infinite',
                     }}
                   >
@@ -2233,12 +2262,13 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 </div>
                 <button
                   onClick={cancelSearch}
-                  className="msg-cartoon-btn px-4 py-2 text-white rounded-xl text-[11px] font-extrabold uppercase"
+                  className="msg-cartoon-btn px-4 py-2 text-white rounded-xl text-[12px] font-black uppercase"
                   style={{
-                    background: 'linear-gradient(180deg,#374151,#1f2937)',
+                    background: 'linear-gradient(180deg,#ef4444,#b91c1c)',
                     border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 2px 0 #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a',
                     letterSpacing: '0.14em',
+                    textShadow: '0 1px 0 rgba(0,0,0,0.4)',
                   }}
                 >
                   Cancel
