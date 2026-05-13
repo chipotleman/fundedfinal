@@ -1496,33 +1496,11 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     the layout is identical, but the eyebrow + label
                     explain that matchmaking will pick a stranger
                     instead of expecting the user to pick someone. */}
-                <div
-                  className="flex items-center gap-3 p-3 rounded-2xl"
-                  style={{
-                    background: 'linear-gradient(180deg,rgba(251,146,60,0.14),rgba(251,146,60,0.04))',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(251,146,60,0.18)',
-                  }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: 'linear-gradient(180deg,#fb923c,#ea580c)',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 2px 0 #0a0a0a',
-                      color: '#fff',
-                      fontSize: 18,
-                    }}
-                    aria-hidden="true"
-                  >
-                    ⚡
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-extrabold uppercase tracking-[0.2em]" style={{ color: '#fb923c' }}>Opponent</div>
-                    <div className="text-sm font-extrabold truncate" style={{ color: '#fff' }}>Random Match</div>
-                    <div className="text-[10px] mt-0.5" style={{ color: '#9ca3af' }}>We&apos;ll find you someone of similar skill.</div>
-                  </div>
-                </div>
+                {/* Opponent "Random Match — we'll find you someone of
+                    similar skill" row removed — read as a technical
+                    matchmaker disclaimer instead of a gamified prompt.
+                    The mode tiles + Find Opponent CTA below already
+                    communicate "tap to draw a stranger". */}
 
                 {/* Buy-in tiles — hidden during beta (ranking-only, no $). */}
                 {isBeta ? (
@@ -1883,16 +1861,33 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     </div>
                   </div>
                   {isBeta ? (
+                    /* Cartoon BETA stamp — single chunky pill with a
+                       glowing star + the word BETA in an Impact-stack
+                       so it reads like a sticker on the card instead
+                       of a two-line "BETA / No Risk" disclaimer. */
                     <div
-                      className="flex flex-col items-center px-2.5 py-1 rounded-xl flex-shrink-0"
+                      className="qmm-beta-stamp flex items-center gap-1.5 px-3 py-1.5 rounded-xl flex-shrink-0"
                       style={{
-                        background: 'linear-gradient(180deg,#10b981,#047857)',
+                        background: 'linear-gradient(180deg,#facc15 0%,#eab308 55%,#ca8a04 100%)',
                         border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(250,204,21,0.45)',
+                        transform: 'rotate(3deg)',
                       }}
                     >
-                      <span className="text-white text-[8px] font-black uppercase tracking-[0.18em]">Beta</span>
-                      <span className="text-white text-sm font-black leading-none mt-0.5">No Risk</span>
+                      <span style={{ fontSize: 14, lineHeight: 1 }} aria-hidden="true">⭐</span>
+                      <span
+                        className="font-black uppercase"
+                        style={{
+                          color: '#0a0a0a',
+                          fontFamily: 'Impact, "Arial Black", sans-serif',
+                          fontSize: 16,
+                          letterSpacing: '0.12em',
+                          lineHeight: 1,
+                          WebkitTextStroke: '0.5px #0a0a0a',
+                        }}
+                      >
+                        BETA
+                      </span>
                     </div>
                   ) : (
                     <div
