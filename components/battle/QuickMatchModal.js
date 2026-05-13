@@ -162,17 +162,8 @@ function MatchFoundContent({
   const totalSegments = 10;
   const filledSegments = Math.max(0, Math.min(totalSegments, Math.ceil((secondsLeft / CONFIRM_SECONDS) * totalSegments)));
 
-  const Bolt = ({ size = 28, delay = 0 }) => (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      style={{
-        filter: 'drop-shadow(0 0 8px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)',
-        animation: `qm-bolt-flicker 0.8s ease-in-out ${delay}s infinite`,
-      }}
-      aria-hidden="true"
-    >
+  const Bolt = ({ size = 28 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
       <path
         d="M13 2L3 14h7l-2 8 11-13h-7l3-7z"
         fill="#facc15"
@@ -185,50 +176,15 @@ function MatchFoundContent({
 
   return (
     <div className="relative z-10">
-      {/* Sparkles in the background — cheap dots */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {Array.from({ length: 14 }).map((_, i) => {
-          const left = (i * 13 + 5) % 100;
-          const top = (i * 19 + 7) % 100;
-          const colors = ['#facc15', '#fb923c', '#3b82f6', '#10b981', '#06b6d4'];
-          const c = colors[i % colors.length];
-          const sz = 4 + (i % 3) * 2;
-          const delay = (i % 7) * 0.18;
-          return (
-            <span
-              key={i}
-              style={{
-                position: 'absolute',
-                left: `${left}%`,
-                top: `${top}%`,
-                width: sz,
-                height: sz,
-                background: c,
-                borderRadius: '50%',
-                boxShadow: `0 0 8px ${c}`,
-                opacity: 0.7,
-                animation: `qm-sparkle-twinkle 1.6s ease-in-out ${delay}s infinite`,
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/* Header — lightning bolts + MATCH FOUND!
-          Larger, bolder title so it reads as the focal point of the
-          popup like the cartoon reference. */}
+      {/* Header — lightning bolts + MATCH FOUND! Solid color, no
+          gradient/stroke/glow — readable and clean. */}
       <div className="pt-5 pb-1 text-center relative">
         <div className="inline-flex items-center justify-center gap-3">
-          <Bolt size={32} delay={0} />
+          <Bolt size={28} />
           <h3
             className="text-3xl md:text-4xl font-black inline-block"
             style={{
-              color: 'transparent',
-              background: 'linear-gradient(180deg, #fef08a 0%, #facc15 45%, #fb923c 80%, #c2410c 100%)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextStroke: '2.5px #0a0a0a',
-              textShadow: '0 5px 0 rgba(0,0,0,0.45)',
+              color: '#facc15',
               letterSpacing: '0.04em',
               animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.05s both',
               fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -236,7 +192,7 @@ function MatchFoundContent({
           >
             MATCH FOUND!
           </h3>
-          <Bolt size={32} delay={0.2} />
+          <Bolt size={28} />
         </div>
       </div>
 
@@ -246,27 +202,25 @@ function MatchFoundContent({
         <div
           className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 whitespace-nowrap"
           style={{
-            background: 'linear-gradient(180deg, #0f1424 0%, #0a0e1c 100%)',
-            border: '2.5px solid #3b82f6',
-            boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
+            background: '#0f1424',
+            border: '2px solid #3b82f6',
             maxWidth: 360,
           }}
         >
-          <span style={{ fontSize: 22, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">🏆</span>
+          <span style={{ fontSize: 22 }} aria-hidden="true">🏆</span>
           <span className="text-white font-extrabold text-sm md:text-base" style={{ letterSpacing: '0.02em' }}>
             <span style={{ color: '#facc15' }}>{buyInLabel}</span>
             <span className="text-gray-400 mx-1.5">·</span>
             <span style={{ color: '#facc15' }}>{potLabel}</span>
           </span>
-          <span style={{ fontSize: 22, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">🪙</span>
+          <span style={{ fontSize: 22 }} aria-hidden="true">🪙</span>
         </div>
         <div className="mt-2 flex justify-center">
           <span
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase"
             style={{
-              background: 'linear-gradient(180deg, #10b981 0%, #047857 100%)',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: '0 2px 0 #0a0a0a',
+              background: '#10b981',
+              border: '2px solid #047857',
               color: '#fff',
               letterSpacing: '0.12em',
             }}
@@ -278,41 +232,8 @@ function MatchFoundContent({
         </div>
       </div>
 
-      {/* Avatars + VS burst */}
+      {/* Avatars + VS */}
       <div className="flex items-center justify-center gap-4 md:gap-8 py-4 px-4 relative">
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            left: '50%', top: '50%', width: 140, height: 140,
-            transform: 'translate(-50%, -50%)', zIndex: 5,
-          }}
-          aria-hidden="true"
-        >
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              border: '4px solid #facc15',
-              boxShadow: '0 0 30px rgba(250,204,21,0.6)',
-              animation: 'qm-impact-burst 0.7s ease-out 0.45s forwards',
-              opacity: 0,
-            }}
-          />
-          {[0, 45, 90, 135].map((deg) => (
-            <div
-              key={deg}
-              className="absolute left-1/2 top-1/2"
-              style={{
-                width: 80, height: 4, marginTop: -2, marginLeft: -40,
-                background: 'linear-gradient(90deg, transparent, #facc15, transparent)',
-                boxShadow: '0 0 8px rgba(250,204,21,0.8)',
-                transform: `rotate(${deg}deg) scaleX(0)`,
-                transformOrigin: 'center',
-                animation: `qm-impact-line 0.5s ease-out 0.45s forwards`,
-              }}
-            />
-          ))}
-        </div>
-
         {/* YOU side */}
         <div
           className="flex flex-col items-center relative z-10"
@@ -320,21 +241,10 @@ function MatchFoundContent({
         >
           <div className="relative mb-2">
             <div
-              className="absolute rounded-full"
-              style={{
-                top: -6, left: -6, right: -6, bottom: -6,
-                border: '3px solid #3b82f6',
-                boxShadow: '0 0 22px rgba(59,130,246,0.8), inset 0 0 12px rgba(59,130,246,0.4)',
-                animation: 'qm-found-ring-expand 1.2s ease-out forwards',
-              }}
-              aria-hidden="true"
-            />
-            <div
               className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
               style={{
-                border: '3.5px solid #0a0a0a',
+                border: '3px solid #3b82f6',
                 background: th.avatarBg1,
-                boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55), inset 0 0 0 2.5px #3b82f6',
               }}
             >
               <UserAvatar
@@ -346,9 +256,7 @@ function MatchFoundContent({
           <p
             className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[120px] text-center px-2.5 py-1 rounded-md"
             style={{
-              background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: '0 2px 0 #0a0a0a',
+              background: '#1a1a1a',
               letterSpacing: '0.08em',
             }}
           >
@@ -357,9 +265,8 @@ function MatchFoundContent({
           <span
             className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase"
             style={{
-              background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-              border: `2px solid ${userRank.color}`,
-              boxShadow: `0 2px 0 #0a0a0a, 0 0 8px ${userRank.color}66`,
+              background: '#0f1424',
+              border: `1.5px solid ${userRank.color}`,
               color: userRank.color,
               letterSpacing: '0.14em',
             }}
@@ -374,13 +281,8 @@ function MatchFoundContent({
           <div
             className="text-3xl md:text-5xl font-black italic"
             style={{
-              background: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #c2410c 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              WebkitTextStroke: '2px #0a0a0a',
-              textShadow: '0 0 24px rgba(250,204,21,0.6)',
-              animation: 'qm-vs-explode 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.4s both, qm-vs-pulse 1.6s ease-in-out 1.05s infinite',
+              color: '#facc15',
+              animation: 'qm-vs-explode 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.4s both',
               fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           >
@@ -390,8 +292,7 @@ function MatchFoundContent({
             <div
               className="mt-1 text-[10px] font-extrabold text-white px-2 py-0.5 rounded-md"
               style={{
-                background: '#0a0a0a',
-                border: '2px solid #1a1a1a',
+                background: '#1a1a1a',
                 letterSpacing: '0.1em',
               }}
             >
@@ -407,22 +308,10 @@ function MatchFoundContent({
         >
           <div className="relative mb-2">
             <div
-              className="absolute rounded-full"
-              style={{
-                top: -6, left: -6, right: -6, bottom: -6,
-                border: '3px solid #fb923c',
-                boxShadow: '0 0 22px rgba(251,146,60,0.8), inset 0 0 12px rgba(251,146,60,0.4)',
-                animation: 'qm-found-ring-expand 1.2s ease-out forwards',
-              }}
-              aria-hidden="true"
-            />
-            <div
               className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
               style={{
-                border: '3.5px solid #0a0a0a',
+                border: '3px solid #fb923c',
                 background: th.avatarBg2,
-                boxShadow: '0 3px 0 #0a0a0a, 0 0 22px rgba(251,146,60,0.55), inset 0 0 0 2.5px #fb923c',
-                animation: 'qm-avatar-lock 0.6s ease-out forwards',
               }}
             >
               <UserAvatar
@@ -438,9 +327,7 @@ function MatchFoundContent({
           <p
             className="text-white text-[11px] md:text-xs font-extrabold uppercase truncate max-w-[120px] text-center px-2.5 py-1 rounded-md"
             style={{
-              background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: '0 2px 0 #0a0a0a',
+              background: '#1a1a1a',
               letterSpacing: '0.08em',
             }}
           >
@@ -449,9 +336,8 @@ function MatchFoundContent({
           <span
             className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase"
             style={{
-              background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-              border: `2px solid ${oppRank.color}`,
-              boxShadow: `0 2px 0 #0a0a0a, 0 0 8px ${oppRank.color}66`,
+              background: '#0f1424',
+              border: `1.5px solid ${oppRank.color}`,
               color: oppRank.color,
               letterSpacing: '0.14em',
             }}
@@ -468,9 +354,8 @@ function MatchFoundContent({
           <div
             className="rounded-xl px-2 py-2 flex items-center gap-1.5"
             style={{
-              background: 'linear-gradient(180deg, #1a0b0b, #0a0606)',
-              border: '2.5px solid #ef4444',
-              boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(239,68,68,0.35)',
+              background: '#1a0b0b',
+              border: '2px solid #ef4444',
             }}
           >
             <span style={{ fontSize: 18 }} aria-hidden="true">🔥</span>
@@ -482,9 +367,8 @@ function MatchFoundContent({
           <div
             className="rounded-xl px-2 py-2 flex items-center gap-1.5"
             style={{
-              background: 'linear-gradient(180deg, #1a1505, #0a0803)',
-              border: '2.5px solid #facc15',
-              boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(250,204,21,0.35)',
+              background: '#1a1505',
+              border: '2px solid #facc15',
             }}
           >
             <span style={{ fontSize: 18 }} aria-hidden="true">⭐</span>
@@ -496,9 +380,8 @@ function MatchFoundContent({
           <div
             className="rounded-xl px-2 py-2 flex items-center gap-1.5"
             style={{
-              background: 'linear-gradient(180deg, #052016, #02100a)',
-              border: '2.5px solid #10b981',
-              boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(16,185,129,0.35)',
+              background: '#052016',
+              border: '2px solid #10b981',
             }}
           >
             <span style={{ fontSize: 18 }} aria-hidden="true">🎯</span>
@@ -516,9 +399,8 @@ function MatchFoundContent({
           <div
             className="rounded-2xl px-3 py-2.5 flex items-center gap-3"
             style={{
-              background: 'linear-gradient(180deg, #0f1424, #0a0e1c)',
-              border: '2.5px solid #3b82f6',
-              boxShadow: '0 3px 0 #0a0a0a, 0 0 12px rgba(59,130,246,0.35)',
+              background: '#0f1424',
+              border: '2px solid #3b82f6',
             }}
           >
             <span style={{ fontSize: 16 }} aria-hidden="true">⏱️</span>
@@ -537,11 +419,7 @@ function MatchFoundContent({
                     className="flex-1 rounded-sm"
                     style={{
                       height: 10,
-                      background: filled
-                        ? 'linear-gradient(180deg, #60a5fa, #2563eb)'
-                        : '#0a0a0a',
-                      border: '1.5px solid #0a0a0a',
-                      boxShadow: filled ? '0 0 6px rgba(59,130,246,0.7)' : 'none',
+                      background: filled ? '#3b82f6' : '#1a1a1a',
                     }}
                   />
                 );
@@ -583,14 +461,10 @@ function MatchFoundContent({
               onClick={() => { firedRef.current = true; onContinue(); }}
               className="msg-cartoon-btn w-full py-4 rounded-2xl font-black text-2xl uppercase flex items-center justify-center gap-2"
               style={{
-                background: 'linear-gradient(180deg, #fde047 0%, #facc15 50%, #ca8a04 100%)',
-                border: '3px solid #0a0a0a',
-                boxShadow: '0 6px 0 #0a0a0a, 0 0 30px rgba(250,204,21,0.55)',
+                background: '#facc15',
+                border: '2px solid #ca8a04',
                 letterSpacing: '0.08em',
-                color: '#fff',
-                WebkitTextStroke: '1.5px #0a0a0a',
-                textShadow: '0 3px 0 rgba(0,0,0,0.35)',
-                animation: 'qm-cta-throb 1.4s ease-in-out 0.9s infinite',
+                color: '#0a0a0a',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
               }}
             >
