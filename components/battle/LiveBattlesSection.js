@@ -3289,8 +3289,16 @@ export default function LiveBattlesSection({
   // clicking Preview on any one card expands every peer at the same time
   // and the row never has tall stretched cards sitting next to short
   // un-expanded ones. Cards default to collapsed and only open when the
-  // user explicitly clicks Preview.
-  const battleCardsExpanded = battlesExpanded;
+  // user explicitly clicks Preview — UNLESS the YouVsCard is in an
+  // active/waiting/queued state, in which case it makes the row tall on
+  // its own (you can't shrink the row below the YouVs hero anyway). When
+  // that happens we force the peer cards' content open too, otherwise
+  // they stretch to the row height with the picks/details hidden behind
+  // a Preview button — looking like a giant empty box. The user
+  // explicitly reported this: "the box is already expanded because of a
+  // neighboring box but I still have to click preview to make the
+  // information appear".
+  const battleCardsExpanded = battlesExpanded || !youVsIsIdle;
   // BattleCard forwards the desired next value (true to expand, false to
   // collapse) so we set the row to that exact value rather than blindly
   // inverting.
