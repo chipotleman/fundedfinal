@@ -1504,7 +1504,6 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="mt-auto">
-                    <GapHistoryStrip history={gapHistories[game.id]} currentGap={game._scoreGap} />
                     <div className="flex gap-1.5">
                       {game.lines?.moneyline?.away ? (
                         <TapSurface
