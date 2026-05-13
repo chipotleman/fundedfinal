@@ -5,6 +5,7 @@ import QuickMatchModal from './QuickMatchModal';
 import BattleModeChooser from './BattleModeChooser';
 import PlayFriendModal from './PlayFriendModal';
 import PrivateMatchModal from './PrivateMatchModal';
+import MyBattleOverviewModal from './MyBattleOverviewModal';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
 import MutualFriendsLine from '../social/MutualFriendsLine';
@@ -1269,6 +1270,11 @@ function YouVsCard({
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
   const [cancelling, setCancelling] = useState(false);
+  // Cartoon overview popup for the user's own active battle. Tapping
+  // "View Battle" on a card you're already in opens this instead of
+  // routing straight to /battle so users see a confirmation overview
+  // (mode, opponent, pot, "ends after today") before committing.
+  const [showMyBattleOverview, setShowMyBattleOverview] = useState(false);
   // Beta lockdown: in beta there's no buy-in and only ORIGINAL is
   // playable, so the meta line drops the "$X" segment and we steer
   // matchmaking to original regardless of remembered prefs.
@@ -1643,9 +1649,39 @@ function YouVsCard({
     : { id: null, username: 'You', avatar: null };
 
   const handleNavigate = () => {
+    // If the user is tapping into their OWN active matchup, surface the
+    // cartoon overview popup first (mode/opponent/pot/ends-after-today)
+    // so they get a beat of confirmation instead of an instant route.
+    // The popup's primary CTA still routes via navigateToBattleStart.
+    if (status === 'active' && matchup?.id) {
+      setShowMyBattleOverview(true);
+      return;
+    }
     if (onClick) onClick();
     else router.push('/battle');
   };
+
+  const handleOverviewOpenBattle = useCallback((m) => {
+    const target = m || matchup;
+    if (target) navigateToBattleStart(router, target);
+    else if (onClick) onClick();
+    else router.push('/battle');
+  }, [matchup, onClick, router]);
+
+  const handleOverviewForfeit = useCallback(async (m) => {
+    const id = (m && m.id) || matchup?.id;
+    if (!id) return;
+    try {
+      const res = await fetch('/api/battles/forfeit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchupId: id }),
+      });
+      if (res.ok) {
+        try { await refreshMatchup(); } catch {}
+      }
+    } catch {}
+  }, [matchup, refreshMatchup]);
 
   const handleSearchError = useCallback((message) => {
     cleanupSearchTimers();
@@ -3132,6 +3168,16 @@ function YouVsCard({
         </div>
       </div>
     </div>
+    <MyBattleOverviewModal
+      isOpen={showMyBattleOverview}
+      onClose={() => setShowMyBattleOverview(false)}
+      matchup={matchup}
+      opponent={opponent}
+      myProfile={myProfile}
+      isBeta={isBeta}
+      onOpenBattle={handleOverviewOpenBattle}
+      onForfeit={handleOverviewForfeit}
+    />
     <BattleModeChooser
       isOpen={showChooser}
       onClose={() => setShowChooser(false)}
