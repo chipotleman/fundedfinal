@@ -1104,6 +1104,12 @@ export default function Dashboard() {
   // it, so both leagues remain reachable from the condensed bar.
   const renderSportPills = (variant = 'inline') => {
     const isCondensed = variant === 'condensed';
+    // When the Pik Slip is empty in the condensed sticky header, the
+    // bet-slip button is hidden and the pills row owns the full width
+    // — spread them evenly so the bar doesn't look lopsided. As soon
+    // as the user adds a pick, the bet-slip button mounts on the right
+    // and we collapse back to the natural left-packed layout.
+    const spreadEvenly = isCondensed && (betSlip?.length || 0) === 0;
     const pillPadding = isCondensed ? '6px 12px' : '10px 16px';
     const pillFontSize = isCondensed ? '12px' : '14px';
     const iconSize = isCondensed ? '13px' : '16px';
@@ -1142,7 +1148,7 @@ export default function Dashboard() {
 
     return (
       <div
-        className={`flex items-center space-x-2 overflow-x-auto scrollbar-hide ${isCondensed ? '' : 'pb-1'}`}
+        className={`flex items-center overflow-x-auto scrollbar-hide ${spreadEvenly ? 'justify-between gap-1.5 w-full' : 'space-x-2'} ${isCondensed ? '' : 'pb-1'}`}
         style={isCondensed ? { WebkitOverflowScrolling: 'touch' } : undefined}
       >
         {isDemoMode && !isCondensed && (
