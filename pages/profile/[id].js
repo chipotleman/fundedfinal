@@ -89,6 +89,7 @@ export default function PublicProfile() {
   const [mutualFriendsOpen, setMutualFriendsOpen] = useState(false);
   const [showBattleInvite, setShowBattleInvite] = useState(false);
   const [lastBuyIn, setLastBuyIn] = useState(null);
+  const { data: session } = useSession();
   const viewerId = session?.user?.id || null;
   useEffect(() => {
     if (!viewerId) { setLastBuyIn(null); return; }
@@ -117,7 +118,6 @@ export default function PublicProfile() {
   const badgeShareVisitFiredRef = useRef(null);
   
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
-  const { data: session } = useSession();
 
   // Look up an outgoing pending battle invite to this profile so we can
   // mirror the friend-row / search-row "Invite pending" UX and avoid letting
