@@ -1598,7 +1598,10 @@ function YouVsCard({
     // hero composition below, so the top meta line carries only the
     // time remaining (kept here so the spec's "time remaining stays
     // present in roughly the same location" requirement is met).
-    metaRight = timeLeftMs > 0 ? formatTimeRemaining(timeLeftMs) : 'Live now';
+    // All ORIGINAL battles end at the end of the day, so a literal
+    // "23h 58m" countdown was misleading (it implied the match was a
+    // rolling 24h timer). Surface the real rule instead.
+    metaRight = timeLeftMs > 0 ? 'Ends after today' : 'Live now';
     progressLabel = `${progressPercent.toFixed(0)}% complete`;
   } else if (isWaiting) {
     topLabel = 'Waiting';
@@ -2700,20 +2703,20 @@ function YouVsCard({
                   className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em]"
                   style={{ color: 'rgba(167, 243, 208, 0.85)' }}
                 >
-                  Time Left
+                  Battle Ends
                 </span>
                 <span
-                  className="text-xl sm:text-3xl font-black leading-none tabular-nums whitespace-nowrap"
+                  className="text-lg sm:text-2xl font-black leading-none whitespace-nowrap uppercase"
                   style={{
                     color: '#fff',
                     WebkitTextStroke: '1.25px #0d0d0d',
                     textShadow:
                       '2px 2px 0 #0d0d0d, 0 0 18px rgba(16,185,129,0.45)',
-                    letterSpacing: '-0.01em',
+                    letterSpacing: '0.02em',
                     fontFamily: 'Impact, "Arial Black", sans-serif',
                   }}
                 >
-                  {timeLeftMs > 0 ? formatTimeRemaining(timeLeftMs) : 'LIVE'}
+                  {timeLeftMs > 0 ? 'After Today' : 'LIVE'}
                 </span>
               </div>
 
@@ -2794,18 +2797,19 @@ function YouVsCard({
               ></div>
             </div>
 
-            {/* Footer — Preview toggle stays in the same place as
-                before so the existing expand/collapse interaction
-                is preserved. */}
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 text-[10px]">{progressLabel}</span>
+            {/* Footer — Centered More toggle. The "0% complete" text
+                that used to sit at the left was confusing on a card
+                that just started (it permanently read 0%) and
+                competed with the More CTA. Centering MORE turns the
+                whole row into a single, obvious tap target. */}
+            <div className="flex items-center justify-center">
               <span
-                className="text-[11px] font-semibold flex items-center gap-1"
+                className="text-[12px] font-extrabold uppercase tracking-[0.16em] flex items-center gap-1.5"
                 style={{ color: '#34d399' }}
               >
                 {isExpanded ? 'Hide' : 'More'}
                 <svg
-                  className="w-3 h-3"
+                  className="w-3.5 h-3.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
