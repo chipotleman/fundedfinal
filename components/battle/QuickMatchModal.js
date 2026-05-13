@@ -1538,7 +1538,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     <div className="min-w-0">
                       <div className="text-[10px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#34d399' }}>Beta — Ranking Only</div>
                       <div className="text-[11px] mt-1" style={{ color: '#cbd5e1', lineHeight: 1.4 }}>
-                        No buy-in during the public beta. Both players start with the same coin stack — winner takes the W on the leaderboard.
+                        No buy-in during the public beta. Equal stacks, zero excuses — every win climbs the leaderboard and proves who's the sharper bettor.
                       </div>
                     </div>
                   </div>
@@ -1608,9 +1608,17 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           aria-disabled={locked || undefined}
                           aria-pressed={selected}
                           title={betaLocked ? 'Available after the public beta — Original is the only mode during beta.' : (locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined)}
-                          className="msg-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative"
+                          className="msg-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative overflow-hidden"
                           style={
-                            selected
+                            betaLocked
+                              ? {
+                                  background: 'linear-gradient(180deg, #050505 0%, #020202 100%)',
+                                  border: '2.5px solid #0a0a0a',
+                                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04), 0 3px 0 #000',
+                                  cursor: 'not-allowed',
+                                  minHeight: 88,
+                                }
+                              : selected
                               ? {
                                   background: `linear-gradient(180deg,${tint},#111)`,
                                   border: '2.5px solid #0a0a0a',
@@ -1629,6 +1637,47 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                 }
                           }
                         >
+                          {betaLocked && (
+                            <>
+                              {/* Dark veil over the tile contents so the
+                                  COMING SOON watermark reads as the
+                                  primary content, not the (greyed out)
+                                  mode label. Pointer-events:none so the
+                                  parent button still owns the click. */}
+                              <span
+                                aria-hidden="true"
+                                className="absolute inset-0 pointer-events-none"
+                                style={{
+                                  background:
+                                    'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.78) 100%)',
+                                  borderRadius: 'inherit',
+                                }}
+                              />
+                              {/* Diagonal COMING SOON watermark — single
+                                  rotated band that spans corner-to-corner
+                                  so every locked-after-beta tile reads
+                                  the same way regardless of mode. */}
+                              <span
+                                aria-hidden="true"
+                                className="absolute pointer-events-none font-black uppercase whitespace-nowrap select-none"
+                                style={{
+                                  top: '50%',
+                                  left: '50%',
+                                  transform: 'translate(-50%, -50%) rotate(-22deg)',
+                                  color: '#facc15',
+                                  WebkitTextStroke: '1.25px #0a0a0a',
+                                  textShadow: '2px 2px 0 #0a0a0a',
+                                  fontFamily: 'Impact, "Arial Black", sans-serif',
+                                  letterSpacing: '0.06em',
+                                  fontSize: '14px',
+                                  lineHeight: 1,
+                                  zIndex: 2,
+                                }}
+                              >
+                                Coming Soon
+                              </span>
+                            </>
+                          )}
                           {mode.recommended && (
                             <span
                               className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
@@ -1663,20 +1712,23 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               Live
                             </span>
                           )}
-                          {locked && (
+                          {/* Non-beta lock pill (e.g. Rush has no live
+                              game). The beta-locked case now uses the
+                              full-tile blackout + COMING SOON watermark
+                              instead of a top pill that overlapped the
+                              "Popular" badge on the neighboring tile. */}
+                          {locked && !betaLocked && (
                             <span
                               className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
                               style={{
-                                background: betaLocked
-                                  ? 'linear-gradient(180deg,#10b981,#047857)'
-                                  : 'linear-gradient(180deg,#374151,#1f2937)',
+                                background: 'linear-gradient(180deg,#374151,#1f2937)',
                                 border: '2px solid #0a0a0a',
                                 boxShadow: '0 2px 0 #0a0a0a',
                               }}
                               aria-hidden="true"
                             >
-                              <span style={{ fontSize: 9, lineHeight: 1 }}>{betaLocked ? '⏳' : '🔒'}</span>
-                              {betaLocked ? 'After Beta' : 'Locked'}
+                              <span style={{ fontSize: 9, lineHeight: 1 }}>🔒</span>
+                              Locked
                             </span>
                           )}
                           <span className="text-lg leading-none mb-1">{mode.icon}</span>
