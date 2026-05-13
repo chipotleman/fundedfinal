@@ -2737,10 +2737,11 @@ function YouVsCard({
                       : `Prize pot $${formatMoney(pot, 0)}`}
                   >
                     <span
-                      className="text-[9px] font-black uppercase tracking-widest"
-                      style={{ color: '#2a1404' }}
+                      className="text-base sm:text-lg leading-none"
+                      style={{ filter: 'drop-shadow(0 1px 0 rgba(0,0,0,0.45))' }}
+                      aria-hidden="true"
                     >
-                      {isBeta ? 'Coins' : 'Pot'}
+                      {isBeta ? '⚔️' : '💰'}
                     </span>
                     <span
                       className="text-base sm:text-lg font-black tabular-nums"
