@@ -659,41 +659,52 @@ export default function TopNavbar({
                   the bright background, and color-emoji forced via the
                   variation selector + emoji font stack so iOS Safari and
                   Android Chrome cannot fall back to monochrome glyphs. */}
-              {isLoggedIn && hasActiveChallenge && userProfile && (
+              {/* Desktop balance pills — cash + matchup coins. The two pills
+                  are gated independently so a player who is mid-battle but
+                  whose challenge profile hasn't fully hydrated (or who
+                  legitimately has no active funded challenge) still sees
+                  the orange ⚔ matchup-balance pill. Previously both pills
+                  shared a `hasActiveChallenge && userProfile` wrapper, so
+                  the second player in a battle would see no balance in the
+                  top nav until they opened the Pik Slip — which side-loads
+                  the profile and flips `hasActiveChallenge` true. */}
+              {isLoggedIn && (hasActiveChallenge && userProfile || (hasActiveMatchup && matchupBalance != null)) && (
                 <div className="hidden sm:flex items-center gap-2">
-                  <button
-                    onClick={() => setExplainerType('cash')}
-                    title="Real cash balance — click for details"
-                    className="cartoon-balance-pill"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '5px 12px 5px 10px',
-                      borderRadius: 999,
-                      background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
-                      border: '1.5px solid #0d0d0d',
-                      boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
-                      color: '#022c1f',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span
-                      aria-hidden="true"
+                  {hasActiveChallenge && userProfile && (
+                    <button
+                      onClick={() => setExplainerType('cash')}
+                      title="Real cash balance — click for details"
+                      className="cartoon-balance-pill"
                       style={{
-                        fontSize: 16,
-                        lineHeight: 1,
-                        fontFamily:
-                          '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                        color: 'initial',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '5px 12px 5px 10px',
+                        borderRadius: 999,
+                        background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
+                        border: '1.5px solid #0d0d0d',
+                        boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
+                        color: '#022c1f',
+                        cursor: 'pointer',
                       }}
                     >
-                      {`💵\uFE0F`}
-                    </span>
-                    <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                      ${formatMoney(parseFloat(userProfile.bankroll), 0)}
-                    </span>
-                  </button>
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          fontSize: 16,
+                          lineHeight: 1,
+                          fontFamily:
+                            '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
+                          color: 'initial',
+                        }}
+                      >
+                        {`💵\uFE0F`}
+                      </span>
+                      <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+                        ${formatMoney(parseFloat(userProfile.bankroll), 0)}
+                      </span>
+                    </button>
+                  )}
                   {hasActiveMatchup && matchupBalance != null && (
                     <button
                       onClick={() => setExplainerType('coins')}
