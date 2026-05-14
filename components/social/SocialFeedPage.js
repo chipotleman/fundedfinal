@@ -5,6 +5,7 @@ import { formatMoney } from '../../utils/formatMoney';
 import { formatLastSeen } from '../../utils/relativeTime';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
 import LiveBattleStoryViewer from './LiveBattleStoryViewer';
+import { getSimulatedBattles } from '../battle/LiveBattlesSection';
 
 const surface = '#0d0d0d';
 const surfaceMuted = '#0a0a0a';
@@ -1449,7 +1450,11 @@ export default function SocialFeedPage({ data }) {
       if (!res.ok) return;
       const json = await res.json();
       const list = Array.isArray(json?.battles) ? json.battles : (Array.isArray(json) ? json : []);
-      setLiveBattles(list);
+      if (list.length === 0) {
+        setLiveBattles(getSimulatedBattles([]));
+      } else {
+        setLiveBattles(list);
+      }
     } catch {}
   }, []);
 

@@ -91,7 +91,7 @@ const SIMULATED_PICKS = {
 };
 
 
-function getSimulatedBattles(avatars) {
+export function getSimulatedBattles(avatars) {
   const avatarPool = avatars.length >= 6 ? avatars : [];
   
   return [
