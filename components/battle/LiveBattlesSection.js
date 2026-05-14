@@ -3293,16 +3293,14 @@ export default function LiveBattlesSection({
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const [expandedKey, setExpandedKey] = useState(null);
-  // The compact dashboard carousel uses `items-stretch`, so expanding any
-  // single card forces every other card in the row to grow to match — which
-  // looked like dead empty space below the un-expanded peers. To keep the
-  // row visually full we drive every BattleCard from a single shared
-  // `battlesExpanded` flag: clicking Preview on any card expands all of
-  // them, clicking Hide collapses all of them. When the YouVsCard is in an
-  // active/waiting/queued state it pushes the row tall on its own, so we
-  // also force peer expansion in that case (the user can't shrink the row
-  // below YouVsCard's hero anyway).
-  const [battlesExpanded, setBattlesExpanded] = useState(false);
+  // The compact dashboard carousel keeps each BattleCard's expansion
+  // independent (see peerExpandedFor / setPeerExpanded below). Earlier we
+  // shared a single `battlesExpanded` flag across every peer so the row
+  // height stayed even, but that made Hide feel broken — clicking it on
+  // one card collapsed every peer at once and any stray click on a peer
+  // re-flipped the row open. Per-card expansion via `expandedKey` keyed
+  // by battle id is the source of truth now; the row uses `items-start`
+  // so an expanded card grows downward without stretching its neighbors.
   // When the YouVsCard's in-card matchmaking flow resolves, we hand
   // off to the existing match-found popup by mounting QuickMatchModal
   // pre-seeded into its `found` step. The user sees the same standard
@@ -3335,24 +3333,24 @@ export default function LiveBattlesSection({
     }
   }, [youVsIsIdle]);
 
-  // All BattleCards in the carousel share a single expansion flag, so
-  // clicking Preview on any one card expands every peer at the same time
-  // and the row never has tall stretched cards sitting next to short
-  // un-expanded ones. Cards stay collapsed by default — the
-  // user explicitly opens picks via "See More" on each card. We
-  // intentionally do NOT auto-expand peer cards when the YouVsCard
-  // is active: that previously made every peer card render its full
-  // pick list vertically, blowing up the row height into a wall of
-  // tall containers (reported by the user as "why are these so tall,
-  // they should be horizontal"). Compact horizontal cards next to a
-  // taller YouVsCard read fine because items-stretch only fills the
-  // peer card's own height, leaving the inner picks list collapsed.
-  const battleCardsExpanded = battlesExpanded;
-  // BattleCard forwards the desired next value (true to expand, false to
-  // collapse) so we set the row to that exact value rather than blindly
-  // inverting.
-  const setBattleCardsExpanded = useCallback((next) => {
-    setBattlesExpanded(Boolean(next));
+  // Each peer BattleCard owns its own expansion via the shared
+  // `expandedKey` slot keyed by battle id. Clicking Preview opens that one
+  // card; clicking Hide on it (or opening another) closes it. Earlier we
+  // used a single shared `battlesExpanded` flag so every peer expanded at
+  // once, but that made the Hide button feel broken: clicking Hide on one
+  // card would also force-collapse a card the user had just expanded
+  // elsewhere, and any stray click bubbling from a peer flipped the whole
+  // row open. Per-card state fixes both: cards default to collapsed
+  // (`expandedKey === null`) and Hide reliably closes the one card you
+  // clicked. BattleCard forwards the desired next value to onToggle, so we
+  // set/clear the shared key explicitly rather than blindly inverting.
+  const peerExpandedFor = useCallback((battleId) => expandedKey === `peer:${battleId}`, [expandedKey]);
+  const setPeerExpanded = useCallback((battleId) => (next) => {
+    setExpandedKey((prev) => {
+      const key = `peer:${battleId}`;
+      if (next) return key;
+      return prev === key ? null : prev;
+    });
   }, []);
 
   useEffect(() => {
@@ -3604,16 +3602,16 @@ export default function LiveBattlesSection({
           </button>
         </div>
         {retryHint}
-        {/* items-stretch (instead of items-start) lets every card in the
-            horizontal carousel match the tallest sibling's height. Without
-            this, a battle whose players haven't both locked in their picks
-            renders shorter than one with picks (since the picks row + the
-            "🎯 X vs Y piks" cartoon chip are conditional), which made the
-            "awaiting" cards look out of place next to fully-locked battles
-            and the YouVsCard. The cards themselves already use w-full h-full
-            on their outer wrapper, so they fill the stretched parent
-            cleanly. */}
-        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* items-start (instead of items-stretch) lets each card size to its
+            own content. We previously stretched the row to match the tallest
+            sibling so an "awaiting picks" card wouldn't look short next to a
+            fully-locked battle, but with per-card expansion that stretching
+            also forced collapsed peers to grow when one card was expanded —
+            which read as ghost empty space below the Hide button and made the
+            row feel broken. Letting cards grow naturally keeps the visual
+            simple: collapsed cards stay short, expanded cards extend down,
+            and the carousel stays horizontally scrollable either way. */}
+        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
               youVsState={youVsState}
@@ -3636,8 +3634,8 @@ export default function LiveBattlesSection({
               <BattleCard
                 battle={battle}
                 compact
-                isExpanded={battleCardsExpanded}
-                onToggle={setBattleCardsExpanded}
+                isExpanded={peerExpandedFor(battle.id)}
+                onToggle={setPeerExpanded(battle.id)}
               />
             </div>
           ))}
