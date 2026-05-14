@@ -115,6 +115,10 @@ export default function BattlePage() {
   const [showQuickMatch, setShowQuickMatch] = useState(false);
   const [showPlayFriend, setShowPlayFriend] = useState(false);
   const [playFriendInitial, setPlayFriendInitial] = useState(null);
+  // When the friend-row "Battle" shortcut succeeds we open PlayFriendModal
+  // pre-set into its waiting/sent overlay instead of just toasting. Set to
+  // { id, friend, buyIn, gameMode } and cleared on modal close.
+  const [playFriendSentInvite, setPlayFriendSentInvite] = useState(null);
   const [showPrivateMatch, setShowPrivateMatch] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [socialExpanded, setSocialExpanded] = useState(false);
@@ -1165,7 +1169,23 @@ export default function BattlePage() {
       // stays in sync on every device.
       await saveLastBuyIn(userId, { buyIn: last.buyIn, gameMode: last.gameMode });
       refreshLastBuyIn();
-      showQuickToast(`Invite sent to ${friend.username || 'friend'} · $${last.buyIn} buy-in`);
+      // Open PlayFriendModal directly into its cartoon "waiting for
+      // friend to accept" overlay so the sender gets the same popup as
+      // when the invite is sent from inside the modal — including the
+      // countdown and Cancel Invite button. Previously this path only
+      // showed a toast and the user had no way to cancel from here.
+      const inviteId = data?.invite?.id || null;
+      if (inviteId) {
+        setPlayFriendSentInvite({
+          id: inviteId,
+          friend,
+          buyIn: Number(last.buyIn),
+          gameMode: last.gameMode,
+        });
+        setShowPlayFriend(true);
+      } else {
+        showQuickToast(`Invite sent to ${friend.username || 'friend'} · $${last.buyIn} buy-in`);
+      }
       fetchData();
     } catch {
       showQuickToast('Could not send invite. Try again.', 'error');
@@ -2050,15 +2070,16 @@ export default function BattlePage() {
 
       <PlayFriendModal
         isOpen={showPlayFriend}
-        onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); refreshLastBuyIn(); }}
+        onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); refreshLastBuyIn(); }}
         friends={friends}
         initialFriend={playFriendInitial}
         initialBuyIn={lastBuyIn}
+        initialSentInvite={playFriendSentInvite}
         currentUser={profile ? { id: userId, username: profile.username, avatar: profile.avatar, frameId: profile.equippedFrame } : (session?.user ? { id: userId, username: session.user.name, avatar: session.user.image } : null)}
         onInviteSent={() => { fetchData(); refreshLastBuyIn(); }}
-        onInviteCancelled={() => fetchData()}
-        onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setShowPrivateMatch(true); }}
-        onOpenMessage={(friend) => { setShowPlayFriend(false); setPlayFriendInitial(null); openMessagePopup(friend); }}
+        onInviteCancelled={() => { setPlayFriendSentInvite(null); fetchData(); }}
+        onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); setShowPrivateMatch(true); }}
+        onOpenMessage={(friend) => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); openMessagePopup(friend); }}
       />
 
       <MessagePopup

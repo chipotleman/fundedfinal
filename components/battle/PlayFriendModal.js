@@ -32,7 +32,7 @@ function UserAvatar({ user, size = 36 }) {
   return <SharedUserAvatar user={user} size={size} />;
 }
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null, initialBuyIn = null }) {
+export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null, initialBuyIn = null, initialSentInvite = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
   const { hasActiveMatchup, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
@@ -124,8 +124,34 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         setSelectedFriend(initialFriend);
         setActiveTab('friends');
       }
+      // Friend-row "Battle" shortcut already POSTed an invite before
+      // opening this modal — boot directly into the cartoon waiting
+      // overlay so the sender sees the same countdown + Cancel UI as
+      // when they sent the invite from inside the modal. Without this
+      // path the user just got a "Invite sent" toast and no popup.
+      if (initialSentInvite?.id && initialSentInvite?.friend) {
+        setSelectedFriend(initialSentInvite.friend);
+        setActiveTab('friends');
+        if (typeof initialSentInvite.buyIn === 'number' && BUY_IN_OPTIONS.includes(initialSentInvite.buyIn)) {
+          setBuyIn(initialSentInvite.buyIn);
+        }
+        if (initialSentInvite.gameMode === 'rush' || initialSentInvite.gameMode === 'tournament' || initialSentInvite.gameMode === 'original') {
+          setGameMode(initialSentInvite.gameMode);
+        }
+        setSent(true);
+        setSentInviteId(initialSentInvite.id);
+        const expirySeconds = INVITE_EXPIRY_HOURS * 3600;
+        setInviteCountdown(expirySeconds);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        countdownRef.current = setInterval(() => {
+          setInviteCountdown(prev => {
+            if (prev <= 1) { clearInterval(countdownRef.current); return 0; }
+            return prev - 1;
+          });
+        }, 1000);
+      }
     }
-  }, [isOpen, initialFriend, lockedFriend, initialBuyIn]);
+  }, [isOpen, initialFriend, lockedFriend, initialBuyIn, initialSentInvite]);
 
   useEffect(() => {
     return () => {
