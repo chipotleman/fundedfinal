@@ -152,28 +152,64 @@ function Toast({ toast, ctx, router }) {
   if (toast.type === 'invite_ended') {
     const reason = toast.payload?.reason;
     const name = sender.username || 'Your friend';
+    let eyebrow;
     let title;
     let subtitle;
+    let accent;
+    let emoji;
     if (reason === 'declined') {
-      title = `${name} declined your battle invite`;
-      subtitle = 'They passed on this one.';
+      eyebrow = 'Invite Declined';
+      title = `${name} passed`;
+      subtitle = 'They tapped out — challenge someone else?';
+      accent = '#ef4444';
+      emoji = '🛡️';
     } else if (reason === 'cancelled') {
-      title = 'Battle invite cancelled';
-      subtitle = `Your invite to ${name} was cancelled.`;
+      eyebrow = 'Invite Cancelled';
+      title = `Invite to ${name} cancelled`;
+      subtitle = 'No pot, no penalty. Send another anytime.';
+      accent = '#9ca3af';
+      emoji = '✖️';
     } else {
-      title = 'Your battle invite expired';
-      subtitle = `${name} didn\u2019t respond in time.`;
+      eyebrow = 'Invite Expired';
+      title = `${name} didn't answer in time`;
+      subtitle = 'Try again or queue up a Quick Match.';
+      accent = '#fbbf24';
+      emoji = '⏳';
     }
     return (
       <div
-        className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 border border-slate-500/50 rounded-xl p-3"
-        style={baseStyle}
+        className="rounded-2xl p-3"
+        style={{
+          ...baseStyle,
+          background: 'linear-gradient(180deg, #111 0%, #0a0a0a 100%)',
+          border: `2.5px solid ${accent}`,
+          boxShadow: `0 4px 0 #000, 0 0 18px ${accent}40`,
+        }}
       >
         <div className="flex items-center gap-3">
-          <Avatar sender={sender} />
+          <div
+            className="flex-shrink-0 flex items-center justify-center rounded-xl"
+            style={{
+              width: 44,
+              height: 44,
+              background: '#0a0a0a',
+              border: `2px solid ${accent}`,
+              fontSize: 22,
+              boxShadow: `0 2px 0 #000`,
+            }}
+            aria-hidden="true"
+          >
+            {emoji}
+          </div>
           <div className="flex-1 min-w-0">
-            <div className="text-white text-sm font-bold truncate">{title}</div>
-            <div className="text-gray-300 text-xs">{subtitle}</div>
+            <div
+              className="text-[9px] font-extrabold uppercase tracking-[0.18em] truncate"
+              style={{ color: accent }}
+            >
+              {eyebrow}
+            </div>
+            <div className="text-white text-sm font-extrabold truncate mt-0.5">{title}</div>
+            <div className="text-gray-400 text-[11px] truncate mt-0.5">{subtitle}</div>
           </div>
           <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
         </div>

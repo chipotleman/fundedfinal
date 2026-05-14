@@ -348,6 +348,20 @@ export function NotificationsProvider({ children }) {
               const status = j?.invite?.status;
               if (status !== 'declined' && status !== 'expired' && status !== 'cancelled') return;
               const receiver = prev.receiver || {};
+              // IMPORTANT: enqueue the toast BEFORE dispatching the
+              // window event. The global `piks:invite:ended` listener
+              // installed below pre-marks `invite_ended:${id}` as seen
+              // (so PlayFriendModal's own self-fire doesn't double-pop
+              // a toast). If we dispatched first, the central detection
+              // would suppress its OWN toast — which is the case where
+              // PlayFriendModal is closed and the global toast is the
+              // user's only signal that the invite was declined.
+              enqueueToast({
+                id: `invite_ended:${id}`,
+                type: 'invite_ended',
+                sender: receiver,
+                payload: { reason: status, inviteId: id },
+              });
               if (typeof window !== 'undefined' && receiver.id) {
                 window.dispatchEvent(new CustomEvent('piks:invite:ended', {
                   detail: {
@@ -358,12 +372,6 @@ export function NotificationsProvider({ children }) {
                   },
                 }));
               }
-              enqueueToast({
-                id: `invite_ended:${id}`,
-                type: 'invite_ended',
-                sender: receiver,
-                payload: { reason: status, inviteId: id },
-              });
             } catch {}
           })();
         }
