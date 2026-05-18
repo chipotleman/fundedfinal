@@ -17,8 +17,35 @@ export default function MessengerPage() {
   const [selectedId, setSelectedId] = useState(null);
   const [battleFriend, setBattleFriend] = useState(null);
 
-  const myId = session?.user?.id;
-  const isAuthed = status === 'authenticated';
+  // Hybrid auth check that mirrors TopNavbar (see components/TopNavbar.js
+  // around the `isLoggedIn` derivation): accept either a fully-resolved
+  // NextAuth session OR a cached `current_user` in localStorage. Without
+  // this, the page can show "Sign in to send messages" while the navbar's
+  // avatar dropdown is simultaneously showing the user as signed in —
+  // which is what users were reporting. The `cachedUser` state is kept
+  // in sync via a mount effect so SSR and the first client render don't
+  // mismatch.
+  const [cachedUser, setCachedUser] = useState(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const read = () => {
+      try {
+        const raw = localStorage.getItem('current_user');
+        setCachedUser(raw ? JSON.parse(raw) : null);
+      } catch (_e) {
+        setCachedUser(null);
+      }
+    };
+    read();
+    const onStorage = (e) => {
+      if (!e || e.key === 'current_user') read();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const myId = session?.user?.id || cachedUser?.id || null;
+  const isAuthed = status === 'authenticated' || !!cachedUser?.id;
 
   const handleStartBattle = useCallback((friend) => {
     if (!friend?.id) return;
