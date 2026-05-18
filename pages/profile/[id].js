@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -68,6 +68,7 @@ export default function PublicProfile() {
   const [battleHistory, setBattleHistory] = useState(cachedHistoryEntry?.battles || []);
   const [battleStats, setBattleStats] = useState(cachedHistoryEntry?.stats || null);
   const [historyLoaded, setHistoryLoaded] = useState(!!cachedHistoryEntry);
+  const [historyFilter, setHistoryFilter] = useState('all');
   const [profileNotFound, setProfileNotFound] = useState(!!cachedProfileEntry?.notFound);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -806,6 +807,48 @@ export default function PublicProfile() {
     ? Math.round((battleStats.wins / battleStats.totalBattles) * 100) 
     : 0;
 
+  // Filter + group battle history so the profile's battle list is
+  // browsable instead of an endless flat scroll. Filter pills narrow
+  // by outcome (or in-progress) and the remaining items are bucketed
+  // into time-based sections (This Week / This Month / Earlier).
+  const filteredHistory = useMemo(() => {
+    if (historyFilter === 'all') return battleHistory;
+    if (historyFilter === 'wins') return battleHistory.filter((b) => b.result === 'win');
+    if (historyFilter === 'losses') return battleHistory.filter((b) => b.result === 'loss');
+    if (historyFilter === 'active') return battleHistory.filter((b) => b.result === 'pending' || b.status !== 'completed');
+    return battleHistory;
+  }, [battleHistory, historyFilter]);
+
+  const groupedHistory = useMemo(() => {
+    const now = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
+    const buckets = {
+      active: { key: 'active', label: 'In Progress', battles: [] },
+      week: { key: 'week', label: 'This Week', battles: [] },
+      month: { key: 'month', label: 'This Month', battles: [] },
+      earlier: { key: 'earlier', label: 'Earlier', battles: [] },
+    };
+    for (const b of filteredHistory) {
+      if (b.result === 'pending' || b.status !== 'completed') {
+        buckets.active.battles.push(b);
+        continue;
+      }
+      const ts = new Date(b.endsAt || b.createdAt || 0).getTime();
+      const diff = now - ts;
+      if (diff <= 7 * DAY) buckets.week.battles.push(b);
+      else if (diff <= 30 * DAY) buckets.month.battles.push(b);
+      else buckets.earlier.battles.push(b);
+    }
+    return [buckets.active, buckets.week, buckets.month, buckets.earlier].filter((g) => g.battles.length > 0);
+  }, [filteredHistory]);
+
+  const historyFilterPills = [
+    { key: 'all', label: 'All', count: battleStats?.totalBattles ?? battleHistory.length },
+    { key: 'wins', label: 'Wins', count: battleStats?.wins ?? 0 },
+    { key: 'losses', label: 'Losses', count: battleStats?.losses ?? 0 },
+    { key: 'active', label: 'Active', count: battleHistory.filter((b) => b.result === 'pending' || b.status !== 'completed').length },
+  ];
+
   if (profileNotFound && !hasProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#000' }}>
@@ -1419,8 +1462,51 @@ export default function PublicProfile() {
         )}
 
         <div className="rounded-2xl p-5" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Battle History</h2>
-          
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Battle History</h2>
+            {battleStats && battleStats.completedBattles > 0 && (
+              <span className="text-[11px] font-semibold text-gray-500">
+                <span className="text-green-400">{battleStats.wins}W</span>
+                <span className="mx-1 text-gray-600">·</span>
+                <span className="text-red-400">{battleStats.losses}L</span>
+                {battleStats.ties > 0 && (
+                  <>
+                    <span className="mx-1 text-gray-600">·</span>
+                    <span className="text-yellow-400">{battleStats.ties}T</span>
+                  </>
+                )}
+                <span className="mx-1 text-gray-600">·</span>
+                <span className={battleStats.netPnl >= 0 ? 'text-green-400' : 'text-red-400'}>
+                  {battleStats.netPnl >= 0 ? '+' : ''}{formatCurrency(battleStats.netPnl)}
+                </span>
+              </span>
+            )}
+          </div>
+
+          {battleHistory.length > 0 && (
+            <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {historyFilterPills.map((pill) => {
+                const active = historyFilter === pill.key;
+                return (
+                  <button
+                    key={pill.key}
+                    type="button"
+                    onClick={() => setHistoryFilter(pill.key)}
+                    className="flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
+                    style={{
+                      backgroundColor: active ? 'rgba(59,130,246,0.15)' : '#111',
+                      border: `1px solid ${active ? 'rgba(59,130,246,0.55)' : '#1a1a1a'}`,
+                      color: active ? '#60a5fa' : '#9ca3af',
+                    }}
+                  >
+                    {pill.label}
+                    <span className="ml-1.5 opacity-70">{pill.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {!historyLoaded && battleHistory.length === 0 ? (
             <div className="space-y-2" aria-hidden="true">
               {[0, 1, 2].map((i) => (
@@ -1442,48 +1528,60 @@ export default function PublicProfile() {
                 </div>
               ))}
             </div>
-          ) : battleHistory.length > 0 ? (
-            <div className="space-y-2">
-              {battleHistory.map((battle) => (
-                <div 
-                  key={battle.id} 
-                  className="rounded-xl p-3.5"
-                  style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
-                        {battle.opponent?.avatar ? (
-                          <img src={battle.opponent.avatar} alt="" className="w-full h-full rounded-full object-cover" />
-                        ) : (
-                          <span className={`font-bold text-xs ${'text-white'}`}>{battle.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
-                        )}
+          ) : battleHistory.length === 0 ? (
+            <p className="text-gray-500 text-center py-8 text-sm">No battle history yet</p>
+          ) : groupedHistory.length === 0 ? (
+            <p className="text-gray-500 text-center py-8 text-sm">No battles match this filter</p>
+          ) : (
+            <div className="space-y-5">
+              {groupedHistory.map((group) => (
+                <div key={group.key}>
+                  <div className="flex items-center justify-between mb-2 px-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500">{group.label}</span>
+                    <span className="text-[10px] font-semibold text-gray-600">{group.battles.length}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {group.battles.map((battle) => (
+                      <div
+                        key={battle.id}
+                        className="rounded-xl p-3.5"
+                        style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+                              {battle.opponent?.avatar ? (
+                                <img src={battle.opponent.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                              ) : (
+                                <span className={`font-bold text-xs ${'text-white'}`}>{battle.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className={`font-semibold text-sm ${'text-white'}`}>
+                                vs {battle.opponent?.username || battle.opponent?.displayName || 'Unknown'}
+                              </p>
+                              <p className="text-gray-500 text-xs">
+                                {battle.challengeType?.toUpperCase()} {battle.durationType && `\u00B7 ${battle.durationType.replace('_', ' ')}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-xs font-bold uppercase ${getResultColor(battle.result)}`}>
+                              {battle.result === 'pending' ? 'In Progress' : battle.result}
+                            </p>
+                            {battle.result !== 'pending' && (
+                              <p className={`text-sm font-bold ${battle.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {battle.pnl >= 0 ? '+' : ''}{formatCurrency(battle.pnl)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className={`font-semibold text-sm ${'text-white'}`}>
-                          vs {battle.opponent?.username || battle.opponent?.displayName || 'Unknown'}
-                        </p>
-                        <p className="text-gray-500 text-xs">
-                          {battle.challengeType?.toUpperCase()} {battle.durationType && `\u00B7 ${battle.durationType.replace('_', ' ')}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-xs font-bold uppercase ${getResultColor(battle.result)}`}>
-                        {battle.result === 'pending' ? 'In Progress' : battle.result}
-                      </p>
-                      {battle.result !== 'pending' && (
-                        <p className={`text-sm font-bold ${battle.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {battle.pnl >= 0 ? '+' : ''}{formatCurrency(battle.pnl)}
-                        </p>
-                      )}
-                    </div>
+                    ))}
                   </div>
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-gray-500 text-center py-8 text-sm">No battle history yet</p>
           )}
         </div>
       </div>
