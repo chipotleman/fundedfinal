@@ -2870,7 +2870,7 @@ function YouVsCard({
           // chips that used to live here moved into the confirmation
           // popup so the home card can lead with the call to action
           // and a short explainer of what tapping it actually does.
-          <div className="flex flex-1 flex-col items-center justify-center text-center py-2 sm:py-3 select-none min-h-0 sm:min-h-[148px]">
+          <div className="flex flex-1 flex-col items-center justify-center text-center py-2 select-none min-h-0">
             <div className="relative inline-flex items-center justify-center mb-2 sm:mb-3 h-[58px] sm:h-[100px]">
               <svg
                 className="absolute pointer-events-none hidden sm:block"
@@ -2949,9 +2949,6 @@ function YouVsCard({
             </div>
             <p className="text-sm sm:text-base font-extrabold text-white leading-tight px-2">
               Tap to face anyone in a 1v1
-            </p>
-            <p className="text-[11px] sm:text-xs text-gray-400 mt-1 px-3 leading-snug">
-              Pick your stake &amp; mode in the next step
             </p>
 
             {searchError && (
