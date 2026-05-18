@@ -1903,13 +1903,8 @@ export default function Dashboard() {
                     <div className="inline-flex items-center justify-center gap-2.5">
                       <Bolt size={26} delay={0} />
                       <h2 className="text-2xl md:text-3xl font-black inline-block" style={{
-                        color: 'transparent',
-                        background: 'linear-gradient(180deg,#fef08a 0%,#facc15 45%,#fb923c 80%,#c2410c 100%)',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        WebkitTextStroke: '2.2px #0a0a0a',
-                        textShadow: '0 4px 0 rgba(0,0,0,0.4)',
-                        letterSpacing: '0.03em',
+                        color: '#facc15',
+                        letterSpacing: '0.04em',
                         animation: 'wtTitleBounce 0.55s cubic-bezier(0.34,1.56,0.64,1) both',
                         fontFamily: 'system-ui, -apple-system, sans-serif',
                       }}>
@@ -1962,12 +1957,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex flex-col items-center flex-shrink-0">
                       <div className="text-3xl font-black italic" style={{
-                        color: 'transparent',
-                        background: 'linear-gradient(180deg,#fef08a,#facc15 50%,#c2410c)',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        WebkitTextStroke: '2px #0a0a0a',
-                        textShadow: '0 0 18px rgba(250,204,21,0.6)',
+                        color: '#facc15',
                         fontFamily: 'system-ui, -apple-system, sans-serif',
                       }}>VS</div>
                     </div>
@@ -2000,13 +1990,8 @@ export default function Dashboard() {
                     <div className="inline-flex items-center justify-center gap-2.5">
                       <Bolt size={22} delay={0} />
                       <h2 className="text-xl md:text-2xl font-black" style={{
-                        color: 'transparent',
-                        background: 'linear-gradient(180deg,#fef08a 0%,#facc15 50%,#fb923c 100%)',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        WebkitTextStroke: '2px #0a0a0a',
-                        textShadow: '0 3px 0 rgba(0,0,0,0.4)',
-                        letterSpacing: '0.03em',
+                        color: '#facc15',
+                        letterSpacing: '0.04em',
                         animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
                         fontFamily: 'system-ui, -apple-system, sans-serif',
                       }}>HOW IT WORKS</h2>
@@ -2048,13 +2033,8 @@ export default function Dashboard() {
                     <div className="inline-flex items-center justify-center gap-2.5">
                       <Bolt size={22} delay={0} />
                       <h2 className="text-xl md:text-2xl font-black" style={{
-                        color: 'transparent',
-                        background: 'linear-gradient(180deg,#fef08a 0%,#facc15 50%,#fb923c 100%)',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        WebkitTextStroke: '2px #0a0a0a',
-                        textShadow: '0 3px 0 rgba(0,0,0,0.4)',
-                        letterSpacing: '0.03em',
+                        color: '#facc15',
+                        letterSpacing: '0.04em',
                         animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
                         fontFamily: 'system-ui, -apple-system, sans-serif',
                       }}>TIPS TO WIN</h2>
@@ -2065,7 +2045,7 @@ export default function Dashboard() {
                   <div className="space-y-2.5">
                     {[
                       { color: '#3b82f6', glow: 'rgba(59,130,246,0.35)', icon: '📊', title: 'Track the Banner', desc: 'Your battle status bar at the top shows both balances and time left in real-time.' },
-                      { color: '#facc15', glow: 'rgba(250,204,21,0.35)', icon: '🔒', title: 'Hidden Bets', desc: "Your opponent can't see your picks until you've placed at least one bet — and vice versa." },
+                      { color: '#fb923c', glow: 'rgba(251,146,60,0.35)', icon: '🔒', title: 'Hidden Bets', desc: "Your opponent can't see your picks until you've placed at least one bet — and vice versa." },
                       { color: '#10b981', glow: 'rgba(16,185,129,0.35)', icon: '⚡', title: 'Manage Risk', desc: "Don't go all-in early. Spread your bets across games to build a steady lead." },
                     ].map((t) => (
                       <div key={t.title} className="flex items-start gap-2.5 rounded-xl p-2.5" style={{

@@ -232,8 +232,51 @@ function MatchFoundContent({
         </div>
       </div>
 
-      {/* Avatars + VS */}
-      <div className="flex items-center justify-center gap-4 md:gap-8 py-4 px-4 relative">
+      {/* Avatars + VS — diagonal split between opponents.
+          A blue half on the YOU side and orange half on the OPP side
+          meet on a slanted diagonal so the row reads as two opposing
+          territories. Both layers are absolutely positioned behind the
+          avatars (z-0) with pointer-events:none; the avatars and VS
+          stay on top (z-10/z-20) and are unaffected. */}
+      <div
+        className="flex items-center justify-center gap-4 md:gap-8 py-4 px-4 relative overflow-hidden"
+        style={{ background: '#0a0a0a' }}
+      >
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.06) 55%, transparent 60%)',
+            clipPath: 'polygon(0 0, 58% 0, 42% 100%, 0 100%)',
+            zIndex: 0,
+          }}
+        />
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(225deg, rgba(251,146,60,0.22) 0%, rgba(251,146,60,0.06) 55%, transparent 60%)',
+            clipPath: 'polygon(58% 0, 100% 0, 100% 100%, 42% 100%)',
+            zIndex: 0,
+          }}
+        />
+        {/* Hairline diagonal seam down the middle of the split. */}
+        <span
+          aria-hidden="true"
+          className="absolute pointer-events-none"
+          style={{
+            top: 0,
+            bottom: 0,
+            left: '50%',
+            width: '2px',
+            transform: 'translateX(-50%) skewX(-18deg)',
+            background:
+              'linear-gradient(180deg, rgba(250,204,21,0) 0%, rgba(250,204,21,0.55) 50%, rgba(250,204,21,0) 100%)',
+            zIndex: 1,
+          }}
+        />
         {/* YOU side */}
         <div
           className="flex flex-col items-center relative z-10"
