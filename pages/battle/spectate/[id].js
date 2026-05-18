@@ -5,6 +5,36 @@ import Head from 'next/head';
 import Link from 'next/link';
 import TopNavbar from '../../../components/TopNavbar';
 import UsernameLink from '../../../components/social/UsernameLink';
+import { getSimulatedBattles } from '../../../components/battle/LiveBattlesSection';
+
+// Simulated demo battles surface in the social feed when there are no
+// real live matchups (or alongside them), and have ids like `sim-1`,
+// `sim-2`, etc. They aren't persisted in the database, so the
+// `/api/battles/[id]` endpoint would 404 for them. We detect those
+// ids and synthesize a spectator-shaped battle object locally from
+// `getSimulatedBattles` so the user can actually open the spectate
+// view (scoreboard + readonly chat) instead of being bounced back
+// to /battle with a "Battle not found" message.
+const SIM_ID_RE = /^sim-\d+$/;
+function isSimulatedId(id) {
+  return typeof id === 'string' && SIM_ID_RE.test(id);
+}
+function buildSimulatedBattle(id) {
+  const list = getSimulatedBattles([]);
+  const entry = list.find((b) => b.id === id);
+  if (!entry) return null;
+  return {
+    ...entry,
+    challengeType: 'original',
+    status: 'active',
+    isCompleted: false,
+    likeCount: 0,
+    likedByMe: false,
+    winnerId: null,
+    winnerType: null,
+    picks: null,
+  };
+}
 
 const BORDER = '#1a1a1a';
 const CARD_BG = '#0d0d0d';
@@ -265,6 +295,9 @@ export default function SpectatePage() {
 
   const handleToggleLike = async () => {
     if (!id || !userId || liking) return;
+    // Simulated/demo battles aren't persisted, so there's nothing to
+    // like server-side. No-op silently.
+    if (isSimulatedId(id)) return;
     setLiking(true);
     // Optimistic toggle so the button feels instant.
     setBattle((prev) => {
@@ -301,6 +334,20 @@ export default function SpectatePage() {
 
   const fetchBattle = useCallback(async () => {
     if (!id) return;
+    // Demo/simulated battles are synthesized locally — skip the API
+    // so we don't trip the 404 → NotFoundRedirect path.
+    if (isSimulatedId(id)) {
+      const sim = buildSimulatedBattle(id);
+      if (sim) {
+        setBattle(sim);
+        setNotFound(false);
+      } else {
+        setBattle(null);
+        setNotFound(true);
+      }
+      setLoadingBattle(false);
+      return;
+    }
     try {
       const res = await fetch(`/api/battles/${id}`);
       if (res.status === 404) {
@@ -323,6 +370,12 @@ export default function SpectatePage() {
 
   const fetchMessages = useCallback(async () => {
     if (!id) return;
+    // No backing room for demo battles — leave the chat empty.
+    if (isSimulatedId(id)) {
+      setMessages([]);
+      setLoadingMessages(false);
+      return;
+    }
     try {
       const res = await fetch(`/api/battles/${id}/messages`);
       if (!res.ok) return;
@@ -347,6 +400,8 @@ export default function SpectatePage() {
   const isCompleted = !!battle?.isCompleted || battle?.status === 'completed' || battle?.status === 'cancelled';
   useEffect(() => {
     if (!id) return;
+    // Demo battles are static — no server state to poll.
+    if (isSimulatedId(id)) return undefined;
     const t1 = isCompleted ? null : setInterval(fetchBattle, 5000);
     const t2 = setInterval(fetchMessages, 3000);
     return () => {
@@ -367,6 +422,10 @@ export default function SpectatePage() {
     if (!body || sending) return;
     if (!userId) {
       setChatError('Sign in to chat with the crowd.');
+      return;
+    }
+    if (isSimulatedId(id)) {
+      setChatError('Chat is disabled on demo battles.');
       return;
     }
     setSending(true);
@@ -433,9 +492,15 @@ export default function SpectatePage() {
                 <button
                   type="button"
                   onClick={handleToggleLike}
-                  disabled={!userId || liking}
+                  disabled={!userId || liking || isSimulatedId(id)}
                   aria-pressed={!!battle.likedByMe}
-                  title={userId ? (battle.likedByMe ? 'Unlike' : 'Like this battle') : 'Sign in to like'}
+                  title={
+                    isSimulatedId(id)
+                      ? 'Likes disabled on demo battles'
+                      : userId
+                        ? (battle.likedByMe ? 'Unlike' : 'Like this battle')
+                        : 'Sign in to like'
+                  }
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-transform active:scale-95 disabled:opacity-50"
                   style={{
                     background: battle.likedByMe ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)',
@@ -652,15 +717,21 @@ export default function SpectatePage() {
                     type="text"
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    placeholder={userId ? (isCompleted ? 'Add a comment…' : 'Say something…') : (isCompleted ? 'Sign in to comment…' : 'Sign in to chat…')}
-                    disabled={!userId || sending}
+                    placeholder={
+                      isSimulatedId(id)
+                        ? 'Chat disabled on demo battles'
+                        : userId
+                          ? (isCompleted ? 'Add a comment…' : 'Say something…')
+                          : (isCompleted ? 'Sign in to comment…' : 'Sign in to chat…')
+                    }
+                    disabled={!userId || sending || isSimulatedId(id)}
                     maxLength={300}
                     className="flex-1 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     style={{ background: PANEL_BG, border: `1px solid ${BORDER}` }}
                   />
                   <button
                     type="submit"
-                    disabled={!userId || sending || !draft.trim()}
+                    disabled={!userId || sending || !draft.trim() || isSimulatedId(id)}
                     className="px-3 py-2 rounded-lg text-xs font-bold text-white disabled:opacity-30"
                     style={{ background: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
                   >
