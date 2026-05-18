@@ -188,7 +188,7 @@ export default function Dashboard() {
   const isBeta = useBetaMode();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, hasFetchedOnce: gamesHasFetchedOnce, error: gamesError, lastUpdated, isDemoMode } = useGames();
-  const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup, myBalance: matchupMyBalance, opponentBalance: matchupOppBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('Live');
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
@@ -1385,6 +1385,15 @@ export default function Dashboard() {
             matchup: matchup || null,
             queueEntry: queueEntry || null,
             timeRemaining: timeRemaining,
+            // Forwarded so the YouVsCard active layout can render
+            // per-player balance + PnL on desktop (preserving the
+            // information density of the old hero-arena header).
+            myBalance: matchupMyBalance,
+            opponentBalance: matchupOppBalance,
+            myLiveBalance,
+            opponentLiveBalance,
+            myUnrealizedPnl,
+            opponentUnrealizedPnl,
           }}
           onYouVsClick={() => router.push('/battle')}
           // Wire the in-card chooser modals so Challenge Friend /

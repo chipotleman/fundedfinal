@@ -1366,6 +1366,17 @@ function YouVsCard({
   const matchup = youVsState?.matchup || null;
   const queueEntry = youVsState?.queueEntry || null;
   const initialTimeRemaining = youVsState?.timeRemaining ?? null;
+  // Per-player balance + PnL forwarded from MatchupContext via the
+  // homepage. Used by the active-state slim layout to render the
+  // info-dense balance row that the old hero-arena display used to
+  // carry (shown on desktop only — the mobile carousel keeps the
+  // ultra-slim username-only header to match sibling cards).
+  const youVsMyBalance = youVsState?.myBalance ?? null;
+  const youVsOppBalance = youVsState?.opponentBalance ?? null;
+  const youVsMyLiveBalance = youVsState?.myLiveBalance ?? null;
+  const youVsOppLiveBalance = youVsState?.opponentLiveBalance ?? null;
+  const youVsMyUnrealizedPnl = youVsState?.myUnrealizedPnl ?? null;
+  const youVsOppUnrealizedPnl = youVsState?.opponentUnrealizedPnl ?? null;
 
   // One-tap matchmaking preferences. Seeded with the safe lightweight
   // defaults, then hydrated from localStorage on mount so a returning
@@ -2652,9 +2663,42 @@ function YouVsCard({
                   <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
                     {youUser.username}
                   </p>
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#34d399' }}>
-                    You
-                  </span>
+                  {(() => {
+                    const startBalRaw = parseFloat(matchup?.startingBalance);
+                    const startBal = Number.isFinite(startBalRaw) && startBalRaw > 0 ? startBalRaw : null;
+                    const balRaw = youVsMyLiveBalance != null ? parseFloat(youVsMyLiveBalance)
+                      : youVsMyBalance != null ? parseFloat(youVsMyBalance)
+                      : null;
+                    const bal = Number.isFinite(balRaw) ? balRaw : null;
+                    const unreal = parseFloat(youVsMyUnrealizedPnl);
+                    const pct = Number.isFinite(unreal) && startBal
+                      ? ((unreal / startBal) * 100).toFixed(1)
+                      : (bal != null && startBal ? (((bal - startBal) / startBal) * 100).toFixed(1) : null);
+                    // Desktop: show balance + PnL chip so the user sees
+                    // the same info-density the old hero header had.
+                    // Mobile: keep the slim "You" label so the card
+                    // stays compact in the carousel.
+                    if (bal != null) {
+                      return (
+                        <>
+                          <span className="text-[10px] font-bold uppercase tracking-wider sm:hidden" style={{ color: '#34d399' }}>
+                            You
+                          </span>
+                          <div className="hidden sm:flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[11px] font-bold tabular-nums" style={{ color: '#fff' }}>
+                              {isBeta ? formatMoney(bal, 0) : `$${formatMoney(bal, 0)}`}
+                            </span>
+                            {pct != null && <PnlBadge pnlPercent={pct} size="small" />}
+                          </div>
+                        </>
+                      );
+                    }
+                    return (
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#34d399' }}>
+                        You
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="px-2 flex flex-col items-center flex-shrink-0">
@@ -2671,9 +2715,38 @@ function YouVsCard({
                   <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
                     {showOpponent ? (opponent?.username || 'Opponent') : 'Opponent'}
                   </p>
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    Opponent
-                  </span>
+                  {(() => {
+                    const startBalRaw = parseFloat(matchup?.startingBalance);
+                    const startBal = Number.isFinite(startBalRaw) && startBalRaw > 0 ? startBalRaw : null;
+                    const balRaw = youVsOppLiveBalance != null ? parseFloat(youVsOppLiveBalance)
+                      : youVsOppBalance != null ? parseFloat(youVsOppBalance)
+                      : null;
+                    const bal = Number.isFinite(balRaw) ? balRaw : null;
+                    const unreal = parseFloat(youVsOppUnrealizedPnl);
+                    const pct = Number.isFinite(unreal) && startBal
+                      ? ((unreal / startBal) * 100).toFixed(1)
+                      : (bal != null && startBal ? (((bal - startBal) / startBal) * 100).toFixed(1) : null);
+                    if (bal != null) {
+                      return (
+                        <>
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider sm:hidden">
+                            Opponent
+                          </span>
+                          <div className="hidden sm:flex items-center justify-end gap-1.5 mt-0.5">
+                            {pct != null && <PnlBadge pnlPercent={pct} size="small" />}
+                            <span className="text-[11px] font-bold tabular-nums" style={{ color: '#fff' }}>
+                              {isBeta ? formatMoney(bal, 0) : `$${formatMoney(bal, 0)}`}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    }
+                    return (
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                        Opponent
+                      </span>
+                    );
+                  })()}
                 </div>
                 {showOpponent ? (
                   <PlayerAvatar
