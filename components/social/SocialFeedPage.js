@@ -896,9 +896,28 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
   const u1PickPreview = u1Picks[0];
   const u2PickPreview = u2Picks[0];
 
+  // Clicking the card body (anywhere outside the avatar/username
+  // profile links and the bottom action bar) routes to the full
+  // spectate view. The avatar and the username text are the only
+  // explicit "open profile" affordances — everything else in the
+  // card is treated as "watch this match". Interactive children
+  // (profile links, Spectate/Chat buttons, inline chat panel) stop
+  // propagation so they don't double-fire onSpectate.
+  const handleCardClick = () => onSpectate?.(battle);
+
   return (
     <div
-      className="rounded-2xl mb-4 overflow-hidden"
+      role="button"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
+      aria-label={`Spectate ${u1.username || 'Player 1'} vs ${u2.username || 'Player 2'}`}
+      className="rounded-2xl mb-4 overflow-hidden cursor-pointer"
       style={{
         backgroundColor: surface,
         border: `2.5px solid ${HH_BORDER}`,
@@ -941,13 +960,16 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
       {/* Head-to-Head body */}
       <div className="px-3.5 pt-3.5 pb-3">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          {/* LEFT player */}
-          <button
-            type="button"
-            onClick={() => onOpenProfile?.(u1)}
-            className="flex items-center gap-2.5 min-w-0 text-left lg:hover:bg-white/[0.03] rounded-lg p-1 -m-1 transition-colors"
-          >
-            <div className="relative flex-shrink-0">
+          {/* LEFT player — only the avatar and the username are
+              profile links; the surrounding row (balance, PnL) falls
+              through to the card's spectate click handler. */}
+          <div className="flex items-center gap-2.5 min-w-0 text-left">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1); }}
+              aria-label={`Open ${u1.username || 'Player 1'} profile`}
+              className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
+            >
               <div
                 className="rounded-full p-[2.5px]"
                 style={{
@@ -970,11 +992,16 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
                   🔥
                 </span>
               )}
-            </div>
+            </button>
             <div className="min-w-0">
-              <div className="text-[13px] font-black truncate" style={{ color: textPrimary }}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1); }}
+                className="text-[13px] font-black truncate text-left lg:hover:underline rounded"
+                style={{ color: textPrimary }}
+              >
                 {u1.username || 'Player 1'}
-              </div>
+              </button>
               <div
                 className="text-[15px] font-black tabular-nums leading-tight"
                 style={{ color: u1Lead ? '#34d399' : textPrimary }}
@@ -985,7 +1012,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
                 <PnlMini value={u1.pnlPercent} />
               </div>
             </div>
-          </button>
+          </div>
 
           {/* Center VS chip */}
           <div className="flex flex-col items-center px-1">
@@ -1012,16 +1039,19 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
             </span>
           </div>
 
-          {/* RIGHT player */}
-          <button
-            type="button"
-            onClick={() => onOpenProfile?.(u2)}
-            className="flex items-center gap-2.5 min-w-0 justify-end lg:hover:bg-white/[0.03] rounded-lg p-1 -m-1 transition-colors"
-          >
+          {/* RIGHT player — mirror of LEFT: only avatar + username
+              open the profile; the rest of the row falls through to
+              the card's spectate handler. */}
+          <div className="flex items-center gap-2.5 min-w-0 justify-end">
             <div className="min-w-0 text-right">
-              <div className="text-[13px] font-black truncate" style={{ color: textPrimary }}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2); }}
+                className="text-[13px] font-black truncate text-right lg:hover:underline rounded ml-auto block"
+                style={{ color: textPrimary }}
+              >
                 {u2.username || 'Player 2'}
-              </div>
+              </button>
               <div
                 className="text-[15px] font-black tabular-nums leading-tight"
                 style={{ color: u2Lead ? '#34d399' : textPrimary }}
@@ -1032,7 +1062,12 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
                 <PnlMini value={u2.pnlPercent} align="right" />
               </div>
             </div>
-            <div className="relative flex-shrink-0">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2); }}
+              aria-label={`Open ${u2.username || 'Player 2'} profile`}
+              className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
+            >
               <div
                 className="rounded-full p-[2.5px]"
                 style={{
@@ -1055,8 +1090,8 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
                   🔥
                 </span>
               )}
-            </div>
-          </button>
+            </button>
+          </div>
         </div>
 
         {/* Two-tone balance share bar (blue / orange, green-tinted on the leader's side) */}
@@ -1167,7 +1202,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
       >
         <button
           type="button"
-          onClick={() => onSpectate?.(battle)}
+          onClick={(e) => { e.stopPropagation(); onSpectate?.(battle); }}
           className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
           style={{ color: textPrimary, borderRight: `2px solid ${HH_BORDER}` }}
         >
@@ -1176,7 +1211,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
         </button>
         <button
           type="button"
-          onClick={() => setChatOpen((v) => !v)}
+          onClick={(e) => { e.stopPropagation(); setChatOpen((v) => !v); }}
           aria-expanded={chatOpen}
           className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
           style={{
@@ -1190,7 +1225,9 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
       </div>
 
       {chatOpen && (
-        <LiveBattleChatPanel matchupId={battle.id} currentUser={currentUser} />
+        <div onClick={(e) => e.stopPropagation()}>
+          <LiveBattleChatPanel matchupId={battle.id} currentUser={currentUser} />
+        </div>
       )}
 
       <style>{`
