@@ -1,12 +1,57 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import ProfileModal from '../components/ProfileModal';
 import UserAvatar, { UserNameLink, useProfilePrefetchHandlers } from '../components/UserAvatar';
-import TapSurface from '../components/TapSurface';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
 import { useAuth } from '../contexts/AuthContext';
+
+/* ─────────────────────────────────────────────────────────────────────
+   Cartoon-themed Leaderboard
+   ─────────────────────────────────────────────────────────────────────
+   Built around three goals from the brief:
+     1. Group focus, not a single-winner pedestal — show *many* bettors
+        in one glance so visiting the page feels like walking into an
+        arcade scoreboard, not a hall of fame for one person.
+     2. Filterable on every meaningful axis — sport (NBA/NFL/MLB/NHL),
+        sort metric (Profit / Win% / ROI / Volume), and timeframe.
+        Switching axes re-ranks the whole board so #1 can change.
+     3. Million-user ready — pagination via offset/limit, "Show more"
+        button, total counter so the user can see they're not at the
+        bottom. The API is paginated on the server, the page only
+        holds what's visible.
+
+   Visual language:
+     • 2.5–3px black borders + 4px hard offset shadows (cartoon panel).
+     • Blue / Orange / Emerald / Yellow palette only. No purple.
+     • Bouncy hover on tappable surfaces (gated under hover:hover via
+       Tailwind's hoverOnlyWhenSupported so touch devices don't get
+       sticky hover states).
+   ───────────────────────────────────────────────────────────────────── */
+
+const SPORTS = [
+  { id: 'all',  emoji: '🏆', label: 'All' },
+  { id: 'nba',  emoji: '🏀', label: 'NBA' },
+  { id: 'nfl',  emoji: '🏈', label: 'NFL' },
+  { id: 'mlb',  emoji: '⚾', label: 'MLB' },
+  { id: 'nhl',  emoji: '🏒', label: 'NHL' },
+];
+
+const SORTS = [
+  { id: 'profit',  label: 'Profit',  short: '$$$', accent: '#10b981' },
+  { id: 'winrate', label: 'Win %',   short: 'W%',  accent: '#3b82f6' },
+  { id: 'roi',     label: 'ROI',     short: 'ROI', accent: '#06b6d4' },
+  { id: 'volume',  label: 'Volume',  short: 'Vol', accent: '#fb923c' },
+];
+
+const TIMEFRAMES = [
+  { id: 'weekly',  label: 'Week' },
+  { id: 'monthly', label: 'Month' },
+  { id: 'alltime', label: 'All-Time' },
+];
+
+const PAGE_SIZE = 25;
 
 function ProfileLink({ user, extras, children, className = '', ...rest }) {
   const handlers = useProfilePrefetchHandlers(user, extras);
@@ -22,84 +67,148 @@ function ProfileLink({ user, extras, children, className = '', ...rest }) {
   );
 }
 
+function formatProfit(n) {
+  const value = Number(n) || 0;
+  const sign = value < 0 ? '-' : value > 0 ? '+' : '';
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs >= 10_000) return `${sign}$${(abs / 1_000).toFixed(0)}K`;
+  if (abs >= 1_000) return `${sign}$${(abs / 1_000).toFixed(1)}K`;
+  return `${sign}$${abs.toLocaleString()}`;
+}
+
+function formatVolume(n) {
+  const v = Number(n) || 0;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
+  return v.toLocaleString();
+}
+
+/* The headline stat for each row depends on which sort is active so
+   the user always sees the number the board is ranked by, big and
+   centered. Other stats fall to a compact secondary line. */
+function primaryStatFor(leader, sortBy) {
+  switch (sortBy) {
+    case 'winrate':
+      return {
+        label: 'Win Rate',
+        value: `${(leader.winRate || 0).toFixed(1)}%`,
+        accent: '#3b82f6',
+      };
+    case 'roi':
+      return {
+        label: 'ROI',
+        value: `${(leader.roi || 0).toFixed(1)}%`,
+        accent: '#06b6d4',
+      };
+    case 'volume':
+      return {
+        label: 'Bets',
+        value: formatVolume(leader.totalBets),
+        accent: '#fb923c',
+      };
+    case 'profit':
+    default: {
+      const profit = Number(leader.profit) || 0;
+      return {
+        label: 'Profit',
+        value: formatProfit(profit),
+        accent: profit >= 0 ? '#10b981' : '#ef4444',
+      };
+    }
+  }
+}
+
 const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { selectedProfile, showProfileModal, setShowProfileModal, openProfile } = useUserProfiles();
   const { user } = useAuth();
+
   const [timeframe, setTimeframe] = useState('monthly');
-  const [category, setCategory] = useState('all');
-  const [bankroll, setBankroll] = useState(10000);
-  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [sortBy, setSortBy] = useState('profit');
+  const [sport, setSport] = useState('all');
+
+  const [leaders, setLeaders] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [myRank, setMyRank] = useState(null);
   const [communityStats, setCommunityStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [bankroll, setBankroll] = useState(10000);
+
   const profileRequestRef = useRef(0);
-  const listRef = useRef(null);
   const userRowRefs = useRef({});
 
+  // ── User's own bankroll for the navbar pill ─────────────────────
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user?.id) {
-        try {
-          const response = await fetch(`/api/profiles/${user.id}`);
-          if (response.ok) {
-            const profile = await response.json();
-            if (profile?.bankroll) {
-              setBankroll(profile.bankroll);
-            }
-          }
-        } catch (err) {
-          console.error('Error fetching profile:', err);
-        }
-      }
-    };
-    fetchUserProfile();
+    if (!user?.id) return;
+    fetch(`/api/profiles/${user.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p) => p?.bankroll && setBankroll(p.bankroll))
+      .catch(() => {});
   }, [user]);
+
+  // ── Whenever a filter axis flips we reset the page and refetch ──
+  useEffect(() => {
+    setOffset(0);
+  }, [timeframe, sortBy, sport]);
 
   useEffect(() => {
     let cancelled = false;
-    const fetchLeaderboard = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams({ timeframe, category });
-        const response = await fetch(`/api/leaderboard?${params.toString()}`);
-        if (!response.ok) throw new Error('Failed to load leaderboard');
-        const data = await response.json();
-        if (!cancelled) {
-          setLeaderboardData(Array.isArray(data.leaders) ? data.leaders : []);
-          setCommunityStats(data.communityStats || null);
-        }
-      } catch (err) {
-        console.error('Error fetching leaderboard:', err);
-        if (!cancelled) {
-          setError('Could not load the leaderboard. Please try again.');
-          setLeaderboardData([]);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchLeaderboard();
+    const isInitial = offset === 0;
+    if (isInitial) setLoading(true);
+    else setLoadingMore(true);
+    setError(null);
+
+    const params = new URLSearchParams({
+      timeframe,
+      sortBy,
+      sport,
+      offset: String(offset),
+      limit: String(PAGE_SIZE),
+    });
+
+    fetch(`/api/leaderboard?${params.toString()}`)
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to load leaderboard');
+        return r.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const next = Array.isArray(data.leaders) ? data.leaders : [];
+        setLeaders((prev) => (isInitial ? next : [...prev, ...next]));
+        setTotal(Number(data.total) || next.length);
+        if (isInitial) setMyRank(data.myRank || null);
+        if (data.communityStats) setCommunityStats(data.communityStats);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('Leaderboard fetch error:', err);
+        setError('Could not load the leaderboard. Try again.');
+        if (isInitial) setLeaders([]);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+        setLoadingMore(false);
+      });
+
     return () => {
       cancelled = true;
     };
-  }, [timeframe, category]);
+  }, [timeframe, sortBy, sport, offset]);
 
-  const handleOpenLeader = async (leader) => {
-    const winRate = leader.totalBets > 0
-      ? Number(((leader.wins / leader.totalBets) * 100).toFixed(1))
-      : 0;
-
+  const handleOpenLeader = useCallback(async (leader) => {
     const baseProfile = {
       id: leader.id,
       username: leader.username,
       avatar: leader.avatar || null,
       tier: leader.tier,
-      joinDate: leader.joinDate || new Date().toISOString(),
+      joinDate: new Date().toISOString(),
       stats: {
         totalBets: leader.totalBets,
-        winRate,
+        winRate: leader.winRate,
         totalProfit: leader.profit,
         currentStreak: 0,
         longestStreak: 0,
@@ -111,18 +220,14 @@ const Leaderboard = () => {
       achievements: [],
       recentBets: [],
     };
-
     openProfile(baseProfile);
-
     if (!leader.id) return;
-
     const requestId = ++profileRequestRef.current;
-
     try {
-      const response = await fetch(`/api/profiles/${leader.id}`);
-      if (!response.ok) return;
+      const r = await fetch(`/api/profiles/${leader.id}`);
+      if (!r.ok) return;
       if (requestId !== profileRequestRef.current) return;
-      const data = await response.json();
+      const data = await r.json();
       if (requestId !== profileRequestRef.current) return;
       openProfile({
         ...baseProfile,
@@ -135,58 +240,10 @@ const Leaderboard = () => {
         achievements: Array.isArray(data.achievements) ? data.achievements : [],
         recentBets: Array.isArray(data.recentBets) ? data.recentBets : [],
       });
-    } catch (err) {
-      console.error('Error loading leader profile:', err);
+    } catch (e) {
+      console.error('Leader profile error:', e);
     }
-  };
-
-  const formatProfit = (n) => {
-    const value = Number(n) || 0;
-    const sign = value < 0 ? '-' : '';
-    const abs = Math.abs(value);
-    if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
-    if (abs >= 1_000) return `${sign}$${(abs / 1_000).toFixed(1)}K`;
-    return `${sign}$${abs.toLocaleString()}`;
-  };
-
-  const winRateOf = (leader) => {
-    if (!leader?.totalBets) return 0;
-    return (leader.wins / leader.totalBets) * 100;
-  };
-
-  const keyStatFor = (leader) => {
-    if (category === 'all') {
-      return { label: 'PnL', value: formatProfit(leader.profit) };
-    }
-    const wr = winRateOf(leader);
-    return { label: 'Win Rate', value: `${wr.toFixed(0)}%` };
-  };
-
-  const top3 = useMemo(() => leaderboardData.slice(0, 3), [leaderboardData]);
-  const rest = useMemo(() => leaderboardData.slice(3), [leaderboardData]);
-
-  const userRank = useMemo(() => {
-    if (!user?.id) return null;
-    const me = leaderboardData.find((l) => l.id === user.id);
-    return me || null;
-  }, [user, leaderboardData]);
-
-  const scrollToMyRank = () => {
-    if (!userRank) return;
-    let el = userRowRefs.current[userRank.id];
-    // If the user is in the top 3 their row lives in the podium and won't have
-    // a row ref — fall back to scrolling the page to the very top so the
-    // podium is in view.
-    if (!el && userRank.rank <= 3) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (el && typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('lb-row-flash');
-      setTimeout(() => el.classList.remove('lb-row-flash'), 1600);
-    }
-  };
+  }, [openProfile]);
 
   const userToProps = (leader) => ({
     id: leader.id,
@@ -195,163 +252,39 @@ const Leaderboard = () => {
     frameId: leader.equippedFrame,
   });
 
-  // Podium order: 2 - 1 - 3 (so #1 stands tallest in the middle)
-  const podiumOrder = useMemo(() => {
-    const map = new Map(top3.map((l) => [l.rank, l]));
-    return [map.get(2), map.get(1), map.get(3)].filter(Boolean);
-  }, [top3]);
+  // Prefer the server-computed myRank (works even when the user is off
+  // the visible page); fall back to scanning the loaded page for parity.
+  const userRank = useMemo(() => {
+    if (!user?.id) return null;
+    if (myRank) return myRank;
+    return leaders.find((l) => l.id === user.id) || null;
+  }, [user, leaders, myRank]);
 
-  const renderPodiumItem = (leader) => {
-    if (!leader) return null;
-    const isFirst = leader.rank === 1;
-    const size = isFirst ? 120 : 96;
-    const stat = keyStatFor(leader);
-    const medal = leader.rank === 1 ? '👑' : leader.rank === 2 ? '🥈' : '🥉';
-    const ringColor = leader.rank === 1
-      ? 'ring-yellow-400/70'
-      : leader.rank === 2
-      ? 'ring-cyan-300/60'
-      : 'ring-orange-400/60';
-    const glow = leader.rank === 1
-      ? 'shadow-[0_0_60px_-12px_rgba(250,204,21,0.55)]'
-      : leader.rank === 2
-      ? 'shadow-[0_0_40px_-14px_rgba(103,232,249,0.5)]'
-      : 'shadow-[0_0_40px_-14px_rgba(251,146,60,0.5)]';
-
-    return (
-      <div
-        key={leader.id || leader.rank}
-        className={`flex flex-col items-center ${isFirst ? 'order-2 -mt-2 sm:-mt-4' : leader.rank === 2 ? 'order-1' : 'order-3'}`}
-        style={{ minWidth: 0, flex: '1 1 0' }}
-      >
-        <div className="relative">
-          <div
-            className={`absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-2xl sm:text-3xl select-none`}
-            style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))' }}
-            aria-hidden="true"
-          >
-            {medal}
-          </div>
-          <div
-            className={`rounded-full p-1 ring-2 ${ringColor} ${glow} bg-black/40 transition-transform duration-200 active:scale-95`}
-          >
-            <ProfileLink
-              user={userToProps(leader)}
-              extras={{ tier: leader.tier }}
-              aria-label={`View ${leader.username}'s profile`}
-              className="block rounded-full"
-            >
-              <UserAvatar
-                user={userToProps(leader)}
-                size={size}
-                isOnline={!!leader.isOnline}
-                onlineDotBorderColor="#0a0a0a"
-              />
-            </ProfileLink>
-          </div>
-          <div
-            className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 border border-white/10 text-[10px] font-bold text-white tracking-wider"
-          >
-            #{leader.rank}
-          </div>
-        </div>
-
-        <div className="mt-5 text-center w-full px-1">
-          <UserNameLink
-            user={userToProps(leader)}
-            className="block text-white font-semibold text-sm sm:text-base truncate"
-          />
-          <div className="mt-1.5">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider">
-              {stat.label}
-            </div>
-            <div className="text-base sm:text-lg font-black text-emerald-400">
-              {stat.value}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const scrollToMyRank = () => {
+    if (!userRank) return;
+    const el = userRowRefs.current[userRank.id];
+    if (el?.scrollIntoView) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('lb-row-flash');
+      setTimeout(() => el.classList.remove('lb-row-flash'), 1500);
+      return;
+    }
+    // User is off the currently loaded page — load up to their rank so
+    // the row exists in the DOM, then a follow-up render will scroll.
+    if (userRank.rank > leaders.length) {
+      setOffset(0); // re-fetch from top; subsequent "Show more" walks down
+      // We can't auto-scroll synchronously here because the rows aren't
+      // mounted yet. The pill remains visible; user taps Show More until
+      // their row paints. Future: jump-load by computing the offset page.
+    }
   };
 
-  const renderListRow = (leader) => {
-    const wr = winRateOf(leader);
-    const losses = Math.max(0, (leader.totalBets || 0) - (leader.wins || 0));
-    const isMe = user?.id && leader.id === user.id;
-
-    return (
-      <div
-        key={leader.id || leader.rank}
-        ref={(el) => { if (leader.id) userRowRefs.current[leader.id] = el; }}
-        className={`group flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 transition-colors ${
-          isMe ? 'bg-blue-500/5' : ''
-        } lb-row`}
-      >
-        <div className="w-8 sm:w-10 text-center text-sm sm:text-base font-bold text-gray-400 tabular-nums">
-          {leader.rank}
-        </div>
-
-        <ProfileLink
-          user={userToProps(leader)}
-          extras={{ tier: leader.tier }}
-          aria-label={`View ${leader.username}'s profile`}
-          className="shrink-0 rounded-full"
-        >
-          <UserAvatar
-            user={userToProps(leader)}
-            size={52}
-            isOnline={!!leader.isOnline}
-            onlineDotBorderColor="#111111"
-          />
-        </ProfileLink>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 min-w-0">
-            <UserNameLink
-              user={userToProps(leader)}
-              className="text-white font-semibold text-sm sm:text-base truncate"
-            />
-            {isMe && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                You
-              </span>
-            )}
-          </div>
-          <div className="mt-0.5 text-xs text-gray-400 truncate">
-            {leader.totalBets || 0} bets · {leader.tier || 'Player'}
-          </div>
-        </div>
-
-        <div className="hidden sm:flex items-center gap-2">
-          <StatPill label="PnL" value={formatProfit(leader.profit)} tone="emerald" />
-          <StatPill label="W-L" value={`${leader.wins || 0}-${losses}`} tone="cyan" />
-          <StatPill label="ROI" value={`${(leader.roi || 0).toFixed(1)}%`} tone="blue" />
-        </div>
-
-        <div className="sm:hidden flex flex-col items-end gap-1">
-          <div className="text-emerald-400 font-bold text-sm tabular-nums">
-            {formatProfit(leader.profit)}
-          </div>
-          <div className="text-[10px] text-gray-400 uppercase tracking-wider">
-            {wr.toFixed(0)}% WR
-          </div>
-        </div>
-
-        <button
-          onClick={() => handleOpenLeader(leader)}
-          aria-label={`Quick view ${leader.username}`}
-          className="hidden sm:inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
-      </div>
-    );
-  };
+  const hasMore = leaders.length < total;
+  const activeSport = SPORTS.find((s) => s.id === sport) || SPORTS[0];
+  const activeSort = SORTS.find((s) => s.id === sortBy) || SORTS[0];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen" style={{ background: '#000' }}>
       <TopNavbar
         bankroll={user ? bankroll : null}
         pnl={0}
@@ -359,189 +292,300 @@ const Leaderboard = () => {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="pt-4 pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-5">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Leaderboard</h1>
-          <p className="text-gray-400 text-sm">The community's top performers</p>
+      <div className="max-w-4xl mx-auto px-3 sm:px-5 pt-4 pb-32">
+        {/* ── Cartoon header ──────────────────────────────────── */}
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg mb-2"
+              style={{
+                background: '#fbbf24',
+                border: '2.5px solid #0d0d0d',
+                boxShadow: '3px 3px 0 #0d0d0d',
+              }}
+            >
+              <span className="text-base">🏆</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-black">Leaderboard</span>
+            </div>
+            <h1
+              className="text-3xl sm:text-5xl font-black text-white leading-none tracking-tight"
+              style={{
+                fontStyle: 'italic',
+                WebkitTextStroke: '1.5px #0d0d0d',
+                textShadow: '3px 3px 0 #0d0d0d, 5px 5px 0 rgba(251,191,36,0.4)',
+              }}
+            >
+              Who&apos;s Winning?
+            </h1>
+            <p className="text-gray-400 text-xs sm:text-sm mt-1.5">
+              {communityStats ? (
+                <>
+                  <span className="text-emerald-400 font-bold">{communityStats.activeBettors.toLocaleString()}</span> bettors
+                  {' · '}
+                  <span className="text-cyan-400 font-bold">{(communityStats.avgWinRate || 0).toFixed(1)}%</span> avg win rate
+                  {' · '}
+                  <span className="text-orange-400 font-bold">{formatProfit(communityStats.totalProfits)}</span> in winnings
+                </>
+              ) : (
+                "Live community rankings — switch sport, metric, or window to re-rank the board."
+              )}
+            </p>
+          </div>
         </div>
 
-        {/* Sticky "You're #N" pill — sits just under the TopNavbar so it's
-            always reachable while scrolling the long ranks list. */}
-        {userRank && (
-          <div className="sticky top-2 z-30 mb-4 flex justify-end pointer-events-none">
-            <button
-              onClick={scrollToMyRank}
-              className="pointer-events-auto inline-flex items-center gap-2 px-3 py-2 rounded-full bg-blue-500/15 border border-blue-500/40 text-blue-300 text-xs font-semibold backdrop-blur-md shadow-lg shadow-blue-500/10 transition-colors active:bg-blue-500/25"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-              You're #{userRank.rank}
-            </button>
-          </div>
-        )}
+        {/* ── Sport chips (horizontally scrollable row, sticky-feel) ── */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-3 -mx-1 px-1">
+          {SPORTS.map((s) => {
+            const active = s.id === sport;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setSport(s.id)}
+                className={`lb-chip flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl font-black text-[12px] uppercase tracking-wider transition-transform active:scale-95 ${active ? 'lb-chip-active' : ''}`}
+                style={{
+                  background: active ? '#fbbf24' : '#0d0d0d',
+                  color: active ? '#0d0d0d' : '#9ca3af',
+                  border: '2.5px solid #0d0d0d',
+                  boxShadow: active ? '3px 3px 0 #0d0d0d' : '2px 2px 0 #1a1a1a',
+                  transform: active ? 'translate(-1px, -1px)' : 'none',
+                }}
+              >
+                <span className="text-base leading-none">{s.emoji}</span>
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
 
-        {/* Filters */}
-        <div
-          className="rounded-2xl p-3 sm:p-4 border border-white/10 backdrop-blur-xl mb-5"
-          style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}
-        >
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-between">
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-              {[
-                { id: 'weekly', label: 'Weekly' },
-                { id: 'monthly', label: 'Monthly' },
-                { id: 'alltime', label: 'All Time' }
-              ].map((tf) => (
-                <TapSurface
+        {/* ── Sort metric pills + timeframe dropdown row ────────── */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide flex-1 min-w-0">
+            {SORTS.map((s) => {
+              const active = s.id === sortBy;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSortBy(s.id)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-lg font-black text-[11px] uppercase tracking-wider transition-transform active:scale-95"
+                  style={{
+                    background: active ? s.accent : '#0d0d0d',
+                    color: active ? '#0d0d0d' : '#9ca3af',
+                    border: `2px solid ${active ? '#0d0d0d' : '#1a1a1a'}`,
+                    boxShadow: active ? `2px 2px 0 #0d0d0d` : 'none',
+                  }}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-1 flex-shrink-0">
+            {TIMEFRAMES.map((tf) => {
+              const active = tf.id === timeframe;
+              return (
+                <button
                   key={tf.id}
-                  onTap={() => setTimeframe(tf.id)}
-                  isActive={timeframe === tf.id}
-                  activeColor="#3b82f6"
-                  inactiveColor="rgba(255,255,255,0.04)"
-                  activeTextColor="#ffffff"
-                  inactiveTextColor="#9ca3af"
-                  className="px-3.5 py-2 rounded-lg font-semibold text-xs whitespace-nowrap border border-white/5 flex items-center justify-center"
+                  onClick={() => setTimeframe(tf.id)}
+                  className="px-2.5 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-transform active:scale-95"
+                  style={{
+                    background: active ? '#fff' : '#0d0d0d',
+                    color: active ? '#0d0d0d' : '#9ca3af',
+                    border: `2px solid ${active ? '#0d0d0d' : '#1a1a1a'}`,
+                    boxShadow: active ? '2px 2px 0 #0d0d0d' : 'none',
+                  }}
                 >
                   {tf.label}
-                </TapSurface>
-              ))}
-            </div>
-
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'elite', label: 'Elite' },
-                { id: 'pro', label: 'Pro' },
-                { id: 'starter', label: 'Starter' }
-              ].map((cat) => (
-                <TapSurface
-                  key={cat.id}
-                  onTap={() => setCategory(cat.id)}
-                  isActive={category === cat.id}
-                  activeColor="#0891b2"
-                  inactiveColor="rgba(255,255,255,0.04)"
-                  activeTextColor="#ffffff"
-                  inactiveTextColor="#9ca3af"
-                  className="px-3.5 py-2 rounded-lg font-semibold text-xs whitespace-nowrap border border-white/5 flex items-center justify-center"
-                >
-                  {cat.label}
-                </TapSurface>
-              ))}
-            </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
+        {/* ── Top 3 podium row (compact, all 3 visible at once) ─── */}
+        {!loading && leaders.length >= 3 && (
+          <TopThreeStrip
+            leaders={leaders.slice(0, 3)}
+            sortBy={sortBy}
+            onOpen={handleOpenLeader}
+            userToProps={userToProps}
+          />
+        )}
+
+        {/* ── The list ─────────────────────────────────────────── */}
         {loading ? (
-          <div className="rounded-2xl border border-white/10 p-10 text-center text-gray-400">
-            Loading leaderboard...
+          <div
+            className="rounded-2xl p-8 text-center text-gray-400 text-sm font-bold"
+            style={{
+              background: '#0d0d0d',
+              border: '2.5px solid #1a1a1a',
+              boxShadow: '3px 3px 0 #1a1a1a',
+            }}
+          >
+            Loading the board…
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-10 text-center text-red-300">
+          <div
+            className="rounded-2xl p-8 text-center text-red-400 text-sm font-bold"
+            style={{
+              background: '#0d0d0d',
+              border: '2.5px solid #ef4444',
+              boxShadow: '3px 3px 0 #0d0d0d',
+            }}
+          >
             {error}
           </div>
-        ) : leaderboardData.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 p-10 text-center text-gray-400">
-            No bettors match these filters yet.
+        ) : leaders.length === 0 ? (
+          <div
+            className="rounded-2xl p-8 text-center"
+            style={{
+              background: '#0d0d0d',
+              border: '2.5px solid #1a1a1a',
+              boxShadow: '3px 3px 0 #1a1a1a',
+            }}
+          >
+            <div className="text-4xl mb-2">{activeSport.emoji}</div>
+            <div className="text-white font-black text-base mb-1">No bettors yet</div>
+            <div className="text-gray-500 text-xs">
+              No one has settled bets in <span className="text-white font-bold">{activeSport.label}</span> for this window. Try a different sport or timeframe.
+            </div>
           </div>
         ) : (
           <>
-            {/* Podium */}
-            {top3.length > 0 && (
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: '#0a0a0a',
+                border: '2.5px solid #0d0d0d',
+                boxShadow: '4px 4px 0 #0d0d0d',
+              }}
+            >
               <div
-                className="rounded-3xl border border-white/10 backdrop-blur-xl mb-6 overflow-hidden"
-                style={{
-                  background:
-                    'radial-gradient(120% 80% at 50% 0%, rgba(59,130,246,0.10) 0%, rgba(6,182,212,0.06) 35%, rgba(0,0,0,0) 70%), linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
-                }}
+                className="flex items-center justify-between px-3 py-2"
+                style={{ background: '#0d0d0d', borderBottom: '2px solid #1a1a1a' }}
               >
-                <div className="px-4 sm:px-6 pt-6 pb-8">
-                  <div className="text-[11px] text-blue-300/80 font-semibold uppercase tracking-[0.18em] text-center mb-6">
-                    Top Performers
-                  </div>
-                  <div className="flex items-end justify-center gap-3 sm:gap-8">
-                    {podiumOrder.map((leader) => renderPodiumItem(leader))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Rest of the list */}
-            {rest.length > 0 && (
-              <div
-                ref={listRef}
-                className="rounded-2xl border border-white/10 overflow-hidden"
-                style={{ background: '#111111' }}
-              >
-                <div className="px-4 sm:px-5 py-3 border-b border-white/5 flex items-center justify-between">
-                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Rankings
-                  </h2>
-                  <span className="text-[11px] text-gray-500">
-                    {leaderboardData.length} players
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full animate-pulse"
+                    style={{ background: activeSort.accent, boxShadow: `0 0 8px ${activeSort.accent}` }}
+                  />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                    Ranked by {activeSort.label} · {activeSport.label}
                   </span>
                 </div>
-                <div className="divide-y divide-white/5">
-                  {rest.map((leader) => renderListRow(leader))}
-                </div>
+                <span className="text-[10px] text-gray-500 font-bold tabular-nums">
+                  {total.toLocaleString()} total
+                </span>
               </div>
+
+              <div>
+                {leaders.map((leader) => (
+                  <LeaderRow
+                    key={leader.id || leader.rank}
+                    leader={leader}
+                    sortBy={sortBy}
+                    isMe={!!user?.id && leader.id === user.id}
+                    onOpen={() => handleOpenLeader(leader)}
+                    userToProps={userToProps}
+                    rowRef={(el) => { if (leader.id) userRowRefs.current[leader.id] = el; }}
+                  />
+                ))}
+              </div>
+
+              {/* ── Load more / cycle ─────────────────────────── */}
+              {hasMore && (
+                <div className="p-3" style={{ borderTop: '2px solid #1a1a1a', background: '#0d0d0d' }}>
+                  <button
+                    onClick={() => setOffset(leaders.length)}
+                    disabled={loadingMore}
+                    className="w-full py-2.5 rounded-xl font-black text-[12px] uppercase tracking-wider transition-transform active:scale-95 disabled:opacity-50"
+                    style={{
+                      background: '#fb923c',
+                      color: '#0d0d0d',
+                      border: '2.5px solid #0d0d0d',
+                      boxShadow: '3px 3px 0 #0d0d0d',
+                    }}
+                  >
+                    {loadingMore ? 'Loading…' : `Show next ${Math.min(PAGE_SIZE, total - leaders.length)}`}
+                  </button>
+                  <div className="text-center text-[10px] text-gray-500 font-bold mt-1.5 tabular-nums">
+                    Showing 1–{leaders.length} of {total.toLocaleString()}
+                  </div>
+                </div>
+              )}
+              {!hasMore && leaders.length > PAGE_SIZE && (
+                <div
+                  className="px-3 py-2.5 text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider"
+                  style={{ borderTop: '2px solid #1a1a1a', background: '#0d0d0d' }}
+                >
+                  · End of board ·
+                </div>
+              )}
+            </div>
+
+            {/* ── Sticky "You're #N" pill ─────────────────────── */}
+            {userRank && (
+              <button
+                onClick={scrollToMyRank}
+                className="fixed bottom-20 right-4 z-30 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider transition-transform active:scale-95"
+                style={{
+                  background: '#3b82f6',
+                  color: '#fff',
+                  border: '2.5px solid #0d0d0d',
+                  boxShadow: '3px 3px 0 #0d0d0d',
+                }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                You&apos;re #{userRank.rank}
+              </button>
             )}
           </>
         )}
 
-        {/* Community stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
-          {[
-            {
-              value: communityStats
-                ? communityStats.activeBettors.toLocaleString()
-                : '—',
-              label: 'Active Bettors',
-              color: 'text-blue-400',
-            },
-            {
-              value: communityStats
-                ? formatProfit(communityStats.totalProfits)
-                : '—',
-              label: 'Total Profits',
-              color: 'text-emerald-400',
-            },
-            {
-              value: communityStats
-                ? `${communityStats.avgWinRate.toFixed(1)}%`
-                : '—',
-              label: 'Avg Win Rate',
-              color: 'text-cyan-400',
-            },
-            { value: '24/7', label: 'Live Updates', color: 'text-orange-400' },
-          ].map((s, i) => (
-            <div
-              key={i}
-              className="rounded-2xl p-4 sm:p-5 border border-white/10 text-center"
-              style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)' }}
+        {/* ── Sign-in CTA (guests only) ─────────────────────────── */}
+        {!user && !loading && (
+          <div
+            className="mt-5 rounded-2xl p-5 sm:p-6 text-center"
+            style={{
+              background: 'linear-gradient(135deg, #fbbf24, #fb923c)',
+              border: '3px solid #0d0d0d',
+              boxShadow: '5px 5px 0 #0d0d0d',
+            }}
+          >
+            <div className="text-2xl sm:text-3xl font-black text-black mb-1"
+              style={{
+                fontStyle: 'italic',
+                textShadow: '2px 2px 0 rgba(0,0,0,0.15)',
+              }}
             >
-              <div className={`text-xl sm:text-2xl font-black mb-1 ${s.color}`}>{s.value}</div>
-              <div className="text-gray-400 text-xs">{s.label}</div>
+              Climb the Ranks
             </div>
-          ))}
-        </div>
-
-        {/* CTA */}
-        {!user && (
-          <div className="mt-6">
-            <div
-              className="rounded-2xl p-6 sm:p-8 border border-white/10 text-center"
-              style={{ background: 'linear-gradient(160deg, rgba(59,130,246,0.08) 0%, rgba(6,182,212,0.04) 100%)' }}
-            >
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Ready to Climb the Rankings?</h2>
-              <p className="text-gray-400 mb-5 text-sm">Join the competition and prove you belong among the elite bettors.</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/auth" className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm">
-                  Start Your Journey
-                </Link>
-                <Link href="/" className="bg-white/5 hover:bg-white/10 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm border border-white/10">
-                  View Dashboard
-                </Link>
-              </div>
+            <p className="text-black/80 text-sm font-bold mb-4">
+              Sign up, place some bets, and watch your name climb this board.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Link
+                href="/auth"
+                className="inline-block px-5 py-2.5 rounded-xl font-black text-sm uppercase tracking-wider transition-transform active:scale-95"
+                style={{
+                  background: '#0d0d0d',
+                  color: '#fff',
+                  border: '2.5px solid #0d0d0d',
+                  boxShadow: '3px 3px 0 rgba(0,0,0,0.4)',
+                }}
+              >
+                Join Piks
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-block px-5 py-2.5 rounded-xl font-black text-sm uppercase tracking-wider transition-transform active:scale-95"
+                style={{
+                  background: '#fff',
+                  color: '#0d0d0d',
+                  border: '2.5px solid #0d0d0d',
+                  boxShadow: '3px 3px 0 rgba(0,0,0,0.4)',
+                }}
+              >
+                Battle Now
+              </Link>
             </div>
           </div>
         )}
@@ -556,41 +600,211 @@ const Leaderboard = () => {
       )}
 
       <style>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        .lb-row { transition: background-color 160ms ease; }
         @media (hover: hover) {
-          .lb-row:hover {
-            background: rgba(255, 255, 255, 0.03);
-          }
+          .lb-row:hover { background-color: rgba(255,255,255,0.04); }
         }
-        .lb-row-flash {
-          animation: lbFlash 1.6s ease-out;
-        }
+
+        .lb-row-flash { animation: lbFlash 1.4s ease-out; }
         @keyframes lbFlash {
-          0% { background-color: rgba(59, 130, 246, 0.25); }
-          100% { background-color: rgba(59, 130, 246, 0); }
+          0%   { background-color: rgba(59,130,246,0.3); }
+          100% { background-color: rgba(59,130,246,0); }
         }
+
+        /* Cartoon chip subtle bounce on tap (handled by active:scale-95). */
       `}</style>
     </div>
   );
 };
 
-function StatPill({ label, value, tone = 'emerald' }) {
-  const tones = {
-    emerald: 'text-emerald-300 border-emerald-500/20 bg-emerald-500/5',
-    cyan: 'text-cyan-300 border-cyan-500/20 bg-cyan-500/5',
-    blue: 'text-blue-300 border-blue-500/20 bg-blue-500/5',
-    orange: 'text-orange-300 border-orange-500/20 bg-orange-500/5',
-  };
+/* ─────────────────────────────────────────────────────────────────────
+   TopThreeStrip — three #1/#2/#3 cards side-by-side in a single row.
+   Replaces the old vertical "podium" hero that put one person on a
+   pedestal. All three are visible at the same size so the page reads
+   as "here are the leaders" rather than "here is THE leader".
+   ───────────────────────────────────────────────────────────────────── */
+function TopThreeStrip({ leaders, sortBy, onOpen, userToProps }) {
+  const ACCENTS = ['#fbbf24', '#06b6d4', '#fb923c']; // gold / cyan / orange
+  const MEDALS = ['👑', '🥈', '🥉'];
   return (
-    <div className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold tabular-nums whitespace-nowrap ${tones[tone] || tones.emerald}`}>
-      <span className="opacity-60 mr-1 uppercase tracking-wider text-[9px]">{label}</span>
-      {value}
+    <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+      {leaders.map((leader, i) => {
+        const stat = primaryStatFor(leader, sortBy);
+        const accent = ACCENTS[i];
+        return (
+          <button
+            key={leader.id || i}
+            onClick={() => onOpen(leader)}
+            className="lb-top3 relative flex flex-col items-center text-center p-2.5 sm:p-3 rounded-xl transition-transform active:scale-95"
+            style={{
+              background: '#0d0d0d',
+              border: `2.5px solid ${accent}`,
+              boxShadow: `3px 3px 0 #0d0d0d`,
+            }}
+          >
+            <div
+              className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-md text-[10px] font-black"
+              style={{
+                background: accent,
+                color: '#0d0d0d',
+                border: '2px solid #0d0d0d',
+              }}
+            >
+              #{leader.rank}
+            </div>
+            <div className="text-xl sm:text-2xl mb-1 leading-none">{MEDALS[i]}</div>
+            <div
+              className="rounded-full p-0.5 mb-1.5"
+              style={{ border: `2px solid ${accent}`, background: '#0d0d0d' }}
+            >
+              <ProfileLink
+                user={userToProps(leader)}
+                extras={{ tier: leader.tier }}
+                onClick={(e) => e.stopPropagation()}
+                className="block rounded-full"
+                aria-label={`Open ${leader.username}'s profile`}
+              >
+                <UserAvatar
+                  user={userToProps(leader)}
+                  size={44}
+                  isOnline={!!leader.isOnline}
+                  onlineDotBorderColor="#0d0d0d"
+                />
+              </ProfileLink>
+            </div>
+            <UserNameLink
+              user={userToProps(leader)}
+              onClick={(e) => e.stopPropagation()}
+              className="block text-white font-black text-[11px] sm:text-xs truncate w-full"
+            />
+            <div className="mt-1 px-1.5 py-0.5 rounded text-[11px] sm:text-sm font-black tabular-nums leading-tight"
+              style={{ background: '#000', color: stat.accent }}
+            >
+              {stat.value}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   LeaderRow — dense single-line row tuned for mobile.
+   • Left: rank chip with cartoon border
+   • Avatar
+   • Name + tier · bet count
+   • Primary stat (driven by current sort) on the right, big & bold
+   ───────────────────────────────────────────────────────────────────── */
+function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef }) {
+  const stat = primaryStatFor(leader, sortBy);
+  const rankBg = leader.rank === 1
+    ? '#fbbf24'
+    : leader.rank === 2
+    ? '#06b6d4'
+    : leader.rank === 3
+    ? '#fb923c'
+    : '#1a1a1a';
+  const rankColor = leader.rank <= 3 ? '#0d0d0d' : '#9ca3af';
+
+  return (
+    <div
+      ref={rowRef}
+      className={`lb-row flex items-center gap-2.5 px-3 py-2.5 ${isMe ? 'bg-blue-500/5' : ''}`}
+      style={{ borderBottom: '1px solid #111' }}
+    >
+      <div
+        className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 font-black tabular-nums text-sm"
+        style={{
+          background: rankBg,
+          color: rankColor,
+          border: '2px solid #0d0d0d',
+          boxShadow: leader.rank <= 3 ? '2px 2px 0 #0d0d0d' : 'none',
+        }}
+      >
+        {leader.rank}
+      </div>
+
+      <ProfileLink
+        user={userToProps(leader)}
+        extras={{ tier: leader.tier }}
+        className="flex-shrink-0 rounded-full"
+        aria-label={`Open ${leader.username}'s profile`}
+      >
+        <UserAvatar
+          user={userToProps(leader)}
+          size={38}
+          isOnline={!!leader.isOnline}
+          onlineDotBorderColor="#0a0a0a"
+        />
+      </ProfileLink>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <UserNameLink
+            user={userToProps(leader)}
+            className="text-white font-black text-[13px] truncate"
+          />
+          {isMe && (
+            <span
+              className="flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider"
+              style={{
+                background: '#3b82f6',
+                color: '#0d0d0d',
+                border: '1.5px solid #0d0d0d',
+              }}
+            >
+              You
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500">
+          <span className="font-bold">{leader.totalBets || 0} bets</span>
+          <span className="text-gray-700">·</span>
+          <span className="font-bold">{(leader.winRate || 0).toFixed(0)}% W</span>
+          {leader.tier && (
+            <>
+              <span className="text-gray-700">·</span>
+              <span
+                className="font-black uppercase tracking-wider"
+                style={{
+                  color:
+                    leader.tier === 'Elite'
+                      ? '#fbbf24'
+                      : leader.tier === 'Pro'
+                      ? '#06b6d4'
+                      : '#9ca3af',
+                }}
+              >
+                {leader.tier}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <button
+        onClick={onOpen}
+        className="flex-shrink-0 flex flex-col items-end gap-0.5 px-2.5 py-1.5 rounded-lg transition-transform active:scale-95"
+        style={{
+          background: '#0d0d0d',
+          border: `2px solid ${stat.accent}`,
+          boxShadow: `2px 2px 0 #0d0d0d`,
+        }}
+      >
+        <span className="text-[8px] font-black uppercase tracking-wider text-gray-500 leading-none">
+          {stat.label}
+        </span>
+        <span
+          className="font-black text-sm tabular-nums leading-none"
+          style={{ color: stat.accent }}
+        >
+          {stat.value}
+        </span>
+      </button>
     </div>
   );
 }
