@@ -2634,269 +2634,84 @@ function YouVsCard({
           // accents (sweep, pulsing rings, prize bob) gracefully
           // degrade under prefers-reduced-motion via the styles above.
           <>
-            <div
-              className="hero-arena relative flex flex-col flex-1 mt-0.5 mb-1 sm:mb-1.5 rounded-lg overflow-hidden"
-              style={{
-                minHeight: 100,
-                background:
-                  'radial-gradient(120% 90% at 50% 35%, rgba(16,185,129,0.30) 0%, rgba(6,182,212,0.16) 35%, rgba(13,13,13,0) 70%), radial-gradient(80% 60% at 50% 100%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%), linear-gradient(180deg, #0a1413 0%, #050a0c 100%)',
-                border: '1.5px solid rgba(16,185,129,0.35)',
-                boxShadow:
-                  'inset 0 0 0 1px rgba(16,185,129,0.18), inset 0 16px 24px rgba(0,0,0,0.45)',
-              }}
-            >
-              {/* Arena floor lines — faint perspective hint at the
-                  bottom edge so the radial gradient reads as an arena
-                  pit rather than a flat panel. */}
-              <svg
-                className="absolute inset-x-0 bottom-0 pointer-events-none w-full"
-                height="48"
-                viewBox="0 0 380 48"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-                style={{ opacity: 0.5 }}
-              >
-                <defs>
-                  <linearGradient id="hero-arena-grid" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(16,185,129,0)" />
-                    <stop offset="100%" stopColor="rgba(16,185,129,0.55)" />
-                  </linearGradient>
-                </defs>
-                <g stroke="url(#hero-arena-grid)" strokeWidth="0.6" fill="none">
-                  <line x1="0" y1="48" x2="380" y2="48" />
-                  <line x1="0" y1="36" x2="380" y2="36" />
-                  <line x1="0" y1="24" x2="380" y2="24" />
-                </g>
-              </svg>
-              {/* Diagonal sheen sweeping across the arena. */}
-              <div className="hero-sweep absolute inset-0 pointer-events-none" aria-hidden="true" />
-
-              {/* Fighter row */}
-              <div className="relative flex items-start justify-between gap-1 px-2 pt-1.5 sm:pt-2">
-                {/* You — emerald/cyan corner */}
-                <div className="flex flex-col items-center min-w-0 flex-1">
-                  <div className="relative" style={{ width: 64, height: 64 }}>
-                    <span
-                      className="hero-ring hero-ring-you absolute inset-0 rounded-full"
-                      aria-hidden="true"
-                    />
-                    <span
-                      className="hero-ring hero-ring-you absolute inset-0 rounded-full"
-                      aria-hidden="true"
-                      style={{ animationDelay: '0.6s' }}
-                    />
-                    <div
-                      className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, #34d399 0%, #06b6d4 100%)',
-                        padding: 3,
-                        border: '2.5px solid #0d0d0d',
-                        boxShadow:
-                          '0 4px 0 rgba(0,0,0,0.55), 0 0 16px rgba(16,185,129,0.55)',
-                      }}
-                    >
-                      <div className="rounded-full overflow-hidden w-full h-full bg-black flex items-center justify-center">
-                        <UserAvatar user={youUser} size={52} />
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="mt-1 px-1.5 py-0.5 rounded-md max-w-full"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, rgba(16,185,129,0.55), rgba(6,182,212,0.45))',
-                      border: '1.5px solid #0d0d0d',
-                      boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
-                    }}
-                  >
-                    <span
-                      className="block text-[10px] font-black uppercase tracking-wider truncate text-center"
-                      style={{
-                        color: '#fff',
-                        textShadow: '1px 1px 0 #0d0d0d',
-                        maxWidth: 110,
-                      }}
-                    >
-                      {youUser.username}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Cartoon VS centerpiece */}
-                <div className="relative flex flex-col items-center justify-center px-1 flex-shrink-0 self-center">
-                  <span
-                    className="hero-vs text-3xl sm:text-4xl font-black italic leading-none"
-                    style={{
-                      color: '#fff',
-                      WebkitTextStroke: '2px #0d0d0d',
-                      textShadow:
-                        '3px 3px 0 #0d0d0d, 0 0 18px rgba(251,191,36,0.55)',
-                      letterSpacing: '-0.04em',
-                      fontFamily: 'Impact, "Arial Black", sans-serif',
-                    }}
-                  >
-                    VS
+            {/* Slim active-matchup layout — sized to match the
+                sibling BattleCard rows in the Featured Battles
+                carousel. The previous "hero arena" treatment
+                (Mortal-Kombat-style portraits + giant VS + center
+                "Battle Ends" fill + prize plate) rendered this card
+                roughly 2x taller than its peers, which made the rail
+                look uneven and ghosted the other cards. The slim
+                layout mirrors BattleCard.compact: 40px avatars +
+                small VS centerpiece + inline pot pill. Progress bar
+                and "More" toggle below stay shared, so when peers
+                expand on tap this card expands in lockstep. */}
+            <div className="flex items-center justify-between mb-1 sm:mb-2">
+              <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                <PlayerAvatar user={youUser} isWinning={false} size={40} bgColor="#1e40af" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
+                    {youUser.username}
+                  </p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#34d399' }}>
+                    You
                   </span>
                 </div>
-
-                {/* Opponent — orange/red corner */}
-                <div className="flex flex-col items-center min-w-0 flex-1">
-                  <div className="relative" style={{ width: 64, height: 64 }}>
-                    <span
-                      className="hero-ring hero-ring-opp absolute inset-0 rounded-full"
-                      aria-hidden="true"
-                    />
-                    <span
-                      className="hero-ring hero-ring-opp absolute inset-0 rounded-full"
-                      aria-hidden="true"
-                      style={{ animationDelay: '0.6s' }}
-                    />
-                    <div
-                      className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
-                        padding: 3,
-                        border: '2.5px solid #0d0d0d',
-                        boxShadow:
-                          '0 4px 0 rgba(0,0,0,0.55), 0 0 16px rgba(239,68,68,0.55)',
-                      }}
-                    >
-                      <div className="rounded-full overflow-hidden w-full h-full bg-black flex items-center justify-center">
-                        {showOpponent ? (
-                          <UserAvatar
-                            user={{
-                              id: opponent.id,
-                              username: opponent.username,
-                              avatar: opponent.avatar,
-                            }}
-                            size={52}
-                          />
-                        ) : (
-                          <SilhouetteAvatar
-                            gradient={['#fbbf24', '#f97316']}
-                            size={52}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="mt-1 px-1.5 py-0.5 rounded-md max-w-full"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, rgba(239,68,68,0.55), rgba(249,115,22,0.45))',
-                      border: '1.5px solid #0d0d0d',
-                      boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
-                    }}
-                  >
-                    <span
-                      className="block text-[10px] font-black uppercase tracking-wider truncate text-center"
-                      style={{
-                        color: '#fff',
-                        textShadow: '1px 1px 0 #0d0d0d',
-                        maxWidth: 110,
-                      }}
-                    >
-                      {showOpponent ? opponent?.username || 'Opponent' : 'Opponent'}
-                    </span>
-                  </div>
+              </div>
+              <div className="px-2 flex flex-col items-center flex-shrink-0">
+                <span
+                  className="text-xl font-black text-transparent bg-clip-text"
+                  style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
+                >
+                  VS
+                </span>
+                <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
+              </div>
+              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+                <div className="min-w-0 text-right">
+                  <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
+                    {showOpponent ? (opponent?.username || 'Opponent') : 'Opponent'}
+                  </p>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                    Opponent
+                  </span>
                 </div>
-              </div>
-
-              {/* Center fill — when sibling cards in the same row
-                  expand (showing player picks), this card stretches
-                  to match. Without a flex-1 middle, the area between
-                  the fighter row and the prize plate grows into a
-                  large empty void. This block absorbs that space and
-                  surfaces the live time-remaining as a hero callout
-                  so the middle reads as intentional, not broken.
-                  When the card is at its short minHeight (no sibling
-                  expansion), the block collapses gracefully because
-                  min-h-0 lets flex-1 shrink below content size. */}
-              <div className="relative flex flex-1 flex-col items-center justify-center gap-0.5 px-3 min-h-0">
-                <span
-                  className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em]"
-                  style={{ color: 'rgba(167, 243, 208, 0.85)' }}
-                >
-                  Battle Ends
-                </span>
-                <span
-                  className="text-lg sm:text-2xl font-black leading-none whitespace-nowrap uppercase"
-                  style={{
-                    color: '#fff',
-                    WebkitTextStroke: '1.25px #0d0d0d',
-                    textShadow:
-                      '2px 2px 0 #0d0d0d, 0 0 18px rgba(16,185,129,0.45)',
-                    letterSpacing: '0.02em',
-                    fontFamily: 'Impact, "Arial Black", sans-serif',
-                  }}
-                >
-                  {timeLeftMs > 0 ? 'After Today' : 'LIVE'}
-                </span>
-              </div>
-
-              {/* Prize plate — pot styled as a prize callout so a
-                  glance reads "this match is worth $X". Falls back to
-                  a green "Live now" plate if no pot data is available
-                  so the bottom of the arena is never empty. */}
-              <div className="relative flex justify-center pb-1.5 pt-1">
-                {pot != null ? (
-                  <div
-                    className="hero-prize relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, #facc15 0%, #f59e0b 60%, #ea580c 100%)',
-                      border: '2.5px solid #0d0d0d',
-                      boxShadow:
-                        '0 4px 0 rgba(0,0,0,0.55), 0 0 22px rgba(251,191,36,0.65)',
+                {showOpponent ? (
+                  <PlayerAvatar
+                    user={{
+                      id: opponent?.id,
+                      username: opponent?.username,
+                      avatar: opponent?.avatar,
                     }}
-                    aria-label={isBeta
-                      ? `Coin pot ${formatMoney(pot, 0)} coins`
-                      : `Prize pot $${formatMoney(pot, 0)}`}
-                  >
-                    <span
-                      className="text-base sm:text-lg leading-none"
-                      style={{ filter: 'drop-shadow(0 1px 0 rgba(0,0,0,0.45))' }}
-                      aria-hidden="true"
-                    >
-                      {isBeta ? '⚔️' : '💰'}
-                    </span>
-                    <span
-                      className="text-base sm:text-lg font-black tabular-nums"
-                      style={{
-                        color: '#fff',
-                        WebkitTextStroke: '1.5px #0d0d0d',
-                        textShadow: '2px 2px 0 #0d0d0d',
-                        letterSpacing: '-0.01em',
-                        lineHeight: 1,
-                        fontFamily: 'Impact, "Arial Black", sans-serif',
-                      }}
-                    >
-                      {isBeta ? formatMoney(pot, 0) : `$${formatMoney(pot, 0)}`}
-                    </span>
-                  </div>
+                    isWinning={false}
+                    size={40}
+                    bgColor="#7c2d12"
+                  />
                 ) : (
-                  <div
-                    className="hero-prize inline-flex items-center px-3 py-1 rounded-full"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, #34d399, #10b981)',
-                      border: '2.5px solid #0d0d0d',
-                      boxShadow: '0 3px 0 rgba(0,0,0,0.55)',
-                    }}
-                  >
-                    <span
-                      className="text-[10px] font-black uppercase tracking-widest"
-                      style={{ color: '#022c1f' }}
-                    >
-                      Live Now
-                    </span>
-                  </div>
+                  <SilhouetteAvatar
+                    gradient="linear-gradient(135deg, #fbbf24 0%, #f97316 100%)"
+                    size={40}
+                  />
                 )}
               </div>
             </div>
+
+            {pot != null && (
+              <div className="flex items-center justify-center mb-1 sm:mb-1.5">
+                <span
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tabular-nums"
+                  style={{
+                    background: '#1a1505',
+                    border: '1.5px solid #facc15',
+                    color: '#facc15',
+                    letterSpacing: '0.08em',
+                  }}
+                >
+                  <span aria-hidden="true">🏆</span>
+                  {isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`}
+                  <span className="text-gray-500"> · pot</span>
+                </span>
+              </div>
+            )}
 
             {/* Match progress — kept so the active card still tells
                 time-of-match. Visually unchanged from before so the
