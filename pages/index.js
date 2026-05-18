@@ -2003,7 +2003,7 @@ export default function Dashboard() {
                     {[
                       { n: 1, color: '#3b82f6', glow: 'rgba(59,130,246,0.35)', icon: '🎯', title: 'Place Your Picks', desc: 'Browse games below and add bets to your slip — spreads, moneylines, or totals.' },
                       { n: 2, color: '#10b981', glow: 'rgba(16,185,129,0.35)', icon: '📈', title: 'Grow Your Balance', desc: `You both start with ${startingLabel}. Winning picks grow your bankroll.` },
-                      { n: 3, color: '#fb923c', glow: 'rgba(251,146,60,0.35)', icon: '🏆', title: 'Highest Balance Wins', desc: 'When time runs out, the player with the higher balance takes 90% of the pot.' },
+                      { n: 3, color: '#fb923c', glow: 'rgba(251,146,60,0.35)', icon: '🏆', title: 'Highest Balance Wins', desc: 'When time runs out, the player with the higher balance takes the pot.' },
                     ].map((s) => (
                       <div key={s.n} className="flex items-start gap-2.5 rounded-xl p-2.5" style={{
                         background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
