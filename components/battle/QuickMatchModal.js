@@ -1617,42 +1617,42 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                         >
                           {betaLocked && (
                             <>
-                              {/* Dark veil over the tile contents so the
-                                  COMING SOON watermark reads as the
-                                  primary content, not the (greyed out)
-                                  mode label. Pointer-events:none so the
-                                  parent button still owns the click. */}
+                              {/* Subtle dark veil over the tile contents so
+                                  the mode label reads as greyed-out and the
+                                  "Soon" pill at the bottom carries the
+                                  status. Pointer-events:none so the parent
+                                  button still owns the click. */}
                               <span
                                 aria-hidden="true"
                                 className="absolute inset-0 pointer-events-none"
                                 style={{
                                   background:
-                                    'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.78) 100%)',
+                                    'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.7) 100%)',
                                   borderRadius: 'inherit',
                                 }}
                               />
-                              {/* Diagonal COMING SOON watermark — single
-                                  rotated band that spans corner-to-corner
-                                  so every locked-after-beta tile reads
-                                  the same way regardless of mode. */}
+                              {/* Compact neutral pill — replaces the old
+                                  rotated gold "Coming Soon" watermark that
+                                  overflowed the tile and visually clipped
+                                  the neighboring "Popular" badge. */}
                               <span
                                 aria-hidden="true"
-                                className="absolute pointer-events-none font-black uppercase whitespace-nowrap select-none"
+                                className="absolute left-1/2 -translate-x-1/2 pointer-events-none font-black uppercase tracking-wider select-none"
                                 style={{
-                                  top: '50%',
-                                  left: '50%',
-                                  transform: 'translate(-50%, -50%) rotate(-22deg)',
-                                  color: '#facc15',
-                                  WebkitTextStroke: '1.25px #0a0a0a',
-                                  textShadow: '2px 2px 0 #0a0a0a',
-                                  fontFamily: 'Impact, "Arial Black", sans-serif',
-                                  letterSpacing: '0.06em',
-                                  fontSize: '14px',
+                                  bottom: 6,
+                                  fontSize: 8,
+                                  letterSpacing: '0.12em',
+                                  color: '#e5e7eb',
+                                  background: 'rgba(20,20,20,0.92)',
+                                  border: '1.5px solid #0a0a0a',
+                                  padding: '2px 6px',
+                                  borderRadius: 6,
                                   lineHeight: 1,
                                   zIndex: 2,
+                                  whiteSpace: 'nowrap',
                                 }}
                               >
-                                Coming Soon
+                                Soon
                               </span>
                             </>
                           )}
@@ -1733,7 +1733,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                       <div>
                         <div
                           className="font-extrabold uppercase mb-0.5"
-                          style={{ color: '#fbbf24', fontSize: '9px', letterSpacing: '0.18em' }}
+                          style={{ color: '#ffffff', fontSize: '9px', letterSpacing: '0.18em' }}
                         >
                           Rush locked
                         </div>
@@ -2430,7 +2430,7 @@ function RushVoteSlide({
               <h2 className="font-black uppercase text-white" style={{ fontSize: 18, lineHeight: 1.05, letterSpacing: '0.06em', textShadow: '0 2px 0 #000' }}>
                 Pick a Game
               </h2>
-              <p className="mt-0.5 font-extrabold uppercase" style={{ color: '#fbbf24', fontSize: 9, letterSpacing: '0.18em' }}>
+              <p className="mt-0.5 font-extrabold uppercase" style={{ color: '#9ca3af', fontSize: 9, letterSpacing: '0.18em' }}>
                 Both vote — host wins ties
               </p>
             </div>
