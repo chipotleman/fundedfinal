@@ -1629,7 +1629,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           aria-disabled={locked || undefined}
                           aria-pressed={selected}
                           title={betaLocked ? 'Available after the public beta — Original is the only mode during beta.' : (locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined)}
-                          className="msg-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative overflow-hidden"
+                          className="msg-cartoon-btn flex flex-col items-center text-center px-1.5 pt-6 pb-2.5 rounded-2xl relative overflow-hidden"
                           style={
                             betaLocked
                               ? {
@@ -1674,10 +1674,12 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                   borderRadius: 'inherit',
                                 }}
                               />
-                              {/* Compact neutral pill — replaces the old
-                                  rotated gold "Coming Soon" watermark that
-                                  overflowed the tile and visually clipped
-                                  the neighboring "Popular" badge. */}
+                              {/* "Coming Soon" pill — yellow text on a
+                                  subtle dark background, no glow. The
+                                  yellow makes the upcoming-mode status
+                                  read at a glance without the gold
+                                  watermark glow that used to clip the
+                                  neighboring "Popular" badge. */}
                               <span
                                 aria-hidden="true"
                                 className="absolute left-1/2 -translate-x-1/2 pointer-events-none font-black uppercase tracking-wider select-none"
@@ -1685,7 +1687,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                   bottom: 6,
                                   fontSize: 8,
                                   letterSpacing: '0.12em',
-                                  color: '#e5e7eb',
+                                  color: '#facc15',
                                   background: 'rgba(20,20,20,0.92)',
                                   border: '1.5px solid #0a0a0a',
                                   padding: '2px 6px',
@@ -1695,17 +1697,26 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                   whiteSpace: 'nowrap',
                                 }}
                               >
-                                Soon
+                                Coming Soon
                               </span>
                             </>
                           )}
                           {mode.recommended && (
+                            // Sit the Popular badge *inside* the tile
+                            // (top: 6) rather than overflowing above
+                            // it. The parent button uses
+                            // overflow-hidden to clip the betaLocked
+                            // dark veil to the rounded corners, which
+                            // was also clipping a `-top-2` badge and
+                            // cutting it off at the modal's top edge.
                             <span
-                              className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              className="absolute left-1/2 -translate-x-1/2 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
                               style={{
+                                top: 6,
                                 background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
                                 border: '2px solid #0a0a0a',
                                 boxShadow: '0 2px 0 #0a0a0a',
+                                zIndex: 2,
                               }}
                             >
                               Popular
@@ -1713,11 +1724,13 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           )}
                           {rushLive && (
                             <span
-                              className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
                               style={{
+                                top: 6,
                                 background: 'linear-gradient(180deg,#f59e0b,#d97706)',
                                 border: '2px solid #0a0a0a',
                                 boxShadow: '0 2px 0 #0a0a0a',
+                                zIndex: 2,
                               }}
                               aria-hidden="true"
                             >
@@ -1740,11 +1753,13 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               "Popular" badge on the neighboring tile. */}
                           {locked && !betaLocked && (
                             <span
-                              className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
                               style={{
+                                top: 6,
                                 background: 'linear-gradient(180deg,#374151,#1f2937)',
                                 border: '2px solid #0a0a0a',
                                 boxShadow: '0 2px 0 #0a0a0a',
+                                zIndex: 2,
                               }}
                               aria-hidden="true"
                             >
