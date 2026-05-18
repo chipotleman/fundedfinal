@@ -31,6 +31,39 @@ function formatRemaining(ms) {
   return `${s}s`;
 }
 
+/* When the API returns 404 for this battle id (e.g. a simulated/demo
+   card whose id was never persisted, or a battle that's been cleared),
+   we don't want to trap the user on a dead-end "Battle not found" page.
+   Bounce them to the social feed automatically so they always land
+   somewhere live. A short delay lets the user read the redirect notice. */
+function NotFoundRedirect() {
+  const router = useRouter();
+  useEffect(() => {
+    const t = setTimeout(() => {
+      router.replace('/battle');
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [router]);
+  return (
+    <div
+      className="rounded-2xl p-6 text-center"
+      style={{ background: CARD_BG, border: `1px solid ${BORDER}` }}
+    >
+      <div className="text-white font-bold text-lg mb-1">Heading to Social…</div>
+      <div className="text-gray-500 text-sm mb-4">
+        This battle isn't currently live — taking you to the feed.
+      </div>
+      <Link
+        href="/battle"
+        className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white"
+        style={{ background: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
+      >
+        Go now
+      </Link>
+    </div>
+  );
+}
+
 function PlayerCard({ player, side, isWinning }) {
   if (!player) {
     return (
@@ -452,22 +485,7 @@ export default function SpectatePage() {
           )}
 
           {notFound && !battle && (
-            <div
-              className="rounded-2xl p-6 text-center"
-              style={{ background: CARD_BG, border: `1px solid ${BORDER}` }}
-            >
-              <div className="text-white font-bold text-lg mb-1">Battle not found</div>
-              <div className="text-gray-500 text-sm mb-4">
-                This matchup may have ended or isn't currently live.
-              </div>
-              <Link
-                href="/battle"
-                className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
-              >
-                Back to Social
-              </Link>
-            </div>
+            <NotFoundRedirect />
           )}
 
           {battle && (

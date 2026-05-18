@@ -588,48 +588,116 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
               </div>
 
               {picks ? (
-                <div className="grid grid-cols-2 gap-2 px-3.5 pb-3">
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 truncate">
-                      {user1.username || 'Player 1'}'s picks
-                    </div>
-                    {user1.id && (
-                      <div className="mb-1.5">
-                        <MutualFriendsLine
-                          userId={user1.id}
-                          username={user1.username}
-                          size="xs"
-                        />
-                      </div>
-                    )}
-                    <div className="space-y-1.5">
-                      {picks.user1.length === 0 ? (
-                        <div className="text-[10px] text-gray-600">No picks yet</div>
-                      ) : (
-                        picks.user1.map((pick, i) => <PickPill key={i} pick={pick} compact />)
-                      )}
-                    </div>
+                /* FanDuel-style tickets — one per player. On mobile we
+                   horizontal snap-scroll between the two tickets (swipe,
+                   not infinite scroll) so each ticket gets full width;
+                   on sm+ desktop they sit side-by-side in a 2-col grid. */
+                <div className="px-3.5 pb-3">
+                  <div
+                    className="flex sm:grid sm:grid-cols-2 gap-2 overflow-x-auto sm:overflow-visible snap-x snap-mandatory scrollbar-hide -mx-1 px-1 sm:mx-0 sm:px-0"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {[
+                      { player: user1, list: picks.user1, accent: '#3b82f6', side: 'left' },
+                      { player: user2, list: picks.user2, accent: '#fb923c', side: 'right' },
+                    ].map(({ player, list, accent, side }, idx) => {
+                      const totalStake = list.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+                      return (
+                        <div
+                          key={idx}
+                          className="snap-center flex-shrink-0 w-[88%] sm:w-auto rounded-xl overflow-hidden flex flex-col"
+                          style={{
+                            background: '#0a0a0a',
+                            border: `2px solid ${accent}`,
+                            boxShadow: `3px 3px 0 #000`,
+                          }}
+                        >
+                          <div
+                            className="px-2.5 py-1.5 flex items-center justify-between gap-2"
+                            style={{ background: `${accent}1a`, borderBottom: `1.5px solid ${accent}` }}
+                          >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                style={{ background: accent, boxShadow: `0 0 6px ${accent}` }}
+                              />
+                              <span className="text-[11px] font-black uppercase tracking-wider text-white truncate">
+                                {player.username || (side === 'left' ? 'Player 1' : 'Player 2')}
+                              </span>
+                            </div>
+                            <span
+                              className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                              style={{ background: '#000', color: accent }}
+                            >
+                              {list.length}-leg
+                            </span>
+                          </div>
+                          <div className="flex-1 px-2 py-1.5 space-y-1">
+                            {list.length === 0 ? (
+                              <div className="text-[10px] text-gray-600 py-2 text-center">No picks yet</div>
+                            ) : (
+                              list.map((pick, i) => {
+                                const isWon = pick.status === 'won';
+                                const isLost = pick.status === 'lost';
+                                const statusColor = isWon ? '#10b981' : isLost ? '#ef4444' : '#9ca3af';
+                                return (
+                                  <div
+                                    key={i}
+                                    className="flex items-center gap-2 px-1.5 py-1 rounded"
+                                    style={{ background: '#111', border: '1px solid #1a1a1a' }}
+                                  >
+                                    <div
+                                      className="w-1 h-7 rounded-full flex-shrink-0"
+                                      style={{ background: statusColor }}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-[11px] font-bold text-white truncate leading-tight">
+                                        {pick.team}
+                                      </div>
+                                      <div className="text-[9px] text-gray-500 truncate leading-tight">
+                                        {pick.type}
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col items-end flex-shrink-0">
+                                      <span
+                                        className="text-[10px] font-black tabular-nums leading-tight"
+                                        style={{
+                                          color:
+                                            typeof pick.odds === 'string' && pick.odds.startsWith('+')
+                                              ? '#34d399'
+                                              : '#e5e7eb',
+                                        }}
+                                      >
+                                        {pick.odds || '—'}
+                                      </span>
+                                      <span className="text-[9px] text-gray-500 tabular-nums leading-tight">
+                                        ${Number(pick.amount || 0).toFixed(0)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                          <div
+                            className="px-2.5 py-1.5 flex items-center justify-between"
+                            style={{ background: '#000', borderTop: `1px dashed ${accent}` }}
+                          >
+                            <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">
+                              Total wagered
+                            </span>
+                            <span className="text-[12px] font-black text-white tabular-nums">
+                              ${totalStake.toFixed(0)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 truncate text-right">
-                      {user2.username || 'Player 2'}'s picks
-                    </div>
-                    {user2.id && (
-                      <div className="mb-1.5 flex justify-end">
-                        <MutualFriendsLine
-                          userId={user2.id}
-                          username={user2.username}
-                          size="xs"
-                        />
-                      </div>
-                    )}
-                    <div className="space-y-1.5">
-                      {picks.user2.length === 0 ? (
-                        <div className="text-[10px] text-gray-600 text-right">No picks yet</div>
-                      ) : (
-                        picks.user2.map((pick, i) => <PickPill key={i} pick={pick} compact />)
-                      )}
-                    </div>
+                  {/* Swipe hint dots — mobile only */}
+                  <div className="flex sm:hidden justify-center gap-1 mt-1.5">
+                    <span className="w-1 h-1 rounded-full" style={{ background: '#3b82f6' }} />
+                    <span className="w-1 h-1 rounded-full" style={{ background: '#fb923c' }} />
                   </div>
                 </div>
               ) : (
@@ -646,14 +714,27 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
               <div className="px-3.5 pb-3.5">
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); router.push(`/battle/spectate/${battle.id}`); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    /* Simulated demo cards have no live spectate page —
+                       routing into /battle/spectate/<sim-id> hits the API
+                       404 ("Battle not found"). Drop those clicks on the
+                       social feed instead so the user always lands
+                       somewhere live. Real battles keep the full
+                       spectator view (scoreboard, picks, chat). */
+                    if (battle.simulated || isSimulated) {
+                      router.push('/battle');
+                    } else {
+                      router.push(`/battle/spectate/${battle.id}`);
+                    }
+                  }}
                   className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold text-white"
                   style={{
                     background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
                     boxShadow: '0 4px 12px rgba(59,130,246,0.25)',
                   }}
                 >
-                  See More
+                  {battle.simulated || isSimulated ? 'Open in Social' : 'See More'}
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
@@ -2870,7 +2951,7 @@ function YouVsCard({
           // chips that used to live here moved into the confirmation
           // popup so the home card can lead with the call to action
           // and a short explainer of what tapping it actually does.
-          <div className="flex flex-1 flex-col items-center justify-center text-center py-2 select-none min-h-0">
+          <div className="flex flex-1 flex-col items-center justify-center text-center py-3 sm:py-5 select-none min-h-[180px] sm:min-h-[220px]">
             <div className="relative inline-flex items-center justify-center mb-2 sm:mb-3 h-[58px] sm:h-[100px]">
               <svg
                 className="absolute pointer-events-none hidden sm:block"
