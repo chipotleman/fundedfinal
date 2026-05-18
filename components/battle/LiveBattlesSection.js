@@ -2768,23 +2768,63 @@ function YouVsCard({
               </div>
             </div>
 
-            {pot != null && (
-              <div className="flex items-center justify-center mb-1 sm:mb-1.5">
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tabular-nums"
-                  style={{
-                    background: '#1a1505',
-                    border: '1.5px solid #facc15',
-                    color: '#facc15',
-                    letterSpacing: '0.08em',
-                  }}
-                >
-                  <span aria-hidden="true">🏆</span>
-                  {isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`}
-                  <span className="text-gray-500"> · pot</span>
-                </span>
-              </div>
-            )}
+            {/* Picks status row — mirrors BattleCard's picks pills /
+                "Awaiting picks…" row so the YouVsCard active state
+                contributes the same ~24px band of vertical content,
+                keeping the carousel height aligned with sibling
+                BattleCards instead of collapsing to a much shorter
+                card. The actual picks list is shown via the More
+                toggle expansion. */}
+            <div
+              className="mb-0.5 sm:mb-1 flex items-center gap-1.5 px-2 py-1 rounded-md"
+              style={{ background: '#111', border: '1px solid #1a1a1a', minHeight: '24px' }}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot" />
+              <span className="text-[9px] text-gray-500">
+                {isExpanded ? 'See picks below' : 'Tap More for picks'}
+              </span>
+            </div>
+
+            {/* Cartoon info chip row — mirrors BattleCard's chip band
+                so the two cards keep matching info density. We render
+                mode + pot chips so the user still gets a "this match
+                is worth X" glance even though the pot pill moved out
+                of the centered slot. */}
+            {(() => {
+              const modeKey = (matchup?.durationType || '').toLowerCase();
+              const modeMeta = CARTOON_MODE_META[modeKey];
+              const chips = [];
+              if (modeMeta) {
+                chips.push(
+                  <CartoonChip
+                    key="mode"
+                    icon={modeMeta.icon}
+                    label={modeMeta.label}
+                    color={modeMeta.color}
+                    animate="bounce"
+                    ariaLabel={`Game mode ${modeMeta.label}`}
+                  />
+                );
+              }
+              if (pot != null) {
+                chips.push(
+                  <CartoonChip
+                    key="pot"
+                    icon="🏆"
+                    label={isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`}
+                    color="orange"
+                    animate="bounce"
+                    ariaLabel={isBeta ? `Coin pot ${formatMoney(pot, 0)} coins` : `Prize pot $${formatMoney(pot, 0)}`}
+                  />
+                );
+              }
+              if (chips.length === 0) return null;
+              return (
+                <div className="flex items-center gap-1.5 flex-wrap mb-0.5 sm:mb-1" style={{ minHeight: 18 }}>
+                  {chips}
+                </div>
+              );
+            })()}
 
             {/* Match progress — kept so the active card still tells
                 time-of-match. Visually unchanged from before so the
@@ -2802,35 +2842,42 @@ function YouVsCard({
               ></div>
             </div>
 
-            {/* Footer — Centered More toggle. The "0% complete" text
-                that used to sit at the left was confusing on a card
-                that just started (it permanently read 0%) and
-                competed with the More CTA. Centering MORE turns the
-                whole row into a single, obvious tap target. */}
-            <div className="flex items-center justify-center">
-              <span
-                className="text-[12px] font-extrabold uppercase tracking-[0.16em] flex items-center gap-1.5"
-                style={{ color: '#34d399' }}
-              >
-                {isExpanded ? 'Hide' : 'More'}
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  style={{
-                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 220ms ease',
-                  }}
+            {/* Footer — mirrors BattleCard's footer (Started Xm ago
+                on the left, Hide/More on the right) so the card
+                terminates at the same vertical position as siblings.
+                `mt-auto` pushes the footer to the bottom of the flex
+                column, so when items-stretch or expanded peers grow
+                the carousel row, this footer stays pinned. */}
+            <div className="mt-auto pt-0.5 sm:pt-1">
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                  {(() => {
+                    const startedAgo = formatStartedAgo(startsAt);
+                    if (startedAgo) {
+                      return <span className="text-gray-500 text-[10px] truncate">{startedAgo}</span>;
+                    }
+                    return <span className="text-gray-500 text-[10px] truncate">Live now</span>;
+                  })()}
+                </div>
+                <span
+                  className="text-[11px] font-medium flex items-center gap-1 flex-shrink-0"
+                  style={{ color: '#34d399' }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </span>
+                  {isExpanded ? 'Hide' : 'More'}
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    style={{
+                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 220ms ease',
+                    }}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </div>
             </div>
           </>
         ) : isIdle ? (
