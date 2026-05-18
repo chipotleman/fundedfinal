@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { matchups, profiles, userChallenges } from '../../../shared/schema';
+import { matchups, profiles, userChallenges, battleInvites, matchupQueue, matchmakingQueue } from '../../../shared/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
 const { publishBattleEvent, publishMatchupEnd } = require('../../../lib/battle-events');
 const { sendPushToUsers } = require('../../../lib/web-push');
@@ -186,6 +186,62 @@ export default async function handler(req, res) {
         .update(userChallenges)
         .set({ currentBalance: '0' })
         .where(eq(userChallenges.id, forfeiterChallengeId));
+    }
+
+    // Cleanup invariant: once a user forfeits, they shouldn't get teleported
+    // into another battle by a stale pending invite or queue row that was
+    // accepted/matched while they were mid-fight. Cancel any pending invites
+    // involving the forfeiting user (in either direction) and clear any
+    // queue rows they're still sitting in. We push a notification:refresh
+    // to everyone whose invite we touched so their UI updates instantly.
+    try {
+      const cancelledInvites = await db
+        .update(battleInvites)
+        .set({ status: 'cancelled', respondedAt: now })
+        .where(and(
+          eq(battleInvites.status, 'pending'),
+          or(
+            eq(battleInvites.senderId, userId),
+            eq(battleInvites.receiverId, userId),
+          ),
+        ))
+        .returning({
+          id: battleInvites.id,
+          senderId: battleInvites.senderId,
+          receiverId: battleInvites.receiverId,
+        });
+      if (cancelledInvites.length > 0) {
+        const affected = [
+          ...new Set(
+            cancelledInvites
+              .flatMap(r => [r.senderId, r.receiverId])
+              .filter(Boolean)
+          ),
+        ];
+        if (affected.length > 0) {
+          publishBattleEvent(affected, { type: 'notification:refresh' });
+        }
+      }
+    } catch (e) {
+      console.error('[Forfeit] cancel pending invites error:', e);
+    }
+
+    try {
+      await db
+        .update(matchupQueue)
+        .set({ status: 'expired' })
+        .where(and(
+          eq(matchupQueue.userId, userId),
+          eq(matchupQueue.status, 'waiting'),
+        ));
+      await db
+        .delete(matchmakingQueue)
+        .where(and(
+          eq(matchmakingQueue.userId, userId),
+          eq(matchmakingQueue.status, 'waiting'),
+        ));
+    } catch (e) {
+      console.error('[Forfeit] clear queue error:', e);
     }
 
     return res.status(200).json({

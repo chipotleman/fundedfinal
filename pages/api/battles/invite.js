@@ -211,11 +211,23 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'You can only challenge friends' });
       }
 
+      // Active-matchup guard. Block sending an invite when EITHER party
+      // is currently in a battle. Previously only the sender was checked,
+      // which let a friend spam an invite at a player who was mid-battle;
+      // that invite would then sit pending and could be accepted after the
+      // recipient finished/forfeited their current battle (a UX that read
+      // as "auto-accept after forfeit"). Checking both sides at insert
+      // time makes the invariant explicit and server-authoritative.
       const existingBattle = await db
-        .select({ id: matchups.id })
+        .select({ id: matchups.id, user1Id: matchups.user1Id, user2Id: matchups.user2Id })
         .from(matchups)
         .where(and(
-          or(eq(matchups.user1Id, userId), eq(matchups.user2Id, userId)),
+          or(
+            eq(matchups.user1Id, userId),
+            eq(matchups.user2Id, userId),
+            eq(matchups.user1Id, receiverId),
+            eq(matchups.user2Id, receiverId),
+          ),
           or(
             inArray(matchups.status, ['active', 'matched']),
             and(
@@ -228,7 +240,13 @@ export default async function handler(req, res) {
         .limit(1);
 
       if (existingBattle.length > 0) {
-        return res.status(400).json({ error: "You're already in a battle — finish it before inviting someone else." });
+        const row = existingBattle[0];
+        const senderInBattle = row.user1Id === userId || row.user2Id === userId;
+        return res.status(400).json({
+          error: senderInBattle
+            ? "You're already in a battle — finish it before inviting someone else."
+            : "They're already in a battle. Wait until it ends to challenge them.",
+        });
       }
 
       const existingInvite = await db

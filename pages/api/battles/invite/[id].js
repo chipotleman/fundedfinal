@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../../lib/auth';
 import { db } from '../../../../lib/db';
-import { battleInvites, matchups, profiles } from '../../../../shared/schema';
+import { battleInvites, matchups, profiles, matchupQueue, matchmakingQueue } from '../../../../shared/schema';
 import { eq, and, or, ne, inArray, isNotNull } from 'drizzle-orm';
 const { publishBattleEvent, publishMatchupStart } = require('../../../../lib/battle-events');
 const { sendPushToUsers, sendFriendLivePush } = require('../../../../lib/web-push');
@@ -82,6 +82,26 @@ export default async function handler(req, res) {
           .update(battleInvites)
           .set({ status: 'cancelled', respondedAt: new Date() })
           .where(eq(battleInvites.id, id));
+        // Belt-and-suspenders: also clear the sender's matchmaking queue
+        // rows. The Play-a-Friend flow only writes to battle_invites, but a
+        // user who chained Quick Match → Play Friend (or vice-versa) can
+        // end up with stale `waiting` queue rows that make the UI keep
+        // saying "Searching for a game" even after they cancel the invite.
+        try {
+          await db
+            .update(matchupQueue)
+            .set({ status: 'expired' })
+            .where(and(
+              eq(matchupQueue.userId, userId),
+              eq(matchupQueue.status, 'waiting'),
+            ));
+          await db
+            .delete(matchmakingQueue)
+            .where(and(
+              eq(matchmakingQueue.userId, userId),
+              eq(matchmakingQueue.status, 'waiting'),
+            ));
+        } catch (_e) {}
         try {
           publishBattleEvent(
             [battleInvite.senderId, battleInvite.receiverId],
