@@ -2886,8 +2886,8 @@ function YouVsCard({
           // chips that used to live here moved into the confirmation
           // popup so the home card can lead with the call to action
           // and a short explainer of what tapping it actually does.
-          <div className="flex flex-1 flex-col items-center justify-center text-center py-3 sm:py-5 select-none min-h-[180px] sm:min-h-[220px]">
-            <div className="relative inline-flex items-center justify-center mb-2 sm:mb-3 h-[58px] sm:h-[100px]">
+          <div className="flex flex-1 flex-col items-center justify-center text-center py-1 sm:py-2 select-none">
+            <div className="relative inline-flex items-center justify-center mb-1 sm:mb-2 h-[50px] sm:h-[68px]">
               <svg
                 className="absolute pointer-events-none hidden sm:block"
                 width="260"
@@ -2907,7 +2907,7 @@ function YouVsCard({
               </svg>
 
               <div
-                className="youvs-play-sticker relative inline-flex items-center justify-center px-5 py-2 sm:px-8 sm:py-3 rounded-2xl sm:rounded-3xl"
+                className="youvs-play-sticker relative inline-flex items-center justify-center px-4 py-1 sm:px-6 sm:py-1.5 rounded-2xl sm:rounded-3xl"
                 style={{
                   background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ea580c 100%)',
                   border: '4px solid #0d0d0d',
@@ -2915,7 +2915,7 @@ function YouVsCard({
                 }}
               >
                 <span
-                  className="text-2xl sm:text-5xl font-black tracking-tight leading-none"
+                  className="text-xl sm:text-3xl font-black tracking-tight leading-none"
                   style={{
                     color: '#fff',
                     WebkitTextStroke: '2px #0d0d0d',
@@ -2963,7 +2963,7 @@ function YouVsCard({
                 ✦
               </span>
             </div>
-            <p className="text-sm sm:text-base font-extrabold text-white leading-tight px-2">
+            <p className="text-xs sm:text-sm font-extrabold text-white leading-tight px-2">
               Tap to face anyone in a 1v1
             </p>
 
