@@ -13,7 +13,7 @@ const SEEN_KEY = 'piks_notif_seen_v1';
 const ACHV_CELEBRATED_KEY_PREFIX = 'piks_achv_celebrated_v1:';
 const MAX_SEEN = 250;
 const MAX_CELEBRATED = 100;
-const POLL_MS = 25000;
+const POLL_MS = 7000;
 const TOAST_DURATION_MS = 9000;
 
 function readSeen() {
@@ -613,6 +613,15 @@ export function NotificationsProvider({ children }) {
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
+    // Window focus is a more reliable catch-up trigger than visibilitychange
+    // on iOS Safari and some Android browsers, which throttle/suspend SSE
+    // while the tab is backgrounded. Firing both keeps invites near-instant
+    // when the user returns to the tab.
+    const handleFocus = () => {
+      client.reconnectNow();
+      refresh();
+    };
+    window.addEventListener('focus', handleFocus);
 
     // The waiting-screen modal (PlayFriendModal) handles its own
     // decline/expire/cancel feedback. When it dispatches piks:invite:ended,
@@ -632,6 +641,7 @@ export function NotificationsProvider({ children }) {
     return () => {
       unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
       window.removeEventListener('piks:invite:ended', handleInviteEndedFromModal);
     };
   }, [isAuthed, refresh, markTyping, enqueueToast, enqueueAchievementUnlock, addIncomingInvite, session?.user?.id]);
