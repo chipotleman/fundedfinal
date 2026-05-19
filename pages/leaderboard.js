@@ -296,16 +296,6 @@ const Leaderboard = () => {
         {/* ── Cartoon header ──────────────────────────────────── */}
         <div className="mb-4 flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg mb-2"
-              style={{
-                background: '#fbbf24',
-                border: '2.5px solid #0d0d0d',
-                boxShadow: '3px 3px 0 #0d0d0d',
-              }}
-            >
-              <span className="text-base">🏆</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-black">Leaderboard</span>
-            </div>
             <h1
               className="text-3xl sm:text-5xl font-black text-white leading-none tracking-tight"
               style={{
