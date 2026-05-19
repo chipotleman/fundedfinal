@@ -1,0 +1,60 @@
+20:10:34.443 Running build in Washington, D.C., USA (East) – iad1 (Static IPs)
+20:10:34.444 Build machine configuration: 4 cores, 8 GB
+20:10:34.641 Cloning github.com/chipotleman/fundedfinal (Branch: main, Commit: 4a32206)
+20:11:05.457 Cloning completed: 30.816s
+20:11:05.627 Restored build cache from previous deployment (EbQTbFd8j9Jq7sLUtiAbbmyqmCor)
+20:11:05.844 Running "vercel build"
+20:11:05.855 (node:18) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+20:11:05.855 (Use `node --trace-deprecation ...` to show where the warning was created)
+20:11:05.862 Vercel CLI 53.3.2
+20:11:06.152 Installing dependencies...
+20:11:07.538 
+20:11:07.539 up to date in 1s
+20:11:07.539 
+20:11:07.539 182 packages are looking for funding
+20:11:07.539   run `npm fund` for details
+20:11:07.565 Detected Next.js version: 14.2.35
+20:11:07.570 Running "npm run build"
+20:11:07.675 
+20:11:07.675 > fundedfinal@1.0.0 build
+20:11:07.675 > next build
+20:11:07.675 
+20:11:08.884   ▲ Next.js 14.2.35
+20:11:08.885   - Experiments (use with caution):
+20:11:08.885     · instrumentationHook
+20:11:08.885 
+20:11:08.946    Creating an optimized production build ...
+20:11:09.588 > [PWA] Compile server
+20:11:09.589 > [PWA] Compile server
+20:11:09.591 > [PWA] Compile client (static)
+20:11:09.591 > [PWA] Custom worker found: /vercel/path0/worker/index.js
+20:11:09.591 > [PWA] Build custom worker: /vercel/path0/public/worker-mCP73GuVqDJebl0Zj7OzP.js
+20:11:09.805 > [PWA] Auto register service worker with: /vercel/path0/node_modules/next-pwa/register.js
+20:11:09.805 > [PWA] Service worker: /vercel/path0/public/sw.js
+20:11:09.806 > [PWA]   url: /sw.js
+20:11:09.806 > [PWA]   scope: /
+20:11:09.877 > [PWA] Fallback to precache routes when fetch failed from cache or network:
+20:11:09.878 > [PWA]   document (page): /offline
+20:11:26.443  ⚠ Compiled with warnings
+20:11:26.443 
+20:11:26.443 ./pages/api/leaderboard.ts
+20:11:26.443 Attempted import error: 'authOptions' is not exported from './auth/[...nextauth]' (imported as 'authOptions').
+20:11:26.443 
+20:11:26.444 Import trace for requested module:
+20:11:26.444 ./pages/api/leaderboard.ts
+20:11:26.444 
+20:11:26.444    Linting and checking validity of types ...
+20:11:31.027 Failed to compile.
+20:11:31.027 
+20:11:31.027 ./pages/api/leaderboard.ts:3:10
+20:11:31.028 Type error: Module '"./auth/[...nextauth]"' has no exported member 'authOptions'. Did you mean to use 'import authOptions from "./auth/[...nextauth]"' instead?
+20:11:31.028 
+20:11:31.028   1 | import { NextApiRequest, NextApiResponse } from "next";
+20:11:31.028   2 | import { getServerSession } from "next-auth/next";
+20:11:31.028 > 3 | import { authOptions } from "./auth/[...nextauth]";
+20:11:31.028     |          ^
+20:11:31.028   4 | import { db } from "../../lib/db";
+20:11:31.028   5 | import { sql } from "drizzle-orm";
+20:11:31.028   6 |
+20:11:31.056 Next.js build worker exited with code: 1 and signal: null
+20:11:31.134 Error: Command "npm run build" exited with 1
