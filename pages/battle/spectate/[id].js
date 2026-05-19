@@ -6,6 +6,14 @@ import Link from 'next/link';
 import TopNavbar from '../../../components/TopNavbar';
 import UsernameLink from '../../../components/social/UsernameLink';
 import { getSimulatedBattles } from '../../../components/battle/LiveBattlesSection';
+import { useBetaMode } from '../../../contexts/SiteConfigContext';
+
+function formatAmount(n, isBeta, opts = {}) {
+  const { decimals = 0, suffix = '' } = opts;
+  const num = Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: decimals });
+  if (isBeta) return `${num} coins${suffix ? ` ${suffix}` : ''}`;
+  return `$${num}${suffix ? ` ${suffix}` : ''}`;
+}
 
 // Simulated demo battles surface in the social feed when there are no
 // real live matchups (or alongside them), and have ids like `sim-1`,
@@ -94,7 +102,7 @@ function NotFoundRedirect() {
   );
 }
 
-function PlayerCard({ player, side, isWinning }) {
+function PlayerCard({ player, side, isWinning, isBeta }) {
   if (!player) {
     return (
       <div
@@ -163,7 +171,7 @@ function PlayerCard({ player, side, isWinning }) {
         <div>
           <div className="text-gray-500 text-[10px] uppercase tracking-wider">Balance</div>
           <div className="text-white font-bold text-xl tabular-nums">
-            ${Number(player.balance || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            {formatAmount(player.balance, isBeta)}
           </div>
         </div>
         <div
@@ -177,7 +185,7 @@ function PlayerCard({ player, side, isWinning }) {
   );
 }
 
-function PicksList({ picks, side }) {
+function PicksList({ picks, side, isBeta }) {
   const accent = side === 'left' ? '#3b82f6' : '#fb923c';
   if (!picks || picks.length === 0) {
     return (
@@ -205,7 +213,7 @@ function PicksList({ picks, side }) {
           </div>
           <div className="flex flex-col items-end gap-0.5 flex-shrink-0 ml-2">
             <div className="text-white text-[11px] tabular-nums font-semibold">
-              ${Number(p.amount || 0).toFixed(0)}
+              {formatAmount(p.amount, isBeta)}
             </div>
             <div
               className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
@@ -280,6 +288,7 @@ export default function SpectatePage() {
   const { id } = router.query;
   const { data: session } = useSession();
   const userId = session?.user?.id;
+  const isBeta = useBetaMode();
 
   const [battle, setBattle] = useState(null);
   const [loadingBattle, setLoadingBattle] = useState(true);
@@ -558,15 +567,15 @@ export default function SpectatePage() {
               {/* Left: scoreboard + picks */}
               <div className="space-y-4 min-w-0">
                 <div className="flex items-stretch gap-3">
-                  <PlayerCard player={battle.user1} side="left" isWinning={isU1Winning} />
+                  <PlayerCard player={battle.user1} side="left" isWinning={isU1Winning} isBeta={isBeta} />
                   <div className="flex flex-col items-center justify-center px-1">
                     <div className="text-gray-600 text-[10px] uppercase tracking-wider">VS</div>
                     <div className="text-white font-bold text-base mt-1">
-                      ${Number(battle.potSize || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      {formatAmount(battle.potSize, isBeta)}
                     </div>
                     <div className="text-gray-500 text-[9px]">pot</div>
                   </div>
-                  <PlayerCard player={battle.user2} side="right" isWinning={isU2Winning} />
+                  <PlayerCard player={battle.user2} side="right" isWinning={isU2Winning} isBeta={isBeta} />
                 </div>
 
                 {/* Progress bar (live) or winner banner (final) */}
@@ -596,7 +605,7 @@ export default function SpectatePage() {
                       ? 'Stakes refunded to both players.'
                       : isTie
                         ? 'Stakes refunded.'
-                        : `+$${Number(battle.winnerPayout || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} payout`;
+                        : `+${formatAmount(battle.winnerPayout, isBeta, { decimals: isBeta ? 0 : 2 })} payout`;
                     return (
                       <div
                         className="rounded-2xl p-4 flex items-center justify-between"
@@ -653,13 +662,13 @@ export default function SpectatePage() {
                       <div className="text-[10px] uppercase tracking-wider text-blue-400 font-bold mb-2">
                         {battle.user1?.username || 'P1'}
                       </div>
-                      <PicksList picks={battle.picks?.user1} side="left" />
+                      <PicksList picks={battle.picks?.user1} side="left" isBeta={isBeta} />
                     </div>
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-orange-400 font-bold mb-2">
                         {battle.user2?.username || 'P2'}
                       </div>
-                      <PicksList picks={battle.picks?.user2} side="right" />
+                      <PicksList picks={battle.picks?.user2} side="right" isBeta={isBeta} />
                     </div>
                   </div>
                 </div>
