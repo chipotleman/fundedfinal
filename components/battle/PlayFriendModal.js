@@ -160,6 +160,23 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     };
   }, []);
 
+  // Auto-route into the battle when the recipient accepts our pending
+  // invite. Without this, the moment `matchup:start` fires the modal's
+  // render-phase `hasActiveMatchup` guard would flip the waiting screen
+  // into the "Finish your fight first" blocker — which is wrong, because
+  // the matchup the user is "already in" IS the one that just started
+  // from this invite. We detect the transition (sent → active) and hand
+  // the user straight to the lobby instead.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!sent) return;
+    if (!hasActiveMatchup) return;
+    if (!activeMatchup?.id) return;
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    onClose();
+    navigateToBattleStart(router, activeMatchup);
+  }, [isOpen, sent, hasActiveMatchup, activeMatchup?.id, onClose, router]);
+
   useEffect(() => {
     if (isOpen) {
       fetchFriendRequests();
