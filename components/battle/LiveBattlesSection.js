@@ -723,7 +723,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                        somewhere live. Real battles keep the full
                        spectator view (scoreboard, picks, chat). */
                     if (battle.simulated || isSimulated) {
-                      router.push('/battle');
+                      router.push(`/battle?battle=${encodeURIComponent(battle.id)}`);
                     } else {
                       router.push(`/battle/spectate/${battle.id}`);
                     }
