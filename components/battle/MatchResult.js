@@ -4,6 +4,7 @@ import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
 import PiksBetCard from '../PiksBetCard';
 import { TicketCarousel } from '../BattleOverviewPopup';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 function useCountUp(target, duration = 1000, shouldStart = false) {
   const [value, setValue] = useState(0);
@@ -176,6 +177,7 @@ export default function MatchResult({
   highlight = false,
   highlightRematch = false,
 }) {
+  const isBeta = useBetaMode();
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -290,7 +292,9 @@ export default function MatchResult({
   const animatedPrize = useCountUp(prizeWon, 1100, showStats);
 
   const handleShare = useCallback(async () => {
-    const text = `I just won $${formatMoney(prizeWon)} on Piks! 🏆🔥`;
+    const text = isBeta
+      ? `I just won ${formatMoney(prizeWon)} coins on Piks! 🏆🔥`
+      : `I just won $${formatMoney(prizeWon)} on Piks! 🏆🔥`;
     const id = matchup?.id;
 
     // Pick a deep-linkable "moment" — the biggest winning pik on our side,

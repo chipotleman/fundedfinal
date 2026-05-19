@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { formatMoney } from '../utils/formatMoney';
+import { useBetaMode } from '../contexts/SiteConfigContext';
 
 export default function ForfeitConfirmedModal({ isOpen, onClose, opponent, payout, totalPot }) {
+  const isBeta = useBetaMode();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -88,12 +90,14 @@ export default function ForfeitConfirmedModal({ isOpen, onClose, opponent, payou
               </span>
             </div>
             <div className="text-sm font-bold text-white truncate">
-              ${payoutDisplay} paid to {opponentName}
+              {isBeta ? `${payoutDisplay} coins paid to ${opponentName}` : `$${payoutDisplay} paid to ${opponentName}`}
             </div>
             <div className="text-[11px] text-white/55 mt-0.5">
               {potDisplay
-                ? `From $${potDisplay} pot · your battle balance is now $0`
-                : 'Your battle balance is now $0'}
+                ? (isBeta
+                    ? `From ${potDisplay} coin pot · your battle balance is now 0 coins`
+                    : `From $${potDisplay} pot · your battle balance is now $0`)
+                : (isBeta ? 'Your battle balance is now 0 coins' : 'Your battle balance is now $0')}
             </div>
             <button
               onClick={handleStartNew}

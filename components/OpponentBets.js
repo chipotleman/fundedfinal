@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { formatMoney } from '../utils/formatMoney';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
+import { useBetaMode } from '../contexts/SiteConfigContext';
 
 export default function OpponentBets({ 
   matchupId, 
@@ -9,6 +10,7 @@ export default function OpponentBets({
   opponentName = 'Opponent',
   onRefresh 
 }) {
+  const isBeta = useBetaMode();
   const [isExpanded, setIsExpanded] = useState(false);
   const { formatOdds } = useUserPreferences();
 
@@ -47,7 +49,7 @@ export default function OpponentBets({
           <div>
             <h3 className={`font-semibold ${'text-white'}`}>{opponentName}'s Bets</h3>
             <p className={`text-sm ${'text-gray-400'}`}>
-              {opponentBets.length} pick{opponentBets.length !== 1 ? 's' : ''} • ${formatMoney(totalStaked, 0)} staked
+              {opponentBets.length} pick{opponentBets.length !== 1 ? 's' : ''} • {isBeta ? `${formatMoney(totalStaked, 0)} coins staked` : `$${formatMoney(totalStaked, 0)} staked`}
             </p>
           </div>
         </div>
@@ -93,7 +95,7 @@ export default function OpponentBets({
                 
                 <div className="text-right">
                   <p className={`font-semibold ${'text-white'}`}>
-                    ${formatMoney(parseFloat(bet.stake || 0), 0)}
+                    {isBeta ? `${formatMoney(parseFloat(bet.stake || 0), 0)} coins` : `$${formatMoney(parseFloat(bet.stake || 0), 0)}`}
                   </p>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs ${'text-gray-400'}`}>@ {formatOdds(bet.odds)}</span>
@@ -104,8 +106,8 @@ export default function OpponentBets({
                       'bg-yellow-500/20 text-yellow-500'
                     }`}>
                       {bet.status === 'pending' ? 'Pending' :
-                       bet.status === 'won' ? `+$${formatMoney(parseFloat(bet.pnl || 0), 0)}` :
-                       bet.status === 'lost' ? `-$${formatMoney(parseFloat(bet.stake || 0), 0)}` :
+                       bet.status === 'won' ? (isBeta ? `+${formatMoney(parseFloat(bet.pnl || 0), 0)}` : `+$${formatMoney(parseFloat(bet.pnl || 0), 0)}`) :
+                       bet.status === 'lost' ? (isBeta ? `-${formatMoney(parseFloat(bet.stake || 0), 0)}` : `-$${formatMoney(parseFloat(bet.stake || 0), 0)}`) :
                        'Push'}
                     </span>
                   </div>

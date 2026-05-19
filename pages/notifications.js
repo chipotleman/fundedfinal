@@ -9,6 +9,7 @@ import UserAvatar, { UserNameLink } from '../components/UserAvatar';
 import { formatMoney } from '../utils/formatMoney';
 import { NOTIF_TYPES, TypeChip, getResultStyle } from '../components/notifications/notificationTypeStyles';
 import FriendRequestCard from '../components/notifications/FriendRequestCard';
+import { useBetaMode } from '../contexts/SiteConfigContext';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -172,6 +173,7 @@ const BULK_ACTIONS = {
 };
 
 function NotificationsFeed({ ctx, router, filter }) {
+  const isBeta = useBetaMode();
   const allBattleInvites = ctx.battleInvites || [];
   const allFriendRequests = ctx.friendRequests || [];
   const allGameResults = ctx.gameResults || [];
@@ -372,7 +374,9 @@ function NotificationsFeed({ ctx, router, filter }) {
                   <UserNameLink user={inv.sender} fallback="Someone" /> challenged you
                 </div>
                 <div className="text-xs" style={{ color: textSecondary }}>
-                  ${buyIn} buy-in · ${buyIn * 2} pot{inv.duration ? ` · ${inv.duration}h` : ''}
+                  {isBeta
+                    ? `${formatMoney(buyIn, 0)} coin buy-in · ${formatMoney(buyIn * 2, 0)} coin pot`
+                    : `$${buyIn} buy-in · $${buyIn * 2} pot`}{inv.duration ? ` · ${inv.duration}h` : ''}
                 </div>
                 <div className="flex gap-2 mt-2">
                   <button
@@ -449,9 +453,9 @@ function NotificationsFeed({ ctx, router, filter }) {
             const amount = Math.abs(pnl);
             let label;
             if (r.outcome === 'won') {
-              label = amount > 0 ? `Won $${formatMoney(amount)}` : 'Won';
+              label = amount > 0 ? (isBeta ? `Won ${formatMoney(amount)} coins` : `Won $${formatMoney(amount)}`) : 'Won';
             } else if (r.outcome === 'lost') {
-              label = amount > 0 ? `Lost $${formatMoney(amount)}` : 'Lost';
+              label = amount > 0 ? (isBeta ? `Lost ${formatMoney(amount)} coins` : `Lost $${formatMoney(amount)}`) : 'Lost';
             } else {
               label = 'Push';
             }
@@ -569,6 +573,7 @@ function NotificationsFeed({ ctx, router, filter }) {
 }
 
 export default function NotificationsPage() {
+  const isBeta = useBetaMode();
   const router = useRouter();
   const { data: session, status } = useSession();
   const ctx = useNotifications();

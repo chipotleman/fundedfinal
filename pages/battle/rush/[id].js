@@ -7,6 +7,7 @@ import UserAvatar from '../../../components/UserAvatar';
 import { getBattleStreamClient } from '../../../lib/battleStreamClient';
 import { useGames } from '../../../contexts/GamesContext';
 import { CartoonChipStyles } from '../../../components/battle/CartoonChip';
+import { useBetaMode } from '../../../contexts/SiteConfigContext';
 
 const QUESTION_DURATION_MS = 15000;
 
@@ -487,7 +488,9 @@ export default function RushBattlePage() {
               <span className="text-[10px] font-black uppercase tracking-widest text-orange-300">RUSH 1V1</span>
             </div>
             <div className="text-xs text-gray-400">
-              Pot ${parseFloat(matchup.potSize).toFixed(0)} · Pays ${parseFloat(matchup.winnerPayout).toFixed(0)}
+              {isBeta
+                ? `Pot ${parseFloat(matchup.potSize).toFixed(0)} coins · Pays ${parseFloat(matchup.winnerPayout).toFixed(0)} coins`
+                : `Pot $${parseFloat(matchup.potSize).toFixed(0)} · Pays $${parseFloat(matchup.winnerPayout).toFixed(0)}`}
             </div>
           </div>
 
@@ -587,6 +590,7 @@ function RushCancelledOverlay({ onExit }) {
 }
 
 function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onReady, onForfeit, error, me, opponent }) {
+  const isBeta = useBetaMode();
   const myReady = !!rush.readyVotes?.[userId];
   const oppReady = !!rush.readyVotes?.[opponentId];
   const pot = parseFloat(matchup?.potSize || 0);
@@ -651,7 +655,9 @@ function RushReadyOverlay({ rush, matchup, userId, opponentId, pendingReady, onR
         </div>
 
         <div className="text-xs text-gray-400 mb-3">
-          Pot ${pot.toFixed(0)} · Pays ${winnerTakes.toFixed(0)}
+          {isBeta
+            ? `Pot ${pot.toFixed(0)} coins · Pays ${winnerTakes.toFixed(0)} coins`
+            : `Pot $${pot.toFixed(0)} · Pays $${winnerTakes.toFixed(0)}`}
         </div>
 
         {wasContested && (
@@ -911,6 +917,7 @@ function ReadyCard({ label, ready, color }) {
 }
 
 function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGames, liveLoading, pendingVote, onVote, onForfeit, error, me, opponent }) {
+  const isBeta = useBetaMode();
   const myVote = rush.gameVotes?.[userId];
   const oppVote = rush.gameVotes?.[opponentId];
   const now = useNow(250);
@@ -1067,7 +1074,9 @@ function RushVotingOverlay({ rush, matchup, userId, opponentId, isHost, liveGame
                 border: '1px solid rgba(251,191,36,0.35)',
               }}
             >
-              Pot ${pot.toFixed(0)} · Pays ${winnerTakes.toFixed(0)}
+              {isBeta
+                ? `Pot ${pot.toFixed(0)} coins · Pays ${winnerTakes.toFixed(0)} coins`
+                : `Pot $${pot.toFixed(0)} · Pays $${winnerTakes.toFixed(0)}`}
             </span>
           </div>
         </div>

@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import UserAvatar from '../UserAvatar';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { formatMoney } from '../../utils/formatMoney';
 
 export default function MatchHistoryModal({ isOpen, onClose }) {
+  const isBeta = useBetaMode();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,7 +106,7 @@ export default function MatchHistoryModal({ isOpen, onClose }) {
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badge.color}`}>{badge.text}</span>
                         </div>
                         <div className="text-gray-600 text-xs mt-0.5">
-                          ${match.buyIn} buy-in · {formatDate(match.createdAt)}
+                          {isBeta ? `${formatMoney(match.buyIn, 0)} coin buy-in` : `$${match.buyIn} buy-in`} · {formatDate(match.createdAt)}
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">

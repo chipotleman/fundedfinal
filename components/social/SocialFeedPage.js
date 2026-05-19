@@ -6,6 +6,7 @@ import { formatLastSeen } from '../../utils/relativeTime';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
 import LiveBattleStoryViewer from './LiveBattleStoryViewer';
 import { getSimulatedBattles } from '../battle/LiveBattlesSection';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 const surface = '#0d0d0d';
 const surfaceMuted = '#0a0a0a';
@@ -545,6 +546,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile }) {
 // Pending pile — grouped pending invites + friend requests as a single card.
 // =============================================================================
 function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite, onAcceptFriendRequest, onDeclineFriendRequest, onOpenProfile }) {
+  const isBeta = useBetaMode();
   const items = useMemo(() => {
     const out = [];
     (invites?.received || []).forEach((inv) => {
@@ -554,7 +556,11 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
         rawId: inv.id,
         user: inv.fromUser || inv.from || { username: inv.fromUsername },
         ts: inv.createdAt,
-        meta: inv.buyIn ? `wants to battle for $${formatMoney(inv.buyIn, 0)}` : 'wants to battle',
+        meta: inv.buyIn
+          ? (isBeta
+              ? `wants to battle for ${formatMoney(inv.buyIn, 0)} coins`
+              : `wants to battle for $${formatMoney(inv.buyIn, 0)}`)
+          : 'wants to battle',
       });
     });
     (friendRequests || []).forEach((req) => {
@@ -858,6 +864,7 @@ function LiveBattleChatPanel({ matchupId, currentUser }) {
 }
 
 function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
+  const isBeta = useBetaMode();
   // Inline chat lives directly inside the card so spectators can drop
   // a quick reaction without navigating to /battle/spectate/[id].
   const [chatOpen, setChatOpen] = useState(false);
@@ -949,7 +956,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
         </div>
         <div className="flex items-center gap-2.5 flex-shrink-0">
           <span className="text-[12px] font-black tabular-nums" style={{ color: textPrimary }}>
-            ${formatMoney(pot, 0)}
+            {isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`}
           </span>
           <span className="text-[10px] tabular-nums" style={{ color: textMuted }}>
             {formatTimeLeft(timeLeft)}
@@ -1250,6 +1257,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
 // ResultPost — Instagram-post-style card for a recently-completed battle.
 // =============================================================================
 function ResultPost({ highlight, onOpenProfile, onReplay }) {
+  const isBeta = useBetaMode();
   const winner = highlight.winner || {};
   const loser = highlight.loser || {};
   const pot = parseFloat(highlight.potSize) || 0;
@@ -1272,7 +1280,7 @@ function ResultPost({ highlight, onOpenProfile, onReplay }) {
             </div>
             <div className="text-[10px]" style={{ color: textMuted }}>
               {timeAgo(highlight.endedAt || highlight.completedAt || highlight.createdAt)}
-              {pot > 0 && <> · ${formatMoney(pot, 0)} pot</>}
+              {pot > 0 && <> · {isBeta ? `${formatMoney(pot, 0)} coin pot` : `$${formatMoney(pot, 0)} pot`}</>}
             </div>
           </div>
         </div>
@@ -1299,6 +1307,7 @@ function ResultPost({ highlight, onOpenProfile, onReplay }) {
 // YourMatchPost — compact summary of one of your past matches as a feed card.
 // =============================================================================
 function YourMatchPost({ match, onOpenProfile, onShowHistory }) {
+  const isBeta = useBetaMode();
   const opp = match.opponent || {};
   const result = match.result;
   const pnl = parseFloat(match.pnl || 0);
@@ -1325,7 +1334,7 @@ function YourMatchPost({ match, onOpenProfile, onShowHistory }) {
         </div>
         <div className="text-[10px]" style={{ color: textMuted }}>
           {match.endsAt ? timeAgo(match.endsAt) : 'Live'}
-          {match.potSize ? <> · ${formatMoney(match.potSize, 0)} pot</> : null}
+          {match.potSize ? <> · {isBeta ? `${formatMoney(match.potSize, 0)} coin pot` : `$${formatMoney(match.potSize, 0)} pot`}</> : null}
         </div>
       </div>
       {result !== 'cancelled' && result !== 'pending' && (
@@ -1334,7 +1343,7 @@ function YourMatchPost({ match, onOpenProfile, onShowHistory }) {
           onClick={onShowHistory}
           className={`text-sm font-bold ${pnlPositive ? 'text-green-400' : 'text-red-400'}`}
         >
-          {pnlPositive ? '+' : ''}${formatMoney(pnl, 0)}
+          {pnlPositive ? '+' : ''}{isBeta ? `${formatMoney(pnl, 0)} coins` : `$${formatMoney(pnl, 0)}`}
         </button>
       )}
     </div>
@@ -1345,6 +1354,7 @@ function YourMatchPost({ match, onOpenProfile, onShowHistory }) {
 // Sidebar (desktop) — compact CTA + online friends + recent winners.
 // =============================================================================
 function FeedSidebar({ onStartBattle, friends, recentHighlights, onOpenProfile, onChallengeFriend, onReplay, isGuest }) {
+  const isBeta = useBetaMode();
   const onlineFriends = useMemo(
     () => (friends || []).filter((f) => f.isOnline).slice(0, 6),
     [friends],
@@ -1431,7 +1441,7 @@ function FeedSidebar({ onStartBattle, friends, recentHighlights, onOpenProfile, 
                     <span className="font-medium">{b.loser?.username || 'Player'}</span>
                   </div>
                   <div className="text-[10px]" style={{ color: textMuted }}>
-                    ${formatMoney(b.potSize || 0, 0)} pot · {timeAgo(b.endedAt || b.completedAt || b.createdAt)}
+                    {isBeta ? `${formatMoney(b.potSize || 0, 0)} coin pot` : `$${formatMoney(b.potSize || 0, 0)} pot`} · {timeAgo(b.endedAt || b.completedAt || b.createdAt)}
                   </div>
                 </div>
               </button>

@@ -8,6 +8,7 @@ import { formatLastSeen } from '../../../utils/relativeTime';
 import { getBattlePreview } from '../../../lib/battle-preview';
 import { useAuth } from '../../../contexts/AuthContext';
 import { grantBetaAccess } from '../../../utils/betaAccess';
+import { useBetaMode } from '../../../contexts/SiteConfigContext';
 
 const cardBg = '#0d0d0d';
 const cardBorder = '#1a1a1a';
@@ -212,6 +213,7 @@ export async function getServerSideProps(context) {
 }
 
 export default function BattleReplayPage() {
+  const isBeta = useBetaMode();
   const router = useRouter();
   const { id } = router.query;
   const auth = useAuth();
@@ -492,7 +494,7 @@ export default function BattleReplayPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5" style={{ color: textSecondary }}>
-                        <span className="font-semibold text-yellow-400">${formatMoney(b.potSize, 0)} pot</span>
+                        <span className="font-semibold text-yellow-400">{isBeta ? `${formatMoney(b.potSize, 0)} coin pot` : `$${formatMoney(b.potSize, 0)} pot`}</span>
                         <span>·</span>
                         <span>{formatLastSeen(b.endedAt)}</span>
                       </div>

@@ -1,6 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useMatchup } from '../contexts/MatchupContext';
 import { formatMoney } from '../utils/formatMoney';
+import { useBetaMode } from '../contexts/SiteConfigContext';
 
 const GAME_MODES = {
   rush: { durationMinutes: 180, label: 'RUSH' },
@@ -65,6 +66,7 @@ function getMode(data, isQueueEntry) {
 }
 
 export default function WaitingBattleCard({ matchup, queueEntry, myProfile, opponent }) {
+  const isBeta = useBetaMode();
   const { refresh: refreshMatchup } = useMatchup();
   const { data: session } = useSession();
 
@@ -250,8 +252,11 @@ export default function WaitingBattleCard({ matchup, queueEntry, myProfile, oppo
                   color: theme.accentColor,
                   textShadow: `0 0 20px rgba(${theme.accentRgb},0.5)`,
                 }}>
-                  ${formatMoney(pot, 0)}
+                  {isBeta ? `${formatMoney(pot, 0)}` : `$${formatMoney(pot, 0)}`}
                 </p>
+                {isBeta && (
+                  <p className="text-[7px] md:text-[8px] text-gray-500 uppercase tracking-widest leading-none mt-0.5">coins</p>
+                )}
               </div>
 
               {privateCode && (

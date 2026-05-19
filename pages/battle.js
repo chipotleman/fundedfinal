@@ -18,6 +18,7 @@ import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import ConnectionBadge from '../components/battle/ConnectionBadge';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useNotifications } from '../contexts/NotificationsContext';
+import { useBetaMode } from '../contexts/SiteConfigContext';
 import MessagePopup from '../components/messages/MessagePopup';
 import { useProfileCache } from '../contexts/ProfileCacheContext';
 import { formatMoney } from '../utils/formatMoney';
@@ -49,6 +50,7 @@ const QUICK_MODE_LABELS = { rush: 'Rush', original: 'Original', tournament: 'Tou
 const QUICK_MODE_BADGES = { rush: 'R', tournament: 'T' };
 
 export default function BattlePage() {
+  const isBeta = useBetaMode();
   const router = useRouter();
   // Rush mode is a dedicated 6-question mini-game with its own gameplay
   // page at /battle/rush/[id]. The original/tournament modes drop the
@@ -1184,7 +1186,7 @@ export default function BattlePage() {
         });
         setShowPlayFriend(true);
       } else {
-        showQuickToast(`Invite sent to ${friend.username || 'friend'} · $${last.buyIn} buy-in`);
+        showQuickToast(`Invite sent to ${friend.username || 'friend'} · ${isBeta ? `${formatMoney(last.buyIn, 0)} coin buy-in` : `$${last.buyIn} buy-in`}`);
       }
       fetchData();
     } catch {
@@ -1486,14 +1488,14 @@ export default function BattlePage() {
                         hasPendingInvite
                           ? 'Invite already pending'
                           : lastBuyIn
-                          ? `Quick invite — $${lastBuyIn.buyIn} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'}`
+                          ? `Quick invite — ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} coin` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'}`
                           : 'Quick invite — pick a buy-in (opens the full picker)'
                       }
                       aria-label={
                         hasPendingInvite
                           ? `Invite to ${friend.username || 'friend'} already pending`
                           : lastBuyIn
-                          ? `Quick invite ${friend.username || 'friend'} with $${lastBuyIn.buyIn} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'} buy-in`
+                          ? `Quick invite ${friend.username || 'friend'} with ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} coin` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'} buy-in`
                           : `Quick invite ${friend.username || 'friend'} — opens picker to set a buy-in`
                       }
                     >
@@ -1504,7 +1506,7 @@ export default function BattlePage() {
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {lastBuyIn ? (
                             <span className="text-[10px] font-bold leading-none whitespace-nowrap">
-                              ${lastBuyIn.buyIn}
+                              {isBeta ? formatMoney(lastBuyIn.buyIn, 0) : `$${lastBuyIn.buyIn}`}
                               {lastBuyIn.gameMode && lastBuyIn.gameMode !== 'original' && (
                                 <span className="ml-0.5 opacity-70">{QUICK_MODE_BADGES[lastBuyIn.gameMode] || ''}</span>
                               )}
@@ -1611,7 +1613,9 @@ export default function BattlePage() {
                       <div className="text-sm font-bold truncate" style={{ color: textPrimary }}>{invite.sender?.username} <span className="text-blue-300">challenged you!</span></div>
                       <div className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-yellow-500/15 text-yellow-300 border border-yellow-500/30">
                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 9v1" /></svg>
-                        ${invite.buyIn} buy-in · ${parseFloat(invite.buyIn) * 2} pot
+                        {isBeta
+                          ? `${formatMoney(invite.buyIn, 0)} coin buy-in · ${formatMoney(parseFloat(invite.buyIn) * 2, 0)} coin pot`
+                          : `$${invite.buyIn} buy-in · $${parseFloat(invite.buyIn) * 2} pot`}
                       </div>
                     </div>
                   </div>

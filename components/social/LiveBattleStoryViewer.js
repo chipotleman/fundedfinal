@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import FramedAvatar from '../UserAvatar';
 import { formatMoney } from '../../utils/formatMoney';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 const SLIDE_MS = 5000;
 
@@ -165,6 +166,7 @@ function CoverSlide({ s }) {
 }
 
 function StakesSlide({ s, timeLeft }) {
+  const isBeta = useBetaMode();
   const fire1 = s.u1Pnl > 10;
   const fire2 = s.u2Pnl > 10;
   return (
@@ -177,7 +179,9 @@ function StakesSlide({ s, timeLeft }) {
         aria-hidden="true"
       />
       <div className="relative z-10 flex flex-col items-center gap-4 w-full max-w-xs">
-        <div className="text-[11px] font-extrabold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.6)' }}>Pot on the line</div>
+        <div className="text-[11px] font-extrabold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          {isBeta ? 'Coin pot on the line' : 'Pot on the line'}
+        </div>
         <div
           className="text-5xl font-black tabular-nums"
           style={{
@@ -188,7 +192,7 @@ function StakesSlide({ s, timeLeft }) {
             textShadow: '0 0 30px rgba(250,204,21,0.5)',
           }}
         >
-          ${formatMoney(s.pot, 0)}
+          {isBeta ? `${formatMoney(s.pot, 0)} coins` : `$${formatMoney(s.pot, 0)}`}
         </div>
         <div className="grid grid-cols-2 gap-3 w-full">
           <StatBubble

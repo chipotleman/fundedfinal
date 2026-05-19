@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import UserAvatar from '../UserAvatar';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { formatMoney } from '../../utils/formatMoney';
 
 export default function InviteToast({ invite, onAccept, onDecline, highlight = false }) {
+  const isBeta = useBetaMode();
   const [loading, setLoading] = useState(null);
   const ref = useRef(null);
 
@@ -54,7 +57,9 @@ export default function InviteToast({ invite, onAccept, onDecline, highlight = f
             {sender.username || 'Someone'} challenges you!
           </div>
           <div className="text-gray-400 text-xs">
-            ${buyIn} buy-in · ${potSize} pot · {invite.duration}h
+            {isBeta
+              ? `${formatMoney(buyIn, 0)} coin buy-in · ${formatMoney(potSize, 0)} coin pot · ${invite.duration}h`
+              : `$${buyIn} buy-in · $${potSize} pot · ${invite.duration}h`}
           </div>
         </div>
       </div>

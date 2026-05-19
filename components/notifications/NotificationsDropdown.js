@@ -7,6 +7,7 @@ import { formatMoney } from '../../utils/formatMoney';
 import { cacheBattleResult } from '../../utils/battleResultCache';
 import { NOTIF_TYPES, NotifIcon, getResultStyle } from './notificationTypeStyles';
 import FriendRequestCard from './FriendRequestCard';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 function Avatar({ sender, size = 36 }) {
   return (
@@ -36,6 +37,7 @@ function timeAgo(iso) {
 // Notifications dropdown — alerts only (battle invites, friend requests, and
 // any future game-result alerts). Messages have moved to MessagesDropdown.
 export default function NotificationsDropdown({ open, onClose, anchorRef }) {
+  const isBeta = useBetaMode();
   const router = useRouter();
   const ctx = useNotifications();
   const ref = useRef(null);
@@ -141,7 +143,9 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                     {inv.sender?.username || 'Someone'} challenged you
                   </div>
                   <div className="text-gray-400 text-xs">
-                    ${buyIn} buy-in · ${buyIn * 2} pot{inv.duration ? ` · ${inv.duration}h` : ''}
+                    {isBeta
+                      ? `${formatMoney(buyIn, 0)} coin buy-in · ${formatMoney(buyIn * 2, 0)} coin pot`
+                      : `$${buyIn} buy-in · $${buyIn * 2} pot`}{inv.duration ? ` · ${inv.duration}h` : ''}
                   </div>
                   <div className="flex gap-2 mt-2">
                     <button
@@ -210,9 +214,9 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
               const amount = Math.abs(pnl);
               let label;
               if (r.outcome === 'won') {
-                label = amount > 0 ? `Won $${formatMoney(amount)}` : 'Won';
+                label = amount > 0 ? (isBeta ? `Won ${formatMoney(amount)} coins` : `Won $${formatMoney(amount)}`) : 'Won';
               } else if (r.outcome === 'lost') {
-                label = amount > 0 ? `Lost $${formatMoney(amount)}` : 'Lost';
+                label = amount > 0 ? (isBeta ? `Lost ${formatMoney(amount)} coins` : `Lost $${formatMoney(amount)}`) : 'Lost';
               } else {
                 label = 'Push';
               }
