@@ -48,6 +48,11 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
   const { data: session } = useSession();
   const myId = session?.user?.id;
 
+  // Seed `friendStatus` to 'self' synchronously when the clicked user is
+  // the viewer — without this the popover flashed the Add-Friend /
+  // Message CTAs for one render until /api/users/:id/preview came back
+  // and told us friendStatus='self'.
+  const seedIsSelf = !!myId && !!seedUser?.id && seedUser.id === myId;
   const [user, setUser] = useState({
     id: seedUser?.id,
     username: seedUser?.username || 'Player',
@@ -57,7 +62,7 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
     battleLosses: seedUser?.battleLosses ?? null,
     winRate: null,
     isOnline: !!seedUser?.isOnline,
-    friendStatus: 'none',
+    friendStatus: seedIsSelf ? 'self' : 'none',
     canMessage: false,
   });
   const [loading, setLoading] = useState(true);
