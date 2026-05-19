@@ -2128,42 +2128,6 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 </div>
               </div>
 
-              {/* Scanning ticker — endless scroll of mock player names so
-                  the user feels the matchmaker is actively combing the
-                  global pool, not just spinning. */}
-              <div
-                className="mx-4 mb-2 rounded-xl overflow-hidden"
-                style={{
-                  background: 'linear-gradient(180deg,#0a0a0a,#000)',
-                  border: '2px solid #0a0a0a',
-                  boxShadow: 'inset 0 0 0 1px #1a1a1a, 0 2px 0 #0a0a0a',
-                  height: 22,
-                  position: 'relative',
-                }}
-                aria-hidden="true"
-              >
-                <div
-                  className="absolute inset-y-0 left-0 z-10 w-6"
-                  style={{ background: 'linear-gradient(90deg,#000,transparent)' }}
-                />
-                <div
-                  className="absolute inset-y-0 right-0 z-10 w-6"
-                  style={{ background: 'linear-gradient(270deg,#000,transparent)' }}
-                />
-                <div
-                  className="flex items-center gap-3 whitespace-nowrap will-change-transform py-1"
-                  style={{ animation: 'qm-marquee 16s linear infinite' }}
-                >
-                  {[...SCAN_NAMES, ...SCAN_NAMES].map((n, i) => (
-                    <span key={i} className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase" style={{ letterSpacing: '0.08em' }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: modeColor, boxShadow: `0 0 6px ${modeColor}` }} />
-                      <span style={{ color: '#fff' }}>scanning</span>
-                      <span style={{ color: '#facc15' }}>@{n}</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-
               {/* Phase status pill — gives the user feedback that the
                   matchmaker is doing something specific (vs. a generic
                   spinner) and visibly progresses through phases so the
