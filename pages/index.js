@@ -2108,15 +2108,12 @@ export default function Dashboard() {
                 }}
                 className="flex-1 py-3.5 rounded-2xl font-black uppercase flex items-center justify-center"
                 style={{
-                  background: 'linear-gradient(180deg,#fde047 0%,#facc15 50%,#ca8a04 100%)',
-                  border: '3px solid #0a0a0a',
-                  boxShadow: '0 6px 0 #0a0a0a, 0 0 30px rgba(250,204,21,0.55)',
-                  color: '#fff',
-                  WebkitTextStroke: '1.2px #0a0a0a',
-                  textShadow: '0 2px 0 rgba(0,0,0,0.35)',
-                  letterSpacing: '0.06em',
+                  background: 'linear-gradient(180deg,#fde047 0%,#facc15 100%)',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 4px 0 #0a0a0a',
+                  color: '#0a0a0a',
+                  letterSpacing: '0.08em',
                   fontSize: 14,
-                  animation: 'wtCtaThrob 1.4s ease-in-out 0.6s infinite',
                   fontFamily: 'system-ui, -apple-system, sans-serif',
                 }}
               >
