@@ -745,7 +745,7 @@ export default function TopNavbar({
                         background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
                         border: '1.5px solid #0d0d0d',
                         boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
-                        color: '#ffffff',
+                        color: '#022c1f',
                         cursor: 'pointer',
                       }}
                     >
@@ -761,7 +761,7 @@ export default function TopNavbar({
                       >
                         {`💵\uFE0F`}
                       </span>
-                      <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1, WebkitTextStroke: '0.1px #000', textShadow: '0 0 1px #000' }}>
+                      <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
                         ${formatMoney(parseFloat(userProfile.bankroll), 0)}
                       </span>
                     </button>
@@ -780,7 +780,7 @@ export default function TopNavbar({
                         background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
                         border: '1.5px solid #0d0d0d',
                         boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(249,115,22,0.55)',
-                        color: '#ffffff',
+                        color: '#2a1404',
                         cursor: 'pointer',
                       }}
                     >
@@ -796,7 +796,7 @@ export default function TopNavbar({
                       >
                         {`⚔\uFE0F`}
                       </span>
-                      <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1, WebkitTextStroke: '0.1px #000', textShadow: '0 0 1px #000' }}>
+                      <span style={{ fontWeight: 900, fontSize: 14, color: '#2a1404', letterSpacing: '0.02em', lineHeight: 1.1 }}>
                         {formatMoney(parseFloat(matchupBalance), 0)}
                       </span>
                     </button>
@@ -901,7 +901,7 @@ export default function TopNavbar({
                       background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
                       border: '1.5px solid #0d0d0d',
                       boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(249,115,22,0.55)',
-                      color: '#ffffff',
+                      color: '#2a1404',
                       cursor: 'pointer',
                     }}
                     aria-label="Battle coins details"
@@ -918,7 +918,7 @@ export default function TopNavbar({
                     >
                       {`⚔\uFE0F`}
                     </span>
-                    <span style={{ fontWeight: 900, fontSize: 12, color: '#ffffff', letterSpacing: '0.02em', whiteSpace: 'nowrap', lineHeight: 1.1, WebkitTextStroke: '0.1px #000', textShadow: '0 0 1px #000' }}>
+                    <span style={{ fontWeight: 900, fontSize: 12, color: '#2a1404', letterSpacing: '0.02em', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
                       {formatMoney(parseFloat(matchupBalance), 0)}
                     </span>
                   </button>
@@ -1202,7 +1202,7 @@ export default function TopNavbar({
                   background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
                   border: '1.5px solid #0d0d0d',
                   boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
-                  color: '#ffffff',
+                  color: '#022c1f',
                   cursor: 'pointer',
                   lineHeight: 1,
                 }}
@@ -1220,7 +1220,7 @@ export default function TopNavbar({
                 >
                   {`💵\uFE0F`}
                 </span>
-                <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1, WebkitTextStroke: '0.1px #000', textShadow: '0 0 1px #000' }}>
+                <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
                   ${formatMoney(parseFloat(userProfile.bankroll), 0)}
                 </span>
               </button>
@@ -1239,7 +1239,7 @@ export default function TopNavbar({
                   background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
                   border: '1.5px solid #0d0d0d',
                   boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(249,115,22,0.55)',
-                  color: '#ffffff',
+                  color: '#2a1404',
                   cursor: 'pointer',
                   lineHeight: 1,
                 }}
@@ -1257,7 +1257,7 @@ export default function TopNavbar({
                 >
                   {`⚔\uFE0F`}
                 </span>
-                <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1, WebkitTextStroke: '0.1px #000', textShadow: '0 0 1px #000' }}>
+                <span style={{ fontWeight: 900, fontSize: 14, color: '#2a1404', letterSpacing: '0.02em', lineHeight: 1.1 }}>
                   {formatMoney(parseFloat(matchupBalance), 0)}
                 </span>
               </button>
