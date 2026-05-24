@@ -520,6 +520,67 @@ async function testSseAndPushFanOut() {
   assert(pushCall.payload.url === '/messenger', 'push deep-links to /messenger');
 }
 
+async function testOversizedPayloadRejected() {
+  console.log('test: 413 when JSON body exceeds the byte budget');
+  // Build a snapshot that's clearly over the 16KB budget. The handler
+  // measures `JSON.stringify({recipientIds, note, item})` in UTF-8
+  // bytes, so a single 32KB string in an unknown field is more than
+  // enough to trip the cap — and crucially, this would otherwise be
+  // silently stripped by sanitizeSnapshot, masking the abuse.
+  const { handler, calls } = loadHandlerWithMocks({
+    session: SELF_SESSION,
+    friendRows: [friendRow('u-friend-a', true)],
+  });
+  const res = makeRes();
+  await handler(makeReq({
+    body: {
+      recipientIds: ['u-friend-a'],
+      item: {
+        type: 'post',
+        id: 'p1',
+        snapshot: {
+          body: 'hi',
+          junk: 'x'.repeat(32 * 1024),
+        },
+      },
+    },
+  }), res);
+  assert(res.statusCode === 413, '413 Payload Too Large on oversize body');
+  assert(/too large/i.test(res.body.error || ''), 'error message mentions size');
+  assert(calls.selectWhereCalled === 0, 'friend lookup not executed when payload is rejected');
+  assert(calls.insertedRows == null, 'no insert was attempted');
+  assert(calls.publishBattleEvent.length === 0, 'no SSE event fanned out');
+  assert(calls.sendPushToUsers.length === 0, 'no push fan-out');
+}
+
+async function testPayloadJustUnderBudgetAccepted() {
+  console.log('test: payload just under the 16KB budget still succeeds');
+  // ~12KB of legitimate-shaped content — clamped further by
+  // sanitizeSnapshot, but well under the cap so the request must be
+  // accepted to prove the limit isn't too tight for real shares.
+  const { handler, calls } = loadHandlerWithMocks({
+    session: SELF_SESSION,
+    friendRows: [friendRow('u-friend-a', true)],
+  });
+  const res = makeRes();
+  await handler(makeReq({
+    body: {
+      recipientIds: ['u-friend-a'],
+      note: 'n'.repeat(280),
+      item: {
+        type: 'post',
+        id: 'p1',
+        snapshot: {
+          body: 'b'.repeat(12 * 1024),
+          author: { username: 'me' },
+        },
+      },
+    },
+  }), res);
+  assert(res.statusCode === 201, '201 on payload comfortably under the cap');
+  assert(calls.insertedRows && calls.insertedRows.length === 1, 'one row inserted');
+}
+
 async function testInsertFailureBubblesAs500() {
   console.log('test: db insert failure → 500');
   const { handler, calls } = loadHandlerWithMocks({
@@ -559,6 +620,8 @@ async function main() {
   await testSharedBattleMessageType(); console.log('');
   await testSharedPostMessageType(); console.log('');
   await testSharedResultMessageType(); console.log('');
+  await testOversizedPayloadRejected(); console.log('');
+  await testPayloadJustUnderBudgetAccepted(); console.log('');
   await testSseAndPushFanOut(); console.log('');
   await testInsertFailureBubblesAs500(); console.log('');
 

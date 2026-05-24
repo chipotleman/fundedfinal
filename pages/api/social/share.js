@@ -9,6 +9,15 @@ const { sendPushToUsers } = require('../../../lib/web-push');
 const NOTE_MAX = 280;
 const MAX_RECIPIENTS = 20;
 const ALLOWED_TYPES = new Set(['battle', 'post', 'result']);
+// Hard byte cap on the user-controlled portion of the request body
+// (`item` + `recipientIds` + `note`). Sanitization clamps individual
+// fields, but a buggy/malicious client could still send a snapshot
+// stuffed with thousands of unknown extra fields — `req.body` has
+// already been parsed into memory by then. 16KB is comfortably above
+// the legitimate ceiling (a max-recipient share with a maxed note and
+// snapshot serializes to well under 4KB) while still rejecting
+// obvious abuse early.
+const MAX_PAYLOAD_BYTES = 16 * 1024;
 
 // Best-effort sanitization of the snapshot the client sends along with a
 // share. We only store the small handful of fields needed to render the
@@ -73,6 +82,26 @@ export default async function handler(req, res) {
   const userId = session.user.id;
 
   const { recipientIds, note, item } = req.body || {};
+
+  // Enforce a hard byte budget on the user-controlled portion of the
+  // body *before* we touch sanitization or the DB. The Next.js body
+  // parser has already buffered `req.body`, but rejecting it here
+  // stops oversize payloads from being persisted, fanned out over SSE,
+  // or echoed into push notifications. We measure the JSON
+  // serialization in UTF-8 bytes — close enough to the wire size for
+  // a budget check, and resilient to clients sending wide unicode.
+  try {
+    const measured = JSON.stringify({ recipientIds, note, item });
+    if (typeof measured === 'string'
+        && Buffer.byteLength(measured, 'utf8') > MAX_PAYLOAD_BYTES) {
+      return res.status(413).json({ error: 'Share payload too large' });
+    }
+  } catch (_e) {
+    // Unserializable body (e.g. circular refs) — reject as malformed
+    // rather than letting downstream code trip on it.
+    return res.status(400).json({ error: 'Invalid share payload' });
+  }
+
   if (!Array.isArray(recipientIds) || recipientIds.length === 0) {
     return res.status(400).json({ error: 'recipientIds required' });
   }
