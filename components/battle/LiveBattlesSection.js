@@ -3357,12 +3357,22 @@ export default function LiveBattlesSection({
   // (`expandedKey === null`) and Hide reliably closes the one card you
   // clicked. BattleCard forwards the desired next value to onToggle, so we
   // set/clear the shared key explicitly rather than blindly inverting.
-  const peerExpandedFor = useCallback((battleId) => expandedKey === `peer:${battleId}`, [expandedKey]);
+  // The row uses items-stretch so all peer cards grow to match the
+  // tallest sibling's height. Previously only the clicked card revealed
+  // its pick preview, which left the other (force-stretched) peers
+  // showing empty space below their footer. Treat any `peer:*` key as
+  // "all peers expanded" so every card in the row reveals its preview
+  // in lockstep. We still record which card was clicked in `expandedKey`
+  // so Hide on any peer collapses the row back down cleanly.
+  const anyPeerExpanded = typeof expandedKey === 'string' && expandedKey.startsWith('peer:');
+  const peerExpandedFor = useCallback((_battleId) => anyPeerExpanded, [anyPeerExpanded]);
   const setPeerExpanded = useCallback((battleId) => (next) => {
     setExpandedKey((prev) => {
-      const key = `peer:${battleId}`;
-      if (next) return key;
-      return prev === key ? null : prev;
+      if (next) return `peer:${battleId}`;
+      // Hide on any peer collapses the whole row (since the row
+      // expanded together, it should collapse together too).
+      if (typeof prev === 'string' && prev.startsWith('peer:')) return null;
+      return prev;
     });
   }, []);
 
