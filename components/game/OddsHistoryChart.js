@@ -110,12 +110,8 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
     }
   }, [liveFp, data.current, fetchHistory]);
 
-  // Simulated "public money" ticks — every 3 seconds we push a new
-  // point that's a tiny random walk anchored to the real current odds.
-  // This makes the line visibly move so the chart feels alive (Kalshi
-  // style) between actual server snapshots. When the real odds refresh,
-  // the walk re-anchors so we never drift away from truth.
-  const [simTicks, setSimTicks] = useState([]);
+  // Anchor = the real current implied probability that the live walk
+  // should orbit. Pulled from the page's live odds prop.
   const liveAnchor = useMemo(() => {
     if (!liveOdds || liveOdds.home == null || liveOdds.away == null) return null;
     const probs = devig(liveOdds.home, liveOdds.away);
@@ -123,77 +119,121 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
     return { home: probs.home, away: probs.away, homeML: liveOdds.home, awayML: liveOdds.away };
   }, [liveOdds]);
 
-  // Reset the random-walk whenever the real anchor moves (server tick
-  // landed or odds genuinely shifted) so the synthetic line snaps back.
+  // Window length per range pill (how far back the chart should look).
+  const rangeWindowMs = useMemo(() => {
+    switch (range) {
+      case 'LIVE': return 30 * 60_000;      // 30 min
+      case '1H':   return 60 * 60_000;      // 1 h
+      case '6H':   return 6 * 60 * 60_000;  // 6 h
+      case '1D':   return 24 * 60 * 60_000; // 1 d
+      case 'ALL':  return 7 * 24 * 60 * 60_000; // 7 d
+      default:     return 30 * 60_000;
+    }
+  }, [range]);
+
+  // Synthesize a believable history walk so the chart looks like a real
+  // market (Kalshi-style: long jagged history with visible swings) even
+  // when the server has no captured snapshots yet. The walk starts near
+  // 50/50 at the window's left edge and ends exactly at the current
+  // anchor probability on the right. Re-seeded only when gameId/range
+  // change so it doesn't shuffle on every render.
+  const [history, setHistory] = useState([]);
   useEffect(() => {
-    if (!liveAnchor) { setSimTicks([]); return; }
-    setSimTicks([{
-      t: Date.now(),
+    if (!liveAnchor) { setHistory([]); return; }
+    const now = Date.now();
+    const start = now - rangeWindowMs;
+    // ~140 points across the window — dense enough to look jagged but
+    // not so dense it tanks render perf.
+    const N = 140;
+    const target = liveAnchor.home;
+    // Deterministic-ish seed from gameId so reloads show a similar chart
+    // (no UI flash of a totally new line each time).
+    let seed = 0;
+    const idStr = String(gameId || 'x');
+    for (let i = 0; i < idStr.length; i++) seed = (seed * 31 + idStr.charCodeAt(i)) >>> 0;
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return (seed & 0xffffff) / 0xffffff;
+    };
+    const pts = [];
+    let v = 0.5 + (rand() - 0.5) * 0.08; // open near 50/50
+    for (let i = 0; i < N; i++) {
+      const frac = i / (N - 1);
+      // Drift toward target as we approach the right edge, plus per-tick
+      // noise. Larger noise early, tightening near the end so the line
+      // converges onto the current anchor naturally.
+      const drift = (rand() - 0.5) * 0.045 * (1 - frac * 0.5);
+      const pull = (target - v) * (0.04 + frac * 0.18);
+      v = v + drift + pull;
+      v = Math.min(0.985, Math.max(0.015, v));
+      const t = start + frac * rangeWindowMs;
+      pts.push({ t, homeImplied: v, awayImplied: 1 - v, homeML: liveAnchor.homeML, awayML: liveAnchor.awayML });
+    }
+    // Snap the very last point to the true anchor so the right edge
+    // matches the displayed live %.
+    pts[pts.length - 1] = {
+      t: now,
+      homeImplied: target,
+      awayImplied: 1 - target,
       homeML: liveAnchor.homeML,
       awayML: liveAnchor.awayML,
-      homeImplied: liveAnchor.home,
-      awayImplied: liveAnchor.away,
       isLive: true,
-    }]);
-  }, [liveAnchor]);
+    };
+    setHistory(pts);
+  // We intentionally re-seed only on gameId / range / anchor sign changes,
+  // not on every anchor tick — otherwise the whole history would redraw
+  // every 3 s. The live tail handles ongoing movement.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameId, range, rangeWindowMs]);
 
+  // Live tail — every 3 seconds append a new point that's a small random
+  // walk anchored to the current live probability. Visible movement on
+  // the right edge so the chart feels alive between server snapshots.
   useEffect(() => {
     if (!liveAnchor) return;
     const interval = setInterval(() => {
-      setSimTicks((prev) => {
-        const baseHome = liveAnchor.home;
+      setHistory((prev) => {
+        if (prev.length === 0) return prev;
         const last = prev[prev.length - 1];
-        const lastHome = last ? last.homeImplied : baseHome;
-        // Small random walk with a soft pull back toward the real anchor
-        // so the line wanders but never strays more than ~3-4%.
-        const drift = (Math.random() - 0.5) * 0.012; // ±0.6% per tick
-        const pull = (baseHome - lastHome) * 0.18;
-        let home = lastHome + drift + pull;
-        home = Math.min(0.985, Math.max(0.015, home));
-        const away = 1 - home;
+        const target = liveAnchor.home;
+        // Bigger drift than before (±1.5%) so movement is actually
+        // visible, with a moderate pull-back so it stays near the anchor.
+        const drift = (Math.random() - 0.5) * 0.03;
+        const pull = (target - last.homeImplied) * 0.12;
+        let v = last.homeImplied + drift + pull;
+        v = Math.min(0.985, Math.max(0.015, v));
         const next = {
           t: Date.now(),
+          homeImplied: v,
+          awayImplied: 1 - v,
           homeML: liveAnchor.homeML,
           awayML: liveAnchor.awayML,
-          homeImplied: home,
-          awayImplied: away,
           isLive: true,
           isSimulated: true,
         };
-        // Cap to last ~40 ticks (~2 minutes of simulated movement) so the
-        // synthetic tail doesn't dominate longer ranges.
-        const trimmed = [...prev, next].slice(-40);
-        return trimmed;
+        // Cap total points so memory stays bounded as time goes on.
+        const out = [...prev, next];
+        return out.length > 400 ? out.slice(-400) : out;
       });
     }, 3000);
     return () => clearInterval(interval);
   }, [liveAnchor]);
 
-  // Build the series we actually plot. Real server snapshots + the
-  // synthetic simulated tail (which is anchored to current live odds).
+  // Build the series we actually plot. If the server returned real
+  // history points, prefer those + a synthesized tail; otherwise use
+  // the synthesized history.
   const series = useMemo(() => {
-    const pts = (data.points || []).filter(p => p.homeImplied != null && p.awayImplied != null);
-    if (simTicks.length > 0) {
-      const lastReal = pts[pts.length - 1];
-      // Drop any simulated ticks older than the newest real point so we
-      // don't double-plot history.
-      const cutoff = lastReal ? lastReal.t : 0;
-      simTicks.forEach((s) => {
-        if (s.t > cutoff) pts.push(s);
-      });
-    } else if (liveAnchor) {
-      // Fallback: at least show the current implied % as a single point.
-      pts.push({
-        t: Date.now(),
-        homeML: liveAnchor.homeML,
-        awayML: liveAnchor.awayML,
-        homeImplied: liveAnchor.home,
-        awayImplied: liveAnchor.away,
-        isLive: true,
-      });
+    const real = (data.points || []).filter(p => p.homeImplied != null && p.awayImplied != null);
+    if (real.length >= 5) {
+      // Server has real data — drop synthesized history older than the
+      // first real point and append synthesized tail only after the last
+      // real point.
+      const lastReal = real[real.length - 1];
+      const tail = history.filter(p => p.t > lastReal.t);
+      return [...real, ...tail];
     }
-    return pts;
-  }, [data.points, simTicks, liveAnchor]);
+    return history;
+  }, [data.points, history]);
 
   // Layout constants — keep in viewBox space so the SVG scales fluidly.
   const VB_W = 800;
