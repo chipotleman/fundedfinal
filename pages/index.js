@@ -1917,16 +1917,23 @@ export default function Dashboard() {
             style={{
               background: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
               border: '2.5px solid #0a0a0a',
-              boxShadow: '0 8px 0 #0a0a0a, 0 0 60px rgba(6,182,212,0.3), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
+              boxShadow: walkthroughStep === 0
+                ? '0 8px 0 #0a0a0a, 0 0 60px rgba(251,146,60,0.55), 0 0 90px rgba(251,146,60,0.25), inset 0 0 0 2px rgba(251,146,60,0.75)'
+                : '0 8px 0 #0a0a0a, 0 0 60px rgba(6,182,212,0.3), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
               animation: 'wtSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both',
               maxHeight: 'calc(100dvh - 2rem)',
             }}
           >
-            {/* Cyan corner brackets — match QuickMatchModal "gaming HUD" frame */}
+            {/* Neon corner brackets — cyan on most steps, orange on the
+                arcade-themed "You're Matched!" step 0 to match the
+                celebratory mockup. */}
             {['tl','tr','bl','br'].map(pos => {
               const base = { position: 'absolute', width: 20, height: 20, pointerEvents: 'none', zIndex: 3 };
-              const stroke = '2.5px solid #06b6d4';
-              const glow = { filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.8))' };
+              const isStep0 = walkthroughStep === 0;
+              const stroke = isStep0 ? '2.5px solid #fb923c' : '2.5px solid #06b6d4';
+              const glow = isStep0
+                ? { filter: 'drop-shadow(0 0 8px rgba(251,146,60,0.9))' }
+                : { filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.8))' };
               const map = {
                 tl: { top: 8, left: 8, borderTop: stroke, borderLeft: stroke, borderTopLeftRadius: 8 },
                 tr: { top: 8, right: 8, borderTop: stroke, borderRight: stroke, borderTopRightRadius: 8 },
@@ -1953,78 +1960,94 @@ export default function Dashboard() {
             <div key={walkthroughStep} className="flex-1 overflow-y-auto min-h-0" style={{ animation: 'wtFadeIn 0.3s ease-out' }}>
               {walkthroughStep === 0 && (
                 <>
-                  {/* Centered hero title — same brushed-silver gradient
-                      + gold lightning bolts + cyan accent-line subtitle
-                      as the QuickMatchModal config/searching/found steps.
-                      Keeps the popup feeling like one cohesive flow. */}
-                  <div className="px-5 pt-5 pb-2 text-center relative">
-                    <div className="inline-flex items-center justify-center gap-1.5 mb-3 px-3 py-1 rounded-full" style={{
-                      background: 'linear-gradient(180deg,#10b981,#047857)',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 2px 0 #0a0a0a',
-                    }}>
-                      <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                      <span className="text-white text-[10px] font-extrabold uppercase tracking-[0.18em]">Battle Started</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-2.5">
-                      <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                  {/* Arcade-style stacked "YOU'RE / MATCHED!" hero — yellow
+                      fill with chunky black stroke + multi-layer orange
+                      neon glow, flanked by gold lightning bolts. Matches
+                      the celebratory mockup the user provided. */}
+                  <div className="px-5 pt-4 pb-2 text-center relative">
+                    <div className="flex items-center justify-center gap-3">
+                      <span aria-hidden="true" style={{
+                        fontSize: 36,
+                        lineHeight: 1,
+                        color: '#facc15',
+                        filter: 'drop-shadow(0 0 14px rgba(250,204,21,0.95)) drop-shadow(0 0 6px rgba(251,146,60,0.9)) drop-shadow(0 2px 0 #0a0a0a)',
+                        animation: 'wtBolt 0.9s ease-in-out 0s infinite',
+                      }}>⚡</span>
                       <h2
                         className="font-black uppercase text-center"
                         style={{
-                          fontSize: 'clamp(30px, 8.5vw, 42px)',
-                          lineHeight: 0.92,
-                          letterSpacing: '0.015em',
+                          color: '#facc15',
+                          fontSize: 'clamp(38px, 11vw, 54px)',
+                          lineHeight: 0.88,
+                          letterSpacing: '0.02em',
                           fontStyle: 'italic',
-                          WebkitTextStroke: '1.3px #0a0a0a',
-                          textShadow: '0 3px 0 #0a0a0a, 0 0 30px rgba(6,182,212,0.75), 0 0 16px rgba(255,255,255,0.45)',
-                          background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          whiteSpace: 'nowrap',
+                          WebkitTextStroke: '2px #0a0a0a',
+                          textShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(251,146,60,0.85), 0 0 36px rgba(251,146,60,0.55), 0 0 60px rgba(239,68,68,0.35)',
                           margin: 0,
-                          animation: 'wtTitleBounce 0.55s cubic-bezier(0.34,1.56,0.64,1) both',
-                          fontFamily: 'system-ui, -apple-system, sans-serif',
+                          animation: 'wtTitleBounce 0.6s cubic-bezier(0.34,1.56,0.64,1) both',
+                          fontFamily: 'Impact, "Arial Black", system-ui, -apple-system, sans-serif',
                         }}
                       >
-                        You&apos;re Matched!
+                        <span style={{ display: 'block' }}>You&apos;re</span>
+                        <span style={{ display: 'block' }}>Matched!</span>
                       </h2>
-                      <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                      <span aria-hidden="true" style={{
+                        fontSize: 36,
+                        lineHeight: 1,
+                        color: '#facc15',
+                        filter: 'drop-shadow(0 0 14px rgba(250,204,21,0.95)) drop-shadow(0 0 6px rgba(251,146,60,0.9)) drop-shadow(0 2px 0 #0a0a0a)',
+                        animation: 'wtBolt 0.9s ease-in-out 0.15s infinite',
+                      }}>⚡</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
-                      <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}>
-                        Paired For 1v1 Battle
-                      </p>
-                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                    {/* Green BATTLE STARTED pill — moved below the title
+                        per mockup, with star accents and chunky border. */}
+                    <div className="flex justify-center mt-3">
+                      <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full" style={{
+                        background: 'linear-gradient(180deg,#10b981,#047857)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(16,185,129,0.55)',
+                      }}>
+                        <span aria-hidden="true" style={{ color: '#facc15', fontSize: 11, lineHeight: 1, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>★</span>
+                        <span className="text-white text-[10.5px] font-black uppercase tracking-[0.22em]" style={{ textShadow: '0 1px 0 rgba(0,0,0,0.4)' }}>Battle Started</span>
+                        <span aria-hidden="true" style={{ color: '#facc15', fontSize: 11, lineHeight: 1, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>★</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Mode / Pot pill — single line, blue-bordered, trophy + coins */}
-                  <div className="px-5 pb-3">
-                    <div className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 whitespace-nowrap" style={{
+                  {/* Mode / Pot / Time pill — long rounded capsule with
+                      trophy + clock + coin icons inline, matching the
+                      mockup's information bar. */}
+                  <div className="px-3 sm:px-5 pb-3">
+                    <div className="mx-auto rounded-full px-2.5 sm:px-3.5 py-2 flex items-center justify-center flex-wrap gap-x-2 gap-y-1" style={{
                       background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-                      border: '2.5px solid #3b82f6',
-                      boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
+                      border: '2.5px solid #fb923c',
+                      boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(251,146,60,0.45), inset 0 0 0 1px rgba(251,146,60,0.4)',
                     }}>
-                      <span style={{ fontSize: 20, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">🏆</span>
-                      <span className="text-white font-extrabold text-sm">
-                        <span style={{ color: '#facc15' }}>{modeLabel}</span>
-                        <span className="text-gray-500 mx-1.5">·</span>
-                        <span style={{ color: '#facc15' }}>Win {potLabel}</span>
-                        <span className="text-gray-500 mx-1.5">·</span>
-                        <span style={{ color: '#facc15' }}>{timeLabel}</span>
+                      <span style={{ fontSize: 16, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }} aria-hidden="true">🏆</span>
+                      <span className="text-white font-black text-[12px] uppercase" style={{ letterSpacing: '0.08em' }}>
+                        {modeLabel}
                       </span>
-                      <span style={{ fontSize: 20, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">🪙</span>
+                      <span style={{ color: 'rgba(148,163,184,0.5)', fontSize: 12 }}>·</span>
+                      <span className="text-white font-black text-[12px] uppercase" style={{ letterSpacing: '0.06em' }}>
+                        Win <span style={{ color: '#facc15' }}>{potLabel}</span>
+                      </span>
+                      <span style={{ color: 'rgba(148,163,184,0.5)', fontSize: 12 }}>·</span>
+                      <span aria-hidden="true" style={{ fontSize: 14, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>⏱</span>
+                      <span className="text-white font-black text-[12px] uppercase" style={{ color: '#facc15', letterSpacing: '0.06em' }}>{timeLabel}</span>
+                      <span style={{ fontSize: 16, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }} aria-hidden="true">🪙</span>
                     </div>
                   </div>
 
-                  {/* Avatars with cartoon rings + VS burst */}
-                  <div className="flex items-center justify-center gap-4 px-5 pb-4">
-                    <div className="flex flex-col items-center flex-1 min-w-0">
-                      <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{
+                  {/* Avatars with crown on the host (you) + big neon ring
+                      borders + name pills + RANK badges below, with a
+                      yellow VS in the middle and a record pill underneath. */}
+                  <div className="flex items-start justify-center gap-2 sm:gap-3 px-3 sm:px-5 pb-3" style={{ position: 'relative' }}>
+                    <div className="flex flex-col items-center flex-shrink min-w-0" style={{ flexBasis: 110, maxWidth: 110 }}>
+                      <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, marginBottom: 2, filter: 'drop-shadow(0 0 8px rgba(250,204,21,0.85)) drop-shadow(0 1px 0 #0a0a0a)' }}>👑</span>
+                      <div className="w-[68px] h-[68px] rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{
                         background: '#0a0a0a',
                         border: '3.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.55), inset 0 0 0 2.5px #3b82f6',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 20px rgba(250,204,21,0.6), 0 0 6px rgba(251,146,60,0.6), inset 0 0 0 2.5px #facc15',
                       }}>
                         {myAvatarUrl ? (
                           <img src={myAvatarUrl} alt="" className="w-full h-full object-cover" />
@@ -2032,24 +2055,46 @@ export default function Dashboard() {
                           <span className="font-black text-lg text-white">{myName[0]?.toUpperCase() || 'P'}</span>
                         )}
                       </div>
-                      <p className="text-white text-[10.5px] font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md" style={{
+                      <p className="text-white text-[10px] font-black uppercase truncate w-full text-center px-2 py-1 rounded-lg" style={{
                         background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                        border: '2px solid #0a0a0a',
-                        boxShadow: '0 2px 0 #0a0a0a',
+                        border: '2.5px solid #facc15',
+                        boxShadow: '0 2px 0 #0a0a0a, 0 0 8px rgba(250,204,21,0.4)',
                         letterSpacing: '0.06em',
                       }}>{myName}</p>
+                      <p className="text-white text-[8.5px] font-black uppercase mt-1 px-2 py-0.5 rounded-md inline-flex items-center gap-1" style={{
+                        background: 'linear-gradient(180deg,#fb923c,#c2410c)',
+                        border: '2px solid #0a0a0a',
+                        boxShadow: '0 2px 0 #0a0a0a',
+                        letterSpacing: '0.14em',
+                      }}>
+                        <span aria-hidden="true" style={{ color: '#facc15', fontSize: 8 }}>★</span>
+                        Rank: Pro
+                      </p>
                     </div>
-                    <div className="flex flex-col items-center flex-shrink-0">
+
+                    <div className="flex flex-col items-center flex-shrink-0 self-center" style={{ minWidth: 56 }}>
                       <div className="text-3xl font-black italic" style={{
                         color: '#facc15',
-                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                        fontFamily: 'Impact, "Arial Black", sans-serif',
+                        WebkitTextStroke: '1.5px #0a0a0a',
+                        textShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(251,146,60,0.7)',
+                        letterSpacing: '0.04em',
                       }}>VS</div>
+                      <p className="text-white text-[9px] font-black mt-1.5 px-2 py-0.5 rounded-md" style={{
+                        background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                        border: '2px solid #06b6d4',
+                        boxShadow: '0 2px 0 #0a0a0a, 0 0 6px rgba(6,182,212,0.5)',
+                        letterSpacing: '0.08em',
+                        color: '#7dd3fc',
+                      }}>(0-0)</p>
                     </div>
-                    <div className="flex flex-col items-center flex-1 min-w-0">
-                      <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{
+
+                    <div className="flex flex-col items-center flex-shrink min-w-0" style={{ flexBasis: 110, maxWidth: 110 }}>
+                      <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, marginBottom: 2, opacity: 0 }}>👑</span>
+                      <div className="w-[68px] h-[68px] rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{
                         background: '#0a0a0a',
                         border: '3.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a, 0 0 18px rgba(251,146,60,0.55), inset 0 0 0 2.5px #fb923c',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 20px rgba(6,182,212,0.6), inset 0 0 0 2.5px #06b6d4',
                       }}>
                         {opponent?.avatar ? (
                           <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
@@ -2057,13 +2102,48 @@ export default function Dashboard() {
                           <span className="font-black text-lg text-white">{oppName[0]?.toUpperCase() || 'O'}</span>
                         )}
                       </div>
-                      <p className="text-white text-[10.5px] font-extrabold uppercase truncate max-w-[110px] text-center px-2 py-0.5 rounded-md" style={{
+                      <p className="text-white text-[10px] font-black uppercase truncate w-full text-center px-2 py-1 rounded-lg" style={{
                         background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                        border: '2px solid #0a0a0a',
-                        boxShadow: '0 2px 0 #0a0a0a',
+                        border: '2.5px solid #06b6d4',
+                        boxShadow: '0 2px 0 #0a0a0a, 0 0 8px rgba(6,182,212,0.4)',
                         letterSpacing: '0.06em',
                       }}>{oppName}</p>
+                      <p className="text-white text-[8.5px] font-black uppercase mt-1 px-2 py-0.5 rounded-md inline-flex items-center gap-1" style={{
+                        background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
+                        border: '2px solid #0a0a0a',
+                        boxShadow: '0 2px 0 #0a0a0a',
+                        letterSpacing: '0.14em',
+                      }}>
+                        <span aria-hidden="true" style={{ color: '#7dd3fc', fontSize: 8 }}>◆</span>
+                        Rank: Rookie
+                      </p>
                     </div>
+                  </div>
+
+                  {/* Three colored stat tiles — Win Streak / Bonus XP /
+                      Daily Challenge — cartoon style with thick black
+                      borders + hard shadows + colored backgrounds. */}
+                  <div className="grid grid-cols-3 gap-1.5 px-4 pb-3">
+                    {[
+                      { icon: '🔥', label: 'Win Streak', value: 'On Fire', bg: 'linear-gradient(180deg,#fb923c,#c2410c)', glow: 'rgba(251,146,60,0.5)' },
+                      { icon: '⭐', label: 'Bonus XP', value: '+50 XP', bg: 'linear-gradient(180deg,#facc15,#ca8a04)', glow: 'rgba(250,204,21,0.5)' },
+                      { icon: '🎯', label: 'Daily Goal', value: 'In Progress', bg: 'linear-gradient(180deg,#10b981,#047857)', glow: 'rgba(16,185,129,0.5)' },
+                    ].map((s) => (
+                      <div key={s.label} className="rounded-xl px-1.5 py-1.5 flex flex-col items-center text-center" style={{
+                        background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${s.glow}`,
+                      }}>
+                        <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>{s.icon}</span>
+                        <span className="text-white text-[8px] font-black uppercase mt-1" style={{ letterSpacing: '0.14em', opacity: 0.7 }}>{s.label}</span>
+                        <span className="text-white text-[10px] font-black uppercase mt-0.5 px-1.5 py-0.5 rounded-md w-full truncate" style={{
+                          background: s.bg,
+                          border: '1.5px solid #0a0a0a',
+                          letterSpacing: '0.06em',
+                          textShadow: '0 1px 0 rgba(0,0,0,0.4)',
+                        }}>{s.value}</span>
+                      </div>
+                    ))}
                   </div>
                 </>
               )}
@@ -2220,22 +2300,52 @@ export default function Dashboard() {
                   }
                 }}
                 className="flex-1 rounded-2xl font-black uppercase flex flex-col items-stretch justify-center relative overflow-hidden p-0 text-white"
-                style={{
-                  background: 'linear-gradient(180deg,#3b82f6 0%,#1d4ed8 100%)',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 4px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.5), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
-                  textShadow: '0 1px 0 rgba(0,0,0,0.4)',
-                  letterSpacing: '0.06em',
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
-                }}
+                style={
+                  walkthroughStep === 0
+                    ? {
+                        background: 'linear-gradient(180deg,#fb923c 0%,#ea580c 55%,#c2410c 100%)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 5px 0 #0a0a0a, 0 0 32px rgba(251,146,60,0.65), inset 0 0 0 1.5px rgba(250,204,21,0.75)',
+                        textShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                        letterSpacing: '0.06em',
+                        fontFamily: 'Impact, "Arial Black", system-ui, -apple-system, sans-serif',
+                      }
+                    : {
+                        background: 'linear-gradient(180deg,#3b82f6 0%,#1d4ed8 100%)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 4px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.5), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
+                        textShadow: '0 1px 0 rgba(0,0,0,0.4)',
+                        letterSpacing: '0.06em',
+                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                      }
+                }
               >
-                <span className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-2">
-                  <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: 'linear-gradient(180deg,#0e1b3a,#050a18)', border: '2px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)', color: '#7dd3fc', fontSize: 13 }}>»</span>
-                  <span style={{ fontSize: 14 }}>{ctaLabel}</span>
-                  <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: 'linear-gradient(180deg,#0e1b3a,#050a18)', border: '2px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)', color: '#7dd3fc', fontSize: 13 }}>«</span>
-                </span>
+                {walkthroughStep === 0 ? (
+                  <span className="flex items-center justify-between gap-2 px-3 pt-3 pb-2.5">
+                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'linear-gradient(180deg,#0a0a0a,#1a1a1a)', border: '2.5px solid #facc15', boxShadow: '0 0 12px rgba(250,204,21,0.85), inset 0 0 6px rgba(250,204,21,0.3)', color: '#facc15', fontSize: 15 }}>»</span>
+                    <span style={{ fontSize: 22, fontStyle: 'italic', letterSpacing: '0.05em', WebkitTextStroke: '1px #0a0a0a' }}>Let&apos;s Go!</span>
+                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'linear-gradient(180deg,#0a0a0a,#1a1a1a)', border: '2.5px solid #facc15', boxShadow: '0 0 12px rgba(250,204,21,0.85), inset 0 0 6px rgba(250,204,21,0.3)', color: '#facc15', fontSize: 15 }}>«</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-2">
+                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: 'linear-gradient(180deg,#0e1b3a,#050a18)', border: '2px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)', color: '#7dd3fc', fontSize: 13 }}>»</span>
+                    <span style={{ fontSize: 14 }}>{ctaLabel}</span>
+                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: 'linear-gradient(180deg,#0e1b3a,#050a18)', border: '2px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)', color: '#7dd3fc', fontSize: 13 }}>«</span>
+                  </span>
+                )}
               </button>
             </div>
+            {walkthroughStep === 0 && (
+              <div className="px-5 pb-2 pt-0 flex items-center justify-center gap-1.5">
+                <span aria-hidden="true" style={{ fontSize: 11, color: '#facc15', filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>🔒</span>
+                <span className="text-white text-[10px] font-black uppercase" style={{ letterSpacing: '0.18em', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>
+                  Battle Locked In
+                </span>
+                <span className="text-gray-400 text-[10px] font-semibold normal-case" style={{ letterSpacing: '0.04em' }}>
+                  · Both players are ready
+                </span>
+              </div>
+            )}
             {/* "Don't show this again" preference — persisted in
                 localStorage by closeWalkthrough(). */}
             <label
