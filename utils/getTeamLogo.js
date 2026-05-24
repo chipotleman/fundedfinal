@@ -57,15 +57,29 @@ const MLB = {
   'texas rangers': 'tex', 'toronto blue jays': 'tor', 'washington nationals': 'wsh',
 };
 
+// Keys here cover BOTH the short codes we use internally
+// ("nfl", "nba", …) AND the Odds-API / Goalserve style composite
+// keys that actually come back on game.sport in the wild
+// ("americanfootball_nfl", "basketball_nba", "icehockey_nhl",
+// "baseball_mlb"). Without the composite keys the helper returns
+// null for every real game and we fall back to colored initials.
 const SPORT_MAPS = {
   nba: { map: NBA, league: 'nba' },
   basketball: { map: NBA, league: 'nba' },
+  basketball_nba: { map: NBA, league: 'nba' },
   nfl: { map: NFL, league: 'nfl' },
   football: { map: NFL, league: 'nfl' },
+  americanfootball: { map: NFL, league: 'nfl' },
+  americanfootball_nfl: { map: NFL, league: 'nfl' },
+  amfootball: { map: NFL, league: 'nfl' },
+  amfootball_nfl: { map: NFL, league: 'nfl' },
   nhl: { map: NHL, league: 'nhl' },
   hockey: { map: NHL, league: 'nhl' },
+  icehockey: { map: NHL, league: 'nhl' },
+  icehockey_nhl: { map: NHL, league: 'nhl' },
   mlb: { map: MLB, league: 'mlb' },
   baseball: { map: MLB, league: 'mlb' },
+  baseball_mlb: { map: MLB, league: 'mlb' },
 };
 
 function normalizeName(name) {

@@ -14,17 +14,8 @@ export default function GameDetail() {
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Popular');
-  // `leaving` lets the back button feel instant: on click we
-  // immediately swap the entire heavy page tree for a tiny
-  // spinner, which (a) gives the user instant visual feedback
-  // and (b) unmounts the chart + odds tables + sticky headers
-  // *before* router.back() kicks off, so the browser isn't
-  // doing a giant reconcile + an SSR data round-trip at the
-  // same time.
-  const [leaving, setLeaving] = useState(false);
   // Sync latch so a double-tap on the back button in the same tick
-  // (before React commits the `leaving` state) can't schedule two
-  // navigations.
+  // can't schedule two navigations.
   const leavingRef = useRef(false);
 
   // Prefetch the dashboard so router.back() lands on cached
@@ -40,12 +31,17 @@ export default function GameDetail() {
   const handleBack = () => {
     if (leavingRef.current) return;
     leavingRef.current = true;
-    setLeaving(true);
-    // Defer to the next tick so React commits the lightweight
-    // "leaving" view (unmounting the heavy tree) before we ask
-    // the router to navigate. Without this defer the unmount
-    // and the route change land in the same frame and we lose
-    // the snappiness.
+    // We used to flip a `leaving` state that swapped the entire
+    // page for a spinner here to give "instant" feedback. The
+    // spinner felt worse than the old delay because users saw
+    // the loading pinwheel even though the destination was
+    // already cached by the prefetch effect below — so the page
+    // would briefly flash to a spinner before landing on the
+    // dashboard. The prefetch alone keeps the back snappy, and
+    // letting the current page stay on screen until the router
+    // commits the next route looks much cleaner.
+    // Defer to the next tick so React flushes any in-flight
+    // state before we ask the router to navigate.
     setTimeout(() => {
       leavePage({ router, fallbackHref: '/dashboard' });
     }, 0);
@@ -220,7 +216,7 @@ export default function GameDetail() {
     return isBetInSlip(game, betType, selection);
   };
 
-  if (loading || leaving) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
