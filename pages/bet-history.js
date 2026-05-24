@@ -5,6 +5,7 @@ import PiksBetCard from '../components/PiksBetCard';
 import ShareableBetSlip from '../components/ShareableBetSlip';
 import BattleHistoryTable, { MODE_THEMES, getGameMode } from '../components/BattleHistoryTable';
 import BattleOverviewPopup from '../components/BattleOverviewPopup';
+import { buildBattleHistoryRows } from '../lib/buildBattleHistoryRows';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -247,33 +248,6 @@ export default function BetHistory() {
 
   const { formatOdds } = useUserPreferences();
 
-  // Per-bet status filter (used for standalone bets and "all" view)
-  const matchesBetStatus = (bet) => {
-    if (selectedFilter === 'all') return true;
-    if (selectedFilter === 'won') return bet.status === 'won';
-    return bet.status === selectedFilter;
-  };
-
-  // Battle group is filed by the BATTLE outcome (won/lost/active), not individual bet status
-  const battleMatchesFilter = (battle) => {
-    if (!battle) return false;
-    if (selectedFilter === 'all') return true;
-    if (selectedFilter === 'open') return battle.outcome === 'active';
-    if (selectedFilter === 'won') return battle.outcome === 'won';
-    if (selectedFilter === 'lost') return battle.outcome === 'lost';
-    return false;
-  };
-
-  const sortByDateDesc = (a, b) => {
-    if (selectedFilter !== 'all') {
-      if (a.status === 'open' && b.status !== 'open') return -1;
-      if (a.status !== 'open' && b.status === 'open') return 1;
-    }
-    const dateA = new Date(a.placedAt || a.createdAt || 0);
-    const dateB = new Date(b.placedAt || b.createdAt || 0);
-    return dateB - dateA;
-  };
-
   const totalProfit = allBets.reduce((sum, bet) => sum + bet.profit, 0);
 
   const cashOutBet = async (betId) => {
@@ -496,109 +470,40 @@ export default function BetHistory() {
             };
           };
 
-          // Group bets by battle
-          const allBattleBets = {};
-          const allStandalone = [];
-          for (const bet of allBets) {
-            if (bet.matchupId && battlesMap[bet.matchupId]) {
-              if (!allBattleBets[bet.matchupId]) allBattleBets[bet.matchupId] = [];
-              allBattleBets[bet.matchupId].push(bet);
-            } else {
-              allStandalone.push(bet);
-            }
-          }
-          if (openBattleId && battlesMap[openBattleId] && !allBattleBets[openBattleId]) {
-            allBattleBets[openBattleId] = [];
-          }
-
-          const battleEntries = Object.entries(allBattleBets)
-            .filter(([mid]) => mid === openBattleId || battleMatchesFilter(battlesMap[mid]));
-
-          const me = {
-            username: myProfile?.username || 'You',
-            avatar: myProfile?.avatar || null,
-            equippedFrame: myProfile?.equippedFrame || null,
-          };
-
-          // Build battle rows + enriched bet card maps
-          const battleRowData = battleEntries.map(([mid, bets]) => {
-            const battle = battlesMap[mid];
-            const isPublicFallback = bets.length === 0 && Array.isArray(battle.myBets) && battle.myBets.length > 0;
-            const mineSourced = isPublicFallback ? battle.myBets : bets;
-            const myBetsSorted = [...mineSourced].sort(sortByDateDesc);
-            const oppBetsSorted = [...(battle.opponentBets || [])].sort(sortByDateDesc);
-            const isBattleEnded = battle.status !== 'active' && battle.status !== 'matched';
-
-            const mode = getGameMode(battle);
-            const outcome = battle.outcome || 'active';
-            const result = outcome === 'won' ? 'WON' : outcome === 'lost' ? 'LOST' : outcome === 'tie' ? 'TIE' : 'OPEN';
-            const myScore = myBetsSorted.filter(b => b.status === 'won').length;
-            const oppScore = oppBetsSorted.filter(b => b.status === 'won').length;
-            const startingBalance = parseFloat(battle.startingBalance ?? 0);
-            const winnerPayout = parseFloat(battle.winnerPayout ?? 0);
-            const earnings = result === 'WON'
-              ? Math.max(0, winnerPayout - startingBalance)
-              : result === 'LOST'
-                ? -startingBalance
-                : 0;
-            const dateRaw = myBetsSorted[0]?.placedAt || battle.endsAt || battle.createdAt;
-
-            return {
-              key: `b-${mid}`,
-              matchupId: mid,
-              battle,
-              myBetsSorted,
-              oppBetsSorted,
-              isBattleEnded,
-              mode,
-              modeLabel: MODE_THEMES[mode]?.label || mode,
-              result,
-              myScore,
-              oppScore,
-              pot: battle.potSize || battle.winnerPayout || 0,
-              earnings,
-              dateRaw,
-              me,
-              opponent: battle.opponent || { username: 'Opponent', avatar: null },
-              openable: true,
-            };
+          const rows = buildBattleHistoryRows({
+            bets: allBets,
+            battles: battlesMap,
+            myProfile,
+            selectedFilter,
+            openBattleId,
           });
 
-          // Standalone bet rows
-          const standaloneRowData = allStandalone
-            .filter(matchesBetStatus)
-            .map(bet => {
-              const status = bet.status;
-              const result = status === 'won' ? 'WON' : status === 'lost' ? 'LOST' : status === 'cashed_out' ? 'WON' : 'OPEN';
-              const earnings = status === 'won' || status === 'cashed_out'
-                ? (bet.profit || 0)
-                : status === 'lost'
-                  ? -(bet.stake || 0)
-                  : 0;
-              return {
-                key: `s-${bet.id}`,
-                matchupId: null,
-                bet,
-                mode: 'standalone',
-                modeLabel: 'PIK',
-                result,
-                myScore: status === 'won' || status === 'cashed_out' ? 1 : 0,
-                oppScore: status === 'lost' ? 1 : 0,
-                pot: (bet.stake || 0) + Math.max(0, bet.profit || 0),
-                earnings,
-                dateRaw: bet.placedAt || bet.settledAt,
-                me,
-                opponent: { username: bet.matchup || 'Book', avatar: null },
-                openable: false,
-              };
+          // `onExport` powers the "Export" button: fetches the full
+          // history (respecting filters) so the CSV reflects every page,
+          // not just whatever the table currently has in memory. The
+          // server contract accepts `all=1` (no pagination) plus
+          // optional `from`/`to` date narrowing; status + mode filters
+          // are still applied in-memory once we rebuild rows.
+          const fetchFullHistoryRows = async ({ status, from, to }) => {
+            const qs = new URLSearchParams({ all: '1' });
+            if (from) qs.set('from', from);
+            if (to) qs.set('to', to);
+            const resp = await fetch(`/api/bets/history?${qs.toString()}`, { credentials: 'include' });
+            if (!resp.ok) throw new Error(`history fetch failed (${resp.status})`);
+            const data = await resp.json();
+            const fullBets = Array.isArray(data) ? data : (data.bets || []);
+            const fullBattles = Array.isArray(data) ? {} : (data.battles || {});
+            return buildBattleHistoryRows({
+              bets: fullBets,
+              battles: fullBattles,
+              myProfile,
+              selectedFilter: status || 'all',
             });
-
-          const rows = [...battleRowData, ...standaloneRowData]
-            .sort((a, b) => new Date(b.dateRaw || 0) - new Date(a.dateRaw || 0));
+          };
 
           const renderRowExtras = ({ openBattleId: oid }) => {
             if (!oid) return null;
-            const row = battleRowData.find(r => r.matchupId === oid);
+            const row = rows.find(r => r.matchupId === oid);
             const battle = battlesMap[oid];
             if (!battle) return null;
             const fallbackRow = row || (() => {
@@ -673,6 +578,7 @@ export default function BetHistory() {
               openBattleId={openBattleId}
               onOpenChange={(mid, open) => handleBattleOpenChange(mid, open)}
               renderRowExtras={renderRowExtras}
+              onExport={fetchFullHistoryRows}
             />
           );
         })()}

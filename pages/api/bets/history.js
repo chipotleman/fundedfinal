@@ -18,6 +18,16 @@ export default async function handler(req, res) {
 
     const userId = session.user.id;
 
+    // Optional query params used by the CSV export to fetch the full
+    // filtered history (and to future-proof against server-side
+    // pagination). `all=1` signals "no pagination" — currently a no-op
+    // because this endpoint already returns the full set, but kept as
+    // part of the contract for when row pagination is added. `from` /
+    // `to` narrow by `placedAt` (ISO date, inclusive of the entire
+    // `to` day).
+    const fromParam = typeof req.query.from === 'string' && req.query.from ? req.query.from : null;
+    const toParam = typeof req.query.to === 'string' && req.query.to ? req.query.to : null;
+
     // Check if this user is a fake opponent
     const [fakeOpponent] = await db
       .select()
@@ -279,7 +289,26 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ bets: formattedBets, battles });
+    let responseBets = formattedBets;
+    let responseBattles = battles;
+    if (fromParam || toParam) {
+      const fromTs = fromParam ? new Date(fromParam).getTime() : -Infinity;
+      const toTs = toParam ? new Date(toParam).getTime() + 24 * 60 * 60 * 1000 - 1 : Infinity;
+      if (Number.isFinite(fromTs) || Number.isFinite(toTs)) {
+        responseBets = formattedBets.filter(b => {
+          if (!b.placedAt) return false;
+          const t = new Date(b.placedAt).getTime();
+          if (Number.isNaN(t)) return false;
+          return t >= fromTs && t <= toTs;
+        });
+        const keepMatchups = new Set(responseBets.map(b => b.matchupId).filter(Boolean));
+        responseBattles = Object.fromEntries(
+          Object.entries(battles).filter(([mid]) => keepMatchups.has(mid))
+        );
+      }
+    }
+
+    return res.status(200).json({ bets: responseBets, battles: responseBattles });
   } catch (error) {
     console.error('Error fetching bet history:', error);
     return res.status(500).json({ error: 'Failed to fetch bet history' });

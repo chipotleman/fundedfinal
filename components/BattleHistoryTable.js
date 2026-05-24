@@ -612,6 +612,7 @@ export default function BattleHistoryTable({
   openBattleId,
   onOpenChange,
   renderRowExtras,
+  onExport,
 }) {
   const [page, setPage] = useState(1);
   const [modeFilter, setModeFilter] = useState('all');
@@ -627,6 +628,7 @@ export default function BattleHistoryTable({
     } catch (_) {}
     return { column: null, direction: null };
   });
+  const [exporting, setExporting] = useState(false);
 
   // Persist sort for the session
   useEffect(() => {
@@ -656,19 +658,21 @@ export default function BattleHistoryTable({
     { value: 'standalone', label: 'Standalone' },
   ]), []);
 
+  const applyTableFilters = (rowsArr) => rowsArr.filter(r => {
+    if (modeFilter !== 'all' && r.mode !== modeFilter) return false;
+    if (dateRange.from) {
+      const fromTs = new Date(dateRange.from).getTime();
+      if (!r.dateRaw || new Date(r.dateRaw).getTime() < fromTs) return false;
+    }
+    if (dateRange.to) {
+      const toTs = new Date(dateRange.to).getTime() + 24 * 60 * 60 * 1000 - 1;
+      if (!r.dateRaw || new Date(r.dateRaw).getTime() > toTs) return false;
+    }
+    return true;
+  });
+
   const filtered = useMemo(() => {
-    const base = rows.filter(r => {
-      if (modeFilter !== 'all' && r.mode !== modeFilter) return false;
-      if (dateRange.from) {
-        const fromTs = new Date(dateRange.from).getTime();
-        if (!r.dateRaw || new Date(r.dateRaw).getTime() < fromTs) return false;
-      }
-      if (dateRange.to) {
-        const toTs = new Date(dateRange.to).getTime() + 24 * 60 * 60 * 1000 - 1;
-        if (!r.dateRaw || new Date(r.dateRaw).getTime() > toTs) return false;
-      }
-      return true;
-    });
+    const base = applyTableFilters(rows);
 
     if (!sort.column || !sort.direction) return base;
 
@@ -731,10 +735,30 @@ export default function BattleHistoryTable({
   const safePage = Math.min(page, totalPages);
   const pageRows = filtered.slice((safePage - 1) * ROWS_PER_PAGE, safePage * ROWS_PER_PAGE);
 
-  const handleExport = () => {
-    const csv = buildCsv(filtered, myProfile?.username);
-    const stamp = new Date().toISOString().slice(0, 10);
-    downloadCsv(csv, `piks-battle-history-${stamp}.csv`);
+  const handleExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      let exportRows = filtered;
+      if (typeof onExport === 'function') {
+        const fullRows = await onExport({
+          status: selectedFilter,
+          mode: modeFilter,
+          from: dateRange.from,
+          to: dateRange.to,
+        });
+        if (Array.isArray(fullRows)) {
+          exportRows = applyTableFilters(fullRows);
+        }
+      }
+      const csv = buildCsv(exportRows, myProfile?.username);
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadCsv(csv, `piks-battle-history-${stamp}.csv`);
+    } catch (err) {
+      console.error('Failed to export battle history:', err);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const filters = ['all', 'open', 'won', 'lost'];
@@ -773,7 +797,9 @@ export default function BattleHistoryTable({
           <button
             type="button"
             onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-colors"
+            disabled={exporting}
+            aria-busy={exporting}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-colors disabled:opacity-70 disabled:cursor-wait"
             style={{
               background: '#111',
               border: '1px solid rgba(75,85,99,0.5)',
@@ -782,10 +808,17 @@ export default function BattleHistoryTable({
               letterSpacing: '0.08em',
             }}
           >
-            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-            </svg>
-            <span className="uppercase">Export</span>
+            {exporting ? (
+              <svg className="w-3.5 h-3.5 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+              </svg>
+            )}
+            <span className="uppercase">{exporting ? 'Preparing export…' : 'Export'}</span>
           </button>
         </div>
       </div>
