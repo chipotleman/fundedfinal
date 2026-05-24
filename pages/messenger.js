@@ -7,7 +7,6 @@ import { useNotifications } from '../contexts/NotificationsContext';
 import MessagesPanel from '../components/messages/MessagesPanel';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
 import { leavePage } from '../utils/leavePage';
-import { installTopNavClickTrapWatchdog } from '../utils/topNavClickTrapWatchdog';
 
 export default function MessengerPage() {
   const router = useRouter();
@@ -57,14 +56,10 @@ export default function MessengerPage() {
     setBattleFriend(null);
   }, []);
 
-  // Defensive: install the shared top-nav click-trap watchdog. It clears
-  // any leftover body scroll-lock a crashed modal left behind AND
-  // detects + neutralizes orphan full-viewport `position:fixed` overlays
-  // that would otherwise silently swallow taps on the centered nav links
-  // (Battle / Social / Leaderboard) while leaving the logo and right-side
-  // icons clickable. See utils/topNavClickTrapWatchdog.js for the
-  // full root-cause writeup and detection rules.
-  useEffect(() => installTopNavClickTrapWatchdog('messenger'), []);
+  // The shared top-nav click-trap watchdog is installed globally in
+  // pages/_app.js (GlobalClickTrapWatchdog) for every non-chromeless
+  // route, so we no longer install a /messenger-specific copy here.
+  // See utils/topNavClickTrapWatchdog.js for the detection rules.
 
   // Pre-select a conversation from ?chat=<id>.
   useEffect(() => {

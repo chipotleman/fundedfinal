@@ -10,7 +10,6 @@ import { formatMoney } from '../utils/formatMoney';
 import { NOTIF_TYPES, TypeChip, getResultStyle } from '../components/notifications/notificationTypeStyles';
 import FriendRequestCard from '../components/notifications/FriendRequestCard';
 import { useBetaMode } from '../contexts/SiteConfigContext';
-import { installTopNavClickTrapWatchdog } from '../utils/topNavClickTrapWatchdog';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -675,14 +674,10 @@ export default function NotificationsPage() {
     social: ctx.socialActivity?.length || 0,
   };
 
-  // Defensive: install the shared top-nav click-trap watchdog. Clears any
-  // leftover body scroll-lock a crashed modal left behind AND detects +
-  // neutralizes orphan full-viewport `position:fixed` overlays that would
-  // otherwise silently swallow taps on the centered nav links
-  // (Battle / Social / Leaderboard) while leaving the logo and right-side
-  // icons clickable. See utils/topNavClickTrapWatchdog.js for the full
-  // root-cause writeup and detection rules.
-  useEffect(() => installTopNavClickTrapWatchdog('notifications'), []);
+  // The shared top-nav click-trap watchdog is installed globally in
+  // pages/_app.js (GlobalClickTrapWatchdog) for every non-chromeless
+  // route, so we no longer install a /notifications-specific copy here.
+  // See utils/topNavClickTrapWatchdog.js for the detection rules.
 
   // ?chat=<id> deep link → forward to /messenger.
   useEffect(() => {

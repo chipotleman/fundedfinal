@@ -31,6 +31,7 @@ import PublicBattlePreview from '../components/PublicBattlePreview';
 import BetSlip from '../components/BetSlip';
 import { useEventTracking } from '../hooks/useEventTracking';
 import { releaseBodyScrollLock } from '../hooks/useGlobalScrollLockRecovery';
+import { installTopNavClickTrapWatchdog } from '../utils/topNavClickTrapWatchdog';
 import { useRouter } from 'next/router';
 import App from 'next/app';
 import {
@@ -56,6 +57,29 @@ function AnalyticsTracker() {
     };
   }, [router, trackPageView]);
 
+  return null;
+}
+
+// Global top-nav click-trap watchdog. Originally installed only on
+// /messenger and /notifications because that's where the regression
+// surfaced first, but the underlying class of bug — an orphan
+// full-viewport overlay or stale body scroll-lock left behind by a
+// crashed modal / dropdown teardown — can happen on any route that
+// mounts modals (dashboard, battle, education marketplace, etc.).
+// Installed once per route here so a recurrence on a new page is
+// auto-recovered with the same single-warn-per-page-load behavior.
+// Suppressed on chrome-less routes (admin/debug/checkout/replay) that
+// don't mount the top navbar.
+function GlobalClickTrapWatchdog() {
+  const router = useRouter();
+  const pathname = router?.pathname || '';
+  useEffect(() => {
+    if (isChromelessRoute(pathname)) return undefined;
+    // Tag the warning with the current route so logs surface which page
+    // hit the regression. Falls back to "global" for an empty pathname.
+    const tag = pathname ? `global:${pathname}` : 'global';
+    return installTopNavClickTrapWatchdog(tag);
+  }, [pathname]);
   return null;
 }
 
@@ -655,6 +679,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
                 <UserPreviewProvider>
                 <ForfeitNoticeOverlay />
                 <AnalyticsTracker />
+                <GlobalClickTrapWatchdog />
                 <PresenceHeartbeat isLoggedIn={isLoggedIn} />
                 <AutoGrader />
                 <GlobalToastContainer />

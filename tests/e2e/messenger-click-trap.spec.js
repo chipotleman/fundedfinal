@@ -15,6 +15,7 @@
 const { test, expect } = require('@playwright/test');
 const {
   setupStubs,
+  setupSmokeStubs,
   getBodyLockStyles,
   expectBodyUnlocked,
   expectNoFullscreenOverlay,
@@ -222,6 +223,61 @@ for (const path of TARGET_PAGES) {
     const bell = page.getByRole('button', { name: 'Notifications' });
     await bell.click();
     await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible();
+  });
+}
+
+// Coverage extension for task #619: the click-trap watchdog now installs
+// on every non-chromeless route via pages/_app.js, not just /messenger
+// and /notifications. /dashboard is the highest-traffic landing page
+// (labeled "Battle" in the nav) and is exactly the kind of modal-heavy
+// route where the same orphan-overlay bug could surface next. We run
+// the dashboard through both watchdog vectors here so a regression on
+// that page is caught the same way the messenger/notifications ones
+// are.
+for (const path of ['/dashboard']) {
+  test(`watchdog (global install): orphan fullscreen overlay is auto-neutralized on ${path}`, async ({ page }) => {
+    await setupSmokeStubs(page);
+    await page.goto(path);
+
+    // Wait for the shared TopNavbar to mount so we know _app.js has
+    // installed the global watchdog before we inject the offender.
+    await expect(page.getByAltText('Piks').first()).toBeVisible();
+
+    await page.evaluate(() => {
+      const d = document.createElement('div');
+      d.id = 'e2e-orphan-overlay';
+      d.style.cssText =
+        'position:fixed;inset:0;background:transparent;z-index:99999;';
+      document.body.appendChild(d);
+    });
+
+    await page.waitForTimeout(3500);
+    await expectNoFullscreenOverlay(page);
+
+    const stillBlocks = await page.evaluate(() => {
+      const el = document.getElementById('e2e-orphan-overlay');
+      if (!el) return false;
+      return window.getComputedStyle(el).pointerEvents !== 'none';
+    });
+    expect(stillBlocks, 'orphan overlay must be removed or set to pointer-events:none').toBe(false);
+  });
+
+  test(`watchdog (global install): stale body scroll-lock is auto-released on ${path}`, async ({ page }) => {
+    await setupSmokeStubs(page);
+    await page.goto(path);
+    await expect(page.getByAltText('Piks').first()).toBeVisible();
+
+    await page.evaluate(() => {
+      const b = document.body.style;
+      b.position = 'fixed';
+      b.overflow = 'hidden';
+      b.top = '-200px';
+      b.width = '100%';
+    });
+
+    await page.waitForTimeout(3500);
+    await expectBodyUnlocked(page);
+    await expectNoFullscreenOverlay(page);
   });
 }
 
