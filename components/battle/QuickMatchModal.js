@@ -179,23 +179,44 @@ function MatchFoundContent({
 
   return (
     <div className="relative z-10">
-      {/* Header — lightning bolts + MATCH FOUND! Solid color, no
-          gradient/stroke/glow — readable and clean. */}
-      <div className="pt-5 pb-1 text-center relative">
-        <div className="inline-flex items-center justify-center gap-3">
-          <Bolt size={28} />
+      {/* Centered hero title — same brushed-silver gradient + gold
+          lightning bolts + cyan accent-line subtitle as the config
+          and searching steps. Keeps the whole popup feeling like one
+          cohesive flow instead of three different screens. */}
+      <div className="px-5 pt-7 pb-1 text-center relative">
+        <div className="flex items-center justify-center gap-2.5">
+          <span aria-hidden="true" style={{ fontSize: 26, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
           <h3
-            className="text-3xl md:text-4xl font-black inline-block"
+            className="font-black uppercase text-center"
             style={{
-              color: '#facc15',
-              letterSpacing: '0.04em',
+              fontSize: 'clamp(34px, 9vw, 44px)',
+              lineHeight: 0.92,
+              letterSpacing: '0.015em',
+              fontStyle: 'italic',
+              WebkitTextStroke: '1.3px #0a0a0a',
+              textShadow: '0 3px 0 #0a0a0a, 0 0 32px rgba(6,182,212,0.75), 0 0 16px rgba(255,255,255,0.45)',
+              background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              whiteSpace: 'nowrap',
+              margin: 0,
               animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.05s both',
               fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           >
-            MATCH FOUND!
+            Match Found!
           </h3>
-          <Bolt size={28} />
+          <span aria-hidden="true" style={{ fontSize: 26, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+          <p
+            className="font-black uppercase whitespace-nowrap text-center"
+            style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}
+          >
+            Opponent Locked In
+          </p>
+          <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
         </div>
       </div>
 
