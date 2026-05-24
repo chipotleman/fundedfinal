@@ -1334,9 +1334,7 @@ export default function Dashboard() {
                 // gray border. We use box-shadow for the ring so the
                 // pill width doesn't shift when active vs. inactive.
                 borderColor: isActive ? '#3b82f6' : '#1f2937',
-                boxShadow: isActive
-                  ? '0 0 0 1.5px #3b82f6, 0 0 14px rgba(59,130,246,0.45)'
-                  : 'none',
+                boxShadow: 'none',
                 transition: 'box-shadow 140ms ease-out, border-color 140ms ease-out',
               }}
             >
