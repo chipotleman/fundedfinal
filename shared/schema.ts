@@ -977,6 +977,24 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
 
+// Per-user mute list for push notifications coming from specific friends.
+// Independent from the global per-category `cat*` toggles on
+// push_subscriptions: this lets a user keep `catSocial` on globally while
+// silencing one noisy friend's shares. `muterId` is the user who muted;
+// `mutedId` is the friend whose pushes should be suppressed.
+export const friendMutes = pgTable("friend_mutes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  muterId: varchar("muter_id").notNull(),
+  mutedId: varchar("muted_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  muterIdx: index("friend_mutes_muter_id_idx").on(table.muterId),
+  uniquePair: uniqueIndex("friend_mutes_unique_idx").on(table.muterId, table.mutedId),
+}));
+
+export type FriendMute = typeof friendMutes.$inferSelect;
+export type InsertFriendMute = typeof friendMutes.$inferInsert;
+
 // Generic key/value app-wide settings (used for things like promo slot config).
 export const appSettings = pgTable("app_settings", {
   key: varchar("key", { length: 64 }).primaryKey(),

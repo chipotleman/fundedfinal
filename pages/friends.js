@@ -89,6 +89,22 @@ export default function FriendsPage() {
     }
   };
 
+  const handleToggleMute = async (friend) => {
+    const next = !friend.pushMuted;
+    // Optimistic: flip the local flag immediately, revert on failure.
+    setFriends((prev) => prev.map((f) => (f.id === friend.id ? { ...f, pushMuted: next } : f)));
+    try {
+      const res = await fetch(`/api/friends/${friend.id}/mute`, {
+        method: next ? 'POST' : 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch (err) {
+      console.error('Error toggling mute:', err);
+      setFriends((prev) => prev.map((f) => (f.id === friend.id ? { ...f, pushMuted: !next } : f)));
+    }
+  };
+
   const handleWithdrawRequest = async (requestId) => {
     try {
       const res = await fetch(`/api/friends/${requestId}`, {
@@ -262,6 +278,19 @@ export default function FriendsPage() {
                             className="hidden sm:inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-blue-400 hover:bg-blue-500/15"
                           >
                             Message
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleToggleMute(friend); }}
+                            className={`p-2 rounded-lg ${friend.pushMuted ? 'text-orange-400 hover:bg-orange-500/15' : 'text-gray-400 hover:bg-white/10'}`}
+                            title={friend.pushMuted ? 'Unmute notifications' : 'Mute notifications'}
+                            aria-label={friend.pushMuted ? 'Unmute notifications' : 'Mute notifications'}
+                            aria-pressed={friend.pushMuted}
+                          >
+                            {friend.pushMuted ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l4-4m0 4l-4-4" /></svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                            )}
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); goToProfile(friend); }}

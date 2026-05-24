@@ -237,6 +237,7 @@ export default async function handler(req, res) {
 
       sendPushToUsers(validRecipients, {
         category: 'social',
+        senderId: userId,
         title: `${senderName} shared ${itemLabel} with you`,
         body,
         icon: senderAvatar || undefined,

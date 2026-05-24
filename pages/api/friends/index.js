@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { friendships, profiles, users } from '../../../shared/schema';
+import { friendships, friendMutes, profiles, users } from '../../../shared/schema';
 import { eq, or, and, inArray } from 'drizzle-orm';
 const { publishBattleEvent } = require('../../../lib/battle-events');
 
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ friends: [] });
       }
 
-      const [friendProfiles, friendUsers] = await Promise.all([
+      const [friendProfiles, friendUsers, muteRows] = await Promise.all([
         db
           .select({
             id: profiles.id,
@@ -53,7 +53,12 @@ export default async function handler(req, res) {
           .select({ id: users.id, email: users.email, image: users.image })
           .from(users)
           .where(inArray(users.id, friendIds)),
+        db
+          .select({ mutedId: friendMutes.mutedId })
+          .from(friendMutes)
+          .where(and(eq(friendMutes.muterId, userId), inArray(friendMutes.mutedId, friendIds))),
       ]);
+      const mutedSet = new Set(muteRows.map((m) => m.mutedId));
 
       const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
       const nowMs = Date.now();
@@ -73,6 +78,7 @@ export default async function handler(req, res) {
           status: profile?.status || 'inactive',
           lastSeenAt: lastSeenAt ? lastSeenAt.toISOString() : null,
           isOnline,
+          pushMuted: mutedSet.has(fid),
         };
       });
 
