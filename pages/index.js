@@ -1953,9 +1953,12 @@ export default function Dashboard() {
             <div key={walkthroughStep} className="flex-1 overflow-y-auto min-h-0" style={{ animation: 'wtFadeIn 0.3s ease-out' }}>
               {walkthroughStep === 0 && (
                 <>
-                  {/* Cartoon title with lightning bolts */}
-                  <div className="pt-3 pb-2 text-center">
-                    <div className="inline-flex items-center justify-center gap-1.5 mb-2 px-3 py-1 rounded-full" style={{
+                  {/* Centered hero title — same brushed-silver gradient
+                      + gold lightning bolts + cyan accent-line subtitle
+                      as the QuickMatchModal config/searching/found steps.
+                      Keeps the popup feeling like one cohesive flow. */}
+                  <div className="px-5 pt-5 pb-2 text-center relative">
+                    <div className="inline-flex items-center justify-center gap-1.5 mb-3 px-3 py-1 rounded-full" style={{
                       background: 'linear-gradient(180deg,#10b981,#047857)',
                       border: '2.5px solid #0a0a0a',
                       boxShadow: '0 2px 0 #0a0a0a',
@@ -1963,19 +1966,37 @@ export default function Dashboard() {
                       <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                       <span className="text-white text-[10px] font-extrabold uppercase tracking-[0.18em]">Battle Started</span>
                     </div>
-                    <div className="inline-flex items-center justify-center gap-2.5">
-                      <Bolt size={26} delay={0} />
-                      <h2 className="text-2xl md:text-3xl font-black inline-block" style={{
-                        color: '#facc15',
-                        letterSpacing: '0.04em',
-                        animation: 'wtTitleBounce 0.55s cubic-bezier(0.34,1.56,0.64,1) both',
-                        fontFamily: 'system-ui, -apple-system, sans-serif',
-                      }}>
-                        YOU&apos;RE MATCHED!
+                    <div className="flex items-center justify-center gap-2.5">
+                      <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                      <h2
+                        className="font-black uppercase text-center"
+                        style={{
+                          fontSize: 'clamp(30px, 8.5vw, 42px)',
+                          lineHeight: 0.92,
+                          letterSpacing: '0.015em',
+                          fontStyle: 'italic',
+                          WebkitTextStroke: '1.3px #0a0a0a',
+                          textShadow: '0 3px 0 #0a0a0a, 0 0 30px rgba(6,182,212,0.75), 0 0 16px rgba(255,255,255,0.45)',
+                          background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          whiteSpace: 'nowrap',
+                          margin: 0,
+                          animation: 'wtTitleBounce 0.55s cubic-bezier(0.34,1.56,0.64,1) both',
+                          fontFamily: 'system-ui, -apple-system, sans-serif',
+                        }}
+                      >
+                        You&apos;re Matched!
                       </h2>
-                      <Bolt size={26} delay={0.2} />
+                      <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                     </div>
-                    <p className="text-gray-400 text-xs font-semibold mt-2">You&apos;ve been paired for a 1v1 battle.</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                      <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}>
+                        Paired For 1v1 Battle
+                      </p>
+                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                    </div>
                   </div>
 
                   {/* Mode / Pot pill — single line, blue-bordered, trophy + coins */}
