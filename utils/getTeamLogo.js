@@ -268,15 +268,41 @@ const NCAAF = pairs([
   ['james madison', 256], ['james madison dukes', 256],
 ]);
 
-// Euroleague basketball — ESPN doesn't host these and direct
-// wikimedia URLs require the exact upload path (which we can't
-// guess reliably). Logos for these teams are resolved at runtime
-// via /api/team-logo (Wikipedia REST page-summary lookup) — see
-// components/TeamLogo.js. We keep this map as a placeholder so
-// the SPORT_MAPS entry for `basketball_euroleague` stays valid;
-// any explicit overrides we ever curate go in here.
-const EUROLEAGUE_PLACEHOLDER = {
-  // (intentionally empty — overrides only)
+// Euroleague basketball — these URLs were captured directly from
+// Wikipedia's REST page-summary endpoint (the same endpoint our
+// /api/team-logo resolver uses) and verified loadable. Having them
+// hardcoded means the major Euroleague clubs render their real
+// logo on first paint with zero network round-trip. Anything not
+// in this map still falls through to the dynamic resolver in
+// components/TeamLogo.js.
+const EUROLEAGUE = {
+  'anadolu efes': 'https://upload.wikimedia.org/wikipedia/en/thumb/7/74/Anadolu_Efes_SK_logo.svg/330px-Anadolu_Efes_SK_logo.svg.png',
+  'real madrid': 'https://upload.wikimedia.org/wikipedia/en/b/be/Real_Madrid_Baloncesto.png',
+  'real madrid baloncesto': 'https://upload.wikimedia.org/wikipedia/en/b/be/Real_Madrid_Baloncesto.png',
+  'fc barcelona': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/330px-FC_Barcelona_%28crest%29.svg.png',
+  'barcelona': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/330px-FC_Barcelona_%28crest%29.svg.png',
+  'fc barcelona basquet': 'https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/330px-FC_Barcelona_%28crest%29.svg.png',
+  'olympiacos': 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7f/Olympiacos_BC_logo.svg/330px-Olympiacos_BC_logo.svg.png',
+  'olympiakos': 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7f/Olympiacos_BC_logo.svg/330px-Olympiacos_BC_logo.svg.png',
+  'olympiacos bc': 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7f/Olympiacos_BC_logo.svg/330px-Olympiacos_BC_logo.svg.png',
+  'panathinaikos': 'https://upload.wikimedia.org/wikipedia/en/thumb/1/18/Panathinaikos_BC_logo.svg/330px-Panathinaikos_BC_logo.svg.png',
+  'panathinaikos aktor': 'https://upload.wikimedia.org/wikipedia/en/thumb/1/18/Panathinaikos_BC_logo.svg/330px-Panathinaikos_BC_logo.svg.png',
+  'panathinaikos bc': 'https://upload.wikimedia.org/wikipedia/en/thumb/1/18/Panathinaikos_BC_logo.svg/330px-Panathinaikos_BC_logo.svg.png',
+  'fenerbahce': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0b/Fenerbah%C3%A7e_Men%27s_Basketball_logo.svg/330px-Fenerbah%C3%A7e_Men%27s_Basketball_logo.svg.png',
+  'fenerbahçe': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0b/Fenerbah%C3%A7e_Men%27s_Basketball_logo.svg/330px-Fenerbah%C3%A7e_Men%27s_Basketball_logo.svg.png',
+  'fenerbahce beko': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0b/Fenerbah%C3%A7e_Men%27s_Basketball_logo.svg/330px-Fenerbah%C3%A7e_Men%27s_Basketball_logo.svg.png',
+  'maccabi tel aviv': 'https://upload.wikimedia.org/wikipedia/en/thumb/6/6b/Maccabi_Tel_Aviv_BC_logo.svg/330px-Maccabi_Tel_Aviv_BC_logo.svg.png',
+  'maccabi playtika tel aviv': 'https://upload.wikimedia.org/wikipedia/en/thumb/6/6b/Maccabi_Tel_Aviv_BC_logo.svg/330px-Maccabi_Tel_Aviv_BC_logo.svg.png',
+  'zalgiris': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/BC_%C5%BDalgiris_logo.svg/330px-BC_%C5%BDalgiris_logo.svg.png',
+  'zalgiris kaunas': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/BC_%C5%BDalgiris_logo.svg/330px-BC_%C5%BDalgiris_logo.svg.png',
+  'žalgiris': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/BC_%C5%BDalgiris_logo.svg/330px-BC_%C5%BDalgiris_logo.svg.png',
+  'žalgiris kaunas': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/BC_%C5%BDalgiris_logo.svg/330px-BC_%C5%BDalgiris_logo.svg.png',
+  'bayern munich': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Logo_FC_Bayern_M%C3%BCnchen_Basketball_ab_2022.png/330px-Logo_FC_Bayern_M%C3%BCnchen_Basketball_ab_2022.png',
+  'fc bayern munich': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Logo_FC_Bayern_M%C3%BCnchen_Basketball_ab_2022.png/330px-Logo_FC_Bayern_M%C3%BCnchen_Basketball_ab_2022.png',
+  'bayern munich basketball': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Logo_FC_Bayern_M%C3%BCnchen_Basketball_ab_2022.png/330px-Logo_FC_Bayern_M%C3%BCnchen_Basketball_ab_2022.png',
+  'baskonia': 'https://upload.wikimedia.org/wikipedia/en/6/6a/Saski_Baskonia.png',
+  'baskonia vitoria-gasteiz': 'https://upload.wikimedia.org/wikipedia/en/6/6a/Saski_Baskonia.png',
+  'saski baskonia': 'https://upload.wikimedia.org/wikipedia/en/6/6a/Saski_Baskonia.png',
 };
 const SOCCER = pairs([
   // Premier League
@@ -443,11 +469,11 @@ function flagBuilder(code) {
   return `${FLAG_BASE}/${code}.png`;
 }
 
-// Euroleague logos live on wikimedia commons. The `slug` is already a
-// full path fragment (e.g. "en/thumb/...png") so we just prepend the
-// CDN host.
-function wikiBuilder(slug) {
-  return `https://upload.wikimedia.org/wikipedia/${slug}`;
+// Euroleague map values are already fully-qualified wikimedia URLs
+// (captured from Wikipedia's REST page-summary endpoint and verified
+// loadable), so the "builder" just passes them through unchanged.
+function passthroughBuilder(url) {
+  return url;
 }
 
 // Keys here cover BOTH the short codes we use internally
@@ -486,15 +512,13 @@ const SPORT_MAPS = {
   // Int'l Hockey (Goalserve "icehockey_intl") — country flags.
   icehockey_intl: { map: INTL_HOCKEY, buildUrl: flagBuilder },
   intl_hockey: { map: INTL_HOCKEY, buildUrl: flagBuilder },
-  // Euroleague basketball — runtime-resolved via /api/team-logo.
-  // The placeholder map keeps the sport recognized so resolveSportEntry
-  // returns a valid entry; getTeamLogo will return null (no hardcoded
-  // override hit), and TeamLogo's lazy resolver will fetch the real
-  // logo from Wikipedia.
-  basketball_euroleague: { map: EUROLEAGUE_PLACEHOLDER, buildUrl: wikiBuilder },
-  euroleague: { map: EUROLEAGUE_PLACEHOLDER, buildUrl: wikiBuilder },
-  euro_basketball: { map: EUROLEAGUE_PLACEHOLDER, buildUrl: wikiBuilder },
-  'euro basketball': { map: EUROLEAGUE_PLACEHOLDER, buildUrl: wikiBuilder },
+  // Euroleague basketball — hardcoded URLs for the major clubs so
+  // they render instantly; anything not in EUROLEAGUE falls through
+  // to the dynamic /api/team-logo resolver via TeamLogo.
+  basketball_euroleague: { map: EUROLEAGUE, buildUrl: passthroughBuilder },
+  euroleague: { map: EUROLEAGUE, buildUrl: passthroughBuilder },
+  euro_basketball: { map: EUROLEAGUE, buildUrl: passthroughBuilder },
+  'euro basketball': { map: EUROLEAGUE, buildUrl: passthroughBuilder },
 };
 
 // Friendly league names (case-insensitive) that show up as `game.sportName`

@@ -39,9 +39,13 @@ function cacheSet(key, value) {
 const ACCEPTED_LOGO_HOST = 'upload.wikimedia.org';
 
 const SPORT_TITLE_HINTS = {
-  basketball_euroleague: ['{name}', '{name} B.C.', 'BC {name}', '{name} (basketball)', '{name} S.K.', '{name} Basketball', 'KK {name}'],
-  euroleague: ['{name}', '{name} B.C.', 'BC {name}', '{name} (basketball)'],
-  basketball: ['{name}', '{name} B.C.', '{name} (basketball)', 'BC {name}'],
+  // Basketball-specific titles come first so we don't accidentally
+  // resolve the multi-sport parent club (e.g. "Olympiacos" alone
+  // returns the football crest, but "Olympiacos B.C." returns the
+  // basketball logo).
+  basketball_euroleague: ['{name} B.C.', 'BC {name}', '{name} (basketball)', "{name} Men's Basketball", '{name} Basketball', 'KK {name}', '{name}'],
+  euroleague: ['{name} B.C.', 'BC {name}', '{name} (basketball)', '{name}'],
+  basketball: ['{name} B.C.', '{name} (basketball)', 'BC {name}', '{name}'],
   icehockey_intl: ['{name} national ice hockey team', '{name} men\'s national ice hockey team', '{name}', '{name} (ice hockey)', 'HC {name}', '{name} HC'],
   hockey: ['{name} national ice hockey team', '{name}', '{name} (ice hockey)', 'HC {name}', '{name} HC'],
   soccer: ['{name} F.C.', 'FC {name}', '{name}', '{name} (football club)', '{name} football club'],
