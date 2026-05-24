@@ -1917,22 +1917,59 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     </div>
                   )}
                   {selectedMode && (
-                    <div
+                    <p
                       aria-live="polite"
-                      className="mt-2 flex items-start gap-2 rounded-2xl px-3 py-2.5"
-                      style={{
-                        background: `linear-gradient(180deg, ${selectedMode.color}1f, ${selectedMode.color}0a)`,
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: `0 4px 0 #0a0a0a, 0 0 14px ${selectedMode.color}40`,
-                      }}
+                      className="mt-3 text-center text-[10.5px] leading-snug"
+                      style={{ color: '#94a3b8', letterSpacing: '0.04em' }}
                     >
-                      <span className="text-sm leading-none mt-0.5" aria-hidden="true">{selectedMode.icon}</span>
-                      <p className="text-[11px] leading-snug" style={{ color: '#9ca3af' }}>
-                        <span className="font-extrabold uppercase tracking-wider" style={{ color: '#fff' }}>{selectedMode.label}:</span>{' '}
-                        {selectedMode.description}
-                      </p>
-                    </div>
+                      <span className="font-black uppercase" style={{ color: selectedMode.color, letterSpacing: '0.16em', textShadow: `0 0 8px ${selectedMode.color}66` }}>
+                        {selectedMode.label}
+                      </span>
+                      <span className="mx-1.5 text-gray-600">·</span>
+                      <span style={{ color: '#cbd5e1' }}>{selectedMode.description}</span>
+                    </p>
                   )}
+                  {/* Gamification stat strip — Best Streak / Daily
+                      Jackpot / Next Reward. Matches the marketing-style
+                      mockup. The values are cosmetic for the intro
+                      popup; the real per-user streak lives on the
+                      profile page. */}
+                  <div className="mt-3 grid grid-cols-3 gap-1.5">
+                    {[
+                      { icon: '🏆', label: 'Best Streak', value: '12 Wins', color: '#3b82f6', glow: 'rgba(59,130,246,0.5)' },
+                      { icon: '🪙', label: 'Daily Jackpot', value: '250,000', color: '#facc15', glow: 'rgba(250,204,21,0.55)', highlight: true },
+                      { icon: '🎁', label: 'Next Reward', value: '3 Wins Away', color: '#10b981', glow: 'rgba(16,185,129,0.5)' },
+                    ].map((s) => (
+                      <div
+                        key={s.label}
+                        className="rounded-xl px-1.5 py-1.5 flex flex-col items-center text-center"
+                        style={{
+                          background: s.highlight
+                            ? 'linear-gradient(180deg,#1a1505,#0a0e1c)'
+                            : 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                          border: `2.5px solid ${s.color}`,
+                          boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${s.glow}`,
+                        }}
+                      >
+                        <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1, filter: `drop-shadow(0 0 6px ${s.glow}) drop-shadow(0 1px 0 #0a0a0a)` }}>{s.icon}</span>
+                        <span className="text-white text-[8px] font-black uppercase mt-1" style={{ letterSpacing: '0.14em', opacity: 0.7 }}>{s.label}</span>
+                        <span
+                          className="text-[10px] font-black uppercase mt-0.5 px-1.5 py-0.5 rounded-md w-full truncate"
+                          style={{
+                            color: s.highlight ? '#0a0a0a' : '#fff',
+                            background: s.highlight
+                              ? 'linear-gradient(180deg,#fde047,#facc15)'
+                              : `linear-gradient(180deg,${s.color},${s.color}cc)`,
+                            border: '1.5px solid #0a0a0a',
+                            letterSpacing: '0.06em',
+                            textShadow: s.highlight ? 'none' : '0 1px 0 rgba(0,0,0,0.4)',
+                          }}
+                        >
+                          {s.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <button
