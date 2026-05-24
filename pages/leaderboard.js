@@ -123,7 +123,7 @@ const Leaderboard = () => {
   const { selectedProfile, showProfileModal, setShowProfileModal, openProfile } = useUserProfiles();
   const { user } = useAuth();
 
-  const [timeframe, setTimeframe] = useState('monthly');
+  const [timeframe, setTimeframe] = useState('alltime');
   const [sortBy, setSortBy] = useState('profit');
   const [sport, setSport] = useState('all');
 
@@ -292,7 +292,10 @@ const Leaderboard = () => {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-5 pt-3 sm:pt-4 pb-32">
+      <div
+        className="max-w-7xl mx-auto px-3 sm:px-5 pb-32"
+        style={{ paddingTop: 'calc(var(--top-nav-height, 0px) + 16px)' }}
+      >
         {/* Two-column layout on desktop: filter sidebar (left) + board (right).
             On mobile filters collapse into horizontal chip rows above the
             board. Removed the big "Who's Winning?" hero + community stats
@@ -301,7 +304,13 @@ const Leaderboard = () => {
         <div className="lg:grid lg:grid-cols-[224px_minmax(0,1fr)] lg:gap-5">
 
           {/* ── Filter sidebar (desktop) / chip rows (mobile) ─────── */}
-          <aside className="lg:sticky lg:top-20 lg:self-start space-y-3 lg:space-y-4 mb-3 lg:mb-0">
+          <aside
+            className="lg:sticky lg:self-start lg:overflow-y-auto scrollbar-hide space-y-3 lg:space-y-4 mb-3 lg:mb-0"
+            style={{
+              top: 'calc(var(--top-nav-height, 0px) + 12px)',
+              maxHeight: 'calc(100vh - var(--top-nav-height, 0px) - 24px)',
+            }}
+          >
             {/* Sport — vertical list on desktop, horizontal scroll on mobile */}
             <div>
               <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 px-1">Sport</div>
