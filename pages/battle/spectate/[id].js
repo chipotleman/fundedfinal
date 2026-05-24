@@ -127,7 +127,7 @@ function PlayerCard({ player, side, isWinning, isBeta }) {
       }}
     >
       <div className="flex items-center gap-3 mb-3">
-        {player.id && !player.isFake ? (
+        {player.id ? (
           <UsernameLink
             user={player}
             className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
@@ -151,15 +151,12 @@ function PlayerCard({ player, side, isWinning, isBeta }) {
         )}
         <div className="flex-1 min-w-0">
           <div className="text-white font-bold truncate text-sm">
-            {player.id && !player.isFake ? (
+            {player.id ? (
               <UsernameLink user={player} className="hover:text-blue-300">
                 {player.username || 'Player'}
               </UsernameLink>
             ) : (
               <span>{player.username || 'Player'}</span>
-            )}
-            {player.isFake && (
-              <span className="ml-1.5 text-[9px] text-gray-500 font-normal">(bot)</span>
             )}
           </div>
           <div className="text-gray-500 text-[11px] tabular-nums">
