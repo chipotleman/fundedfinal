@@ -1093,23 +1093,59 @@ export default function Dashboard() {
   const [sportsRowPassed, setSportsRowPassed] = useState(false);
 
   useEffect(() => {
-    if (!sportsSentinelNode || typeof IntersectionObserver === 'undefined') return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        // Engage only when the sentinel has scrolled ABOVE the top edge —
-        // i.e. it's no longer intersecting AND its rect is above the
-        // viewport. That way scrolling back up past the sentinel
-        // disengages, and the next downward pass re-engages cleanly.
-        const above = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-        setSportsRowPassed((prev) => (prev === above ? prev : above));
-      },
-      { root: null, threshold: 0 }
-    );
-    observer.observe(sportsSentinelNode);
+    if (!sportsSentinelNode) return undefined;
+    // Sync the engaged state from the sentinel's current position. Reading
+    // `getBoundingClientRect().top < 0` is the same predicate the observer
+    // uses, so calling this from either the observer callback or a scroll
+    // listener produces identical results — no direction tracking, no
+    // "stuck once" state machine.
+    const syncFromRect = () => {
+      const rect = sportsSentinelNode.getBoundingClientRect();
+      const above = rect.top < 0;
+      setSportsRowPassed((prev) => (prev === above ? prev : above));
+    };
+
+    let observer = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (!entry) return;
+          const above = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+          setSportsRowPassed((prev) => (prev === above ? prev : above));
+        },
+        { root: null, threshold: 0 }
+      );
+      observer.observe(sportsSentinelNode);
+    }
+
+    // iOS Safari fallback: the IntersectionObserver can stay silent across
+    // an address-bar collapse / expand or after a momentum-scroll lands
+    // exactly on the threshold, leaving the bar stuck mounted/unmounted.
+    // A passive scroll/resize listener re-checks the sentinel position
+    // directly so the engaged state always tracks reality on every frame
+    // the user is scrolling. The state setter short-circuits when the
+    // value hasn't changed, so React only re-renders on the actual flip.
+    const handleScroll = () => {
+      // requestAnimationFrame keeps the math off the scroll event thread
+      // on slower devices while still being well under one frame.
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(syncFromRect);
+      } else {
+        syncFromRect();
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    window.addEventListener('orientationchange', handleScroll);
+    // Initial sync in case we mounted mid-scroll (browser scroll restoration).
+    syncFromRect();
+
     return () => {
-      observer.disconnect();
+      if (observer) observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('orientationchange', handleScroll);
     };
   }, [sportsSentinelNode]);
 
