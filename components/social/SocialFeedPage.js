@@ -1564,11 +1564,11 @@ export default function SocialFeedPage({ data }) {
     router.push(`/battle/replay/${highlight.id}`);
   }, [router]);
 
-  // Build the chronological feed by interleaving:
-  //   - live battles sorted by start time (newest first)
-  //   - recent battle results (recentHighlights)
-  //   - your recent matches
-  // We tag each item with a timestamp and merge-sort to get a single stream.
+  // Build the chronological feed. Per user request, the Social page is
+  // purely social — only live battles (so people can comment on them)
+  // and user wall posts. Battle-result cards and "your recent matches"
+  // summaries are surfaced on the dashboard / profile pages and would
+  // be redundant noise here.
   const feedItems = useMemo(() => {
     const live = (liveBattles || []).map((b) => ({
       kind: 'live',
@@ -1576,26 +1576,14 @@ export default function SocialFeedPage({ data }) {
       key: `live-${b.id}`,
       data: b,
     }));
-    const results = (recentHighlights || []).map((h) => ({
-      kind: 'result',
-      ts: new Date(h.endedAt || h.completedAt || h.createdAt || 0).getTime(),
-      key: `result-${h.id}`,
-      data: h,
-    }));
-    const mine = (recentMatches || []).slice(0, 4).map((m) => ({
-      kind: 'mine',
-      ts: new Date(m.endsAt || m.createdAt || 0).getTime(),
-      key: `mine-${m.id}`,
-      data: m,
-    }));
     const postItems = (posts || []).map((p) => ({
       kind: 'post',
       ts: new Date(p.createdAt || 0).getTime(),
       key: `post-${p.id}`,
       data: p,
     }));
-    return [...live, ...results, ...mine, ...postItems].sort((a, b) => b.ts - a.ts);
-  }, [liveBattles, recentHighlights, recentMatches, posts]);
+    return [...live, ...postItems].sort((a, b) => b.ts - a.ts);
+  }, [liveBattles, posts]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 pb-8 max-w-[1080px] mx-auto">
@@ -1655,16 +1643,6 @@ export default function SocialFeedPage({ data }) {
                 />
               );
             }
-            if (item.kind === 'result') {
-              return (
-                <ResultPost
-                  key={item.key}
-                  highlight={item.data}
-                  onOpenProfile={onOpenProfile}
-                  onReplay={handleReplay}
-                />
-              );
-            }
             if (item.kind === 'post') {
               return (
                 <PostCard
@@ -1676,32 +1654,10 @@ export default function SocialFeedPage({ data }) {
                 />
               );
             }
-            return (
-              <YourMatchPost
-                key={item.key}
-                match={item.data}
-                onOpenProfile={onOpenProfile}
-                onShowHistory={onShowHistory}
-              />
-            );
+            return null;
           })
         )}
       </div>
-
-      {/* Right sidebar (desktop only) */}
-      <aside className="hidden lg:block lg:w-[320px] flex-shrink-0">
-        <div className="lg:sticky lg:top-16">
-          <FeedSidebar
-            onStartBattle={onStartBattle}
-            friends={friends}
-            recentHighlights={recentHighlights}
-            onOpenProfile={onOpenProfile}
-            onChallengeFriend={onChallengeFriend}
-            onReplay={handleReplay}
-            isGuest={isGuest}
-          />
-        </div>
-      </aside>
     </div>
   );
 }

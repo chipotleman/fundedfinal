@@ -1933,11 +1933,13 @@ export default function BattlePage() {
             </div>
           )}
 
-          {/* Slim active-battle banner. The full hero VS card already lives
-              on the dashboard; here we just want a single compact strip that
-              tells the user "you're in a battle" and gets out of the way of
-              the social feed below. */}
-          {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (() => {
+          {/* Active-battle banner removed — the user explicitly asked
+              that the Social page be purely social (live battles + posts
+              + comments). The full hero VS card already lives on the
+              dashboard, and the live battle itself still appears as a
+              post in the feed below, so a separate "you're in a battle"
+              banner here is redundant noise. */}
+          {false && activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (() => {
             const startBal = parseFloat(activeMatchup.startingBalance || 0);
             const myBal = matchupData?.myBalance ?? startBal;
             const oppBal = matchupData?.opponentBalance ?? startBal;
