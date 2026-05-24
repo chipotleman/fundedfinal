@@ -23,6 +23,7 @@ export default function GameDetail() {
   }, [id, getPossession]);
 
   const betTabs = ['Popular', 'Live SGP', 'Spread', 'Total', 'Moneyline'];
+  const desktopBetTabs = ['Popular', 'Live SGP', 'Spread', 'Total', 'Moneyline', 'Player Props', 'Game Props'];
 
   useEffect(() => {
     if (!id) return;
@@ -227,7 +228,30 @@ export default function GameDetail() {
       </Head>
 
       <div className="min-h-screen bg-black text-white pb-32">
-        <div className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a]">
+        <DesktopGameDetail
+          game={game}
+          possession={possession}
+          isLive={isLive}
+          isFinal={isFinal}
+          hasLines={hasLines}
+          moneyline={moneyline}
+          spread={spread}
+          total={total}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          betTabs={desktopBetTabs}
+          formatOdds={formatOdds}
+          formatSpread={formatSpread}
+          handleAddToBetSlip={handleAddToBetSlip}
+          checkBetInSlip={checkBetInSlip}
+          betsForThisGame={betsForThisGame}
+          playerProps={Array.isArray(game.playerProps) ? game.playerProps : []}
+          globalBetSlipOpen={showBetSlip}
+          onBack={() => leavePage({ router, fallbackHref: '/dashboard' })}
+          onOpenAllPicks={() => setShowBetSlip(true)}
+        />
+
+        <div className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a] md:hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <button 
               onClick={() => leavePage({ router, fallbackHref: '/dashboard' })}
@@ -254,7 +278,7 @@ export default function GameDetail() {
             live-updates panel, Stream Live / Hide Tracker / Stats buttons,
             and possession highlights were removed per the request to make
             this page feel like Kalshi: the odds chart is the main event. */}
-        <div className="bg-[#0a0a0a] border-b border-[#1a1a1a]">
+        <div className="bg-[#0a0a0a] border-b border-[#1a1a1a] md:hidden">
           <div className="px-4 pt-4 pb-3">
             <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-bold mb-2">
               {game.sportName || game.sport || 'Sports'}
@@ -307,7 +331,7 @@ export default function GameDetail() {
             like public money is shifting, then snaps back to the real
             odds whenever the server snapshot refreshes. */}
         {hasLines && (
-          <div className="px-4 pt-4">
+          <div className="px-4 pt-4 md:hidden">
             <OddsHistoryChart
               gameId={game.id}
               homeTeam={game.homeTeam || game.homeTeamFull}
@@ -320,7 +344,7 @@ export default function GameDetail() {
           </div>
         )}
 
-        <div className="sticky top-[57px] z-40 bg-black border-b border-[#1a1a1a]">
+        <div className="sticky top-[57px] z-40 bg-black border-b border-[#1a1a1a] md:hidden">
           <div className="flex overflow-x-auto scrollbar-hide">
             {betTabs.map((tab) => (
               <button
@@ -338,7 +362,7 @@ export default function GameDetail() {
           </div>
         </div>
 
-        <div className="px-4 py-4 space-y-4">
+        <div className="px-4 py-4 space-y-4 md:hidden">
           {(activeTab === 'Popular' || activeTab === 'Moneyline') && (
             <div className="bg-[#111111] rounded-xl border border-[#1a1a1a] overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a]">
@@ -486,7 +510,7 @@ export default function GameDetail() {
         </div>
 
         {betSlip.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-[#1a1a1a] p-4 z-40">
+          <div className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-[#1a1a1a] p-4 z-40 md:hidden">
             <button
               onClick={() => router.push(demo ? '/demo-dashboard' : '/dashboard')}
               className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"
@@ -498,5 +522,580 @@ export default function GameDetail() {
         )}
       </div>
     </>
+  );
+}
+
+// --- Desktop (lg+) dashboard-style layout ---------------------------
+// Renders only on lg breakpoints and above via `hidden md:block`.
+// Mobile and tablet (<lg) continue to use the existing single-column
+// layout above unchanged. Reuses the same handlers and bet-slip data
+// so adding picks here flows into the global bet slip exactly as it
+// does on mobile.
+
+function teamInitials(name) {
+  if (!name) return '?';
+  const parts = String(name).trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
+  return (parts[parts.length - 1] || '').slice(0, 3).toUpperCase();
+}
+
+function DesktopMarketCard({ title, children }) {
+  return (
+    <div className="bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a] overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[#1a1a1a]">
+        <span className="text-sm font-bold text-white tracking-wide">{title}</span>
+        <span className="text-[10px] font-bold text-gray-500 bg-[#161616] px-2 py-1 rounded uppercase tracking-wider">SGP</span>
+      </div>
+      <div className="p-4 space-y-2">{children}</div>
+    </div>
+  );
+}
+
+function DesktopOptionButton({ active, disabled, label, value, sub, onClick, accent = 'blue' }) {
+  const accentBg = accent === 'orange' ? '#fb923c' : '#3b82f6';
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full rounded-xl px-4 py-3 flex items-center justify-between transition-colors ${
+        disabled
+          ? 'opacity-50 cursor-not-allowed bg-[#141414] border border-[#1a1a1a]'
+          : active
+            ? 'border-2 text-white'
+            : 'bg-[#141414] border border-[#1a1a1a] hover:border-gray-600'
+      }`}
+      style={active && !disabled ? { background: 'rgba(59,130,246,0.15)', borderColor: accentBg } : undefined}
+    >
+      <div className="flex flex-col items-start">
+        <span className="text-sm font-semibold text-gray-200">{label}</span>
+        {sub != null && <span className="text-xs text-gray-500 mt-0.5">{sub}</span>}
+      </div>
+      <span
+        className="text-lg font-extrabold tabular-nums"
+        style={{ color: active && !disabled ? '#ffffff' : accentBg }}
+      >
+        {value}
+      </span>
+    </button>
+  );
+}
+
+function DesktopGameDetail({
+  game,
+  possession,
+  isLive,
+  isFinal,
+  hasLines,
+  moneyline,
+  spread,
+  total,
+  activeTab,
+  setActiveTab,
+  betTabs,
+  formatOdds,
+  formatSpread,
+  handleAddToBetSlip,
+  checkBetInSlip,
+  betsForThisGame,
+  playerProps = [],
+  globalBetSlipOpen = false,
+  onBack,
+  onOpenAllPicks,
+}) {
+  const awayName = game.awayTeamFull || game.awayTeam;
+  const homeName = game.homeTeamFull || game.homeTeam;
+  const awayScore = isLive || isFinal
+    ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0)
+    : '—';
+  const homeScore = isLive || isFinal
+    ? (possession?.homeScore ?? game.scores?.home?.total ?? game.homeScore ?? 0)
+    : '—';
+
+  const awayPeriods = game.scores?.away?.periods || [];
+  const homePeriods = game.scores?.home?.periods || [];
+  const periodCount = Math.max(awayPeriods.length, homePeriods.length);
+  const periodLabel = (game.sport === 'nhl' || game.sport === 'hockey') ? 'P' : 'Q';
+
+  return (
+    <div className="hidden md:block">
+      <div className="max-w-[1400px] mx-auto px-6 xl:px-10 py-6">
+        {/* Top breadcrumb / back */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">
+              {game.sportName || game.sport || 'Sports'}
+            </span>
+            <span className="text-gray-700">/</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-400">Game Detail</span>
+          </button>
+        </div>
+
+        {/* Hero */}
+        <div className="bg-gradient-to-b from-[#0d0d0d] to-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 mb-6">
+          <div className="flex items-start justify-between mb-6">
+            <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">
+              {game.sportName || game.sport || 'Sports'}{game.season ? ` · ${game.season}` : ''}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#141414] border border-[#1f1f1f] text-gray-300 hover:text-white hover:border-gray-600 transition-colors"
+              >
+                Box Score
+              </button>
+              <button
+                type="button"
+                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#141414] border border-[#1f1f1f] text-gray-300 hover:text-white hover:border-gray-600 transition-colors"
+              >
+                Gamecast
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
+            {/* Away */}
+            <div className="flex items-center gap-4">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center text-base font-black"
+                style={{ background: 'rgba(251,146,60,0.15)', border: '2px solid rgba(251,146,60,0.5)', color: '#fb923c' }}
+              >
+                {teamInitials(awayName)}
+              </div>
+              <div className="min-w-0">
+                <div className="text-xl font-black text-white truncate">{awayName}</div>
+                <div className="text-xs text-gray-500 font-semibold">{game.awayRecord || 'Away'}</div>
+              </div>
+            </div>
+
+            {/* Center scoreboard */}
+            <div className="text-center min-w-[260px]">
+              <div className="flex items-center justify-center gap-5">
+                <div className="text-5xl xl:text-6xl font-black tabular-nums" style={{ color: '#fb923c' }}>{awayScore}</div>
+                <div className="text-3xl font-bold text-gray-700">—</div>
+                <div className="text-5xl xl:text-6xl font-black tabular-nums" style={{ color: '#3b82f6' }}>{homeScore}</div>
+              </div>
+              <div className="mt-2 flex items-center justify-center gap-2">
+                {isFinal ? (
+                  <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">Final</span>
+                ) : isLive ? (
+                  <>
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
+                      style={{ background: 'rgba(239,68,68,0.18)', border: '1.5px solid rgba(239,68,68,0.55)', color: '#fca5a5' }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      Live
+                    </span>
+                    {game.quarter && (
+                      <span className="text-[11px] font-bold text-gray-400 tabular-nums">{game.quarter}</span>
+                    )}
+                    {game.period && !game.quarter && (
+                      <span className="text-[11px] font-bold text-gray-400 tabular-nums">{game.period}</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{game.time || 'TBD'}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Home */}
+            <div className="flex items-center gap-4 justify-end">
+              <div className="min-w-0 text-right">
+                <div className="text-xl font-black text-white truncate">{homeName}</div>
+                <div className="text-xs text-gray-500 font-semibold">{game.homeRecord || 'Home'}</div>
+              </div>
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center text-base font-black"
+                style={{ background: 'rgba(59,130,246,0.15)', border: '2px solid rgba(59,130,246,0.5)', color: '#3b82f6' }}
+              >
+                {teamInitials(homeName)}
+              </div>
+            </div>
+          </div>
+
+          {/* Venue subline */}
+          {(game.venue || game.location) && (
+            <div className="text-center text-xs text-gray-500 font-semibold mt-4">
+              {[game.venue, game.location].filter(Boolean).join(' · ')}
+            </div>
+          )}
+
+          {/* Quarter-by-quarter strip (only when data exists) */}
+          {periodCount > 0 && (
+            <div className="mt-5 pt-4 border-t border-[#1a1a1a]">
+              <div className="grid gap-2 text-xs" style={{ gridTemplateColumns: `120px repeat(${periodCount + 1}, minmax(0, 1fr))` }}>
+                <div />
+                {Array.from({ length: periodCount }).map((_, i) => (
+                  <div key={i} className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-500">{periodLabel}{i + 1}</div>
+                ))}
+                <div className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-400">T</div>
+                <div className="text-sm font-bold truncate" style={{ color: '#fb923c' }}>{awayName}</div>
+                {Array.from({ length: periodCount }).map((_, i) => (
+                  <div key={i} className="text-center text-sm font-bold text-gray-300 tabular-nums">{awayPeriods[i] ?? '—'}</div>
+                ))}
+                <div className="text-center text-sm font-black text-white tabular-nums">{awayScore}</div>
+                <div className="text-sm font-bold truncate" style={{ color: '#3b82f6' }}>{homeName}</div>
+                {Array.from({ length: periodCount }).map((_, i) => (
+                  <div key={i} className="text-center text-sm font-bold text-gray-300 tabular-nums">{homePeriods[i] ?? '—'}</div>
+                ))}
+                <div className="text-center text-sm font-black text-white tabular-nums">{homeScore}</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Two-column shell — single column at md (sidebar collapses
+            under the markets), two columns at lg+ with sticky sidebar. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+          {/* Main column */}
+          <div className="min-w-0 space-y-5">
+            {hasLines && (
+              <OddsHistoryChart
+                gameId={game.id}
+                homeTeam={game.homeTeam || game.homeTeamFull}
+                awayTeam={game.awayTeam || game.awayTeamFull}
+                liveOdds={{ home: moneyline.home, away: moneyline.away }}
+                commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
+                isLive={isLive}
+                isFinal={isFinal}
+              />
+            )}
+
+            {/* Underline tab row */}
+            <div className="border-b border-[#1a1a1a]">
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+                {betTabs.map((tab) => {
+                  const active = activeTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`relative px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors ${
+                        active ? 'text-white' : 'text-gray-500 hover:text-gray-200'
+                      }`}
+                    >
+                      {tab}
+                      {active && <span className="absolute left-3 right-3 -bottom-px h-[2px] bg-blue-500 rounded-full" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Markets grid — 2-up at md (intermediate), 3-up at lg+ */}
+            {activeTab === 'Popular' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <DesktopMarketCard title="Moneyline">
+                  <DesktopOptionButton
+                    accent="orange"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('moneyline', awayName)}
+                    label={awayName}
+                    value={hasLines ? formatOdds(moneyline.away) : '-'}
+                    onClick={() => handleAddToBetSlip('moneyline', moneyline.away, awayName)}
+                  />
+                  <DesktopOptionButton
+                    accent="blue"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('moneyline', homeName)}
+                    label={homeName}
+                    value={hasLines ? formatOdds(moneyline.home) : '-'}
+                    onClick={() => handleAddToBetSlip('moneyline', moneyline.home, homeName)}
+                  />
+                </DesktopMarketCard>
+
+                <DesktopMarketCard title="Spread">
+                  <DesktopOptionButton
+                    accent="orange"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('spread', `${awayName} ${spread.away?.point}`)}
+                    label={awayName}
+                    sub={hasLines ? formatSpread(spread.away?.point) : null}
+                    value={hasLines ? formatOdds(spread.away?.odds) : '-'}
+                    onClick={() => handleAddToBetSlip('spread', spread.away, `${awayName} ${spread.away?.point}`)}
+                  />
+                  <DesktopOptionButton
+                    accent="blue"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('spread', `${homeName} ${spread.home?.point}`)}
+                    label={homeName}
+                    sub={hasLines ? formatSpread(spread.home?.point) : null}
+                    value={hasLines ? formatOdds(spread.home?.odds) : '-'}
+                    onClick={() => handleAddToBetSlip('spread', spread.home, `${homeName} ${spread.home?.point}`)}
+                  />
+                </DesktopMarketCard>
+
+                <DesktopMarketCard title="Total Points">
+                  <DesktopOptionButton
+                    accent="blue"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('total', `Over ${total.over?.point}`)}
+                    label="Over"
+                    sub={hasLines ? total.over?.point : null}
+                    value={hasLines ? formatOdds(total.over?.odds) : '-'}
+                    onClick={() => handleAddToBetSlip('total', total.over, `Over ${total.over?.point}`)}
+                  />
+                  <DesktopOptionButton
+                    accent="blue"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('total', `Under ${total.under?.point}`)}
+                    label="Under"
+                    sub={hasLines ? total.under?.point : null}
+                    value={hasLines ? formatOdds(total.under?.odds) : '-'}
+                    onClick={() => handleAddToBetSlip('total', total.under, `Under ${total.under?.point}`)}
+                  />
+                </DesktopMarketCard>
+              </div>
+            )}
+
+            {activeTab === 'Moneyline' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DesktopMarketCard title={`Moneyline · ${awayName}`}>
+                  <DesktopOptionButton
+                    accent="orange"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('moneyline', awayName)}
+                    label={awayName}
+                    value={hasLines ? formatOdds(moneyline.away) : '-'}
+                    onClick={() => handleAddToBetSlip('moneyline', moneyline.away, awayName)}
+                  />
+                </DesktopMarketCard>
+                <DesktopMarketCard title={`Moneyline · ${homeName}`}>
+                  <DesktopOptionButton
+                    accent="blue"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('moneyline', homeName)}
+                    label={homeName}
+                    value={hasLines ? formatOdds(moneyline.home) : '-'}
+                    onClick={() => handleAddToBetSlip('moneyline', moneyline.home, homeName)}
+                  />
+                </DesktopMarketCard>
+              </div>
+            )}
+
+            {activeTab === 'Spread' && (
+              <DesktopMarketCard title="Spread">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <DesktopOptionButton
+                    accent="orange"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('spread', `${awayName} ${spread.away?.point}`)}
+                    label={awayName}
+                    sub={hasLines ? formatSpread(spread.away?.point) : null}
+                    value={hasLines ? formatOdds(spread.away?.odds) : '-'}
+                    onClick={() => handleAddToBetSlip('spread', spread.away, `${awayName} ${spread.away?.point}`)}
+                  />
+                  <DesktopOptionButton
+                    accent="blue"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('spread', `${homeName} ${spread.home?.point}`)}
+                    label={homeName}
+                    sub={hasLines ? formatSpread(spread.home?.point) : null}
+                    value={hasLines ? formatOdds(spread.home?.odds) : '-'}
+                    onClick={() => handleAddToBetSlip('spread', spread.home, `${homeName} ${spread.home?.point}`)}
+                  />
+                </div>
+              </DesktopMarketCard>
+            )}
+
+            {activeTab === 'Total' && (
+              <DesktopMarketCard title="Total Points">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <DesktopOptionButton
+                    accent="blue"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('total', `Over ${total.over?.point}`)}
+                    label="Over"
+                    sub={hasLines ? total.over?.point : null}
+                    value={hasLines ? formatOdds(total.over?.odds) : '-'}
+                    onClick={() => handleAddToBetSlip('total', total.over, `Over ${total.over?.point}`)}
+                  />
+                  <DesktopOptionButton
+                    accent="blue"
+                    disabled={!hasLines}
+                    active={checkBetInSlip('total', `Under ${total.under?.point}`)}
+                    label="Under"
+                    sub={hasLines ? total.under?.point : null}
+                    value={hasLines ? formatOdds(total.under?.odds) : '-'}
+                    onClick={() => handleAddToBetSlip('total', total.under, `Under ${total.under?.point}`)}
+                  />
+                </div>
+              </DesktopMarketCard>
+            )}
+
+            {activeTab === 'Live SGP' && (
+              <div className="text-center py-16 bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a]">
+                <div className="text-4xl mb-3">🎯</div>
+                <p className="text-gray-400">Same Game Parlay options available during live games</p>
+              </div>
+            )}
+
+            {activeTab === 'Player Props' && (
+              playerProps.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {playerProps.map((p, i) => (
+                    <DesktopMarketCard key={`pp-${i}`} title={`${p.player} · ${p.market}`}>
+                      <DesktopOptionButton accent="blue" disabled label={`Over ${p.line ?? ''}`} value={p.over != null ? formatOdds(p.over) : '-'} />
+                      <DesktopOptionButton accent="orange" disabled label={`Under ${p.line ?? ''}`} value={p.under != null ? formatOdds(p.under) : '-'} />
+                    </DesktopMarketCard>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a]">
+                  <div className="text-4xl mb-3">👤</div>
+                  <p className="text-gray-400">Player props will appear here once available for this game.</p>
+                </div>
+              )
+            )}
+
+            {activeTab === 'Game Props' && (
+              <div className="text-center py-16 bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a]">
+                <div className="text-4xl mb-3">📋</div>
+                <p className="text-gray-400">Game props will appear here once available for this game.</p>
+              </div>
+            )}
+
+            {/* Featured Player Props row — rendered under Popular markets
+                when prop data is available. Gracefully hidden otherwise. */}
+            {activeTab === 'Popular' && playerProps.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Featured Player Props</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('Player Props')}
+                    className="text-xs font-bold text-blue-400 hover:text-blue-300"
+                  >
+                    See all →
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {playerProps.slice(0, 6).map((p, i) => (
+                    <div key={`fp-${i}`} className="bg-[#0f0f0f] rounded-xl border border-[#1a1a1a] p-3">
+                      <div className="text-sm font-bold text-white truncate">{p.player}</div>
+                      <div className="text-[11px] text-gray-500 uppercase tracking-wider font-bold">{p.market}{p.line != null ? ` · ${p.line}` : ''}</div>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div className="bg-[#141414] rounded-lg px-2 py-1.5 text-center">
+                          <div className="text-[10px] text-gray-500 font-bold">O</div>
+                          <div className="text-sm font-extrabold text-blue-400 tabular-nums">{p.over != null ? formatOdds(p.over) : '-'}</div>
+                        </div>
+                        <div className="bg-[#141414] rounded-lg px-2 py-1.5 text-center">
+                          <div className="text-[10px] text-gray-500 font-bold">U</div>
+                          <div className="text-sm font-extrabold text-orange-400 tabular-nums">{p.under != null ? formatOdds(p.under) : '-'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="text-center text-gray-600 text-xs py-2">
+              Odds provided by {spread.away?.source || 'FanDuel'}
+            </div>
+          </div>
+
+          {/* Right sidebar */}
+          <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+            {/* When the docked global bet slip is open it already shows
+                the full picks editor, so we hide the in-page My Picks
+                card to avoid a duplicated panel. The Game Info card
+                below still renders. */}
+            {!globalBetSlipOpen && (
+            <div className="bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a] overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[#1a1a1a]">
+                <span className="text-sm font-bold text-white">My Picks</span>
+                <span className="text-[11px] font-bold text-gray-400 bg-[#161616] px-2 py-1 rounded-full tabular-nums">
+                  {betsForThisGame.length}
+                </span>
+              </div>
+              {betsForThisGame.length === 0 ? (
+                <div className="px-5 py-8 text-center">
+                  <div className="text-xs text-gray-500">Tap any line to add your first pick.</div>
+                </div>
+              ) : (
+                <div className="divide-y divide-[#161616]">
+                  {betsForThisGame.slice(0, 5).map((bet) => {
+                    const stake = Number(bet.stake || 0);
+                    const oddsVal = typeof bet.odds === 'object' ? (bet.odds.odds ?? bet.odds.value ?? 0) : bet.odds;
+                    const odds = Number(oddsVal) || 0;
+                    const decimal = odds > 0 ? odds / 100 + 1 : 100 / Math.abs(odds) + 1;
+                    const toWin = stake > 0 ? (stake * decimal - stake) : 0;
+                    return (
+                      <div key={bet.id} className="px-5 py-3 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-white truncate">{bet.selection || bet.team || '—'}</span>
+                          <span className="font-extrabold text-blue-400 tabular-nums">{formatOdds(odds)}</span>
+                        </div>
+                        <div className="flex items-center justify-between mt-1 text-gray-500">
+                          <span className="uppercase tracking-wider text-[10px] font-bold">{bet.betType || 'Pick'}</span>
+                          <span className="tabular-nums">
+                            {stake > 0 ? `$${stake.toFixed(0)} → $${toWin.toFixed(0)}` : '—'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="px-5 py-3 border-t border-[#1a1a1a]">
+                <button
+                  type="button"
+                  onClick={onOpenAllPicks}
+                  disabled={betsForThisGame.length === 0}
+                  className={`w-full text-center text-xs font-bold py-2 rounded-lg transition-colors ${
+                    betsForThisGame.length === 0
+                      ? 'bg-[#141414] text-gray-600 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-500'
+                  }`}
+                >
+                  View All Picks
+                </button>
+              </div>
+            </div>
+            )}
+
+            <div className="bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a] overflow-hidden">
+              <div className="px-5 py-3 border-b border-[#1a1a1a]">
+                <span className="text-sm font-bold text-white">Game Info</span>
+              </div>
+              <dl className="px-5 py-3 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <dt className="text-gray-500 uppercase tracking-wider text-[10px] font-bold">Time</dt>
+                  <dd className="text-white font-semibold">{game.time || (isFinal ? 'Final' : 'TBD')}</dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-gray-500 uppercase tracking-wider text-[10px] font-bold">Venue</dt>
+                  <dd className="text-white font-semibold truncate ml-3">{game.venue || '—'}</dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-gray-500 uppercase tracking-wider text-[10px] font-bold">Location</dt>
+                  <dd className="text-white font-semibold truncate ml-3">{game.location || '—'}</dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-gray-500 uppercase tracking-wider text-[10px] font-bold">TV</dt>
+                  <dd className="text-white font-semibold truncate ml-3">{game.tv || '—'}</dd>
+                </div>
+              </dl>
+              <div className="px-5 py-3 border-t border-[#1a1a1a]">
+                <button
+                  type="button"
+                  className="w-full text-center text-xs font-bold py-2 rounded-lg bg-[#141414] border border-[#1f1f1f] text-gray-300 hover:text-white hover:border-gray-600 transition-colors"
+                >
+                  View Matchup
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
   );
 }
