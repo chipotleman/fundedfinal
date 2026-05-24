@@ -1,6 +1,44 @@
 import { useState, useEffect } from 'react';
 import { getTeamLogo, getTeamLogoAnySport } from '../utils/getTeamLogo';
 
+// Module-level cache + in-flight de-duplication for the dynamic
+// /api/team-logo lookup. Keyed by `${sport}::${name}`. Survives
+// component remounts so we never re-fetch within a session.
+const DYNAMIC_LOGO_CACHE = new Map(); // key -> string|null
+const DYNAMIC_LOGO_INFLIGHT = new Map(); // key -> Promise<string|null>
+
+function dynamicCacheKey(name, sportHints) {
+  const sport = (sportHints.find(Boolean) || '').toString().toLowerCase();
+  return `${sport}::${String(name).toLowerCase()}`;
+}
+
+function fetchDynamicLogo(name, sportHints) {
+  const key = dynamicCacheKey(name, sportHints);
+  if (DYNAMIC_LOGO_CACHE.has(key)) {
+    return Promise.resolve(DYNAMIC_LOGO_CACHE.get(key));
+  }
+  if (DYNAMIC_LOGO_INFLIGHT.has(key)) {
+    return DYNAMIC_LOGO_INFLIGHT.get(key);
+  }
+  const sport = sportHints.find(Boolean) || '';
+  const url = `/api/team-logo?name=${encodeURIComponent(name)}&sport=${encodeURIComponent(sport)}`;
+  const p = fetch(url)
+    .then(r => (r.ok ? r.json() : { url: null }))
+    .then(json => {
+      const resolved = json?.url || null;
+      DYNAMIC_LOGO_CACHE.set(key, resolved);
+      DYNAMIC_LOGO_INFLIGHT.delete(key);
+      return resolved;
+    })
+    .catch(() => {
+      DYNAMIC_LOGO_CACHE.set(key, null);
+      DYNAMIC_LOGO_INFLIGHT.delete(key);
+      return null;
+    });
+  DYNAMIC_LOGO_INFLIGHT.set(key, p);
+  return p;
+}
+
 export function getPickedTeamName(selection, bet) {
   if (!selection || !bet) return null;
   const sel = String(selection).toLowerCase();
@@ -45,17 +83,54 @@ export default function TeamLogo({
   // games whose `sport` field is missing render bare initials even
   // for major leagues whose teams are all in our maps.
   const hints = [sport, sportName, league].filter(Boolean);
-  let logoUrl = null;
+  let staticLogoUrl = null;
   for (const hint of hints) {
-    logoUrl = getTeamLogo(name, hint);
-    if (logoUrl) break;
+    staticLogoUrl = getTeamLogo(name, hint);
+    if (staticLogoUrl) break;
   }
-  if (!logoUrl) logoUrl = getTeamLogoAnySport(name);
+  if (!staticLogoUrl) staticLogoUrl = getTeamLogoAnySport(name);
+
+  // Resolve dynamic logo state directly from the module cache by
+  // the current cache key — that way switching between teams never
+  // shows the previous team's logo, even when the next team's
+  // dynamic lookup hasn't completed yet (or resolves to null).
+  const dynamicKey = name && !staticLogoUrl ? dynamicCacheKey(name, hints) : null;
+  const dynamicSeed = dynamicKey && DYNAMIC_LOGO_CACHE.has(dynamicKey)
+    ? DYNAMIC_LOGO_CACHE.get(dynamicKey)
+    : null;
+  const [dynamicLogoUrl, setDynamicLogoUrl] = useState(dynamicSeed);
   const [failed, setFailed] = useState(false);
+
+  const logoUrl = staticLogoUrl || dynamicLogoUrl;
 
   useEffect(() => {
     setFailed(false);
   }, [logoUrl]);
+
+  // When no hardcoded logo exists, ask the server-side resolver.
+  // Always reset state on key change (don't leave a stale logo
+  // from a previous render) and always apply the resolved value
+  // — even null — so a "no logo found" result correctly clears
+  // any leftover URL instead of keeping the prior team's image.
+  useEffect(() => {
+    if (!name || staticLogoUrl) {
+      setDynamicLogoUrl(null);
+      return;
+    }
+    // Sync from cache on key change first.
+    const key = dynamicCacheKey(name, hints);
+    if (DYNAMIC_LOGO_CACHE.has(key)) {
+      setDynamicLogoUrl(DYNAMIC_LOGO_CACHE.get(key));
+    } else {
+      setDynamicLogoUrl(null);
+    }
+    let cancelled = false;
+    fetchDynamicLogo(name, hints).then(url => {
+      if (!cancelled) setDynamicLogoUrl(url || null);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, staticLogoUrl, sport, sportName, league]);
 
   const isBadge = !!accent;
   const showLogo = logoUrl && !failed;
