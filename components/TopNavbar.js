@@ -1192,17 +1192,17 @@ export default function TopNavbar({
               <button
                 onClick={() => setExplainerType('cash')}
                 title="Real cash balance — click for details"
-                className="no-hover-effect flex-shrink-0"
+                className="cartoon-balance-pill no-hover-effect flex-shrink-0"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 4,
-                  padding: '4px 9px 4px 8px',
+                  gap: 6,
+                  padding: '5px 12px 5px 10px',
                   borderRadius: 999,
                   background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
                   border: '1.5px solid #0d0d0d',
-                  boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
-                  color: '#04221a',
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
+                  color: '#022c1f',
                   cursor: 'pointer',
                   lineHeight: 1,
                 }}
@@ -1211,7 +1211,7 @@ export default function TopNavbar({
                 <span
                   aria-hidden="true"
                   style={{
-                    fontSize: 12,
+                    fontSize: 16,
                     lineHeight: 1,
                     fontFamily:
                       '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
@@ -1220,7 +1220,7 @@ export default function TopNavbar({
                 >
                   {`💵\uFE0F`}
                 </span>
-                <span style={{ fontWeight: 900, fontSize: 12, letterSpacing: '0.02em' }}>
+                <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
                   ${formatMoney(parseFloat(userProfile.bankroll), 0)}
                 </span>
               </button>
@@ -1229,16 +1229,16 @@ export default function TopNavbar({
               <button
                 onClick={() => setExplainerType('coins')}
                 title="In-battle play coins — click for details"
-                className="no-hover-effect flex-shrink-0"
+                className="cartoon-balance-pill no-hover-effect flex-shrink-0"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 4,
-                  padding: '4px 9px 4px 8px',
+                  gap: 6,
+                  padding: '5px 12px 5px 10px',
                   borderRadius: 999,
                   background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
                   border: '1.5px solid #0d0d0d',
-                  boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(249,115,22,0.55)',
                   color: '#2a1404',
                   cursor: 'pointer',
                   lineHeight: 1,
@@ -1248,7 +1248,7 @@ export default function TopNavbar({
                 <span
                   aria-hidden="true"
                   style={{
-                    fontSize: 12,
+                    fontSize: 16,
                     lineHeight: 1,
                     fontFamily:
                       '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
@@ -1257,7 +1257,7 @@ export default function TopNavbar({
                 >
                   {`⚔\uFE0F`}
                 </span>
-                <span style={{ fontWeight: 900, fontSize: 12, letterSpacing: '0.02em' }}>
+                <span style={{ fontWeight: 900, fontSize: 14, color: '#2a1404', letterSpacing: '0.02em', lineHeight: 1.1 }}>
                   {formatMoney(parseFloat(matchupBalance), 0)}
                 </span>
               </button>
@@ -1266,18 +1266,18 @@ export default function TopNavbar({
               <button
                 ref={notifBellRefCondensed}
                 onClick={() => { setShowMsgDropdown(false); setShowNotifDropdown(v => !v); }}
-                className="relative w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 no-hover-effect"
+                className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full flex-shrink-0 no-hover-effect"
                 title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
                 aria-label="Notifications"
                 aria-haspopup="true"
                 aria-expanded={showNotifDropdown}
               >
-                <svg className="w-5 h-5" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {notifTotal > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                    className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
                     style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
                   >
                     {notifTotal > 9 ? '9+' : notifTotal}
@@ -1289,18 +1289,18 @@ export default function TopNavbar({
               <button
                 ref={msgBtnRefCondensed}
                 onClick={() => { setShowNotifDropdown(false); setShowMsgDropdown(v => !v); }}
-                className="relative w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 no-hover-effect"
+                className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full flex-shrink-0 no-hover-effect"
                 title={notifMessages > 0 ? `${notifMessages} unread message${notifMessages > 1 ? 's' : ''}` : 'Messages'}
                 aria-label="Messages"
                 aria-haspopup="true"
                 aria-expanded={showMsgDropdown}
               >
-                <svg className="w-5 h-5" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
                 </svg>
                 {notifMessages > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                    className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
                     style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
                   >
                     {notifMessages > 9 ? '9+' : notifMessages}

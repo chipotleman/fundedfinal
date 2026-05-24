@@ -1167,9 +1167,12 @@ export default function Dashboard() {
     // as the user adds a pick, the bet-slip button mounts on the right
     // and we collapse back to the natural left-packed layout.
     const spreadEvenly = isCondensed && (betSlip?.length || 0) === 0;
-    const pillPadding = isCondensed ? '6px 12px' : '10px 16px';
-    const pillFontSize = isCondensed ? '12px' : '14px';
-    const iconSize = isCondensed ? '13px' : '16px';
+    // Match the inline pill sizing in the condensed bar too — earlier
+    // we shrank them, but that made the condensed row look mismatched
+    // against the desktop top-nav icons that sit alongside the pills.
+    const pillPadding = '10px 16px';
+    const pillFontSize = '14px';
+    const iconSize = '16px';
 
     // Build the per-variant list of pill sources. For the inline row
     // each league is its own pill; for the condensed bar we collapse
