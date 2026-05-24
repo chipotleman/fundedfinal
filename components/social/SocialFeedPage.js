@@ -1586,12 +1586,12 @@ export default function SocialFeedPage({ data }) {
   }, [liveBattles, posts]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 pb-8 w-full max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6">
-      {/* Main feed column — stays readable on huge monitors but the
-          surrounding shell now spans the full page so it reads like a
-          real social network (feed + sidebar) instead of a narrow
-          centered island floating on a black void. */}
-      <div className="flex-1 min-w-0 max-w-[680px] mx-auto lg:mx-0 w-full">
+    <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px] gap-6 pb-8 w-full max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6">
+      {/* Main feed column — fills all remaining horizontal space on
+          desktop so the page actually spans the screen instead of
+          floating as a narrow centered island. Mobile keeps the
+          centered readable column. */}
+      <div className="min-w-0 max-w-[680px] mx-auto lg:max-w-none lg:mx-0 w-full">
         <StoriesRail
           battles={liveBattles}
           onSpectate={handleSpectate}
@@ -1666,7 +1666,7 @@ export default function SocialFeedPage({ data }) {
           recent winners. Keeps the page feeling balanced like a real
           social feed (Facebook / X) instead of leaving half the screen
           empty. Hidden under lg so mobile stays a single column. */}
-      <aside className="hidden lg:block w-[320px] flex-shrink-0">
+      <aside className="hidden lg:block w-full min-w-0">
         <div className="sticky top-20">
           <FeedSidebar
             onStartBattle={onStartBattle}
