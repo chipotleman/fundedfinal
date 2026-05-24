@@ -2829,22 +2829,6 @@ function YouVsCard({
               );
             })()}
 
-            {/* Match progress — kept so the active card still tells
-                time-of-match. Visually unchanged from before so the
-                rail stays familiar. */}
-            <div
-              className="h-1 rounded-full overflow-hidden mb-1 sm:mb-2"
-              style={{ background: '#1a1a1a' }}
-            >
-              <div
-                className="h-full rounded-full transition-all duration-1000"
-                style={{
-                  width: `${progressPercent}%`,
-                  background: 'linear-gradient(90deg, #10b981, #06b6d4)',
-                }}
-              ></div>
-            </div>
-
             {/* Footer — mirrors BattleCard's footer (Started Xm ago
                 on the left, Hide/More on the right) so the card
                 terminates at the same vertical position as siblings.
@@ -3060,16 +3044,7 @@ function YouVsCard({
               </div>
             </div>
 
-            <div className="h-1 rounded-full overflow-hidden mb-0.5 sm:mb-1 mt-auto" style={{ background: '#1a1a1a' }}>
-              <div
-                className="h-full rounded-full transition-all duration-1000"
-                style={{
-                  width: `${progressPercent}%`,
-                  background: 'linear-gradient(90deg, #10b981, #06b6d4)',
-                }}
-              ></div>
-            </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mt-auto">
               <span className="text-gray-600 text-[10px]">
                 {progressLabel}
               </span>
