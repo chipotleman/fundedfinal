@@ -20,6 +20,13 @@ const RESUME_AFTER_INTERACTION_MS = 2000;
 // rather than a drag (which would steal the click).
 const DRAG_THRESHOLD_PX = 6;
 
+// After a wheel/trackpad scrub stops producing deltas, wait this long
+// of idleness before scheduling the auto-scroll resume. Short enough
+// that the strip feels responsive when the user lets go, long enough
+// that the pauses between frames of a single trackpad fling don't
+// count as "stopped".
+const WHEEL_IDLE_MS = 160;
+
 function SlideHost({
   slideKey,
   isEmpty,
@@ -110,6 +117,7 @@ export default function PromoCarousel({ slides }) {
     moved: false,
   });
   const resumeTimerRef = useRef(null);
+  const wheelIdleTimerRef = useRef(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
   // Mirror of `activeIndex` for use inside the rAF loop so we can
@@ -377,6 +385,13 @@ export default function PromoCarousel({ slides }) {
     }
   }, []);
 
+  const clearWheelIdleTimer = useCallback(() => {
+    if (wheelIdleTimerRef.current) {
+      clearTimeout(wheelIdleTimerRef.current);
+      wheelIdleTimerRef.current = null;
+    }
+  }, []);
+
   const scheduleResume = useCallback(() => {
     clearResumeTimer();
     resumeTimerRef.current = setTimeout(() => {
@@ -483,13 +498,70 @@ export default function PromoCarousel({ slides }) {
     scheduleResume();
   }, [scheduleResume]);
 
+  // Wheel / trackpad scrubbing while the pointer is over the strip.
+  // Attached as a native non-passive listener so we can preventDefault
+  // on horizontal-dominant gestures without React's passive default
+  // swallowing the call. Vertical-dominant gestures are left untouched
+  // so the page still scrolls naturally through the strip.
+  useEffect(() => {
+    if (!showLoop) return;
+    const vp = viewportRef.current;
+    if (!vp) return;
+
+    const onWheel = (e) => {
+      // Treat shift+wheel (the desktop convention for horizontal
+      // scroll) and any gesture with a dominant horizontal component
+      // as a request to scrub the strip. Everything else is left to
+      // bubble so the page scrolls.
+      const horiz = e.shiftKey && e.deltaX === 0 ? e.deltaY : e.deltaX;
+      const vert = e.shiftKey && e.deltaX === 0 ? 0 : e.deltaY;
+      if (Math.abs(horiz) <= Math.abs(vert)) return;
+      if (horiz === 0) return;
+
+      // Don't fight the user's own drag.
+      if (dragRef.current.active) return;
+
+      if (e.cancelable) {
+        try { e.preventDefault(); } catch (_err) {}
+      }
+
+      pausedRef.current = true;
+      clearResumeTimer();
+
+      const setWidth = setWidthRef.current;
+      let next = offsetRef.current + horiz;
+      if (setWidth > 0) {
+        next = ((next % setWidth) + setWidth) % setWidth;
+      } else if (next < 0) {
+        next = 0;
+      }
+      offsetRef.current = next;
+      applyTransform();
+
+      // Reset the idle timer on every delta; once the wheel goes
+      // quiet for WHEEL_IDLE_MS, kick the normal resume timer so the
+      // strip picks back up without needing the page to scroll.
+      clearWheelIdleTimer();
+      wheelIdleTimerRef.current = setTimeout(() => {
+        wheelIdleTimerRef.current = null;
+        scheduleResume();
+      }, WHEEL_IDLE_MS);
+    };
+
+    vp.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      vp.removeEventListener('wheel', onWheel, { passive: false });
+    };
+  }, [showLoop, applyTransform, clearResumeTimer, clearWheelIdleTimer, scheduleResume]);
+
   // Clean up rAF + pending timers on unmount.
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       clearResumeTimer();
+      clearWheelIdleTimer();
     };
-  }, [clearResumeTimer]);
+  }, [clearResumeTimer, clearWheelIdleTimer]);
 
   if (candidates.length === 0) return null;
 
