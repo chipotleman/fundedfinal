@@ -292,113 +292,123 @@ const Leaderboard = () => {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="max-w-4xl mx-auto px-3 sm:px-5 pt-4 pb-32">
-        {/* ── Cartoon header ──────────────────────────────────── */}
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            <h1
-              className="text-3xl sm:text-5xl font-black text-white leading-none tracking-tight"
-              style={{
-                fontStyle: 'italic',
-                WebkitTextStroke: '1.5px #0d0d0d',
-                textShadow: '3px 3px 0 #0d0d0d, 5px 5px 0 rgba(251,191,36,0.4)',
-              }}
-            >
-              Who&apos;s Winning?
-            </h1>
-            <p className="text-gray-400 text-xs sm:text-sm mt-1.5">
-              {communityStats ? (
-                <>
-                  <span className="text-emerald-400 font-bold">{communityStats.activeBettors.toLocaleString()}</span> bettors
-                  {' · '}
-                  <span className="text-cyan-400 font-bold">{(communityStats.avgWinRate || 0).toFixed(1)}%</span> avg win rate
-                  {' · '}
-                  <span className="text-orange-400 font-bold">{formatProfit(communityStats.totalProfits)}</span> in winnings
-                </>
-              ) : (
-                "Live community rankings — switch sport, metric, or window to re-rank the board."
-              )}
-            </p>
-          </div>
-        </div>
+      <div className="max-w-7xl mx-auto px-3 sm:px-5 pt-3 sm:pt-4 pb-32">
+        {/* Two-column layout on desktop: filter sidebar (left) + board (right).
+            On mobile filters collapse into horizontal chip rows above the
+            board. Removed the big "Who's Winning?" hero + community stats
+            line and the top-3 podium boxes (didn't fit on mobile) — the
+            board itself is now the main view, more chart-like. */}
+        <div className="lg:grid lg:grid-cols-[224px_minmax(0,1fr)] lg:gap-5">
 
-        {/* ── Sport chips (horizontally scrollable row, sticky-feel) ── */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-3 -mx-1 px-1">
-          {SPORTS.map((s) => {
-            const active = s.id === sport;
-            return (
-              <button
-                key={s.id}
-                onClick={() => setSport(s.id)}
-                className={`lb-chip flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl font-black text-[12px] uppercase tracking-wider transition-transform active:scale-95 ${active ? 'lb-chip-active' : ''}`}
+          {/* ── Filter sidebar (desktop) / chip rows (mobile) ─────── */}
+          <aside className="lg:sticky lg:top-20 lg:self-start space-y-3 lg:space-y-4 mb-3 lg:mb-0">
+            {/* Sport — vertical list on desktop, horizontal scroll on mobile */}
+            <div>
+              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 px-1">Sport</div>
+              <div className="flex lg:flex-col gap-1.5 lg:gap-1 overflow-x-auto lg:overflow-visible scrollbar-hide -mx-1 px-1 lg:mx-0 lg:px-0">
+                {SPORTS.map((s) => {
+                  const active = s.id === sport;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setSport(s.id)}
+                      className="lb-chip flex-shrink-0 lg:w-full inline-flex items-center gap-1.5 lg:gap-2 px-3 py-2 lg:py-2 rounded-xl lg:rounded-lg font-black text-[12px] lg:text-[11px] uppercase tracking-wider transition-transform active:scale-95"
+                      style={{
+                        background: active ? '#fbbf24' : '#0d0d0d',
+                        color: active ? '#0d0d0d' : '#9ca3af',
+                        border: '2px solid #0d0d0d',
+                        boxShadow: active ? '2px 2px 0 #0d0d0d' : '2px 2px 0 #1a1a1a',
+                        justifyContent: 'flex-start',
+                      }}
+                    >
+                      <span className="text-base leading-none">{s.emoji}</span>
+                      <span className="lg:flex-1 lg:text-left">{s.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sort metric */}
+            <div>
+              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 px-1">Sort by</div>
+              <div className="flex lg:grid lg:grid-cols-2 gap-1.5 overflow-x-auto lg:overflow-visible scrollbar-hide -mx-1 px-1 lg:mx-0 lg:px-0">
+                {SORTS.map((s) => {
+                  const active = s.id === sortBy;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setSortBy(s.id)}
+                      className="flex-shrink-0 lg:flex-shrink px-3 py-1.5 rounded-lg font-black text-[11px] uppercase tracking-wider transition-transform active:scale-95"
+                      style={{
+                        background: active ? s.accent : '#0d0d0d',
+                        color: active ? '#0d0d0d' : '#9ca3af',
+                        border: `2px solid ${active ? '#0d0d0d' : '#1a1a1a'}`,
+                        boxShadow: active ? `2px 2px 0 #0d0d0d` : 'none',
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Timeframe */}
+            <div>
+              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 px-1">Window</div>
+              <div className="flex lg:grid lg:grid-cols-3 gap-1 lg:gap-1.5">
+                {TIMEFRAMES.map((tf) => {
+                  const active = tf.id === timeframe;
+                  return (
+                    <button
+                      key={tf.id}
+                      onClick={() => setTimeframe(tf.id)}
+                      className="flex-1 lg:flex-initial px-2.5 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-transform active:scale-95"
+                      style={{
+                        background: active ? '#fff' : '#0d0d0d',
+                        color: active ? '#0d0d0d' : '#9ca3af',
+                        border: `2px solid ${active ? '#0d0d0d' : '#1a1a1a'}`,
+                        boxShadow: active ? '2px 2px 0 #0d0d0d' : 'none',
+                      }}
+                    >
+                      {tf.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Community stats — compact, sidebar only */}
+            {communityStats && (
+              <div
+                className="hidden lg:block rounded-xl p-3"
                 style={{
-                  background: active ? '#fbbf24' : '#0d0d0d',
-                  color: active ? '#0d0d0d' : '#9ca3af',
-                  border: '2.5px solid #0d0d0d',
-                  boxShadow: active ? '3px 3px 0 #0d0d0d' : '2px 2px 0 #1a1a1a',
-                  transform: active ? 'translate(-1px, -1px)' : 'none',
+                  background: '#0d0d0d',
+                  border: '2px solid #1a1a1a',
                 }}
               >
-                <span className="text-base leading-none">{s.emoji}</span>
-                {s.label}
-              </button>
-            );
-          })}
-        </div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Community</div>
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-bold">Bettors</span>
+                    <span className="text-emerald-400 font-black tabular-nums">{communityStats.activeBettors.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-bold">Avg win %</span>
+                    <span className="text-cyan-400 font-black tabular-nums">{(communityStats.avgWinRate || 0).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-bold">Winnings</span>
+                    <span className="text-orange-400 font-black tabular-nums">{formatProfit(communityStats.totalProfits)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </aside>
 
-        {/* ── Sort metric pills + timeframe dropdown row ────────── */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide flex-1 min-w-0">
-            {SORTS.map((s) => {
-              const active = s.id === sortBy;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setSortBy(s.id)}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-lg font-black text-[11px] uppercase tracking-wider transition-transform active:scale-95"
-                  style={{
-                    background: active ? s.accent : '#0d0d0d',
-                    color: active ? '#0d0d0d' : '#9ca3af',
-                    border: `2px solid ${active ? '#0d0d0d' : '#1a1a1a'}`,
-                    boxShadow: active ? `2px 2px 0 #0d0d0d` : 'none',
-                  }}
-                >
-                  {s.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex gap-1 flex-shrink-0">
-            {TIMEFRAMES.map((tf) => {
-              const active = tf.id === timeframe;
-              return (
-                <button
-                  key={tf.id}
-                  onClick={() => setTimeframe(tf.id)}
-                  className="px-2.5 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-transform active:scale-95"
-                  style={{
-                    background: active ? '#fff' : '#0d0d0d',
-                    color: active ? '#0d0d0d' : '#9ca3af',
-                    border: `2px solid ${active ? '#0d0d0d' : '#1a1a1a'}`,
-                    boxShadow: active ? '2px 2px 0 #0d0d0d' : 'none',
-                  }}
-                >
-                  {tf.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Top 3 podium row (compact, all 3 visible at once) ─── */}
-        {!loading && leaders.length >= 3 && (
-          <TopThreeStrip
-            leaders={leaders.slice(0, 3)}
-            sortBy={sortBy}
-            onOpen={handleOpenLeader}
-            userToProps={userToProps}
-          />
-        )}
+          {/* ── Main board column ─────────────────────────────────── */}
+          <div className="min-w-0">
 
         {/* ── The list ─────────────────────────────────────────── */}
         {loading ? (
@@ -579,6 +589,8 @@ const Leaderboard = () => {
             </div>
           </div>
         )}
+          </div>{/* /board column */}
+        </div>{/* /grid */}
       </div>
 
       {showProfileModal && (
