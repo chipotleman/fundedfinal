@@ -968,7 +968,28 @@ export default function TopNavbar({
                       <>
                         <div
                           className="fixed inset-0 z-[45]"
-                          onClick={() => setShowUserMenu(false)}
+                          onClick={(e) => {
+                            setShowUserMenu(false);
+                            // Allow a single click on the messages or notifications
+                            // buttons to fall through: detect what's underneath the
+                            // backdrop at the click point and forward the click.
+                            const backdrop = e.currentTarget;
+                            const x = e.clientX;
+                            const y = e.clientY;
+                            const prevPE = backdrop.style.pointerEvents;
+                            backdrop.style.pointerEvents = 'none';
+                            const el = typeof document !== 'undefined'
+                              ? document.elementFromPoint(x, y)
+                              : null;
+                            backdrop.style.pointerEvents = prevPE;
+                            if (el) {
+                              if (msgBtnRef.current && msgBtnRef.current.contains(el)) {
+                                msgBtnRef.current.click();
+                              } else if (notifBellRef.current && notifBellRef.current.contains(el)) {
+                                notifBellRef.current.click();
+                              }
+                            }
+                          }}
                         />
                         
                         {/* Menu */}
@@ -1025,22 +1046,6 @@ export default function TopNavbar({
                                 <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
                               </svg>
                               <span className="font-medium">Battle History</span>
-                            </Link>
-
-                            <Link
-                              href="/dashboard"
-                              onClick={() => setShowUserMenu(false)}
-                              aria-current={router.pathname === '/dashboard' ? 'page' : undefined}
-                              className={`w-full flex items-center space-x-3 px-4 py-3 lg:hover:bg-[#1a1a1a] lg:hover:text-blue-400 transition-colors border-l-[3px] ${
-                                router.pathname === '/dashboard'
-                                  ? 'bg-[#0f1d3a] text-white border-l-[#3b82f6]'
-                                  : 'text-gray-300 border-l-transparent'
-                              }`}
-                            >
-                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                              </svg>
-                              <span className="font-medium">Battle</span>
                             </Link>
 
                             <Link
