@@ -1582,25 +1582,25 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 >
                   <svg className="w-4 h-4" style={{ color: '#7dd3fc' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
-                {onBack && (
-                  <button
-                    aria-label="Back"
-                    onClick={onBack}
-                    className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center absolute"
-                    style={{ top: 18, left: 18, backgroundColor: '#0a0f1c', border: '2px solid #06b6d4', boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(6,182,212,0.6)', zIndex: 5 }}
-                  >
-                    <svg className="w-4 h-4" style={{ color: '#7dd3fc' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
-                  </button>
-                )}
+                <button
+                  aria-label="Back"
+                  onClick={onBack || onClose}
+                  className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center absolute"
+                  style={{ top: 18, left: 18, backgroundColor: '#0a0f1c', border: '2px solid #06b6d4', boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(6,182,212,0.6)', zIndex: 5 }}
+                >
+                  <svg className="w-4 h-4" style={{ color: '#7dd3fc' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+                </button>
                 {/* Centered hero title — full-width "QUICK MATCH" with
-                    decorative lightning bolts flanking it on both sides. */}
-                <div className="flex items-center justify-center gap-3 mb-2 mt-1">
-                  <span aria-hidden="true" style={{ fontSize: 30, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                    decorative lightning bolts flanking it on both sides.
+                    Padded horizontally so the title never slides under
+                    the back / close HUD buttons. */}
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 mt-1 px-12 sm:px-14">
+                  <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                   <h2
                     id="qm-title"
                     className="font-black uppercase text-center"
                     style={{
-                      fontSize: 'clamp(44px, 12vw, 60px)',
+                      fontSize: 'clamp(28px, 8vw, 44px)',
                       lineHeight: 0.92,
                       letterSpacing: '0.01em',
                       fontStyle: 'italic',
@@ -1615,7 +1615,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   >
                     Quick Match
                   </h2>
-                  <span aria-hidden="true" style={{ fontSize: 30, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                  <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
