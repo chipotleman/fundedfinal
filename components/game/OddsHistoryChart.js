@@ -235,13 +235,17 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
     return history;
   }, [data.points, history]);
 
-  // Layout constants — keep in viewBox space so the SVG scales fluidly.
-  const VB_W = 800;
-  const VB_H = 240;
-  const PAD_L = 12;
-  const PAD_R = 64;  // room for right-edge live labels
+  // Layout — use the *measured* container width as the viewBox width so
+  // the SVG renders 1:1 with screen pixels and text doesn't get stretched
+  // horizontally. (Previously we used a fixed 800-wide viewBox with
+  // preserveAspectRatio="none", which made labels and badges look
+  // squished/elongated on wider screens.) Height is fixed.
+  const VB_H = 220;
+  const VB_W = Math.max(320, Math.round(width));
+  const PAD_L = 14;
+  const PAD_R = 56;  // room for right-edge live labels
   const PAD_T = 16;
-  const PAD_B = 28;
+  const PAD_B = 26;
   const plotW = VB_W - PAD_L - PAD_R;
   const plotH = VB_H - PAD_T - PAD_B;
 
@@ -278,12 +282,12 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
   const last = series[series.length - 1] || null;
 
   // Pointer interaction — find nearest point by x. Works for both mouse
-  // and touch via pointer events.
+  // and touch via pointer events. viewBox is now sized to live width so
+  // pixel-space and viewBox-space match 1:1.
   const onPointerMove = (e) => {
     if (!svgRef.current || series.length === 0) return;
     const rect = svgRef.current.getBoundingClientRect();
-    const px = e.clientX - rect.left;
-    const vbX = (px / rect.width) * VB_W;
+    const vbX = e.clientX - rect.left;
     if (vbX < PAD_L - 4 || vbX > PAD_L + plotW + 4) { setHover(null); return; }
     let best = 0;
     let bestDx = Infinity;
@@ -372,9 +376,9 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
           <svg
             ref={svgRef}
             viewBox={`0 0 ${VB_W} ${VB_H}`}
-            preserveAspectRatio="none"
+            preserveAspectRatio="xMidYMid meet"
             className="w-full block select-none"
-            style={{ height: 'clamp(180px, 32vw, 240px)' }}
+            style={{ height: VB_H }}
             onPointerMove={onPointerMove}
             onPointerLeave={onPointerLeave}
           >
@@ -395,23 +399,23 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
               <text
                 key={'l-' + p}
                 x={PAD_L + plotW + 6}
-                y={yOf(p) + 3}
-                fontSize="9"
-                fill="#3f3f46"
-                fontWeight="700"
+                y={yOf(p) + 4}
+                fontSize="11"
+                fill="#52525b"
+                fontWeight="600"
               >
                 {Math.round(p * 100)}%
               </text>
             ))}
 
             {/* Time axis labels (start / mid / end) */}
-            <text x={PAD_L} y={VB_H - 8} fontSize="9" fill="#52525b" fontWeight="700">
+            <text x={PAD_L} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600">
               {fmtTime(tMin, range)}
             </text>
-            <text x={PAD_L + plotW / 2} y={VB_H - 8} fontSize="9" fill="#52525b" fontWeight="700" textAnchor="middle">
+            <text x={PAD_L + plotW / 2} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600" textAnchor="middle">
               {fmtTime((tMin + tMax) / 2, range)}
             </text>
-            <text x={PAD_L + plotW} y={VB_H - 8} fontSize="9" fill="#52525b" fontWeight="700" textAnchor="end">
+            <text x={PAD_L + plotW} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600" textAnchor="end">
               now
             </text>
 
