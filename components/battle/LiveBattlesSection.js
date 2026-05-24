@@ -750,7 +750,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
   return (
     <div
       ref={cardRef}
-      className={`rounded-xl overflow-hidden ${focused ? 'live-battle-highlight' : ''}`}
+      className={`rounded-xl overflow-hidden w-full h-full flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
       style={{
         backgroundColor: '#0d0d0d',
         border: focused ? '1px solid rgba(6, 182, 212, 0.5)' : `1px solid ${'#1a1a1a'}`,
@@ -3624,7 +3624,7 @@ export default function LiveBattlesSection({
             row feel broken. Letting cards grow naturally keeps the visual
             simple: collapsed cards stay short, expanded cards extend down,
             and the carousel stays horizontally scrollable either way. */}
-        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
               youVsState={youVsState}
