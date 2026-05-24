@@ -1912,11 +1912,91 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               opacity: betaLocked ? 0.55 : 0.9,
                             }}
                           />
+                          {/* Mode-specific themed backdrop. Each tile gets
+                              its own decorative pattern so RUSH feels like
+                              electric speed, ORIGINAL like a balanced
+                              trophy stage, and TOURNAMENT like a royal
+                              crown arena. */}
+                          {mode.id === 'rush' && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute inset-0 pointer-events-none overflow-hidden"
+                              style={{ borderRadius: 'inherit', opacity: betaLocked ? 0.3 : 0.9 }}
+                            >
+                              <span
+                                className="absolute inset-0"
+                                style={{
+                                  background:
+                                    'repeating-linear-gradient(115deg, rgba(16,185,129,0.18) 0 6px, transparent 6px 16px)',
+                                }}
+                              />
+                              <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))' }}>⚡</span>
+                              <span style={{ position: 'absolute', bottom: 30, right: 6, fontSize: 14, opacity: 0.5, color: '#fde047', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))', transform: 'rotate(18deg)' }}>⚡</span>
+                            </span>
+                          )}
+                          {mode.id === 'original' && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute inset-0 pointer-events-none overflow-hidden"
+                              style={{ borderRadius: 'inherit', opacity: betaLocked ? 0.3 : 0.85 }}
+                            >
+                              <span
+                                className="absolute inset-0"
+                                style={{
+                                  background:
+                                    'radial-gradient(ellipse at 50% 100%, rgba(250,204,21,0.22) 0%, transparent 55%)',
+                                }}
+                              />
+                              <span
+                                className="absolute"
+                                style={{
+                                  top: 14, left: '50%', transform: 'translateX(-50%)',
+                                  width: 56, height: 26, borderRadius: '50%',
+                                  background: 'radial-gradient(ellipse, rgba(250,204,21,0.45), transparent 70%)',
+                                  filter: 'blur(2px)',
+                                }}
+                              />
+                              <span style={{ position: 'absolute', top: 10, left: 8, fontSize: 9, color: '#facc15', opacity: 0.7 }}>★</span>
+                              <span style={{ position: 'absolute', top: 10, right: 8, fontSize: 9, color: '#facc15', opacity: 0.7 }}>★</span>
+                            </span>
+                          )}
+                          {mode.id === 'tournament' && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute inset-0 pointer-events-none overflow-hidden"
+                              style={{ borderRadius: 'inherit', opacity: betaLocked ? 0.3 : 0.9 }}
+                            >
+                              <span
+                                className="absolute inset-0"
+                                style={{
+                                  background:
+                                    'repeating-linear-gradient(180deg, rgba(249,115,22,0.14) 0 3px, transparent 3px 9px)',
+                                }}
+                              />
+                              <span
+                                className="absolute"
+                                style={{
+                                  inset: 0,
+                                  background:
+                                    'radial-gradient(circle at 50% 28%, rgba(250,204,21,0.35) 0%, transparent 45%)',
+                                }}
+                              />
+                              <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
+                              <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
+                              <span style={{ position: 'absolute', bottom: 28, left: 8, fontSize: 9, color: '#fb923c', opacity: 0.7 }}>♛</span>
+                              <span style={{ position: 'absolute', bottom: 28, right: 8, fontSize: 9, color: '#fb923c', opacity: 0.7 }}>♛</span>
+                            </span>
+                          )}
                           <span
                             className="leading-none mb-2 relative"
                             style={{
                               fontSize: 38,
                               filter: `drop-shadow(0 0 14px ${glow}) drop-shadow(0 2px 0 #000)`,
+                              animation: mode.id === 'rush'
+                                ? 'qm-bolt-flicker 1.4s ease-in-out infinite'
+                                : mode.id === 'tournament'
+                                ? 'qm-banner-bounce 0.9s cubic-bezier(0.34,1.56,0.64,1)'
+                                : undefined,
                             }}
                           >
                             {mode.icon}
@@ -1992,47 +2072,6 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                       <span style={{ color: '#cbd5e1' }}>{selectedMode.description}</span>
                     </p>
                   )}
-                  {/* Gamification stat strip — Best Streak / Daily
-                      Jackpot / Next Reward. Matches the marketing-style
-                      mockup. The values are cosmetic for the intro
-                      popup; the real per-user streak lives on the
-                      profile page. */}
-                  <div className="mt-3 grid grid-cols-3 gap-1.5">
-                    {[
-                      { icon: '🏆', label: 'Best Streak', value: '12 Wins', color: '#3b82f6', glow: 'rgba(59,130,246,0.5)' },
-                      { icon: '🪙', label: 'Daily Jackpot', value: '250,000', color: '#facc15', glow: 'rgba(250,204,21,0.55)', highlight: true },
-                      { icon: '🎁', label: 'Next Reward', value: '3 Wins Away', color: '#10b981', glow: 'rgba(16,185,129,0.5)' },
-                    ].map((s) => (
-                      <div
-                        key={s.label}
-                        className="rounded-xl px-1.5 py-1.5 flex flex-col items-center text-center"
-                        style={{
-                          background: s.highlight
-                            ? 'linear-gradient(180deg,#1a1505,#0a0e1c)'
-                            : 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-                          border: `2.5px solid ${s.color}`,
-                          boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${s.glow}`,
-                        }}
-                      >
-                        <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1, filter: `drop-shadow(0 0 6px ${s.glow}) drop-shadow(0 1px 0 #0a0a0a)` }}>{s.icon}</span>
-                        <span className="text-white text-[8px] font-black uppercase mt-1" style={{ letterSpacing: '0.14em', opacity: 0.7 }}>{s.label}</span>
-                        <span
-                          className="text-[10px] font-black uppercase mt-0.5 px-1.5 py-0.5 rounded-md w-full truncate"
-                          style={{
-                            color: s.highlight ? '#0a0a0a' : '#fff',
-                            background: s.highlight
-                              ? 'linear-gradient(180deg,#fde047,#facc15)'
-                              : `linear-gradient(180deg,${s.color},${s.color}cc)`,
-                            border: '1.5px solid #0a0a0a',
-                            letterSpacing: '0.06em',
-                            textShadow: s.highlight ? 'none' : '0 1px 0 rgba(0,0,0,0.4)',
-                          }}
-                        >
-                          {s.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 <button
