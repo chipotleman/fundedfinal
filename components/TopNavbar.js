@@ -620,7 +620,18 @@ export default function TopNavbar({
             <div className="hidden lg:flex items-center space-x-8">
               {(() => {
                 const currentPath = router.pathname || '';
-                const isActive = (href) => currentPath === href || currentPath.startsWith(`${href}/`);
+                const isActive = (href) => {
+                  // The Battle link points at `/dashboard`, but that route is a
+                  // permanent redirect to `/` (home). Treat home as Battle's
+                  // landing page so the active treatment actually shows up
+                  // when the user lands there. Other links keep the plain
+                  // path-prefix check so they don't accidentally light up on
+                  // home too.
+                  if (href === '/dashboard') {
+                    return currentPath === '/dashboard' || currentPath === '/';
+                  }
+                  return currentPath === href || currentPath.startsWith(`${href}/`);
+                };
                 const renderNavLink = (href, label) => {
                   const active = isActive(href);
                   return (

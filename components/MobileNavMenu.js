@@ -337,18 +337,25 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                   )}
                 </Link>
               )}
-              <Link
-                href="/dashboard"
-                onClick={handleNavigation('/dashboard')}
-                aria-current={router.pathname === '/dashboard' ? 'page' : undefined}
-                className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
-                  router.pathname === '/dashboard'
-                    ? 'text-white font-bold border-l-[#3b82f6]'
-                    : 'text-gray-300 font-light border-l-transparent'
-                }`}
-              >
-                Battle
-              </Link>
+              {(() => {
+                // `/dashboard` permanently redirects to `/`, so treat home as
+                // Battle's landing page when deciding the active treatment.
+                const battleActive = router.pathname === '/dashboard' || router.pathname === '/';
+                return (
+                  <Link
+                    href="/dashboard"
+                    onClick={handleNavigation('/dashboard')}
+                    aria-current={battleActive ? 'page' : undefined}
+                    className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                      battleActive
+                        ? 'text-white font-bold border-l-[#3b82f6]'
+                        : 'text-gray-300 font-light border-l-transparent'
+                    }`}
+                  >
+                    Battle
+                  </Link>
+                );
+              })()}
               <Link
                 href="/bet-history"
                 onClick={handleNavigation('/bet-history')}
