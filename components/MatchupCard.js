@@ -1,6 +1,7 @@
 // components/MatchupCard.js
 
 import React from 'react';
+import TeamLogo from './TeamLogo';
 
 export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBetSelect }) {
   const [team1, team2] = game.matchup.split(' vs ');
@@ -15,7 +16,10 @@ export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBet
       <div className="grid grid-cols-3 gap-4 items-center">
         {/* Away Team */}
         <div className="text-center">
-          <div className="text-lg font-bold text-white">{game.awayTeam}</div>
+          <div className="flex items-center justify-center gap-2">
+            <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport || game.sportName} size={20} />
+            <div className="text-lg font-bold text-white truncate">{game.awayTeam}</div>
+          </div>
           <div className="text-sm text-gray-400">{game.awayRecord}</div>
         </div>
 
@@ -26,7 +30,10 @@ export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBet
 
         {/* Home Team */}
         <div className="text-center">
-          <div className="text-lg font-bold text-white">{game.homeTeam}</div>
+          <div className="flex items-center justify-center gap-2">
+            <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport || game.sportName} size={20} />
+            <div className="text-lg font-bold text-white truncate">{game.homeTeam}</div>
+          </div>
           <div className="text-sm text-gray-400">{game.homeRecord}</div>
         </div>
       </div>

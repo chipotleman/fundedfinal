@@ -164,7 +164,8 @@ export const BetSlipProvider = ({ children }) => {
         homeScore: capturedHomeScore,
         gameTime: game.time || '',
         gameStart: game.startTime || null,
-        sportName: game.sportName || ''
+        sportName: game.sportName || '',
+        sport: game.sport || game.sportKey || game.sport_key || ''
       };
       
       setBetSlip([...filteredSlip, newBet]);

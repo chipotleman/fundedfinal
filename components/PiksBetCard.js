@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import TapSurface from './TapSurface';
+import TeamLogo, { SelectionLogos } from './TeamLogo';
 import { formatMoney } from '../utils/formatMoney';
 import { calculatePayout } from '../utils/odds';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
@@ -342,8 +343,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
   const ScoreSection = ({ homeTeam, awayTeam, homeScore, awayScore, homeQuarters, awayQuarters }) => (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-sm">
-        <span style={{ color: 'rgba(255,255,255,0.9)' }}>{homeTeam}</span>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <TeamLogo name={homeTeam} sport={bet.sport || bet.sportName} size={18} />
+          <span className="truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{homeTeam}</span>
+        </div>
+        <div className="flex items-center space-x-2 flex-shrink-0">
           {homeQuarters && homeQuarters.length > 0 && (
             <div className="flex space-x-1.5 text-gray-400 text-xs">
               {homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -353,8 +357,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
         </div>
       </div>
       <div className="flex justify-between items-center text-sm">
-        <span style={{ color: 'rgba(255,255,255,0.9)' }}>{awayTeam}</span>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <TeamLogo name={awayTeam} sport={bet.sport || bet.sportName} size={18} />
+          <span className="truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{awayTeam}</span>
+        </div>
+        <div className="flex items-center space-x-2 flex-shrink-0">
           {awayQuarters && awayQuarters.length > 0 && (
             <div className="flex space-x-1.5 text-gray-400 text-xs">
               {awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -449,9 +456,15 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
           className={`flex justify-between items-start mb-2 ${isParlay && isSettled ? 'cursor-pointer' : ''}`}
           onClick={() => isParlay && isSettled && setIsExpanded(!isExpanded)}
         >
-          <div className="flex-1">
+          <div className="flex-1 flex items-start gap-2 min-w-0">
+            {!isParlay && (
+              <div className="mt-0.5">
+                <SelectionLogos selection={getFullSelectionName()} bet={bet} size={22} />
+              </div>
+            )}
+            <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <div className="font-bold text-base" style={{ color: '#ffffff' }}>{isParlay ? formatParlayTitle : getFullSelectionName()}</div>
+              <div className="font-bold text-base truncate" style={{ color: '#ffffff' }}>{isParlay ? formatParlayTitle : getFullSelectionName()}</div>
               {isParlay && isSettled && (
                 <svg 
                   className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -464,6 +477,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
               )}
             </div>
             <div className="text-xs uppercase tracking-wide whitespace-nowrap" style={{ color: '#9ca3af' }}>{bet.betType}</div>
+            </div>
           </div>
           <div className="font-bold text-xl" style={{ color: '#ffffff' }}>
             {formatOdds(bet.odds)}
@@ -496,10 +510,20 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
               return (
                 <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <div className="text-white font-bold text-base">{capitalizeLeagueId(leg.selection)}</div>
-                      <div className="text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">
-                        {leg.betType || 'Moneyline'}
+                    <div className="flex-1 flex items-start gap-2 min-w-0">
+                      <div className="mt-0.5">
+                        <SelectionLogos
+                          selection={leg.selection}
+                          bet={{ ...leg, awayTeam: legTeams.awayTeam, homeTeam: legTeams.homeTeam, awayTeamFull: leg.awayTeamFull || legTeams.awayTeam, homeTeamFull: leg.homeTeamFull || legTeams.homeTeam }}
+                          sport={leg.sport || leg.sportName || bet.sport || bet.sportName}
+                          size={20}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-white font-bold text-base truncate">{capitalizeLeagueId(leg.selection)}</div>
+                        <div className="text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">
+                          {leg.betType || 'Moneyline'}
+                        </div>
                       </div>
                     </div>
                     {parlayLegs.hasRealData && leg.odds && (
@@ -510,8 +534,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.homeTeam)}</span>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <TeamLogo name={legTeams.homeTeam} sport={leg.sport || leg.sportName || bet.sport || bet.sportName} size={18} />
+                        <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.homeTeam)}</span>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
                         </div>
@@ -519,8 +546,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.awayTeam)}</span>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <TeamLogo name={legTeams.awayTeam} sport={leg.sport || leg.sportName || bet.sport || bet.sportName} size={18} />
+                        <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.awayTeam)}</span>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
                         </div>
@@ -563,12 +593,18 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
             {isLiveGame && typeof currentHomeScore === 'number' ? (
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.matchup?.split(' @ ')[0])}</span>
-                  <span className="text-white font-bold">{currentAwayScore}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <TeamLogo name={bet.awayTeamFull || bet.matchup?.split(' @ ')[0]} sport={bet.sport || bet.sportName} size={18} />
+                    <span className="text-sm font-medium truncate" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.matchup?.split(' @ ')[0])}</span>
+                  </div>
+                  <span className="text-white font-bold flex-shrink-0 ml-2">{currentAwayScore}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.matchup?.split(' @ ')[1])}</span>
-                  <span className="text-white font-bold">{currentHomeScore}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <TeamLogo name={bet.homeTeamFull || bet.matchup?.split(' @ ')[1]} sport={bet.sport || bet.sportName} size={18} />
+                    <span className="text-sm font-medium truncate" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.matchup?.split(' @ ')[1])}</span>
+                  </div>
+                  <span className="text-white font-bold flex-shrink-0 ml-2">{currentHomeScore}</span>
                 </div>
               </div>
             ) : (
@@ -640,17 +676,27 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                   return (
                     <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
                       <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="text-white font-bold text-base">{capitalizeLeagueId(getFullSelection())}</div>
-                            {isLegCompleted && (
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded ${legWon ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
-                                {legWon ? 'WON' : 'LOST'}
-                              </span>
-                            )}
+                        <div className="flex-1 flex items-start gap-2 min-w-0">
+                          <div className="mt-0.5">
+                            <SelectionLogos
+                              selection={getFullSelection()}
+                              bet={{ ...leg, awayTeam: legTeams.awayTeam, homeTeam: legTeams.homeTeam, awayTeamFull: leg.awayTeamFull || legTeams.awayTeam, homeTeamFull: leg.homeTeamFull || legTeams.homeTeam }}
+                              sport={leg.sport || leg.sportName || bet.sport || bet.sportName}
+                              size={20}
+                            />
                           </div>
-                          <div className="text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">
-                            {leg.betType || 'Moneyline'}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <div className="text-white font-bold text-base truncate">{capitalizeLeagueId(getFullSelection())}</div>
+                              {isLegCompleted && (
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${legWon ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                                  {legWon ? 'WON' : 'LOST'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">
+                              {leg.betType || 'Moneyline'}
+                            </div>
                           </div>
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
@@ -661,19 +707,25 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                       </div>
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.homeTeamFull || legTeams.homeTeam)}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <TeamLogo name={leg.homeTeamFull || legTeams.homeTeam} sport={leg.sport || leg.sportName || bet.sport || bet.sportName} size={18} />
+                            <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.homeTeamFull || legTeams.homeTeam)}</span>
+                          </div>
                           {(isLegLive || hasScores) ? (
-                            <span className="text-white font-bold">{leg.homeScore}</span>
+                            <span className="text-white font-bold flex-shrink-0 ml-2">{leg.homeScore}</span>
                           ) : (
-                            <span className="text-gray-500 text-xs">-</span>
+                            <span className="text-gray-500 text-xs flex-shrink-0 ml-2">-</span>
                           )}
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.awayTeamFull || legTeams.awayTeam)}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <TeamLogo name={leg.awayTeamFull || legTeams.awayTeam} sport={leg.sport || leg.sportName || bet.sport || bet.sportName} size={18} />
+                            <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.awayTeamFull || legTeams.awayTeam)}</span>
+                          </div>
                           {(isLegLive || hasScores) ? (
-                            <span className="text-white font-bold">{leg.awayScore}</span>
+                            <span className="text-white font-bold flex-shrink-0 ml-2">{leg.awayScore}</span>
                           ) : (
-                            <span className="text-gray-500 text-xs">-</span>
+                            <span className="text-gray-500 text-xs flex-shrink-0 ml-2">-</span>
                           )}
                         </div>
                       </div>

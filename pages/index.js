@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import TapSurface from '../components/TapSurface';
+import TeamLogo from '../components/TeamLogo';
 import LiveGameTimer from '../components/LiveGameTimer';
 import DepositMatchContainer from '../components/DepositMatchContainer';
 import TrendingBetContainer from '../components/TrendingBetContainer';
@@ -1566,11 +1567,17 @@ export default function Dashboard() {
                       onClick={() => router.push(`/game/${game.id}`)}
                     >
                       <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: '170px' }}>{game.awayTeamFull || game.awayTeam}</span>
+                        <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: '190px' }}>
+                          <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} size={18} />
+                          <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.awayTeamFull || game.awayTeam}</span>
+                        </div>
                         {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: '170px' }}>{game.homeTeamFull || game.homeTeam}</span>
+                        <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: '190px' }}>
+                          <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport} size={18} />
+                          <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.homeTeamFull || game.homeTeam}</span>
+                        </div>
                         {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>}
                       </div>
                     </div>
@@ -1680,7 +1687,10 @@ export default function Dashboard() {
                         onClick={() => router.push(`/game/${game.id}`)}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: 'calc(100% - 40px)' }}>{game.awayTeamFull || game.awayTeam}</span>
+                          <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: 'calc(100% - 40px)' }}>
+                            <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} size={20} />
+                            <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.awayTeamFull || game.awayTeam}</span>
+                          </div>
                           {(isLive || isFinal) ? (
                             <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>
                           ) : (
@@ -1688,7 +1698,10 @@ export default function Dashboard() {
                           )}
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: 'calc(100% - 40px)' }}>{game.homeTeamFull || game.homeTeam}</span>
+                          <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: 'calc(100% - 40px)' }}>
+                            <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport} size={20} />
+                            <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.homeTeamFull || game.homeTeam}</span>
+                          </div>
                           {(isLive || isFinal) ? (
                             <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>
                           ) : (

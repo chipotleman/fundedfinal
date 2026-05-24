@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import TeamLogo, { SelectionLogos } from './TeamLogo';
 import { useGames } from '../contexts/GamesContext';
 import { useMatchup } from '../contexts/MatchupContext';
 import ShareableBetSlip from './ShareableBetSlip';
@@ -1065,6 +1066,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                             
                             {/* Content column - has the padding and spacing from circles and delete button */}
                             <div className="flex-1 flex items-center gap-3 py-3 pl-3 pr-4 min-w-0">
+                              {/* Fixed-width logo slot: single picked-team logo for ML/spread, dual logos for totals */}
+                              <SelectionLogos selection={bet.selection} bet={bet} size={20} />
                               {/* Leg Info */}
                               <div className="flex-1 min-w-0">
                                 <div className="font-bold text-sm leading-tight" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.selection)}</div>
@@ -1265,9 +1268,14 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                             <div className="px-4 pb-4">
                               {/* Selection & Odds Row */}
                               <div className="flex justify-between items-start mb-3">
-                                <div className="flex-1">
-                                  <div className="font-bold text-lg leading-tight" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.selection)}</div>
-                                  <div className="text-gray-500 text-xs uppercase mt-0.5 whitespace-nowrap">{bet.betType}</div>
+                                <div className="flex-1 flex items-start gap-2 min-w-0">
+                                  <div className="mt-0.5">
+                                    <SelectionLogos selection={bet.selection} bet={bet} size={22} />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="font-bold text-lg leading-tight truncate" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.selection)}</div>
+                                    <div className="text-gray-500 text-xs uppercase mt-0.5 whitespace-nowrap">{bet.betType}</div>
+                                  </div>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   {bet.oddsMoved === 'down' && <span className="text-red-500 text-sm">▼</span>}
@@ -1290,12 +1298,18 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                     </div>
                                   )}
                                   <div className="flex justify-between items-center">
-                                    <span className="text-sm" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
-                                    {awayScore !== null && <span className="font-bold text-sm" style={{ color: '#ffffff' }}>{awayScore}</span>}
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <TeamLogo name={bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]} sport={bet.sport || bet.sportName} size={18} />
+                                      <span className="text-sm truncate" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
+                                    </div>
+                                    {awayScore !== null && <span className="font-bold text-sm flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{awayScore}</span>}
                                   </div>
                                   <div className="flex justify-between items-center">
-                                    <span className="text-sm" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1] || 'Home')}</span>
-                                    {homeScore !== null && <span className="font-bold text-sm" style={{ color: '#ffffff' }}>{homeScore}</span>}
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <TeamLogo name={bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]} sport={bet.sport || bet.sportName} size={18} />
+                                      <span className="text-sm truncate" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1] || 'Home')}</span>
+                                    </div>
+                                    {homeScore !== null && <span className="font-bold text-sm flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{homeScore}</span>}
                                   </div>
                                 </div>
                               </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { formatMoney } from '../utils/formatMoney';
+import TeamLogo, { SelectionLogos } from './TeamLogo';
 import { calculatePayout } from '../utils/odds';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
@@ -218,9 +219,14 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                       return (
                         <div key={index} className="bg-[#111] rounded p-2">
                           <div className="flex justify-between items-start mb-1">
-                            <div className="flex-1">
-                              <div className="text-white font-bold text-xs">{leg.selection}</div>
-                              <div className="text-gray-400 text-[10px] uppercase whitespace-nowrap">{leg.betType || 'Moneyline'}</div>
+                            <div className="flex-1 flex items-start gap-2 min-w-0">
+                              <div className="mt-0.5">
+                                <SelectionLogos selection={leg.selection} bet={leg} size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-white font-bold text-xs truncate">{leg.selection}</div>
+                                <div className="text-gray-400 text-[10px] uppercase whitespace-nowrap">{leg.betType || 'Moneyline'}</div>
+                              </div>
                             </div>
                             {leg.odds && (
                               <div className="font-bold text-sm text-blue-400">
@@ -231,12 +237,18 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                           {hasLegLiveScores ? (
                             <div className="space-y-1">
                               <div className="flex justify-between items-center">
-                                <span className="text-white text-sm font-medium">{leg.awayTeamFull || leg.awayTeam || leg.matchup?.split(' @ ')[0]}</span>
-                                <span className="text-white font-bold">{leg.awayScore}</span>
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <TeamLogo name={leg.awayTeamFull || leg.awayTeam || leg.matchup?.split(' @ ')[0]} sport={leg.sport || leg.sportName} size={18} />
+                                  <span className="text-white text-sm font-medium truncate">{leg.awayTeamFull || leg.awayTeam || leg.matchup?.split(' @ ')[0]}</span>
+                                </div>
+                                <span className="text-white font-bold flex-shrink-0 ml-2">{leg.awayScore}</span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-white text-sm font-medium">{leg.homeTeamFull || leg.homeTeam || leg.matchup?.split(' @ ')[1]}</span>
-                                <span className="text-white font-bold">{leg.homeScore}</span>
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <TeamLogo name={leg.homeTeamFull || leg.homeTeam || leg.matchup?.split(' @ ')[1]} sport={leg.sport || leg.sportName} size={18} />
+                                  <span className="text-white text-sm font-medium truncate">{leg.homeTeamFull || leg.homeTeam || leg.matchup?.split(' @ ')[1]}</span>
+                                </div>
+                                <span className="text-white font-bold flex-shrink-0 ml-2">{leg.homeScore}</span>
                               </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
@@ -265,9 +277,14 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
               return (
                 <div className="pt-1 mt-1">
                   <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="text-white font-bold text-sm">{bet.team || bet.selection}</div>
-                      <div className="text-gray-400 text-xs uppercase whitespace-nowrap">{bet.betType}</div>
+                    <div className="flex-1 flex items-start gap-2 min-w-0">
+                      <div className="mt-0.5">
+                        <SelectionLogos selection={bet.team || bet.selection} bet={bet} size={20} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-white font-bold text-sm truncate">{bet.team || bet.selection}</div>
+                        <div className="text-gray-400 text-xs uppercase whitespace-nowrap">{bet.betType}</div>
+                      </div>
                     </div>
                     <div className={`font-bold text-lg ${isOpen ? colors.text : 'text-white'}`}>
                       {formatOdds(bet.odds)}
@@ -279,12 +296,18 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                     {showLiveDisplay ? (
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-white text-sm font-medium">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
-                          <span className="text-white font-bold">{bet.homeScore}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <TeamLogo name={bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]} sport={bet.sport || bet.sportName} size={18} />
+                            <span className="text-white text-sm font-medium truncate">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
+                          </div>
+                          <span className="text-white font-bold flex-shrink-0 ml-2">{bet.homeScore}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-white text-sm font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
-                          <span className="text-white font-bold">{bet.awayScore}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <TeamLogo name={bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]} sport={bet.sport || bet.sportName} size={18} />
+                            <span className="text-white text-sm font-medium truncate">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
+                          </div>
+                          <span className="text-white font-bold flex-shrink-0 ml-2">{bet.awayScore}</span>
                         </div>
                         {isLive && (
                           <div className="flex items-center gap-1 mt-1">

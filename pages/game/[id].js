@@ -6,7 +6,7 @@ import { useGames } from '../../contexts/GamesContext';
 import OddsHistoryChart from '../../components/game/OddsHistoryChart';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { leavePage } from '../../utils/leavePage';
-import { getTeamLogo } from '../../utils/getTeamLogo';
+import TeamLogo from '../../components/TeamLogo';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -571,41 +571,8 @@ export default function GameDetail() {
 // so adding picks here flows into the global bet slip exactly as it
 // does on mobile.
 
-function teamInitials(name) {
-  if (!name) return '?';
-  const parts = String(name).trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
-  return (parts[parts.length - 1] || '').slice(0, 3).toUpperCase();
-}
-
 function TeamLogoBadge({ name, sport, accent = 'orange', size = 64 }) {
-  const logoUrl = getTeamLogo(name, sport);
-  const [failed, setFailed] = useState(false);
-  const accentStyles = accent === 'blue'
-    ? { background: 'rgba(59,130,246,0.15)', border: '2px solid rgba(59,130,246,0.5)', color: '#3b82f6' }
-    : { background: 'rgba(251,146,60,0.15)', border: '2px solid rgba(251,146,60,0.5)', color: '#fb923c' };
-  const dimStyle = { width: size, height: size };
-  const showLogo = logoUrl && !failed;
-  return (
-    <div
-      className="rounded-full flex items-center justify-center text-base font-black overflow-hidden flex-shrink-0"
-      style={{ ...dimStyle, ...accentStyles }}
-    >
-      {showLogo ? (
-        <img
-          src={logoUrl}
-          alt={name || 'Team'}
-          width={size}
-          height={size}
-          loading="lazy"
-          onError={() => setFailed(true)}
-          style={{ width: '78%', height: '78%', objectFit: 'contain' }}
-        />
-      ) : (
-        teamInitials(name)
-      )}
-    </div>
-  );
+  return <TeamLogo name={name} sport={sport} accent={accent} size={size} />;
 }
 
 function DesktopMarketCard({ title, children }) {
