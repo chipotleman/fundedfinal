@@ -66,7 +66,7 @@ const TOP_STRIP_MIN_Z = 50;
 function isInsideOpenModal(el) {
   if (!el) return false;
   return !!el.closest(
-    '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"]'
+    '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"], [data-allow-fixed-overlay="true"]'
   );
 }
 
@@ -191,7 +191,7 @@ export function installTopNavClickTrapWatchdog(tag) {
     const b = document.body.style;
     const isLocked = b.position === 'fixed' || b.overflow === 'hidden';
     const hasOpenModal = !!document.querySelector(
-      '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"]'
+      '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"], [data-allow-fixed-overlay="true"]'
     );
     if (isLocked && !hasOpenModal) {
       releaseBodyLock();
