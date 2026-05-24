@@ -6,6 +6,7 @@ import { useGames } from '../../contexts/GamesContext';
 import OddsHistoryChart from '../../components/game/OddsHistoryChart';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { leavePage } from '../../utils/leavePage';
+import { getTeamLogo } from '../../utils/getTeamLogo';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -322,13 +323,19 @@ export default function GameDetail() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-lg font-bold truncate text-white">{game.awayTeamFull || game.awayTeam}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <TeamLogoBadge name={game.awayTeamFull || game.awayTeam} sport={game.sport} accent="orange" size={28} />
+                    <span className="text-lg font-bold truncate text-white">{game.awayTeamFull || game.awayTeam}</span>
+                  </div>
                   <span className="text-2xl font-black tabular-nums" style={{ color: '#fb923c' }}>
                     {isLive || isFinal ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0) : '—'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-lg font-bold truncate text-white">{game.homeTeamFull || game.homeTeam}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <TeamLogoBadge name={game.homeTeamFull || game.homeTeam} sport={game.sport} accent="blue" size={28} />
+                    <span className="text-lg font-bold truncate text-white">{game.homeTeamFull || game.homeTeam}</span>
+                  </div>
                   <span className="text-2xl font-black tabular-nums" style={{ color: '#3b82f6' }}>
                     {isLive || isFinal ? (possession?.homeScore ?? game.scores?.home?.total ?? game.homeScore ?? 0) : '—'}
                   </span>
@@ -575,6 +582,36 @@ function teamInitials(name) {
   return (parts[parts.length - 1] || '').slice(0, 3).toUpperCase();
 }
 
+function TeamLogoBadge({ name, sport, accent = 'orange', size = 64 }) {
+  const logoUrl = getTeamLogo(name, sport);
+  const [failed, setFailed] = useState(false);
+  const accentStyles = accent === 'blue'
+    ? { background: 'rgba(59,130,246,0.15)', border: '2px solid rgba(59,130,246,0.5)', color: '#3b82f6' }
+    : { background: 'rgba(251,146,60,0.15)', border: '2px solid rgba(251,146,60,0.5)', color: '#fb923c' };
+  const dimStyle = { width: size, height: size };
+  const showLogo = logoUrl && !failed;
+  return (
+    <div
+      className="rounded-full flex items-center justify-center text-base font-black overflow-hidden flex-shrink-0"
+      style={{ ...dimStyle, ...accentStyles }}
+    >
+      {showLogo ? (
+        <img
+          src={logoUrl}
+          alt={name || 'Team'}
+          width={size}
+          height={size}
+          loading="lazy"
+          onError={() => setFailed(true)}
+          style={{ width: '78%', height: '78%', objectFit: 'contain' }}
+        />
+      ) : (
+        teamInitials(name)
+      )}
+    </div>
+  );
+}
+
 function DesktopMarketCard({ title, children }) {
   // `h-full` makes the card stretch to fill its grid row, and the
   // inner flex column lets the children area (`flex-1`) expand so
@@ -709,12 +746,7 @@ function DesktopGameDetail({
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
             {/* Away */}
             <div className="flex items-center gap-4">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center text-base font-black"
-                style={{ background: 'rgba(251,146,60,0.15)', border: '2px solid rgba(251,146,60,0.5)', color: '#fb923c' }}
-              >
-                {teamInitials(awayName)}
-              </div>
+              <TeamLogoBadge name={awayName} sport={game.sport} accent="orange" size={64} />
               <div className="min-w-0">
                 <div className="text-xl font-black text-white truncate">{awayName}</div>
                 <div className="text-xs text-gray-500 font-semibold">{game.awayRecord || 'Away'}</div>
@@ -759,12 +791,7 @@ function DesktopGameDetail({
                 <div className="text-xl font-black text-white truncate">{homeName}</div>
                 <div className="text-xs text-gray-500 font-semibold">{game.homeRecord || 'Home'}</div>
               </div>
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center text-base font-black"
-                style={{ background: 'rgba(59,130,246,0.15)', border: '2px solid rgba(59,130,246,0.5)', color: '#3b82f6' }}
-              >
-                {teamInitials(homeName)}
-              </div>
+              <TeamLogoBadge name={homeName} sport={game.sport} accent="blue" size={64} />
             </div>
           </div>
 
