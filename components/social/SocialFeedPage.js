@@ -896,7 +896,35 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
   const [commentCount, setCommentCount] = useState(Number(battle.commentCount) || 0);
   // Simulated battles aren't real matchups in the DB, so like/share
   // toggles would 404 — disable those affordances on placeholders.
-  const isSimulated = !!battle.isSimulated || battle.id?.startsWith?.('sim-');
+  // Note: real bot battles (isFakeOpponent=true) have real UUIDs and
+  // DO support likes — only synthetic `sim-…` cards are gated here.
+  const isSimulated = !!battle.isSimulated || !!battle.simulated || battle.id?.startsWith?.('sim-');
+
+  // Re-sync from props when the parent refetches `/api/battles/live`
+  // and the server-side `likedByMe` / `likeCount` actually change
+  // (e.g. the auth session hydrates after the first paint, or another
+  // tab toggles the like). Without this, the initial `useState` value
+  // sticks forever and the next Like click can race the server.
+  //
+  // IMPORTANT: deps are only the prop values themselves — NOT
+  // `likePending`. If `likePending` were a dep, this effect would
+  // re-fire when a toggle request completes (pending: true → false)
+  // and overwrite the just-confirmed API result with whatever stale
+  // props the parent still holds (the parent only refetches on focus
+  // / SSE highlight, not after every like). We additionally guard
+  // with a ref-tracked "last props we synced from" so once we accept
+  // an API result, a later parent re-render that passes the same
+  // pre-toggle props through doesn't clobber the confirmed state.
+  const lastSyncedRef = useRef({ likedByMe: !!battle.likedByMe, likeCount: Number(battle.likeCount) || 0 });
+  useEffect(() => {
+    const nextLiked = !!battle.likedByMe;
+    const nextCount = Number(battle.likeCount) || 0;
+    const last = lastSyncedRef.current;
+    if (last.likedByMe === nextLiked && last.likeCount === nextCount) return;
+    lastSyncedRef.current = { likedByMe: nextLiked, likeCount: nextCount };
+    setLiked(nextLiked);
+    setLikeCount(nextCount);
+  }, [battle.likedByMe, battle.likeCount]);
 
   const handleLike = async (e) => {
     e?.stopPropagation?.();
@@ -1263,8 +1291,9 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
       )}
 
       {/* Action bar — Spectate routes to the full overview page;
-          Like toggles a battle_likes row; Comment opens the inline
-          spectator chat thread; Share opens the in-platform share sheet. */}
+          Like toggles a battle_likes row; Chat opens the inline
+          spectator chat thread (labeled "Hide" when already open);
+          Share opens the in-platform share sheet. */}
       <div
         className="grid grid-cols-4"
         style={{ borderTop: `2px solid ${HH_BORDER}` }}
@@ -1308,7 +1337,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
           }}
         >
           <Icon.Chat size={14} />
-          <span>{chatOpen ? 'Hide' : 'Comment'}</span>
+          <span>{chatOpen ? 'Hide' : 'Chat'}</span>
         </button>
         <button
           type="button"
