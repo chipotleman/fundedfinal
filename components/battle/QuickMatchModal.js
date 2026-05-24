@@ -1458,14 +1458,29 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
             the header unreachable on small viewports. */}
         <div className="min-h-full flex items-center justify-center p-4">
         <div
-          className="rounded-2xl max-w-md w-full overflow-hidden"
+          className="qm-frame max-w-md w-full overflow-hidden relative"
           style={{
-            background: 'linear-gradient(180deg, #141414 0%, #0a0a0a 100%)',
+            background: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
             border: '2.5px solid #0a0a0a',
-            boxShadow: '0 4px 0 #0a0a0a, 0 10px 40px rgba(0,0,0,0.6), 0 0 60px rgba(59,130,246,0.18)',
+            borderRadius: 22,
+            boxShadow:
+              '0 4px 0 #0a0a0a, 0 10px 60px rgba(0,0,0,0.7), 0 0 90px rgba(6,182,212,0.25), inset 0 0 0 1.5px rgba(6,182,212,0.55), inset 0 0 30px rgba(6,182,212,0.08)',
           }}
           onClick={e => e.stopPropagation()}
         >
+          {/* Cyan corner brackets — give the modal a "gaming HUD" frame. */}
+          {['tl','tr','bl','br'].map(pos => {
+            const base = { position: 'absolute', width: 22, height: 22, pointerEvents: 'none', zIndex: 3 };
+            const stroke = '2.5px solid #06b6d4';
+            const glow = { filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.8))' };
+            const map = {
+              tl: { top: 8, left: 8, borderTop: stroke, borderLeft: stroke, borderTopLeftRadius: 8 },
+              tr: { top: 8, right: 8, borderTop: stroke, borderRight: stroke, borderTopRightRadius: 8 },
+              bl: { bottom: 8, left: 8, borderBottom: stroke, borderLeft: stroke, borderBottomLeftRadius: 8 },
+              br: { bottom: 8, right: 8, borderBottom: stroke, borderRight: stroke, borderBottomRightRadius: 8 },
+            };
+            return <span key={pos} aria-hidden="true" style={{ ...base, ...map[pos], ...glow }} />;
+          })}
           {step === 'config' && (
             <>
               {/* Header — mirrors PlayFriendModal exactly so the two
@@ -1488,30 +1503,39 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     <div className="min-w-0">
                       <h2
                         id="qm-title"
-                        className="font-black uppercase"
+                        className="font-black uppercase inline-flex items-center gap-2.5"
                         style={{
                           color: '#fff',
-                          fontSize: '34px',
+                          fontSize: '40px',
                           lineHeight: 0.95,
-                          letterSpacing: '0.02em',
+                          letterSpacing: '0.015em',
                           fontStyle: 'italic',
                           WebkitTextStroke: '1.5px #0a0a0a',
-                          textShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(59,130,246,0.55)',
+                          textShadow: '0 3px 0 #0a0a0a, 0 0 32px rgba(6,182,212,0.7), 0 0 14px rgba(255,255,255,0.4)',
+                          background: 'linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
                         }}
                       >
+                        <span aria-hidden="true" style={{ color: '#06b6d4', WebkitTextFillColor: '#06b6d4', WebkitTextStroke: '0', fontSize: 26, filter: 'drop-shadow(0 0 10px rgba(6,182,212,0.9))' }}>⚡</span>
                         Quick Match
+                        <span aria-hidden="true" style={{ color: '#06b6d4', WebkitTextFillColor: '#06b6d4', WebkitTextStroke: '0', fontSize: 26, filter: 'drop-shadow(0 0 10px rgba(6,182,212,0.9))' }}>⚡</span>
                       </h2>
-                      <p
-                        className="mt-1.5 font-extrabold uppercase"
-                        style={{
-                          color: '#60a5fa',
-                          fontSize: '10px',
-                          letterSpacing: '0.22em',
-                          textShadow: '0 0 10px rgba(59,130,246,0.45)',
-                        }}
-                      >
-                        Instant matchmaking · Real competition
-                      </p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                        <p
+                          className="font-black uppercase whitespace-nowrap"
+                          style={{
+                            color: '#7dd3fc',
+                            fontSize: '11px',
+                            letterSpacing: '0.22em',
+                            textShadow: '0 0 10px rgba(6,182,212,0.6)',
+                          }}
+                        >
+                          Instant Matchmaking · Real Competition
+                        </p>
+                        <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                      </div>
                     </div>
                   </div>
                   <button
@@ -1789,21 +1813,57 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               Locked
                             </span>
                           )}
-                          <span className="text-2xl leading-none mb-1.5">{mode.icon}</span>
-                          <span className="font-black text-[12px] leading-tight uppercase tracking-wider" style={{ color: '#fff' }}>{mode.label}</span>
+                          {/* Internal radial color glow — gives each tile
+                              the "trading card" look from the mockup. */}
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: `radial-gradient(ellipse at 50% 38%, ${glow} 0%, transparent 60%)`,
+                              borderRadius: 'inherit',
+                              opacity: betaLocked ? 0.55 : 0.9,
+                            }}
+                          />
+                          <span
+                            className="leading-none mb-2 relative"
+                            style={{
+                              fontSize: 38,
+                              filter: `drop-shadow(0 0 14px ${glow}) drop-shadow(0 2px 0 #000)`,
+                            }}
+                          >
+                            {mode.icon}
+                          </span>
+                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.label}</span>
                           {mode.tagline && (
                             <span
-                              className="text-[7.5px] font-extrabold uppercase mt-0.5 leading-none"
-                              style={{ color: selected ? '#cbd5e1' : '#6b7280', letterSpacing: '0.14em' }}
+                              className="text-[8px] font-extrabold uppercase mt-1 leading-none relative"
+                              style={{ color: '#e2e8f0', letterSpacing: '0.16em', opacity: 0.9 }}
                             >
                               {mode.tagline}
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1 mt-1.5">
-                            <span className="font-black text-[12px] leading-none" style={{ color: '#fff' }}>{mode.coins.toLocaleString()}</span>
-                            <span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>🪙</span>
+                          <span className="inline-flex items-center gap-1.5 mt-2 relative">
+                            <span className="font-black text-[15px] leading-none" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
+                            <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, filter: 'drop-shadow(0 0 6px #fbbf24)' }}>🪙</span>
                           </span>
-                          <span className="text-[8px] uppercase tracking-wider mt-0.5 leading-none font-bold" style={{ color: '#6b7280' }}>coins</span>
+                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>coins</span>
+                          {selected && !betaLocked && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute left-1/2 -translate-x-1/2 inline-flex items-center justify-center rounded-full"
+                              style={{
+                                bottom: -10,
+                                width: 22,
+                                height: 22,
+                                background: 'linear-gradient(180deg,#06b6d4,#0891b2)',
+                                border: '2.5px solid #0a0a0a',
+                                boxShadow: '0 2px 0 #0a0a0a, 0 0 14px rgba(6,182,212,0.9)',
+                                zIndex: 3,
+                              }}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -1852,20 +1912,55 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
 
                 <button
                   onClick={startSearch}
-                  className="msg-cartoon-btn w-full text-white font-black uppercase rounded-2xl flex flex-col items-center justify-center gap-1 py-3.5"
+                  className="msg-cartoon-btn w-full text-white font-black uppercase rounded-2xl flex flex-col items-stretch justify-center relative overflow-hidden p-0"
                   style={{
-                    background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                    background: 'linear-gradient(180deg,#3b82f6 0%,#1d4ed8 100%)',
                     border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 5px 0 #0a0a0a, 0 0 28px rgba(59,130,246,0.6)',
-                    textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                    boxShadow: '0 5px 0 #0a0a0a, 0 0 32px rgba(6,182,212,0.55), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
+                    textShadow: '0 1px 0 rgba(0,0,0,0.4)',
                   }}
                 >
-                  <span className="inline-flex items-center gap-2.5" style={{ fontSize: 17, letterSpacing: '0.08em' }}>
-                    <span aria-hidden="true" className="qm-cta-chev" style={{ fontSize: 14, opacity: 0.9 }}>»</span>
-                    Find Opponent
-                    <span aria-hidden="true" className="qm-cta-chev" style={{ fontSize: 14, opacity: 0.9 }}>«</span>
+                  <span className="flex items-center justify-between gap-2 px-3 pt-3 pb-2.5">
+                    <span
+                      aria-hidden="true"
+                      className="qm-cta-chev inline-flex items-center justify-center rounded-full flex-shrink-0"
+                      style={{
+                        width: 30,
+                        height: 30,
+                        background: 'linear-gradient(180deg,#0e1b3a,#050a18)',
+                        border: '2px solid #06b6d4',
+                        boxShadow: '0 0 12px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)',
+                        color: '#7dd3fc',
+                        fontSize: 15,
+                      }}
+                    >»</span>
+                    <span style={{ fontSize: 19, letterSpacing: '0.06em' }}>Find Opponent</span>
+                    <span
+                      aria-hidden="true"
+                      className="qm-cta-chev inline-flex items-center justify-center rounded-full flex-shrink-0"
+                      style={{
+                        width: 30,
+                        height: 30,
+                        background: 'linear-gradient(180deg,#0e1b3a,#050a18)',
+                        border: '2px solid #06b6d4',
+                        boxShadow: '0 0 12px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)',
+                        color: '#7dd3fc',
+                        fontSize: 15,
+                      }}
+                    >«</span>
                   </span>
-                  <span style={{ fontSize: 9, letterSpacing: '0.28em', color: '#bfdbfe', textShadow: 'none' }}>
+                  <span
+                    className="block text-center"
+                    style={{
+                      background: 'linear-gradient(180deg,#050a18,#020611)',
+                      borderTop: '1.5px solid rgba(6,182,212,0.35)',
+                      padding: '6px 0 7px',
+                      fontSize: 10,
+                      letterSpacing: '0.32em',
+                      color: '#7dd3fc',
+                      textShadow: '0 0 8px rgba(6,182,212,0.6)',
+                    }}
+                  >
                     Play Now · Win Big
                   </span>
                 </button>
