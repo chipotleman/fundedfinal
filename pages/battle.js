@@ -11,7 +11,6 @@ import InviteToast from '../components/battle/InviteToast';
 import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
-import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import SocialFeedPage from '../components/social/SocialFeedPage';
 import ForfeitModal from '../components/battle/ForfeitModal';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
@@ -2034,14 +2033,14 @@ export default function BattlePage() {
             }}
           />
 
-          {/* Live battles row stays — it gives spectators the full row of
-              YouVsCard battles with chat. We render it underneath the feed
-              so the social column is unbroken at the top. */}
-          {!isGuest && (
-            <div className="mt-2 mb-6 max-w-[1080px] mx-auto">
-              <LiveBattlesSection focusBattleId={focusLiveBattleId || router.query.battle} currentUserId={userId} />
-            </div>
-          )}
+          {/* Live battles are now fully integrated into SocialFeedPage above
+              as LiveBattlePost cards — interleaved chronologically with user
+              posts by startsAt, with Spectate + Chat actions on every card,
+              the LIVE NOW stories rail up top, and consistent arcade theming.
+              The separate LiveBattlesSection row used to live here but it
+              broke the social theme (no chat/spectate styling, dark "Watch"
+              link buttons) and duplicated battles already in the feed, so
+              it's been removed per the "one unified social feed" request. */}
 
           {/* Old dual-column layout below is dead code, gated false so the
               bundler short-circuits it and JSX renders nothing. Kept in place
