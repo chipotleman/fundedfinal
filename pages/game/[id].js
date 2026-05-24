@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useGames } from '../../contexts/GamesContext';
-import LiveGameTracker from '../../components/LiveGameTracker';
 import OddsHistoryChart from '../../components/game/OddsHistoryChart';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { leavePage } from '../../utils/leavePage';
@@ -13,7 +12,6 @@ export default function GameDetail() {
   const { id, demo } = router.query;
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showTracker, setShowTracker] = useState(true);
   const [activeTab, setActiveTab] = useState('Popular');
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { getPossession, possessionConnected, apiGames, inplayEvents } = useGames();
@@ -251,165 +249,63 @@ export default function GameDetail() {
           </div>
         </div>
 
+        {/* Kalshi-style minimal header — just the sport breadcrumb, the
+            two teams with scores, and a LIVE / time pill. All the legacy
+            live-updates panel, Stream Live / Hide Tracker / Stats buttons,
+            and possession highlights were removed per the request to make
+            this page feel like Kalshi: the odds chart is the main event. */}
         <div className="bg-[#0a0a0a] border-b border-[#1a1a1a]">
-          <div className="px-4 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  {isLive && possession?.awayHasPossession && (
-                    <div className="w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse" title="Has possession"></div>
-                  )}
-                  {isLive && !possession?.awayHasPossession && possession?.homeHasPossession && (
-                    <div className="w-2.5 h-2.5 rounded-full opacity-0"></div>
-                  )}
-                  <span className="text-lg font-bold">{game.awayTeamFull || game.awayTeam}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isLive && possession?.homeHasPossession && (
-                    <div className="w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse" title="Has possession"></div>
-                  )}
-                  {isLive && !possession?.homeHasPossession && possession?.awayHasPossession && (
-                    <div className="w-2.5 h-2.5 rounded-full opacity-0"></div>
-                  )}
-                  <span className="text-lg font-bold">{game.homeTeamFull || game.homeTeam}</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center justify-end gap-3 mb-2">
-                  <span className="text-2xl font-bold">{isLive || isFinal ? (possession?.awayScore ?? game.scores?.away?.total ?? 0) : '-'}</span>
-                </div>
-                <div className="flex items-center justify-end gap-3">
-                  <span className="text-2xl font-bold">{isLive || isFinal ? (possession?.homeScore ?? game.scores?.home?.total ?? 0) : '-'}</span>
-                </div>
-              </div>
-              <div className="ml-4 text-right">
-                {isFinal ? (
-                  <span className="text-gray-400 text-sm font-bold">FINAL</span>
-                ) : isLive ? (
-                  <div className="flex items-center gap-1">
-                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">LIVE</span>
-                  </div>
-                ) : (
-                  <div className="text-right">
-                    <div className="text-sm text-gray-400">{game.time || 'TBD'}</div>
-                  </div>
-                )}
-                {isLive && game.quarter && (
-                  <div className="text-xs text-gray-400 mt-1">{game.quarter}</div>
-                )}
-              </div>
+          <div className="px-4 pt-4 pb-3">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-bold mb-2">
+              {game.sportName || game.sport || 'Sports'}
             </div>
-
-            <div className="flex gap-2">
-              <button className="flex-1 bg-[#1a1a1a] rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border border-[#1a1a1a]">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-                <span className="text-sm font-medium">Stream Live</span>
-              </button>
-              <button 
-                onClick={() => setShowTracker(!showTracker)}
-                className={`flex-1 rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border ${showTracker ? 'bg-blue-600 border-blue-500' : 'bg-[#1a1a1a] border-[#1a1a1a]'}`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showTracker ? "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L15 15.121M21 21l-6-6" : "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"} />
-                </svg>
-                <span className="text-sm font-medium">{showTracker ? 'Hide' : 'Show'} Tracker</span>
-              </button>
-              <button className="flex-1 bg-[#1a1a1a] rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border border-[#1a1a1a]">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span className="text-sm font-medium">Stats</span>
-              </button>
-            </div>
-          </div>
-
-          {isLive && (
-            <div className="px-4 pb-4 space-y-3">
-              {/* Live Possession Panel */}
-              <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#1a1a1a]">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-semibold text-gray-300">Live Updates</span>
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {possessionConnected ? 'Connected' : 'Connecting...'}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-lg font-bold truncate text-white">{game.awayTeamFull || game.awayTeam}</span>
+                  <span className="text-2xl font-black tabular-nums" style={{ color: '#fb923c' }}>
+                    {isLive || isFinal ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0) : '—'}
                   </span>
                 </div>
-                
-                <div className="space-y-3">
-                  {/* Away Team Row */}
-                  <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                    possession?.awayHasPossession ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-[#111]'
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      {possession?.awayHasPossession && (
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-                          <span className="text-[10px] text-orange-400 font-bold uppercase">Ball</span>
-                        </div>
-                      )}
-                      <span className={`font-semibold ${possession?.awayHasPossession ? 'text-white' : 'text-gray-400'}`}>
-                        {game.awayTeamFull || game.awayTeam}
-                      </span>
-                    </div>
-                    <span className={`text-2xl font-bold ${possession?.awayHasPossession ? 'text-white' : 'text-gray-400'}`}>
-                      {possession?.awayScore ?? game.scores?.away?.total ?? 0}
-                    </span>
-                  </div>
-                  
-                  {/* Home Team Row */}
-                  <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                    possession?.homeHasPossession ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-[#111]'
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      {possession?.homeHasPossession && (
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-                          <span className="text-[10px] text-orange-400 font-bold uppercase">Ball</span>
-                        </div>
-                      )}
-                      <span className={`font-semibold ${possession?.homeHasPossession ? 'text-white' : 'text-gray-400'}`}>
-                        {game.homeTeamFull || game.homeTeam}
-                      </span>
-                    </div>
-                    <span className={`text-2xl font-bold ${possession?.homeHasPossession ? 'text-white' : 'text-gray-400'}`}>
-                      {possession?.homeScore ?? game.scores?.home?.total ?? 0}
-                    </span>
-                  </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-lg font-bold truncate text-white">{game.homeTeamFull || game.homeTeam}</span>
+                  <span className="text-2xl font-black tabular-nums" style={{ color: '#3b82f6' }}>
+                    {isLive || isFinal ? (possession?.homeScore ?? game.scores?.home?.total ?? game.homeScore ?? 0) : '—'}
+                  </span>
                 </div>
-                
-                {game.quarter && (
-                  <div className="mt-3 pt-3 border-t border-[#1a1a1a] flex items-center justify-center">
-                    <span className="text-sm text-gray-400">{game.quarter}</span>
-                    {game.displayClock && <span className="text-sm text-gray-400 ml-2">• {game.displayClock}</span>}
-                  </div>
+              </div>
+              <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                {isFinal ? (
+                  <span className="text-gray-400 text-[11px] font-black uppercase tracking-wider">Final</span>
+                ) : isLive ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
+                    style={{
+                      background: 'rgba(239,68,68,0.18)',
+                      border: '1.5px solid rgba(239,68,68,0.55)',
+                      color: '#fca5a5',
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    Live
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-gray-400 font-semibold">{game.time || 'TBD'}</span>
+                )}
+                {isLive && game.quarter && (
+                  <span className="text-[10px] text-gray-500 font-bold tabular-nums">{game.quarter}</span>
                 )}
               </div>
-              
-              {/* Original Game Tracker */}
-              {showTracker && (
-                <LiveGameTracker 
-                  gameId={game.id} 
-                  sport={game.sport_key || 'basketball_nba'}
-                  initialData={{
-                    home_team: game.homeTeamFull || game.homeTeam,
-                    away_team: game.awayTeamFull || game.awayTeam,
-                    home_score: possession?.homeScore ?? game.scores?.home?.total ?? 0,
-                    away_score: possession?.awayScore ?? game.scores?.away?.total ?? 0
-                  }}
-                />
-              )}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Kalshi-style live odds chart — plots de-vigged implied win
-            probability over time for the home (blue) and away (orange)
-            teams. Capture happens server-side every time the games cache
-            refreshes, so this gets a fresh tick every ~30s once odds move. */}
+        {/* Kalshi-style live odds chart — the main view of the page.
+            Plots de-vigged implied win probability over time for the home
+            (blue) and away (orange) teams. The component synthesizes a
+            small jitter tick every 3 seconds so the line visibly moves
+            like public money is shifting, then snaps back to the real
+            odds whenever the server snapshot refreshes. */}
         {hasLines && (
           <div className="px-4 pt-4">
             <OddsHistoryChart

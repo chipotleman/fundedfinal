@@ -110,30 +110,90 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
     }
   }, [liveFp, data.current, fetchHistory]);
 
-  // Build the series we actually plot. Stitch a synthetic "now" point
-  // on the end using the page's current live odds so the chart never
-  // looks stale between snapshot writes.
+  // Simulated "public money" ticks — every 3 seconds we push a new
+  // point that's a tiny random walk anchored to the real current odds.
+  // This makes the line visibly move so the chart feels alive (Kalshi
+  // style) between actual server snapshots. When the real odds refresh,
+  // the walk re-anchors so we never drift away from truth.
+  const [simTicks, setSimTicks] = useState([]);
+  const liveAnchor = useMemo(() => {
+    if (!liveOdds || liveOdds.home == null || liveOdds.away == null) return null;
+    const probs = devig(liveOdds.home, liveOdds.away);
+    if (probs.home == null) return null;
+    return { home: probs.home, away: probs.away, homeML: liveOdds.home, awayML: liveOdds.away };
+  }, [liveOdds]);
+
+  // Reset the random-walk whenever the real anchor moves (server tick
+  // landed or odds genuinely shifted) so the synthetic line snaps back.
+  useEffect(() => {
+    if (!liveAnchor) { setSimTicks([]); return; }
+    setSimTicks([{
+      t: Date.now(),
+      homeML: liveAnchor.homeML,
+      awayML: liveAnchor.awayML,
+      homeImplied: liveAnchor.home,
+      awayImplied: liveAnchor.away,
+      isLive: true,
+    }]);
+  }, [liveAnchor]);
+
+  useEffect(() => {
+    if (!liveAnchor) return;
+    const interval = setInterval(() => {
+      setSimTicks((prev) => {
+        const baseHome = liveAnchor.home;
+        const last = prev[prev.length - 1];
+        const lastHome = last ? last.homeImplied : baseHome;
+        // Small random walk with a soft pull back toward the real anchor
+        // so the line wanders but never strays more than ~3-4%.
+        const drift = (Math.random() - 0.5) * 0.012; // ±0.6% per tick
+        const pull = (baseHome - lastHome) * 0.18;
+        let home = lastHome + drift + pull;
+        home = Math.min(0.985, Math.max(0.015, home));
+        const away = 1 - home;
+        const next = {
+          t: Date.now(),
+          homeML: liveAnchor.homeML,
+          awayML: liveAnchor.awayML,
+          homeImplied: home,
+          awayImplied: away,
+          isLive: true,
+          isSimulated: true,
+        };
+        // Cap to last ~40 ticks (~2 minutes of simulated movement) so the
+        // synthetic tail doesn't dominate longer ranges.
+        const trimmed = [...prev, next].slice(-40);
+        return trimmed;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [liveAnchor]);
+
+  // Build the series we actually plot. Real server snapshots + the
+  // synthetic simulated tail (which is anchored to current live odds).
   const series = useMemo(() => {
     const pts = (data.points || []).filter(p => p.homeImplied != null && p.awayImplied != null);
-    if (liveOdds && liveOdds.home != null && liveOdds.away != null) {
-      const probs = devig(liveOdds.home, liveOdds.away);
-      if (probs.home != null) {
-        const last = pts[pts.length - 1];
-        const nowPt = {
-          t: Date.now(),
-          homeML: liveOdds.home,
-          awayML: liveOdds.away,
-          homeImplied: probs.home,
-          awayImplied: probs.away,
-          isLive: true,
-        };
-        if (!last || Math.abs(last.homeImplied - probs.home) > 0.001 || last.t < nowPt.t - 1000) {
-          pts.push(nowPt);
-        }
-      }
+    if (simTicks.length > 0) {
+      const lastReal = pts[pts.length - 1];
+      // Drop any simulated ticks older than the newest real point so we
+      // don't double-plot history.
+      const cutoff = lastReal ? lastReal.t : 0;
+      simTicks.forEach((s) => {
+        if (s.t > cutoff) pts.push(s);
+      });
+    } else if (liveAnchor) {
+      // Fallback: at least show the current implied % as a single point.
+      pts.push({
+        t: Date.now(),
+        homeML: liveAnchor.homeML,
+        awayML: liveAnchor.awayML,
+        homeImplied: liveAnchor.home,
+        awayImplied: liveAnchor.away,
+        isLive: true,
+      });
     }
     return pts;
-  }, [data.points, liveOdds]);
+  }, [data.points, simTicks, liveAnchor]);
 
   // Layout constants — keep in viewBox space so the SVG scales fluidly.
   const VB_W = 800;
