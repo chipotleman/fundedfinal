@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import PiksBetCard from '../components/PiksBetCard';
 import ShareableBetSlip from '../components/ShareableBetSlip';
-import BattleHistoryGroup from '../components/BattleHistoryGroup';
+import BattleHistoryTable, { MODE_THEMES, getGameMode } from '../components/BattleHistoryTable';
+import BattleOverviewPopup from '../components/BattleOverviewPopup';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,9 +22,6 @@ export default function BetHistory() {
   const [battlesMap, setBattlesMap] = useState({});
   const [myProfile, setMyProfile] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const tabsRef = useRef(null);
-  const [indicatorStyle, setIndicatorStyle] = useState({});
-  const [expandedShare, setExpandedShare] = useState({});
   const [shareModalBet, setShareModalBet] = useState(null);
   const [bankroll, setBankroll] = useState(10000);
 
@@ -443,272 +441,241 @@ export default function BetHistory() {
       />
 
       <div className="pt-8 px-4 sm:px-6 lg:px-8 pb-24">
-        {/* Header */}
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-center text-white font-bold text-2xl sm:text-3xl mb-6 tracking-tight">
-            Battle History
-          </h1>
+        {(() => {
+          const normalizeTeam = (name) => {
+            if (!name) return '';
+            return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          };
 
-          {/* Sliding Filter Tabs */}
-          <div className="flex justify-center mb-8">
-            <div 
-              ref={tabsRef}
-              className="relative rounded-full p-1 flex"
-              style={{
-                backgroundColor: '#111111',
-                border: '1px solid rgba(55,65,81,0.5)'
-              }}
-            >
-              <div 
-                className="absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-out"
-                style={{
-                  ...indicatorStyle,
-                  backgroundColor: selectedFilter === 'won' ? '#eab308' : selectedFilter === 'lost' ? '#ef4444' : '#2563eb',
-                  boxShadow: selectedFilter === 'won' ? '0 2px 8px rgba(234, 179, 8, 0.4)' : selectedFilter === 'lost' ? '0 2px 8px rgba(239, 68, 68, 0.4)' : '0 2px 8px rgba(37, 99, 235, 0.4)'
-                }}
-              />
-              {['all', 'open', 'won', 'lost'].map((filter, index) => (
-                <button
-                  key={filter}
-                  data-filter={filter}
-                  onClick={(e) => {
-                    setSelectedFilter(filter);
-                    const btn = e.currentTarget;
-                    const container = tabsRef.current;
-                    if (container) {
-                      const containerRect = container.getBoundingClientRect();
-                      const btnRect = btn.getBoundingClientRect();
-                      setIndicatorStyle({
-                        left: btnRect.left - containerRect.left,
-                        width: btnRect.width
-                      });
-                    }
-                  }}
-                  className="relative z-10 px-5 py-2 rounded-full font-semibold text-sm transition-colors duration-200"
-                  style={{
-                    color: selectedFilter === filter 
-                      ? '#ffffff' 
-                      : ('#9ca3af')
-                  }}
-                  ref={(el) => {
-                    if (el && selectedFilter === filter && !indicatorStyle.width) {
-                      const container = tabsRef.current;
-                      if (container) {
-                        const containerRect = container.getBoundingClientRect();
-                        const btnRect = el.getBoundingClientRect();
-                        setTimeout(() => {
-                          setIndicatorStyle({
-                            left: btnRect.left - containerRect.left,
-                            width: btnRect.width
-                          });
-                        }, 0);
-                      }
-                    }
-                  }}
-                >
-                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
+          const findLiveGame = (gameId, matchup, awayTeam, homeTeam, awayTeamFull, homeTeamFull) => {
+            const fullMatchup = awayTeamFull && homeTeamFull ? `${awayTeamFull} @ ${homeTeamFull}` : null;
+            const abbrMatchup = awayTeam && homeTeam ? `${awayTeam} @ ${homeTeam}` : null;
+            const normalizedMatchup = matchup
+              ? `${normalizeTeam(matchup.split(' @ ')[0])}@${normalizeTeam(matchup.split(' @ ')[1])}`
+              : null;
+            return liveGames[gameId] ||
+              liveGames[matchup] ||
+              liveGames[matchup?.toLowerCase()] ||
+              (fullMatchup && liveGames[fullMatchup]) ||
+              (fullMatchup && liveGames[fullMatchup.toLowerCase()]) ||
+              (abbrMatchup && liveGames[abbrMatchup]) ||
+              (abbrMatchup && liveGames[abbrMatchup.toLowerCase()]) ||
+              (normalizedMatchup && liveGames[normalizedMatchup]) ||
+              null;
+          };
 
-          {/* Bets List - grouped by battle when applicable */}
-          <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
-            {(() => {
-              const normalizeTeam = (name) => {
-                if (!name) return '';
-                return name.toLowerCase().replace(/[^a-z0-9]/g, '');
-              };
-
-              const findLiveGame = (gameId, matchup, awayTeam, homeTeam, awayTeamFull, homeTeamFull) => {
-                const fullMatchup = awayTeamFull && homeTeamFull ? `${awayTeamFull} @ ${homeTeamFull}` : null;
-                const abbrMatchup = awayTeam && homeTeam ? `${awayTeam} @ ${homeTeam}` : null;
-                const normalizedMatchup = matchup
-                  ? `${normalizeTeam(matchup.split(' @ ')[0])}@${normalizeTeam(matchup.split(' @ ')[1])}`
-                  : null;
-                return liveGames[gameId] ||
-                  liveGames[matchup] ||
-                  liveGames[matchup?.toLowerCase()] ||
-                  (fullMatchup && liveGames[fullMatchup]) ||
-                  (fullMatchup && liveGames[fullMatchup.toLowerCase()]) ||
-                  (abbrMatchup && liveGames[abbrMatchup]) ||
-                  (abbrMatchup && liveGames[abbrMatchup.toLowerCase()]) ||
-                  (normalizedMatchup && liveGames[normalizedMatchup]) ||
-                  null;
-              };
-
-              const enrichBet = (bet) => {
-                const liveGame = findLiveGame(bet.gameId, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull);
-                let enrichedLegs = bet.legs;
-                if (bet.legs && Array.isArray(bet.legs)) {
-                  enrichedLegs = bet.legs.map(leg => {
-                    const legGame = findLiveGame(leg.gameId, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull);
-                    const legIsLive = !!(legGame && (legGame.isLive || legGame.status === 'IN_PROGRESS'));
-                    if (legGame) {
-                      return {
-                        ...leg,
-                        isLive: legIsLive,
-                        homeScore: legGame.scores?.home?.total ?? legGame.homeScore,
-                        awayScore: legGame.scores?.away?.total ?? legGame.awayScore,
-                        homeTeamFull: legGame.homeTeamFull || legGame.homeTeam,
-                        awayTeamFull: legGame.awayTeamFull || legGame.awayTeam,
-                        gameStart: legGame.startTime
-                      };
-                    }
-                    return { ...leg, isLive: false };
-                  });
-                }
-                return {
-                  ...bet,
-                  legs: enrichedLegs,
-                  isLive: liveGame?.isLive || liveGame?.status === 'IN_PROGRESS' || enrichedLegs?.some(leg => leg.isLive),
-                  currentHomeScore: liveGame?.scores?.home?.total ?? liveGame?.homeScore,
-                  currentAwayScore: liveGame?.scores?.away?.total ?? liveGame?.awayScore,
-                  homeTeamFull: liveGame?.homeTeamFull || liveGame?.homeTeam,
-                  awayTeamFull: liveGame?.awayTeamFull || liveGame?.awayTeam
-                };
-              };
-
-              // Group ALL user bets by matchupId (unfiltered, so a battle's whole
-              // story is shown when its battle-outcome tab is selected)
-              const allBattleBets = {};
-              const allStandalone = [];
-              for (const bet of allBets) {
-                if (bet.matchupId && battlesMap[bet.matchupId]) {
-                  if (!allBattleBets[bet.matchupId]) allBattleBets[bet.matchupId] = [];
-                  allBattleBets[bet.matchupId].push(bet);
-                } else {
-                  allStandalone.push(bet);
-                }
-              }
-
-              // Ensure a deep-linked battle (e.g. opened from a shared public
-              // preview) is always present so the popup can render even when
-              // the viewer has no bets in it.
-              if (openBattleId && battlesMap[openBattleId] && !allBattleBets[openBattleId]) {
-                allBattleBets[openBattleId] = [];
-              }
-
-              // Filter battle groups by battle outcome
-              const battleEntries = Object.entries(allBattleBets)
-                .filter(([mid]) => mid === openBattleId || battleMatchesFilter(battlesMap[mid]))
-                .sort((a, b) => {
-                  // Deep-linked fallback groups can have an empty bet
-                  // array (viewer is not a participant). Fall back to the
-                  // battle's own timestamp so sorting stays deterministic
-                  // instead of degenerating to -Infinity from an empty
-                  // Math.max.
-                  const fallbackTs = (mid) => {
-                    const b = battlesMap[mid];
-                    return new Date(b?.endsAt || b?.createdAt || 0).getTime();
+          const enrichBet = (bet) => {
+            const liveGame = findLiveGame(bet.gameId, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull);
+            let enrichedLegs = bet.legs;
+            if (bet.legs && Array.isArray(bet.legs)) {
+              enrichedLegs = bet.legs.map(leg => {
+                const legGame = findLiveGame(leg.gameId, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull);
+                const legIsLive = !!(legGame && (legGame.isLive || legGame.status === 'IN_PROGRESS'));
+                if (legGame) {
+                  return {
+                    ...leg,
+                    isLive: legIsLive,
+                    homeScore: legGame.scores?.home?.total ?? legGame.homeScore,
+                    awayScore: legGame.scores?.away?.total ?? legGame.awayScore,
+                    homeTeamFull: legGame.homeTeamFull || legGame.homeTeam,
+                    awayTeamFull: legGame.awayTeamFull || legGame.awayTeam,
+                    gameStart: legGame.startTime
                   };
-                  const placedTs = (bets) => (bets.length === 0
-                    ? -Infinity
-                    : Math.max(...bets.map(x => new Date(x.placedAt || 0).getTime())));
-                  const aTs = placedTs(a[1]);
-                  const bTs = placedTs(b[1]);
-                  const aFinal = Number.isFinite(aTs) ? aTs : fallbackTs(a[0]);
-                  const bFinal = Number.isFinite(bTs) ? bTs : fallbackTs(b[0]);
-                  return bFinal - aFinal;
-                });
-
-              // Filter standalone bets by per-bet status.
-              const standaloneBets = allStandalone
-                .filter(matchesBetStatus)
-                .sort(sortByDateDesc);
-
-              const groupNodes = battleEntries.map(([mid, bets]) => {
-                const battle = battlesMap[mid];
-                // For deep-linked public battles where the viewer has no
-                // local bets (e.g. arriving from a shared link as a
-                // non-participant), fall back to the public payload's
-                // `battle.myBets` so the moment id from the share URL can
-                // resolve and the popup can still render rich content.
-                const isPublicFallback = bets.length === 0 && Array.isArray(battle.myBets) && battle.myBets.length > 0;
-                const mineSourced = isPublicFallback ? battle.myBets : bets;
-                const myBetsSorted = [...mineSourced].sort(sortByDateDesc);
-                const oppBetsSorted = [...(battle.opponentBets || [])].sort(sortByDateDesc);
-                const isBattleEnded = battle.status !== 'active' && battle.status !== 'matched';
-                return (
-                  <BattleHistoryGroup
-                    key={mid}
-                    battle={battle}
-                    matchupId={mid}
-                    myProfile={myProfile}
-                    betCount={myBetsSorted.length}
-                    opponentBetCount={oppBetsSorted.length}
-                    myBetIds={myBetsSorted.map(b => b.id)}
-                    opponentBetIds={oppBetsSorted.map(b => b.id)}
-                    momentBetId={openBattleMoment && openBattleMoment.battleId === mid ? openBattleMoment.momentId : null}
-                    isOpen={openBattleId === mid}
-                    onOpenChange={(open) => handleBattleOpenChange(mid, open)}
-                    myBetCards={myBetsSorted.map(bet => (
-                      <PiksBetCard
-                        key={bet.id}
-                        bet={enrichBet(bet)}
-                        onCashOut={cashOutBet}
-                        onShare={(b) => setShareModalBet(b)}
-                        compactHeader
-                        isBattleEnded={isBattleEnded}
-                      />
-                    ))}
-                    opponentBetCards={oppBetsSorted.map(bet => (
-                      <PiksBetCard
-                        key={bet.id}
-                        bet={enrichBet(bet)}
-                        isOpponent
-                        opponentName={battle.opponent?.username}
-                        opponentAvatar={battle.opponent?.avatar}
-                        compactHeader
-                        isBattleEnded={isBattleEnded}
-                      />
-                    ))}
-                  />
-                );
+                }
+                return { ...leg, isLive: false };
               });
+            }
+            return {
+              ...bet,
+              legs: enrichedLegs,
+              isLive: liveGame?.isLive || liveGame?.status === 'IN_PROGRESS' || enrichedLegs?.some(leg => leg.isLive),
+              currentHomeScore: liveGame?.scores?.home?.total ?? liveGame?.homeScore,
+              currentAwayScore: liveGame?.scores?.away?.total ?? liveGame?.awayScore,
+              homeTeamFull: liveGame?.homeTeamFull || liveGame?.homeTeam,
+              awayTeamFull: liveGame?.awayTeamFull || liveGame?.awayTeam
+            };
+          };
 
-              const standaloneNodes = standaloneBets.map(bet => (
-                <PiksBetCard
-                  key={bet.id}
-                  bet={enrichBet(bet)}
-                  onCashOut={cashOutBet}
-                  onShare={(b) => setShareModalBet(b)}
-                />
-              ));
+          // Group bets by battle
+          const allBattleBets = {};
+          const allStandalone = [];
+          for (const bet of allBets) {
+            if (bet.matchupId && battlesMap[bet.matchupId]) {
+              if (!allBattleBets[bet.matchupId]) allBattleBets[bet.matchupId] = [];
+              allBattleBets[bet.matchupId].push(bet);
+            } else {
+              allStandalone.push(bet);
+            }
+          }
+          if (openBattleId && battlesMap[openBattleId] && !allBattleBets[openBattleId]) {
+            allBattleBets[openBattleId] = [];
+          }
 
-              const totalDisplayed = groupNodes.length + standaloneNodes.length;
+          const battleEntries = Object.entries(allBattleBets)
+            .filter(([mid]) => mid === openBattleId || battleMatchesFilter(battlesMap[mid]));
 
-              return (
-                <>
-                  {groupNodes}
-                  {standaloneNodes.length > 0 && groupNodes.length > 0 && (
-                    <div className="flex items-center gap-3 mt-2">
-                      <div className="flex-1 h-px bg-gray-700/50" />
-                      <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Other Piks</span>
-                      <div className="flex-1 h-px bg-gray-700/50" />
-                    </div>
-                  )}
-                  {standaloneNodes}
-                  {totalDisplayed === 0 && (
-                    <div className="col-span-full">
-                      <div className="text-center py-24">
-                        <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl p-12 max-w-md mx-auto border border-slate-700/50">
-                          <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                          </div>
-                          <h3 className="text-2xl font-black text-white mb-4">No {selectedFilter} bets found</h3>
-                          <p className="text-gray-400 text-lg">Start placing bets to build your gallery!</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        </div>
+          const me = {
+            username: myProfile?.username || 'You',
+            avatar: myProfile?.avatar || null,
+            equippedFrame: myProfile?.equippedFrame || null,
+          };
+
+          // Build battle rows + enriched bet card maps
+          const battleRowData = battleEntries.map(([mid, bets]) => {
+            const battle = battlesMap[mid];
+            const isPublicFallback = bets.length === 0 && Array.isArray(battle.myBets) && battle.myBets.length > 0;
+            const mineSourced = isPublicFallback ? battle.myBets : bets;
+            const myBetsSorted = [...mineSourced].sort(sortByDateDesc);
+            const oppBetsSorted = [...(battle.opponentBets || [])].sort(sortByDateDesc);
+            const isBattleEnded = battle.status !== 'active' && battle.status !== 'matched';
+
+            const mode = getGameMode(battle);
+            const outcome = battle.outcome || 'active';
+            const result = outcome === 'won' ? 'WON' : outcome === 'lost' ? 'LOST' : outcome === 'tie' ? 'TIE' : 'OPEN';
+            const myScore = myBetsSorted.filter(b => b.status === 'won').length;
+            const oppScore = oppBetsSorted.filter(b => b.status === 'won').length;
+            const startingBalance = parseFloat(battle.startingBalance ?? 0);
+            const winnerPayout = parseFloat(battle.winnerPayout ?? 0);
+            const earnings = result === 'WON'
+              ? Math.max(0, winnerPayout - startingBalance)
+              : result === 'LOST'
+                ? -startingBalance
+                : 0;
+            const dateRaw = myBetsSorted[0]?.placedAt || battle.endsAt || battle.createdAt;
+
+            return {
+              key: `b-${mid}`,
+              matchupId: mid,
+              battle,
+              myBetsSorted,
+              oppBetsSorted,
+              isBattleEnded,
+              mode,
+              modeLabel: MODE_THEMES[mode]?.label || mode,
+              result,
+              myScore,
+              oppScore,
+              pot: battle.potSize || battle.winnerPayout || 0,
+              earnings,
+              dateRaw,
+              me,
+              opponent: battle.opponent || { username: 'Opponent', avatar: null },
+              openable: true,
+            };
+          });
+
+          // Standalone bet rows
+          const standaloneRowData = allStandalone
+            .filter(matchesBetStatus)
+            .map(bet => {
+              const status = bet.status;
+              const result = status === 'won' ? 'WON' : status === 'lost' ? 'LOST' : status === 'cashed_out' ? 'WON' : 'OPEN';
+              const earnings = status === 'won' || status === 'cashed_out'
+                ? (bet.profit || 0)
+                : status === 'lost'
+                  ? -(bet.stake || 0)
+                  : 0;
+              return {
+                key: `s-${bet.id}`,
+                matchupId: null,
+                bet,
+                mode: 'standalone',
+                modeLabel: 'PIK',
+                result,
+                myScore: status === 'won' || status === 'cashed_out' ? 1 : 0,
+                oppScore: status === 'lost' ? 1 : 0,
+                pot: (bet.stake || 0) + Math.max(0, bet.profit || 0),
+                earnings,
+                dateRaw: bet.placedAt || bet.settledAt,
+                me,
+                opponent: { username: bet.matchup || 'Book', avatar: null },
+                openable: false,
+              };
+            });
+
+          const rows = [...battleRowData, ...standaloneRowData]
+            .sort((a, b) => new Date(b.dateRaw || 0) - new Date(a.dateRaw || 0));
+
+          const renderRowExtras = ({ openBattleId: oid }) => {
+            if (!oid) return null;
+            const row = battleRowData.find(r => r.matchupId === oid);
+            const battle = battlesMap[oid];
+            if (!battle) return null;
+            const fallbackRow = row || (() => {
+              const mode = getGameMode(battle);
+              const outcome = battle.outcome || 'active';
+              return {
+                battle,
+                mode,
+                modeLabel: MODE_THEMES[mode]?.label || mode,
+                myBetsSorted: Array.isArray(battle.myBets) ? battle.myBets : [],
+                oppBetsSorted: Array.isArray(battle.opponentBets) ? battle.opponentBets : [],
+                isBattleEnded: battle.status !== 'active' && battle.status !== 'matched',
+                result: outcome === 'won' ? 'WON' : outcome === 'lost' ? 'LOST' : outcome === 'tie' ? 'TIE' : 'OPEN',
+              };
+            })();
+
+            const mode = fallbackRow.mode;
+            const theme = MODE_THEMES[mode];
+            const outcomeBadge =
+              fallbackRow.result === 'WON' ? { label: 'WON', bg: 'bg-green-500/20', text: 'text-green-400', border: 'rgba(34,197,94,0.6)' }
+              : fallbackRow.result === 'LOST' ? { label: 'LOST', bg: 'bg-red-500/20', text: 'text-red-400', border: 'rgba(239,68,68,0.6)' }
+              : fallbackRow.result === 'TIE' ? { label: 'TIE', bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'rgba(234,179,8,0.6)' }
+              : { label: 'ACTIVE', bg: 'bg-blue-500/20', text: 'text-blue-400', border: theme.borderColor };
+
+            const myBetCards = fallbackRow.myBetsSorted.map(bet => (
+              <PiksBetCard
+                key={bet.id}
+                bet={enrichBet(bet)}
+                onCashOut={cashOutBet}
+                onShare={(b) => setShareModalBet(b)}
+                compactHeader
+                isBattleEnded={fallbackRow.isBattleEnded}
+              />
+            ));
+            const opponentBetCards = fallbackRow.oppBetsSorted.map(bet => (
+              <PiksBetCard
+                key={bet.id}
+                bet={enrichBet(bet)}
+                isOpponent
+                opponentName={battle.opponent?.username}
+                opponentAvatar={battle.opponent?.avatar}
+                compactHeader
+                isBattleEnded={fallbackRow.isBattleEnded}
+              />
+            ));
+
+            return (
+              <BattleOverviewPopup
+                battle={battle}
+                matchupId={oid}
+                theme={theme}
+                myProfile={myProfile}
+                betCount={fallbackRow.myBetsSorted.length}
+                opponentBetCount={fallbackRow.oppBetsSorted.length}
+                myBetCards={myBetCards}
+                opponentBetCards={opponentBetCards}
+                myBetIds={fallbackRow.myBetsSorted.map(b => b.id)}
+                opponentBetIds={fallbackRow.oppBetsSorted.map(b => b.id)}
+                momentBetId={openBattleMoment && openBattleMoment.battleId === oid ? openBattleMoment.momentId : null}
+                outcomeBadge={outcomeBadge}
+                onClose={() => handleBattleOpenChange(oid, false)}
+              />
+            );
+          };
+
+          return (
+            <BattleHistoryTable
+              rows={rows}
+              myProfile={myProfile}
+              selectedFilter={selectedFilter}
+              onFilterChange={setSelectedFilter}
+              openBattleId={openBattleId}
+              onOpenChange={(mid, open) => handleBattleOpenChange(mid, open)}
+              renderRowExtras={renderRowExtras}
+            />
+          );
+        })()}
       </div>
 
       {/* Shareable Bet Slip Modal */}
