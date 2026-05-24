@@ -1297,8 +1297,8 @@ export default function Dashboard() {
           // game-count badge. On mobile they stay emoji-only with the
           // floating superscript count.
           const condensedClass = isCondensed
-            ? 'gap-0 md:gap-2 px-2.5 py-[5px] md:px-4 md:py-2.5 text-[12px] md:text-[14px]'
-            : '';
+            ? 'gap-0 md:gap-2 px-2.5 py-[5px] md:px-4 md:py-2.5 text-[12px] md:text-[14px] preserve-active-ring'
+            : 'preserve-active-ring';
           return (
             <TapSurface
               key={pill.key}

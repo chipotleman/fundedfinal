@@ -55,13 +55,13 @@ button,
   outline: none !important;
 }
 
-button:active,
-button:focus,
-button:focus-visible,
-button:focus-within,
-[role="button"]:active,
-[role="button"]:focus,
-[role="button"]:focus-visible {
+button:active:not(.preserve-active-ring),
+button:focus:not(.preserve-active-ring),
+button:focus-visible:not(.preserve-active-ring),
+button:focus-within:not(.preserve-active-ring),
+[role="button"]:active:not(.preserve-active-ring),
+[role="button"]:focus:not(.preserve-active-ring),
+[role="button"]:focus-visible:not(.preserve-active-ring) {
   outline: none !important;
   outline-width: 0 !important;
   box-shadow: none !important;
@@ -561,10 +561,10 @@ body {
   appearance: none !important;
 }
 
-.no-hover-effect:not(.hamburger-btn):hover,
-.no-hover-effect:not(.hamburger-btn):focus,
-.no-hover-effect:not(.hamburger-btn):focus-visible,
-.no-hover-effect:not(.hamburger-btn):active {
+.no-hover-effect:not(.hamburger-btn):not(.preserve-active-ring):hover,
+.no-hover-effect:not(.hamburger-btn):not(.preserve-active-ring):focus,
+.no-hover-effect:not(.hamburger-btn):not(.preserve-active-ring):focus-visible,
+.no-hover-effect:not(.hamburger-btn):not(.preserve-active-ring):active {
   box-shadow: none !important;
   outline: none !important;
   transform: none !important;
@@ -620,14 +620,31 @@ button.no-hover-effect:not(.hamburger-btn):active {
 }
 
 /* Override browser/Tailwind focus-visible outline - higher specificity */
-button.no-hover-effect:not(.hamburger-btn):focus,
-button.no-hover-effect:not(.hamburger-btn):focus-visible,
-button.no-hover-effect:not(.hamburger-btn):focus-within {
+button.no-hover-effect:not(.hamburger-btn):not(.preserve-active-ring):focus,
+button.no-hover-effect:not(.hamburger-btn):not(.preserve-active-ring):focus-visible,
+button.no-hover-effect:not(.hamburger-btn):not(.preserve-active-ring):focus-within {
   outline: none !important;
   outline-width: 0 !important;
   outline-color: transparent !important;
   box-shadow: none !important;
   border-color: transparent !important;
+}
+
+/* Opt-in: buttons that draw their own active ring via inline box-shadow
+   (e.g. the sport filter pills) need to keep that ring through :focus
+   and :active. The earlier global rules force `box-shadow: none` on
+   every focused button, which made the ring disappear during the click
+   and only "pop back" after blur — looking like the outline was
+   expanding on mouse-away. Add this class to opt out of those nukes
+   and let the element's own inline boxShadow/border style do the
+   talking in every state. */
+button.no-hover-effect.preserve-active-ring,
+button.no-hover-effect.preserve-active-ring:hover,
+button.no-hover-effect.preserve-active-ring:focus,
+button.no-hover-effect.preserve-active-ring:focus-visible,
+button.no-hover-effect.preserve-active-ring:focus-within,
+button.no-hover-effect.preserve-active-ring:active {
+  outline: none !important;
 }
 
 /* Even more specific - element + class + pseudo */
