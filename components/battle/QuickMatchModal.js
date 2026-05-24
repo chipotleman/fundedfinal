@@ -2021,10 +2021,47 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
             <div className="qm-amp relative overflow-hidden" style={{
               background: `radial-gradient(ellipse at top, ${modeSoft} 0%, transparent 60%)`,
             }}>
+              {/* Centered hero title — same brushed-silver + gold-bolt
+                  treatment as the config step so the two phases read
+                  as one cohesive popup. */}
+              <div className="px-5 pt-7 pb-1 flex-shrink-0 relative">
+                <div className="flex items-center justify-center gap-2.5">
+                  <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 10px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                  <h2
+                    className="font-black uppercase text-center"
+                    style={{
+                      fontSize: 'clamp(28px, 8vw, 38px)',
+                      lineHeight: 0.95,
+                      letterSpacing: '0.015em',
+                      fontStyle: 'italic',
+                      WebkitTextStroke: '1.2px #0a0a0a',
+                      textShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.7), 0 0 14px rgba(255,255,255,0.4)',
+                      background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      whiteSpace: 'nowrap',
+                      margin: 0,
+                    }}
+                  >
+                    Finding Opponent
+                  </h2>
+                  <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 10px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                </div>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                  <p
+                    className="font-black uppercase whitespace-nowrap text-center"
+                    style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}
+                  >
+                    Matchmaking In Progress
+                  </p>
+                  <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                </div>
+              </div>
               {/* Cartoon mode banner — anchors the loader to the mode
                   and surfaces buy-in + max payout up top so there's
                   no negative space at the start of the popup. */}
-              <div className="px-4 pt-4 pb-3">
+              <div className="px-4 pt-3 pb-3">
                 <div
                   className="rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2"
                   style={{
