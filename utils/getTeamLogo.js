@@ -513,4 +513,15 @@ export function getTeamLogo(name, sport) {
   return entry.buildUrl(slug);
 }
 
+const ANY_SPORT_FALLBACK_ORDER = ['nba', 'nfl', 'nhl', 'mlb'];
+
+export function getTeamLogoAnySport(name) {
+  if (!name) return null;
+  for (const key of ANY_SPORT_FALLBACK_ORDER) {
+    const url = getTeamLogo(name, key);
+    if (url) return url;
+  }
+  return null;
+}
+
 export default getTeamLogo;

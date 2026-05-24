@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import FramedAvatar from '../UserAvatar';
+import TeamLogo from '../TeamLogo';
 import { formatMoney } from '../../utils/formatMoney';
 import { formatLastSeen } from '../../utils/relativeTime';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
@@ -724,6 +725,7 @@ function PickMini({ pick, sideColor, align = 'left' }) {
         boxShadow: insetShadow,
       }}
     >
+      {align !== 'right' && <TeamLogo name={pick.team} sport={pick.sport} size={16} />}
       <div className={`flex-1 min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
         <div className="text-[11px] font-black truncate" style={{ color: '#fff' }}>
           {pick.team}
@@ -741,6 +743,7 @@ function PickMini({ pick, sideColor, align = 'left' }) {
       >
         {pick.odds}
       </span>
+      {align === 'right' && <TeamLogo name={pick.team} sport={pick.sport} size={16} />}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import PrivateMatchModal from './PrivateMatchModal';
 import MyBattleOverviewModal from './MyBattleOverviewModal';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
+import TeamLogo from '../TeamLogo';
 import MutualFriendsLine from '../social/MutualFriendsLine';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
@@ -179,7 +180,8 @@ function PickPill({ pick, compact = false }) {
         {isPending && <div className="pick-pending-dot" style={{ width: compact ? '4px' : '5px', height: compact ? '4px' : '5px', borderRadius: '50%', background: statusColor, boxShadow: `0 0 6px ${statusColor}` }}></div>}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: compact ? '6px' : '8px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '6px' : '8px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+        <TeamLogo name={pick.team} sport={pick.sport} size={compact ? 14 : 18} />
         <span
           style={{
             color: '#fff',
@@ -650,6 +652,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                                       className="w-1 h-7 rounded-full flex-shrink-0"
                                       style={{ background: statusColor }}
                                     />
+                                    <TeamLogo name={pick.team} sport={pick.sport} size={18} />
                                     <div className="flex-1 min-w-0">
                                       <div className="text-[11px] font-bold text-white truncate leading-tight">
                                         {pick.team}

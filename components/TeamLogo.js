@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTeamLogo } from '../utils/getTeamLogo';
+import { getTeamLogo, getTeamLogoAnySport } from '../utils/getTeamLogo';
 
 export function getPickedTeamName(selection, bet) {
   if (!selection || !bet) return null;
@@ -36,7 +36,7 @@ export default function TeamLogo({
   className = '',
   style: extraStyle,
 }) {
-  const logoUrl = getTeamLogo(name, sport);
+  const logoUrl = sport ? getTeamLogo(name, sport) : getTeamLogoAnySport(name);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
