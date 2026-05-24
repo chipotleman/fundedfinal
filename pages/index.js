@@ -2070,18 +2070,38 @@ export default function Dashboard() {
 
               {walkthroughStep === 1 && (
                 <div className="px-5 py-4">
-                  <div className="text-center mb-4">
-                    <div className="inline-flex items-center justify-center gap-2.5">
-                      <Bolt size={22} delay={0} />
-                      <h2 className="text-xl md:text-2xl font-black" style={{
-                        color: '#facc15',
-                        letterSpacing: '0.04em',
-                        animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
-                        fontFamily: 'system-ui, -apple-system, sans-serif',
-                      }}>HOW IT WORKS</h2>
-                      <Bolt size={22} delay={0.2} />
+                  <div className="text-center mb-4 relative">
+                    <div className="flex items-center justify-center gap-2.5">
+                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                      <h2
+                        className="font-black uppercase text-center"
+                        style={{
+                          fontSize: 'clamp(28px, 8vw, 38px)',
+                          lineHeight: 0.92,
+                          letterSpacing: '0.015em',
+                          fontStyle: 'italic',
+                          WebkitTextStroke: '1.2px #0a0a0a',
+                          textShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.75), 0 0 14px rgba(255,255,255,0.45)',
+                          background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          whiteSpace: 'nowrap',
+                          margin: 0,
+                          animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
+                          fontFamily: 'system-ui, -apple-system, sans-serif',
+                        }}
+                      >
+                        How It Works
+                      </h2>
+                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                     </div>
-                    <p className="text-gray-400 text-xs font-semibold mt-1.5">Three simple steps to win</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                      <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}>
+                        Three Simple Steps To Win
+                      </p>
+                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                    </div>
                   </div>
                   <div className="space-y-2.5">
                     {[
@@ -2113,18 +2133,38 @@ export default function Dashboard() {
 
               {walkthroughStep === 2 && (
                 <div className="px-5 py-4">
-                  <div className="text-center mb-4">
-                    <div className="inline-flex items-center justify-center gap-2.5">
-                      <Bolt size={22} delay={0} />
-                      <h2 className="text-xl md:text-2xl font-black" style={{
-                        color: '#facc15',
-                        letterSpacing: '0.04em',
-                        animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
-                        fontFamily: 'system-ui, -apple-system, sans-serif',
-                      }}>TIPS TO WIN</h2>
-                      <Bolt size={22} delay={0.2} />
+                  <div className="text-center mb-4 relative">
+                    <div className="flex items-center justify-center gap-2.5">
+                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                      <h2
+                        className="font-black uppercase text-center"
+                        style={{
+                          fontSize: 'clamp(28px, 8vw, 38px)',
+                          lineHeight: 0.92,
+                          letterSpacing: '0.015em',
+                          fontStyle: 'italic',
+                          WebkitTextStroke: '1.2px #0a0a0a',
+                          textShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.75), 0 0 14px rgba(255,255,255,0.45)',
+                          background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          whiteSpace: 'nowrap',
+                          margin: 0,
+                          animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
+                          fontFamily: 'system-ui, -apple-system, sans-serif',
+                        }}
+                      >
+                        Tips To Win
+                      </h2>
+                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                     </div>
-                    <p className="text-gray-400 text-xs font-semibold mt-1.5">Quick strategy guide</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                      <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}>
+                        Quick Strategy Guide
+                      </p>
+                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                    </div>
                   </div>
                   <div className="space-y-2.5">
                     {[
