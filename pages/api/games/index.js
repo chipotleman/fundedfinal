@@ -8,6 +8,7 @@ import {
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
 import { generateSimulatedGames } from '../../../lib/simulated-games';
+import { captureGamesSnapshots } from '../../../lib/oddsHistory';
 
 let globalCache = null;
 let globalCacheTimestamp = null;
@@ -370,6 +371,13 @@ export default async function handler(req, res) {
       debugInfo: { gameCount: formattedGames.length, sports: Object.keys(bySport) }
     };
     globalCacheTimestamp = now;
+
+    // Fire-and-forget: capture per-game odds snapshots so the Kalshi-style
+    // chart on /game/[id] has a time series to plot. This only writes when
+    // the moneyline actually moves (dedup'd in lib/oddsHistory).
+    if (Array.isArray(formattedGames) && formattedGames.length > 0) {
+      captureGamesSnapshots(formattedGames).catch(() => {});
+    }
 
     const recommendedInterval = hasLiveGames ? LIVE_GAMES_CACHE_DURATION : NO_LIVE_GAMES_CACHE_DURATION;
     

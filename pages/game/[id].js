@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useGames } from '../../contexts/GamesContext';
 import LiveGameTracker from '../../components/LiveGameTracker';
+import OddsHistoryChart from '../../components/game/OddsHistoryChart';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { leavePage } from '../../utils/leavePage';
 
@@ -404,6 +405,21 @@ export default function GameDetail() {
             </div>
           )}
         </div>
+
+        {/* Kalshi-style live odds chart — plots de-vigged implied win
+            probability over time for the home (blue) and away (orange)
+            teams. Capture happens server-side every time the games cache
+            refreshes, so this gets a fresh tick every ~30s once odds move. */}
+        {hasLines && (
+          <div className="px-4 pt-4">
+            <OddsHistoryChart
+              gameId={game.id}
+              homeTeam={game.homeTeam || game.homeTeamFull}
+              awayTeam={game.awayTeam || game.awayTeamFull}
+              liveOdds={{ home: moneyline.home, away: moneyline.away }}
+            />
+          </div>
+        )}
 
         <div className="sticky top-[57px] z-40 bg-black border-b border-[#1a1a1a]">
           <div className="flex overflow-x-auto scrollbar-hide">

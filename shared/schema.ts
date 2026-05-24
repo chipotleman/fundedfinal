@@ -454,6 +454,29 @@ export const oddsHistoryPulls = pgTable("odds_history_pulls", {
   pulledAtIdx: index("odds_history_pulls_pulled_at_idx").on(table.pulledAt),
 }));
 
+// Per-game odds snapshots — one row per meaningful odds change for a game.
+// Powers the Kalshi-style live odds chart on /game/[id]: we plot implied
+// win probability over time, devig'd from the moneyline pair. Captured
+// from the public games cache write path so it doesn't consume extra API
+// credits. Dedup'd in-memory by (gameId, last-snapshot-fingerprint) plus
+// a soft 30s min-interval to keep volume sane. Rows older than 14 days
+// are pruned by a tiny on-write cleanup.
+export const gameOddsSnapshots = pgTable("game_odds_snapshots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gameId: varchar("game_id", { length: 191 }).notNull(),
+  sport: varchar("sport", { length: 100 }),
+  capturedAt: timestamp("captured_at").defaultNow().notNull(),
+  homeMl: integer("home_ml"),
+  awayMl: integer("away_ml"),
+  totalLine: decimal("total_line", { precision: 8, scale: 2 }),
+  homeSpread: decimal("home_spread", { precision: 8, scale: 2 }),
+  awaySpread: decimal("away_spread", { precision: 8, scale: 2 }),
+  source: varchar("source", { length: 64 }),
+}, (table) => ({
+  gameCapturedIdx: index("game_odds_snapshots_game_captured_idx").on(table.gameId, table.capturedAt),
+  capturedAtIdx: index("game_odds_snapshots_captured_at_idx").on(table.capturedAt),
+}));
+
 // Completed games - stores game results for bet grading
 export const completedGames = pgTable("completed_games", {
   id: varchar("id").primaryKey(), // Use the game ID from The Odds API
