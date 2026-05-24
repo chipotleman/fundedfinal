@@ -761,7 +761,7 @@ export default function TopNavbar({
                       >
                         {`💵\uFE0F`}
                       </span>
-                      <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+                      <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1, WebkitTextStroke: '1px #000', textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>
                         ${formatMoney(parseFloat(userProfile.bankroll), 0)}
                       </span>
                     </button>
@@ -796,7 +796,7 @@ export default function TopNavbar({
                       >
                         {`⚔\uFE0F`}
                       </span>
-                      <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+                      <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1, WebkitTextStroke: '1px #000', textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>
                         {formatMoney(parseFloat(matchupBalance), 0)}
                       </span>
                     </button>
@@ -918,7 +918,7 @@ export default function TopNavbar({
                     >
                       {`⚔\uFE0F`}
                     </span>
-                    <span style={{ fontWeight: 900, fontSize: 12, color: '#ffffff', letterSpacing: '0.02em', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
+                    <span style={{ fontWeight: 900, fontSize: 12, color: '#ffffff', letterSpacing: '0.02em', whiteSpace: 'nowrap', lineHeight: 1.1, WebkitTextStroke: '1px #000', textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>
                       {formatMoney(parseFloat(matchupBalance), 0)}
                     </span>
                   </button>
@@ -1220,7 +1220,7 @@ export default function TopNavbar({
                 >
                   {`💵\uFE0F`}
                 </span>
-                <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+                <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1, WebkitTextStroke: '1px #000', textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>
                   ${formatMoney(parseFloat(userProfile.bankroll), 0)}
                 </span>
               </button>
@@ -1257,7 +1257,7 @@ export default function TopNavbar({
                 >
                   {`⚔\uFE0F`}
                 </span>
-                <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+                <span style={{ fontWeight: 900, fontSize: 14, color: '#ffffff', letterSpacing: '0.02em', lineHeight: 1.1, WebkitTextStroke: '1px #000', textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>
                   {formatMoney(parseFloat(matchupBalance), 0)}
                 </span>
               </button>
