@@ -193,6 +193,15 @@ export default function Dashboard() {
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
   const [walkthroughDismissed, setWalkthroughDismissed] = useState(false);
+  const [walkthroughDontShowAgain, setWalkthroughDontShowAgain] = useState(false);
+  const closeWalkthrough = () => {
+    if (walkthroughDontShowAgain && typeof window !== 'undefined') {
+      try { window.localStorage.setItem('piks_battle_walkthrough_dismissed', '1'); } catch (_) {}
+    }
+    setShowBattleWalkthrough(false);
+    setWalkthroughDismissed(true);
+    setWalkthroughStep(0);
+  };
   const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
   const [promoSlots, setPromoSlots] = useState(() =>
     DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })),
@@ -252,10 +261,21 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (router.query.battleStarted !== 'true') return;
-    
+
+    // Respect the user's "Don't show this again" preference — clear the
+    // query string and bail before the walkthrough overlay ever renders.
+    if (typeof window !== 'undefined' && window.localStorage.getItem('piks_battle_walkthrough_dismissed') === '1') {
+      router.replace('/', undefined, { shallow: true });
+      return;
+    }
+
+    // Open the overlay IMMEDIATELY so the dashboard underneath never
+    // flashes. The walkthrough renders a loading skeleton internally
+    // until the matchup payload finishes hydrating.
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    setShowBattleWalkthrough(true);
+
     if (hasActiveMatchup) {
-      window.scrollTo({ top: 0, behavior: 'auto' });
-      setShowBattleWalkthrough(true);
       router.replace('/', undefined, { shallow: true });
       if (battleStartedRetryRef.current) {
         clearInterval(battleStartedRetryRef.current);
@@ -1818,6 +1838,26 @@ export default function Dashboard() {
 
       <Footer />
 
+      {showBattleWalkthrough && !(hasActiveMatchup && matchup) && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}>
+          <div
+            className="w-full max-w-[380px] rounded-2xl overflow-hidden flex flex-col items-center justify-center py-12 relative"
+            style={{
+              background: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 8px 0 #0a0a0a, 0 0 60px rgba(6,182,212,0.35), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
+            }}
+          >
+            <div className="w-12 h-12 rounded-full mb-3" style={{
+              border: '3px solid rgba(6,182,212,0.25)',
+              borderTopColor: '#06b6d4',
+              animation: 'wtSpin 0.9s linear infinite',
+            }} />
+            <p className="text-white text-sm font-extrabold uppercase tracking-[0.18em]" style={{ color: '#7dd3fc' }}>Loading your battle…</p>
+            <style>{`@keyframes wtSpin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        </div>
+      )}
       {showBattleWalkthrough && hasActiveMatchup && matchup && (() => {
         // Cartoon-themed battle walkthrough — visually matches the
         // QuickMatchModal "MATCH FOUND" reference (yellow/orange title
@@ -1873,27 +1913,41 @@ export default function Dashboard() {
             @media (hover: hover) { .wt-back-btn:hover { background: linear-gradient(180deg,#262626,#171717) !important; } }
           `}</style>
           <div
-            className="w-full max-w-[380px] rounded-2xl overflow-hidden flex flex-col"
+            className="w-full max-w-[380px] rounded-2xl overflow-hidden flex flex-col relative"
             style={{
-              background: 'linear-gradient(180deg, #0a1024 0%, #06070d 100%)',
+              background: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
               border: '2.5px solid #0a0a0a',
-              boxShadow: '0 8px 0 #0a0a0a, 0 0 40px rgba(59,130,246,0.35)',
+              boxShadow: '0 8px 0 #0a0a0a, 0 0 60px rgba(6,182,212,0.3), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
               animation: 'wtSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both',
               maxHeight: 'calc(100dvh - 2rem)',
             }}
           >
+            {/* Cyan corner brackets — match QuickMatchModal "gaming HUD" frame */}
+            {['tl','tr','bl','br'].map(pos => {
+              const base = { position: 'absolute', width: 20, height: 20, pointerEvents: 'none', zIndex: 3 };
+              const stroke = '2.5px solid #06b6d4';
+              const glow = { filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.8))' };
+              const map = {
+                tl: { top: 8, left: 8, borderTop: stroke, borderLeft: stroke, borderTopLeftRadius: 8 },
+                tr: { top: 8, right: 8, borderTop: stroke, borderRight: stroke, borderTopRightRadius: 8 },
+                bl: { bottom: 8, left: 8, borderBottom: stroke, borderLeft: stroke, borderBottomLeftRadius: 8 },
+                br: { bottom: 8, right: 8, borderBottom: stroke, borderRight: stroke, borderBottomRightRadius: 8 },
+              };
+              return <span key={pos} aria-hidden="true" style={{ ...base, ...map[pos], ...glow }} />;
+            })}
             {/* Top bar — progress dots + skip */}
-            <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
+            <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0 relative" style={{ zIndex: 4 }}>
               <div className="flex gap-1.5">
                 {[0, 1, 2].map(i => (
                   <div key={i} className="h-1.5 rounded-full transition-all duration-300" style={{
                     width: walkthroughStep === i ? '28px' : '10px',
-                    background: walkthroughStep >= i ? 'linear-gradient(90deg,#facc15,#fb923c)' : '#1a1a1a',
+                    background: walkthroughStep >= i ? 'linear-gradient(90deg,#06b6d4,#3b82f6)' : '#1a1a1a',
                     border: '1.5px solid #0a0a0a',
+                    boxShadow: walkthroughStep >= i ? '0 0 6px rgba(6,182,212,0.6)' : 'none',
                   }} />
                 ))}
               </div>
-              <button onClick={() => { setShowBattleWalkthrough(false); setWalkthroughDismissed(true); setWalkthroughStep(0); }} className="text-gray-500 text-xs font-bold uppercase tracking-wider">Skip</button>
+              <button onClick={closeWalkthrough} className="text-gray-500 text-xs font-bold uppercase tracking-wider" style={{ letterSpacing: '0.14em' }}>Skip</button>
             </div>
 
             <div key={walkthroughStep} className="flex-1 overflow-y-auto min-h-0" style={{ animation: 'wtFadeIn 0.3s ease-out' }}>
@@ -2101,25 +2155,60 @@ export default function Dashboard() {
                   if (walkthroughStep < 2) {
                     setWalkthroughStep(walkthroughStep + 1);
                   } else {
-                    setShowBattleWalkthrough(false);
-                    setWalkthroughDismissed(true);
-                    setWalkthroughStep(0);
+                    closeWalkthrough();
                   }
                 }}
-                className="flex-1 py-3.5 rounded-2xl font-black uppercase flex items-center justify-center"
+                className="flex-1 rounded-2xl font-black uppercase flex flex-col items-stretch justify-center relative overflow-hidden p-0 text-white"
                 style={{
-                  background: 'linear-gradient(180deg,#fde047 0%,#facc15 100%)',
+                  background: 'linear-gradient(180deg,#3b82f6 0%,#1d4ed8 100%)',
                   border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 4px 0 #0a0a0a',
-                  color: '#0a0a0a',
-                  letterSpacing: '0.08em',
-                  fontSize: 14,
+                  boxShadow: '0 4px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.5), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
+                  textShadow: '0 1px 0 rgba(0,0,0,0.4)',
+                  letterSpacing: '0.06em',
                   fontFamily: 'system-ui, -apple-system, sans-serif',
                 }}
               >
-                {ctaLabel}
+                <span className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-2">
+                  <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: 'linear-gradient(180deg,#0e1b3a,#050a18)', border: '2px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)', color: '#7dd3fc', fontSize: 13 }}>»</span>
+                  <span style={{ fontSize: 14 }}>{ctaLabel}</span>
+                  <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: 'linear-gradient(180deg,#0e1b3a,#050a18)', border: '2px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)', color: '#7dd3fc', fontSize: 13 }}>«</span>
+                </span>
               </button>
             </div>
+            {/* "Don't show this again" preference — persisted in
+                localStorage by closeWalkthrough(). */}
+            <label
+              className="flex items-center justify-center gap-2 px-5 pb-4 pt-0 cursor-pointer select-none"
+              style={{ letterSpacing: '0.1em' }}
+            >
+              <span
+                role="checkbox"
+                aria-checked={walkthroughDontShowAgain}
+                tabIndex={0}
+                onClick={() => setWalkthroughDontShowAgain(v => !v)}
+                onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setWalkthroughDontShowAgain(v => !v); } }}
+                className="inline-flex items-center justify-center rounded"
+                style={{
+                  width: 16, height: 16,
+                  background: walkthroughDontShowAgain ? 'linear-gradient(180deg,#06b6d4,#0891b2)' : '#0a0f1c',
+                  border: '2px solid #06b6d4',
+                  boxShadow: walkthroughDontShowAgain ? '0 0 10px rgba(6,182,212,0.7)' : 'none',
+                }}
+              >
+                {walkthroughDontShowAgain && (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                )}
+              </span>
+              <input
+                type="checkbox"
+                checked={walkthroughDontShowAgain}
+                onChange={(e) => setWalkthroughDontShowAgain(e.target.checked)}
+                className="sr-only"
+              />
+              <span className="text-[10.5px] font-extrabold uppercase" style={{ color: walkthroughDontShowAgain ? '#7dd3fc' : '#94a3b8' }}>
+                Don&apos;t show this again
+              </span>
+            </label>
           </div>
         </div>
         );
