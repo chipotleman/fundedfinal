@@ -224,9 +224,20 @@ export default function UserAvatar({
 /**
  * Username text that links to the user's profile page when clicked.
  */
-export function UserNameLink({ user, className = '', style, fallback = 'Player' }) {
+export function UserNameLink({ user, className = '', style, fallback = 'Player', onClick, ...rest }) {
   const name = user?.username || user?.name || fallback;
   const prefetchHandlers = useProfilePrefetchHandlers(user);
+  // Merge the caller's onClick with the prefetch seedOnly handler so
+  // callers can pass `onClick={(e) => e.stopPropagation()}` (e.g. when
+  // the name sits inside a parent button that opens an overview popup)
+  // without losing profile-cache seeding. Without this, clicking a
+  // username inside a parent button bubbles up and triggers the parent
+  // handler too, which made the leaderboard top-3 cards flash an
+  // overview popup before navigating to the profile.
+  const mergedClick = (e) => {
+    onClick?.(e);
+    if (!e.defaultPrevented) prefetchHandlers.onClick?.(e);
+  };
   if (user?.id) {
     return (
       <Link
@@ -234,10 +245,12 @@ export function UserNameLink({ user, className = '', style, fallback = 'Player' 
         className={`hover:underline hover:text-emerald-300 transition-colors ${className}`}
         style={style}
         {...prefetchHandlers}
+        {...rest}
+        onClick={mergedClick}
       >
         {name}
       </Link>
     );
   }
-  return <span className={className} style={style}>{name}</span>;
+  return <span className={className} style={style} onClick={onClick} {...rest}>{name}</span>;
 }
