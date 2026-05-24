@@ -58,22 +58,30 @@ export default function TeamLogo({
   }, [logoUrl]);
 
   const isBadge = !!accent;
-  const accentStyles = !isBadge
-    ? null
-    : accent === 'blue'
-      ? { background: 'rgba(59,130,246,0.15)', border: '2px solid rgba(59,130,246,0.5)', color: '#3b82f6' }
-      : { background: 'rgba(251,146,60,0.15)', border: '2px solid rgba(251,146,60,0.5)', color: '#fb923c' };
+  const showLogo = logoUrl && !failed;
+
+  // When a real logo is available we render it on a transparent
+  // background so the team's brand colors aren't tinted by our
+  // accent fill. The accent color is only used for the initials
+  // fallback (so the orange/blue "ND / LSU" placeholder still
+  // matches the player side it belongs to).
+  const accentColor = accent === 'blue' ? '#3b82f6' : accent === 'orange' ? '#fb923c' : null;
+  const fallbackStyles = isBadge && !showLogo && accentColor
+    ? {
+        background: accent === 'blue' ? 'rgba(59,130,246,0.15)' : 'rgba(251,146,60,0.15)',
+        border: `2px solid ${accent === 'blue' ? 'rgba(59,130,246,0.5)' : 'rgba(251,146,60,0.5)'}`,
+        color: accentColor,
+      }
+    : null;
 
   const baseStyle = {
     width: size,
     height: size,
     fontSize: Math.max(8, Math.round(size * 0.4)),
     lineHeight: 1,
-    ...(accentStyles || {}),
+    ...(fallbackStyles || {}),
     ...(extraStyle || {}),
   };
-
-  const showLogo = logoUrl && !failed;
 
   return (
     <div
@@ -89,7 +97,7 @@ export default function TeamLogo({
           height={size}
           loading="lazy"
           onError={() => setFailed(true)}
-          style={{ width: isBadge ? '78%' : '100%', height: isBadge ? '78%' : '100%', objectFit: 'contain' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         />
       ) : (
         <span style={{ color: isBadge ? undefined : '#9ca3af' }}>{teamInitials(name)}</span>
