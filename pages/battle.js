@@ -2028,7 +2028,6 @@ export default function BattlePage() {
               onAcceptFriendRequest: handleAcceptFriendRequest,
               onDeclineFriendRequest: handleDeclineFriendRequest,
               onChallengeFriend: handleQuickInvite,
-              onOpenProfile: goToProfile,
               onShowHistory: () => setShowHistory(true),
             }}
           />

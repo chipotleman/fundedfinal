@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import UserAvatar from '../UserAvatar';
+import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 
 // Cartoon site-wide profile preview. Renders as a floating card via
 // portal, anchored next to the trigger element when possible (chat
@@ -47,6 +48,10 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
   const router = useRouter();
   const { data: session } = useSession();
   const myId = session?.user?.id;
+  // Optional: warm the profile cache so /profile/[id] renders instantly
+  // when the popover's View Profile button is tapped. Mirrors the
+  // prefetch behavior that previously lived in goToProfile on /battle.
+  const profileCache = useProfileCacheOptional();
 
   // Seed `friendStatus` to 'self' synchronously when the clicked user is
   // the viewer — without this the popover flashed the Add-Friend /
@@ -144,6 +149,13 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
   };
 
   const handleViewProfile = () => {
+    if (profileCache && user.id) {
+      profileCache.prefetchProfile(user.id, {
+        id: user.id,
+        username: user.username,
+        avatar: user.avatar ?? null,
+      });
+    }
     onClose?.();
     router.push(`/profile/${user.id}`);
   };

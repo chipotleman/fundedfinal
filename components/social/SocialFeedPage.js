@@ -7,6 +7,7 @@ import { getBattleStreamClient } from '../../lib/battleStreamClient';
 import LiveBattleStoryViewer from './LiveBattleStoryViewer';
 import { getSimulatedBattles } from '../battle/LiveBattlesSection';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { useUserPreview } from '../../contexts/UserPreviewContext';
 
 const surface = '#0d0d0d';
 const surfaceMuted = '#0a0a0a';
@@ -430,11 +431,11 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile }) {
   return (
     <div className="rounded-2xl mb-4 overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
       <div className="flex items-center gap-3 px-4 pt-3">
-        <button type="button" onClick={() => onOpenProfile?.(author)} className="flex-shrink-0">
+        <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="flex-shrink-0">
           <FramedAvatar avatar={author.avatar} username={author.username || 'P'} frameId={author.equippedFrame} size={36} bgColor="#1a1a1a" />
         </button>
         <div className="min-w-0 flex-1">
-          <button type="button" onClick={() => onOpenProfile?.(author)} className="text-[13px] font-semibold hover:underline" style={{ color: textPrimary }}>
+          <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="text-[13px] font-semibold hover:underline" style={{ color: textPrimary }}>
             {author.username || 'Player'}
           </button>
           <div className="text-[10px]" style={{ color: textMuted }}>{timeAgo(post.createdAt)}</div>
@@ -486,11 +487,11 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile }) {
                 const ca = c.author || {};
                 return (
                   <div key={c.id} className="flex items-start gap-2.5">
-                    <button type="button" onClick={() => onOpenProfile?.(ca)} className="flex-shrink-0 mt-0.5">
+                    <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
                       <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor="#1a1a1a" />
                     </button>
                     <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: '#111' }}>
-                      <button type="button" onClick={() => onOpenProfile?.(ca)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
+                      <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
                         {ca.username || 'Player'}
                       </button>
                       <div className="text-[13px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>{c.body}</div>
@@ -588,7 +589,7 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
       <div className="divide-y" style={{ borderColor: border }}>
         {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3 px-3 py-2.5">
-            <button type="button" onClick={() => onOpenProfile?.(item.user)} className="flex-shrink-0">
+            <button type="button" onClick={(e) => onOpenProfile?.(item.user, e)} className="flex-shrink-0">
               <FramedAvatar
                 avatar={item.user?.avatar}
                 username={item.user?.username || '?'}
@@ -599,7 +600,7 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
             </button>
             <div className="min-w-0 flex-1">
               <div className="text-[13px] truncate" style={{ color: textPrimary }}>
-                <button type="button" onClick={() => onOpenProfile?.(item.user)} className="font-semibold hover:underline">
+                <button type="button" onClick={(e) => onOpenProfile?.(item.user, e)} className="font-semibold hover:underline">
                   {item.user?.username || 'Player'}
                 </button>
                 <span className="ml-1" style={{ color: textSecondary }}>{item.meta}</span>
@@ -973,7 +974,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
           <div className="flex items-center gap-2.5 min-w-0 text-left">
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1); }}
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
               aria-label={`Open ${u1.username || 'Player 1'} profile`}
               className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
             >
@@ -1003,7 +1004,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
             <div className="min-w-0">
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1); }}
+                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
                 className="text-[13px] font-black truncate text-left lg:hover:underline rounded"
                 style={{ color: textPrimary }}
               >
@@ -1053,7 +1054,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
             <div className="min-w-0 text-right">
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2); }}
+                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
                 className="text-[13px] font-black truncate text-right lg:hover:underline rounded ml-auto block"
                 style={{ color: textPrimary }}
               >
@@ -1071,7 +1072,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
             </div>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2); }}
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
               aria-label={`Open ${u2.username || 'Player 2'} profile`}
               className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
             >
@@ -1265,16 +1266,16 @@ function ResultPost({ highlight, onOpenProfile, onReplay }) {
     <div className="rounded-2xl mb-4 overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={() => onOpenProfile?.(winner)} className="flex-shrink-0">
+          <button type="button" onClick={(e) => onOpenProfile?.(winner, e)} className="flex-shrink-0">
             <FramedAvatar avatar={winner.avatar} username={winner.username || 'W'} frameId={winner.equippedFrame} size={36} bgColor="#16a34a" />
           </button>
           <div className="min-w-0">
             <div className="text-[13px] truncate" style={{ color: textPrimary }}>
-              <button type="button" onClick={() => onOpenProfile?.(winner)} className="font-semibold text-green-400 hover:underline">
+              <button type="button" onClick={(e) => onOpenProfile?.(winner, e)} className="font-semibold text-green-400 hover:underline">
                 {winner.username || 'Player'}
               </button>
               <span style={{ color: textSecondary }}> beat </span>
-              <button type="button" onClick={() => onOpenProfile?.(loser)} className="font-semibold hover:underline">
+              <button type="button" onClick={(e) => onOpenProfile?.(loser, e)} className="font-semibold hover:underline">
                 {loser.username || 'Player'}
               </button>
             </div>
@@ -1321,14 +1322,14 @@ function YourMatchPost({ match, onOpenProfile, onShowHistory }) {
         : { text: 'In progress', color: 'text-blue-400' };
   return (
     <div className="rounded-2xl mb-4 p-3 flex items-center gap-3" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
-      <button type="button" onClick={() => onOpenProfile?.(opp)} className="flex-shrink-0">
+      <button type="button" onClick={(e) => onOpenProfile?.(opp, e)} className="flex-shrink-0">
         <FramedAvatar avatar={opp.avatar} username={opp.username || '?'} frameId={opp.equippedFrame} size={40} bgColor="#1a1a1a" />
       </button>
       <div className="flex-1 min-w-0">
         <div className="text-[13px]" style={{ color: textPrimary }}>
           <span className={`font-semibold ${badge.color}`}>{badge.text}</span>
           <span style={{ color: textSecondary }}> vs </span>
-          <button type="button" onClick={() => onOpenProfile?.(opp)} className="font-semibold hover:underline">
+          <button type="button" onClick={(e) => onOpenProfile?.(opp, e)} className="font-semibold hover:underline">
             {opp.username || 'Player'}
           </button>
         </div>
@@ -1390,11 +1391,11 @@ function FeedSidebar({ onStartBattle, friends, recentHighlights, onOpenProfile, 
           <div className="divide-y" style={{ borderColor: border }}>
             {onlineFriends.map((f) => (
               <div key={f.id} className="flex items-center gap-3 px-3 py-2.5">
-                <button type="button" onClick={() => onOpenProfile?.(f)} className="relative flex-shrink-0">
+                <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="relative flex-shrink-0">
                   <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor="#1a1a1a" isOnline onlineDotBorderColor={surface} />
                 </button>
                 <div className="min-w-0 flex-1">
-                  <button type="button" onClick={() => onOpenProfile?.(f)} className="block w-full text-left">
+                  <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="block w-full text-left">
                     <div className="text-[13px] font-semibold truncate" style={{ color: textPrimary }}>{f.username}</div>
                     <div className="text-[10px]" style={{ color: textMuted }}>Online</div>
                   </button>
@@ -1476,9 +1477,20 @@ export default function SocialFeedPage({ data }) {
     onAcceptFriendRequest,
     onDeclineFriendRequest,
     onChallengeFriend,
-    onOpenProfile,
     onShowHistory,
   } = data || {};
+
+  // Clicking any username or avatar in the feed opens the site-wide
+  // user preview popover (View Profile / Add Friend / Message) instead
+  // of navigating straight to /profile/[id]. The popover's own "View
+  // Full Profile" action still performs the navigation. We pass the
+  // click event's currentTarget as the anchor so the popover positions
+  // itself next to the clicked element.
+  const { openPreview } = useUserPreview();
+  const onOpenProfile = useCallback((user, e) => {
+    if (!user?.id) return;
+    openPreview(user, e?.currentTarget || null);
+  }, [openPreview]);
 
   // Live battles for the stories rail and feed posts. We do our own fetch +
   // SSE subscribe (rather than mounting LiveBattlesSection) because the feed
