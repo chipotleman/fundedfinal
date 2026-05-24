@@ -8,6 +8,7 @@ import LiveBattleStoryViewer from './LiveBattleStoryViewer';
 import { getSimulatedBattles } from '../battle/LiveBattlesSection';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
 import { useUserPreview } from '../../contexts/UserPreviewContext';
+import SharedByPill from '../messages/SharedByPill';
 
 const surface = '#0d0d0d';
 const surfaceMuted = '#0a0a0a';
@@ -2144,6 +2145,7 @@ export default function SocialFeedPage({ data }) {
           the social feed spans the entire page. Mobile keeps the
           centered readable column. */}
       <div className="min-w-0 max-w-[680px] mx-auto lg:max-w-none w-full">
+        <SharedByPill />
         <StoriesRail
           battles={liveBattles}
           onSpectate={handleSpectate}

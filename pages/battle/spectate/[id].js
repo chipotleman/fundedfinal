@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Link from 'next/link';
 import TopNavbar from '../../../components/TopNavbar';
+import SharedByPill from '../../../components/messages/SharedByPill';
 import UsernameLink from '../../../components/social/UsernameLink';
 import { getSimulatedBattles } from '../../../components/battle/LiveBattlesSection';
 import { useBetaMode } from '../../../contexts/SiteConfigContext';
@@ -483,6 +484,7 @@ export default function SpectatePage() {
             breathe under the sticky TopNavbar (previous pt-4 was
             visibly clipped on the spectate page). */}
         <div className="max-w-5xl mx-auto px-3 sm:px-5 pt-6 sm:pt-8 pb-24">
+          <SharedByPill />
           <div className="flex items-center justify-between mb-4">
             <Link
               href="/battle"

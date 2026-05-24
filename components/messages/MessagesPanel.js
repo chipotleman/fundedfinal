@@ -1092,7 +1092,7 @@ function VoiceWaveform({
 // as JSON (`{v,type,id,note,snapshot}`); we parse defensively and fall
 // back to plain text if anything is off. Tapping the card deep-links to
 // the spectator page (battle) or the social feed (post).
-function SharedItemBubble({ raw, mine, onNavigate }) {
+function SharedItemBubble({ raw, mine, onNavigate, senderId, senderUsername }) {
   let payload = null;
   try { payload = JSON.parse(raw); } catch { payload = null; }
   if (!payload || !['battle', 'post', 'result'].includes(payload.type)) {
@@ -1100,13 +1100,22 @@ function SharedItemBubble({ raw, mine, onNavigate }) {
   }
   const { type } = payload;
   const snap = payload.snapshot || {};
+  // Only carry the share-attribution query params when the recipient is
+  // the one tapping the bubble — opening your own outgoing share doesn't
+  // need a "Shared by you" pill on the destination page.
+  const buildShareSuffix = (joiner) => {
+    if (mine || !senderId) return '';
+    const parts = [`shared=${encodeURIComponent(senderId)}`];
+    if (senderUsername) parts.push(`sharedBy=${encodeURIComponent(senderUsername)}`);
+    return `${joiner}${parts.join('&')}`;
+  };
   const handleClick = () => {
     if (!payload.id) return;
-    if (type === 'battle') onNavigate?.(`/battle/spectate/${payload.id}`);
-    else if (type === 'result') onNavigate?.(`/battle/replay/${payload.id}`);
+    if (type === 'battle') onNavigate?.(`/battle/spectate/${payload.id}${buildShareSuffix('?')}`);
+    else if (type === 'result') onNavigate?.(`/battle/replay/${payload.id}${buildShareSuffix('?')}`);
     // Post deep-link: SocialFeedPage reads ?post= and scrolls + opens
     // the post's comment thread so the recipient lands on the original.
-    else if (type === 'post') onNavigate?.(`/battle?post=${encodeURIComponent(payload.id)}`);
+    else if (type === 'post') onNavigate?.(`/battle?post=${encodeURIComponent(payload.id)}${buildShareSuffix('&')}`);
   };
   const headerBg = type === 'battle'
     ? 'linear-gradient(135deg,#2563eb,#f97316)'
@@ -2770,6 +2779,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                 <SharedItemBubble
                   raw={m.content}
                   mine={m.senderId === myId}
+                  senderId={m.senderId === myId ? myId : friend?.id}
+                  senderUsername={m.senderId === myId ? undefined : friend?.username}
                   onNavigate={(href) => { try { router.push(href); } catch {} }}
                 />
               ) : (
