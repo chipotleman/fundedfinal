@@ -200,7 +200,11 @@ export default async function handler(req, res) {
     // directly in the thread with the sender.
     try {
       const senderRows = await db
-        .select({ username: profiles.username, avatar: profiles.avatar })
+        .select({
+          username: profiles.username,
+          avatar: profiles.avatar,
+          updatedAt: profiles.updatedAt,
+        })
         .from(profiles)
         .where(eq(profiles.id, userId));
       const senderName = senderRows[0]?.username || 'A friend';
@@ -212,7 +216,15 @@ export default async function handler(req, res) {
       // load it. The URL is relative; the service worker resolves it
       // against the page origin when calling showNotification.
       const rawAvatar = senderRows[0]?.avatar || null;
-      const senderAvatarUrl = `/api/users/${encodeURIComponent(userId)}/avatar`;
+      // Pin a version token so the CDN can hold the avatar response
+      // long-term. The token rolls over whenever the profile changes, so a
+      // new avatar invalidates the cache without any explicit purge.
+      const avatarVersion = senderRows[0]?.updatedAt
+        ? new Date(senderRows[0].updatedAt).getTime()
+        : null;
+      const senderAvatarUrl =
+        `/api/users/${encodeURIComponent(userId)}/avatar` +
+        (avatarVersion ? `?v=${avatarVersion}` : '');
       const senderAvatarOriginal = rawAvatar && /^https?:\/\//i.test(rawAvatar) && rawAvatar.length <= 500
         ? rawAvatar
         : null;
