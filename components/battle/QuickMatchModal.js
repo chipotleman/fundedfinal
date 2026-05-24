@@ -2167,7 +2167,11 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
               </div>
 
               <div className="flex items-center justify-center gap-4 md:gap-8 relative px-4" style={{ minHeight: '220px' }}>
-                <div className="flex flex-col items-center justify-center">
+                {/* Both side columns are pinned to a fixed width so the
+                    cycling opponent name on the right can change length
+                    without nudging the entire row (and the user's
+                    avatar on the left) horizontally each tick. */}
+                <div className="flex flex-col items-center justify-center flex-shrink-0" style={{ width: 120 }}>
                   <div className="relative mb-2">
                     <div
                       className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
@@ -2243,7 +2247,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   </div>
                 </div>
 
-                <div className="flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center justify-center flex-shrink-0" style={{ width: 120 }}>
                   <div className="relative mb-2" style={{ perspective: '400px' }}>
                     <div
                       className="absolute -inset-3 rounded-full"
