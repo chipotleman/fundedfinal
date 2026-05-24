@@ -204,11 +204,16 @@ export default async function handler(req, res) {
         .from(profiles)
         .where(eq(profiles.id, userId));
       const senderName = senderRows[0]?.username || 'A friend';
-      // Web push payloads are capped (~4KB on most pushers), so refuse
-      // to inline a giant base64 data: URL as the icon — fall back to
-      // the default app icon. Only http(s) URLs are passed through.
+      // Web push payloads are capped (~4KB on most pushers), so we never
+      // inline a giant base64 data: URL. Instead we always reference the
+      // sender's avatar through the `/api/users/<id>/avatar` proxy — that
+      // endpoint serves http(s) avatars via redirect and decodes base64
+      // avatars to binary on the fly, so the OS notification can always
+      // load it. The URL is relative; the service worker resolves it
+      // against the page origin when calling showNotification.
       const rawAvatar = senderRows[0]?.avatar || null;
-      const senderAvatar = rawAvatar && /^https?:\/\//i.test(rawAvatar) && rawAvatar.length <= 500
+      const senderAvatarUrl = `/api/users/${encodeURIComponent(userId)}/avatar`;
+      const senderAvatarOriginal = rawAvatar && /^https?:\/\//i.test(rawAvatar) && rawAvatar.length <= 500
         ? rawAvatar
         : null;
 
@@ -240,7 +245,10 @@ export default async function handler(req, res) {
         senderId: userId,
         title: `${senderName} shared ${itemLabel} with you`,
         body,
-        icon: senderAvatar || undefined,
+        icon: senderAvatarUrl,
+        // `image` becomes the large hero preview on Android/Chrome — the
+        // sender's avatar makes it obvious who shared something at a glance.
+        image: senderAvatarUrl,
         url: `/messenger?chat=${encodeURIComponent(userId)}`,
         tag: `social:share:${item.id}:${userId}`,
         data: {
@@ -249,7 +257,7 @@ export default async function handler(req, res) {
           itemId: item.id,
           actorId: userId,
           actorName: senderName,
-          actorAvatar: senderAvatar,
+          actorAvatar: senderAvatarOriginal || senderAvatarUrl,
           snapshot,
           threadId: userId,
         },

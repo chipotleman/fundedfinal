@@ -35,7 +35,7 @@ self.addEventListener('push', (event) => {
       }
     } catch (_e) {}
 
-    return self.registration.showNotification(title, {
+    const notificationOptions = {
       body: payload.body || '',
       tag,
       renotify: true,
@@ -43,7 +43,15 @@ self.addEventListener('push', (event) => {
       badge: payload.badge || '/icon-192x192.png',
       data: { url, ...(payload.data || {}), category: payload.category || null },
       requireInteraction: false,
-    });
+    };
+    // Android/Chrome render `image` as a large hero preview below the body —
+    // for social shares this is the sender's avatar so the recipient can
+    // recognize who shared something at a glance. Other platforms (iOS Safari,
+    // Firefox) safely ignore the field.
+    if (payload.image) {
+      notificationOptions.image = payload.image;
+    }
+    return self.registration.showNotification(title, notificationOptions);
   })();
 
   event.waitUntil(showPromise);
