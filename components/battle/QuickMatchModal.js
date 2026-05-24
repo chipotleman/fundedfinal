@@ -2052,13 +2052,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 </div>
 
                 <div className="flex flex-col items-center justify-center flex-shrink-0 relative z-20">
-                  <div className="relative">
-                    <svg className="w-4 h-4 text-yellow-400 mb-1" viewBox="0 0 24 24" fill="currentColor" style={{
-                      animation: 'qm-bolt-flicker 1.5s ease-in-out infinite',
-                      filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))',
-                    }}>
-                      <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-                    </svg>
+                  <div className="relative flex flex-col items-center">
+                    <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, marginBottom: 2, filter: 'drop-shadow(0 0 8px rgba(250,204,21,0.6))' }}>👑</span>
 
                     <div
                       className="text-3xl md:text-4xl font-black italic text-transparent bg-clip-text"
@@ -2072,12 +2067,22 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                       VS
                     </div>
 
-                    <svg className="w-4 h-4 text-yellow-400 mt-1 mx-auto" viewBox="0 0 24 24" fill="currentColor" style={{
-                      animation: 'qm-bolt-flicker 1.5s ease-in-out infinite 0.5s',
-                      filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))',
-                    }}>
-                      <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-                    </svg>
+                    <div
+                      className="mt-2 flex flex-col items-center px-2.5 py-1 rounded-xl"
+                      style={{
+                        background: 'linear-gradient(180deg,#1a1a1a,#0a0a0a)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 12px rgba(250,204,21,0.35)',
+                      }}
+                    >
+                      <span className="font-black uppercase" style={{ color: '#facc15', fontSize: 8, letterSpacing: '0.22em', lineHeight: 1 }}>Stake</span>
+                      <span className="inline-flex items-center gap-1 mt-0.5">
+                        <span className="font-black text-white" style={{ fontSize: 13, lineHeight: 1 }}>
+                          {isBeta ? '10,000' : `$${buyIn}`}
+                        </span>
+                        {isBeta && <span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>🪙</span>}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -2174,35 +2179,81 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 </div>
               </div>
 
-              {/* Phase status pill — gives the user feedback that the
-                  matchmaker is doing something specific (vs. a generic
-                  spinner) and visibly progresses through phases so the
-                  wait feels short. */}
-              <div className="px-4 pt-2 pb-1 flex justify-center">
+              {/* Phase status card — radar + label + subtitle + waveform.
+                  Bigger than a pill so it carries the matchmaker beat
+                  visually and tells the user we're actively looking. */}
+              <div className="px-4 pt-2 pb-1">
                 <div
                   key={phase.label}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full"
+                  className="flex items-center gap-3 rounded-2xl px-3.5 py-2.5"
                   style={{
-                    background: `linear-gradient(180deg, ${phase.dotColor}33, ${phase.dotColor}11)`,
+                    background: `linear-gradient(180deg, ${phase.dotColor}22, ${phase.dotColor}08)`,
                     border: `2.5px solid ${phase.dotColor}`,
-                    boxShadow: `0 3px 0 #0a0a0a, 0 0 12px ${phase.dotColor}66`,
+                    boxShadow: `0 4px 0 #0a0a0a, 0 0 14px ${phase.dotColor}55`,
                     animation: 'qm-tip-fade-in 0.3s ease-out',
                   }}
                 >
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{
-                      backgroundColor: phase.dotColor,
-                      boxShadow: `0 0 8px ${phase.dotColor}`,
-                      animation: 'qm-bolt-flicker 0.9s ease-in-out infinite',
-                    }}
+                  <div
+                    className="relative flex items-center justify-center flex-shrink-0"
+                    style={{ width: 32, height: 32 }}
                     aria-hidden="true"
-                  />
-                  <span className="text-white text-[12px] font-black uppercase" style={{ letterSpacing: '0.14em' }}>
-                    {phase.label}
-                  </span>
+                  >
+                    <span
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        border: `2px solid ${phase.dotColor}`,
+                        opacity: 0.5,
+                        animation: 'qm-ring-spin 2.4s linear infinite',
+                      }}
+                    />
+                    <span
+                      className="absolute rounded-full"
+                      style={{
+                        inset: 6,
+                        background: `conic-gradient(from 0deg, transparent 0deg, ${phase.dotColor} 80deg, transparent 120deg)`,
+                        animation: 'qm-ring-spin 1.6s linear infinite',
+                      }}
+                    />
+                    <span
+                      className="relative rounded-full"
+                      style={{
+                        width: 8,
+                        height: 8,
+                        backgroundColor: phase.dotColor,
+                        boxShadow: `0 0 10px ${phase.dotColor}`,
+                        animation: 'qm-bolt-flicker 0.9s ease-in-out infinite',
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-white font-black uppercase" style={{ fontSize: 12, letterSpacing: '0.16em', lineHeight: 1.1 }}>
+                      {phase.label}
+                    </div>
+                    <div className="font-bold mt-0.5" style={{ color: '#94a3b8', fontSize: 10, letterSpacing: '0.04em' }}>
+                      Finding the best matchup…
+                    </div>
+                  </div>
+                  <div className="flex items-end gap-[3px] flex-shrink-0" aria-hidden="true" style={{ height: 22 }}>
+                    {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                      <span
+                        key={i}
+                        style={{
+                          width: 2.5,
+                          background: phase.dotColor,
+                          borderRadius: 1,
+                          boxShadow: `0 0 4px ${phase.dotColor}88`,
+                          animation: `qm-wave-${i % 3} 0.9s ease-in-out ${i * 0.08}s infinite`,
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
+              <style jsx>{`
+                @keyframes qm-wave-0 { 0%,100% { height: 5px; } 50% { height: 20px; } }
+                @keyframes qm-wave-1 { 0%,100% { height: 10px; } 50% { height: 16px; } }
+                @keyframes qm-wave-2 { 0%,100% { height: 14px; } 50% { height: 6px; } }
+              `}</style>
 
               <div className="px-5 pb-3 pt-1">
                 <div
@@ -2215,39 +2266,44 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 >
                   <span style={{ fontSize: 16, filter: 'drop-shadow(0 2px 0 #0a0a0a)' }} aria-hidden="true">💡</span>
                   <p
-                    className="text-white text-[11px] font-bold leading-snug flex-1 transition-opacity duration-300"
+                    className="text-white text-[11px] font-bold leading-snug flex-1 transition-opacity duration-300 uppercase"
                     style={{
                       opacity: tipFade ? 0 : 1,
                       animation: tipFade ? 'none' : 'qm-tip-fade-in 0.3s ease-out',
+                      letterSpacing: '0.04em',
                     }}
                   >
                     {TIPS[tipIndex]}
                   </p>
+                  <span aria-hidden="true" style={{ color: '#06b6d4', fontSize: 14, lineHeight: 1, fontWeight: 900 }}>›</span>
                 </div>
               </div>
 
               <div className="px-5 pb-5 flex items-center justify-between">
                 <div
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl"
                   style={{
                     background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
                     border: `2.5px solid ${modeColor}`,
                     boxShadow: `0 3px 0 #0a0a0a, 0 0 8px ${modeColor}55`,
                   }}
                 >
-                  <div
-                    className="w-2 h-2 rounded-full animate-pulse"
-                    style={{ backgroundColor: modeColor, boxShadow: `0 0 6px ${modeColor}` }}
-                  />
-                  <span
-                    className="text-white text-[12px] font-black font-mono"
-                    style={{
-                      letterSpacing: '0.04em',
-                      animation: 'qm-timer-tick 1s ease-in-out infinite',
-                    }}
-                  >
-                    {searchTime}s
-                  </span>
+                  <span aria-hidden="true" style={{ fontSize: 14, lineHeight: 1, filter: `drop-shadow(0 0 6px ${modeColor})` }}>⏱</span>
+                  <div className="flex flex-col leading-none">
+                    <span
+                      className="text-white font-black font-mono"
+                      style={{
+                        fontSize: 14,
+                        letterSpacing: '0.04em',
+                        animation: 'qm-timer-tick 1s ease-in-out infinite',
+                      }}
+                    >
+                      {`0:${String(searchTime).padStart(2, '0')}`}
+                    </span>
+                    <span className="font-black uppercase mt-0.5" style={{ color: '#94a3b8', fontSize: 7, letterSpacing: '0.24em' }}>
+                      Elapsed
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={cancelSearch}
