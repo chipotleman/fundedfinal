@@ -351,18 +351,33 @@ function PostComposer({
 // like + comment toggle. Tapping comment expands an inline thread (lazy loaded
 // on first expand) plus a comment composer.
 // =============================================================================
-function PostCard({ post, currentUser, isGuest, onOpenProfile }) {
+function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultOpen = false, scrollRef }) {
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likePending, setLikePending] = useState(false);
   const [commentCount, setCommentCount] = useState(post.commentCount || 0);
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(!!defaultOpen);
   const [comments, setComments] = useState([]);
   const [commentsLoaded, setCommentsLoaded] = useState(false);
   const [commentDraft, setCommentDraft] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   const author = post.author || {};
+
+  // Auto-load comments once when opened via deep-link (?post=<id>).
+  useEffect(() => {
+    if (defaultOpen && !commentsLoaded) {
+      (async () => {
+        try {
+          const res = await fetch(`/api/social/posts/${post.id}/comments`);
+          if (!res.ok) return;
+          const json = await res.json();
+          setComments(Array.isArray(json.comments) ? json.comments : []);
+          setCommentsLoaded(true);
+        } catch {}
+      })();
+    }
+  }, [defaultOpen, commentsLoaded, post.id]);
 
   const handleLike = async () => {
     if (isGuest || likePending) return;
@@ -452,7 +467,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile }) {
           {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
         </div>
       )}
-      <div className="grid grid-cols-2 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
+      <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
         <button
           type="button"
           onClick={handleLike}
@@ -473,6 +488,30 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile }) {
         >
           <Icon.Chat size={14} />
           Comment
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (isGuest) return;
+            onShare?.({
+              type: 'post',
+              id: post.id,
+              snapshot: {
+                body: post.body,
+                author: { username: author.username, avatar: author.avatar },
+              },
+            });
+          }}
+          disabled={isGuest}
+          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
+          style={{ color: textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
+        >
+          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+          Share
         </button>
       </div>
       {commentsOpen && (
@@ -705,55 +744,52 @@ function PickMini({ pick, sideColor, align = 'left' }) {
   );
 }
 
-function LiveBattleChatPanel({ matchupId, currentUser }) {
-  // Inline spectator-chat panel that lives inside LiveBattlePost so
-  // spectators can chat without leaving the feed. Mirrors the API
-  // surface of the full /battle/spectate/[id] page (same GET/POST
-  // /api/battles/[id]/messages endpoints) so messages are shared
-  // across both surfaces in real time.
+// BattleCommentThread — persisted inline comment thread for a matchup
+// (live or completed). Mirrors PostCard's inline comment-thread UX
+// (lazy-loaded list + single composer at bottom) rather than the
+// chat-panel auto-poll model. Backend is the existing battle
+// spectator messages endpoint (/api/battles/[id]/messages) so threads
+// stay in sync with the /battle/spectate/[id] surface.
+function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, onCountChange }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
-  const [sending, setSending] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const scrollerRef = useRef(null);
   const userId = currentUser?.id;
 
-  const fetchMessages = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/battles/${matchupId}/messages`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setMessages(Array.isArray(data?.messages) ? data.messages : []);
-    } catch {
-      // swallow — keep last known messages on transient failures
-    } finally {
-      setLoading(false);
-    }
-  }, [matchupId]);
-
+  // Lazy-load comments once when the thread mounts (PostCard pattern:
+  // the thread only mounts when the user expands "Comment"). No
+  // background polling — refresh-on-re-open is sufficient for the
+  // social-feed surface; the full /battle/spectate/[id] page keeps the
+  // realtime SSE stream.
   useEffect(() => {
     if (!matchupId) return;
-    fetchMessages();
-    const t = setInterval(fetchMessages, 3000);
-    return () => clearInterval(t);
-  }, [matchupId, fetchMessages]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/battles/${matchupId}/messages`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const list = Array.isArray(data?.messages) ? data.messages : [];
+        setMessages(list);
+        onCountChange?.(list.length);
+      } catch {} finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [matchupId, onCountChange]);
 
-  // Keep the latest message in view as new ones arrive.
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages.length]);
-
-  const handleSend = async (e) => {
-    e?.preventDefault?.();
+  const handleSubmit = async () => {
     const body = draft.trim();
-    if (!body || sending) return;
-    if (!userId) {
-      setError('Sign in to chat.');
+    if (!body || submitting) return;
+    if (isGuest || !userId) {
+      setError('Sign in to comment.');
       return;
     }
-    setSending(true);
+    setSubmitting(true);
     setError('');
     try {
       const res = await fetch(`/api/battles/${matchupId}/messages`, {
@@ -763,112 +799,124 @@ function LiveBattleChatPanel({ matchupId, currentUser }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error || 'Failed to send.');
+        setError(data?.error || 'Failed to comment.');
         return;
       }
-      if (data?.message) setMessages((prev) => [...prev, data.message]);
+      if (data?.message) {
+        setMessages((prev) => {
+          const next = [...prev, data.message];
+          onCountChange?.(next.length);
+          return next;
+        });
+      }
       setDraft('');
     } catch {
-      setError('Network error. Try again.');
+      setError('Network error.');
     } finally {
-      setSending(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <div
-      style={{ borderTop: `2px solid ${HH_BORDER}`, background: '#080808' }}
-    >
-      <div
-        ref={scrollerRef}
-        className="overflow-y-auto px-3 py-2"
-        style={{ maxHeight: 220, minHeight: 88 }}
-      >
-        {loading && messages.length === 0 ? (
-          <div className="text-center text-[11px] py-4" style={{ color: textMuted }}>
-            Loading chat…
-          </div>
+    <div style={{ borderTop: `1px solid ${border}` }}>
+      <div className="px-4 py-3 space-y-3">
+        {loading ? (
+          <div className="text-[11px]" style={{ color: textMuted }}>Loading comments…</div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-[11px] py-4" style={{ color: textMuted }}>
-            Be the first to talk about this battle.
-          </div>
+          <div className="text-[11px]" style={{ color: textMuted }}>Be the first to comment on this battle.</div>
         ) : (
-          <div className="space-y-1.5">
-            {messages.map((m) => {
-              const author = m.author || {};
-              const isMe = author.id && author.id === userId;
-              return (
-                <div key={m.id} className="flex items-start gap-2">
-                  <div
-                    className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black text-white"
-                    style={{
-                      background: author.avatar
-                        ? `url(${author.avatar}) center/cover`
-                        : (isMe ? HH_BLUE : '#1f2937'),
-                      border: `1.5px solid ${HH_BORDER}`,
-                    }}
-                  >
-                    {!author.avatar && (author.username || '?').charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-1.5">
-                      <span
-                        className="text-[11px] font-bold truncate"
-                        style={{ color: isMe ? '#93c5fd' : textSecondary }}
-                      >
-                        {author.username || 'Spectator'}
-                      </span>
-                    </div>
-                    <div className="text-[12px] break-words" style={{ color: textPrimary }}>
-                      {m.body}
-                    </div>
-                  </div>
+          messages.map((m) => {
+            const ca = m.author || {};
+            return (
+              <div key={m.id} className="flex items-start gap-2.5">
+                <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
+                  <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor="#1a1a1a" />
+                </button>
+                <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: '#111' }}>
+                  <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
+                    {ca.username || 'Spectator'}
+                  </button>
+                  <div className="text-[13px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>{m.body}</div>
+                  <div className="text-[10px] mt-0.5" style={{ color: textMuted }}>{timeAgo(m.createdAt)}</div>
                 </div>
-              );
-            })}
+              </div>
+            );
+          })
+        )}
+        {!isGuest && (
+          <div className="flex items-start gap-2.5 pt-1">
+            <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor="#1a1a1a" />
+            <div className="flex-1 flex items-center gap-2">
+              <input
+                type="text"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder="Write a comment…"
+                maxLength={300}
+                className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                style={{ backgroundColor: '#111', border: `1px solid ${border}`, color: textPrimary }}
+              />
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!draft.trim() || submitting}
+                className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
+                style={{
+                  background: draft.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
+                  cursor: draft.trim() && !submitting ? 'pointer' : 'not-allowed',
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                {submitting ? '…' : 'Send'}
+              </button>
+            </div>
           </div>
         )}
+        {error && <div className="text-[10px] text-red-400">{error}</div>}
       </div>
-      <form
-        onSubmit={handleSend}
-        className="flex items-center gap-1.5 p-2"
-        style={{ borderTop: `1.5px solid ${HH_BORDER}`, background: '#0a0a0a' }}
-      >
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={userId ? 'Say something…' : 'Sign in to chat…'}
-          disabled={!userId || sending}
-          maxLength={300}
-          className="flex-1 rounded-lg px-2.5 py-1.5 text-[13px] text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          style={{ background: '#000', border: `1.5px solid ${HH_BORDER}` }}
-        />
-        <button
-          type="submit"
-          disabled={!userId || sending || !draft.trim()}
-          className="px-2.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-white disabled:opacity-40"
-          style={{
-            background: HH_BLUE,
-            border: `2px solid ${HH_BORDER}`,
-            boxShadow: `2px 2px 0 ${HH_BORDER}`,
-          }}
-        >
-          Send
-        </button>
-      </form>
-      {error && (
-        <div className="px-3 pb-2 text-[10px] text-red-400">{error}</div>
-      )}
     </div>
   );
 }
 
-function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
+function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGuest, onShare }) {
   const isBeta = useBetaMode();
   // Inline chat lives directly inside the card so spectators can drop
   // a quick reaction without navigating to /battle/spectate/[id].
   const [chatOpen, setChatOpen] = useState(false);
+  const [liked, setLiked] = useState(!!battle.likedByMe);
+  const [likeCount, setLikeCount] = useState(Number(battle.likeCount) || 0);
+  const [likePending, setLikePending] = useState(false);
+  const [commentCount, setCommentCount] = useState(Number(battle.commentCount) || 0);
+  // Simulated battles aren't real matchups in the DB, so like/share
+  // toggles would 404 — disable those affordances on placeholders.
+  const isSimulated = !!battle.isSimulated || battle.id?.startsWith?.('sim-');
+
+  const handleLike = async (e) => {
+    e?.stopPropagation?.();
+    if (isGuest || likePending || isSimulated) return;
+    setLikePending(true);
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikeCount((c) => Math.max(0, c + (wasLiked ? -1 : 1)));
+    try {
+      const res = await fetch(`/api/battles/${battle.id}/like`, { method: 'POST' });
+      if (!res.ok) throw new Error('Like failed');
+      const json = await res.json();
+      if (typeof json.liked === 'boolean') setLiked(json.liked);
+      if (typeof json.likeCount === 'number') setLikeCount(json.likeCount);
+    } catch {
+      setLiked(wasLiked);
+      setLikeCount((c) => Math.max(0, c + (wasLiked ? 1 : -1)));
+    } finally {
+      setLikePending(false);
+    }
+  };
   const u1 = battle.user1 || {};
   const u2 = battle.user2 || {};
   const u1Bal = parseFloat(u1.balance || 0);
@@ -1201,11 +1249,23 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
         )}
       </div>
 
+      {/* Like / comment count strip — only shown when there's something
+          to count, mirroring the user-post card's social signals. */}
+      {(likeCount > 0 || commentCount > 0) && (
+        <div
+          className="px-3.5 py-1.5 flex items-center gap-3 text-[11px]"
+          style={{ borderTop: `2px solid ${HH_BORDER}`, color: textMuted, background: '#0a0a0a' }}
+        >
+          {likeCount > 0 && <span>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>}
+          {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
+        </div>
+      )}
+
       {/* Action bar — Spectate routes to the full overview page;
-          Chat toggles an inline chat panel below so spectators can
-          drop a quick reaction without navigating away from the feed. */}
+          Like toggles a battle_likes row; Comment opens the inline
+          spectator chat thread; Share opens the in-platform share sheet. */}
       <div
-        className="grid grid-cols-2"
+        className="grid grid-cols-4"
         style={{ borderTop: `2px solid ${HH_BORDER}` }}
       >
         <button
@@ -1215,7 +1275,25 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
           style={{ color: textPrimary, borderRight: `2px solid ${HH_BORDER}` }}
         >
           <Icon.Eye size={14} />
-          Spectate
+          <span className="hidden sm:inline">Spectate</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleLike}
+          disabled={isGuest || likePending || isSimulated}
+          aria-pressed={liked}
+          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
+          style={{
+            color: liked ? '#f87171' : textPrimary,
+            borderRight: `2px solid ${HH_BORDER}`,
+            cursor: (isGuest || isSimulated) ? 'not-allowed' : 'pointer',
+            opacity: (isGuest || isSimulated) ? 0.55 : 1,
+          }}
+        >
+          <svg viewBox="0 0 24 24" width={14} height={14} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          <span>{liked ? 'Liked' : 'Like'}</span>
         </button>
         <button
           type="button"
@@ -1225,16 +1303,41 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
           style={{
             color: chatOpen ? HH_BLUE : textPrimary,
             background: chatOpen ? 'rgba(59,130,246,0.08)' : 'transparent',
+            borderRight: `2px solid ${HH_BORDER}`,
           }}
         >
           <Icon.Chat size={14} />
-          {chatOpen ? 'Hide Chat' : 'Chat'}
+          <span>{chatOpen ? 'Hide' : 'Comment'}</span>
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); if (!isGuest && !isSimulated) onShare?.({ type: 'battle', id: battle.id, snapshot: { potSize: battle.potSize, durationType: battle.durationType, user1: { username: u1.username, avatar: u1.avatar }, user2: { username: u2.username, avatar: u2.avatar } } }); }}
+          disabled={isGuest || isSimulated}
+          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
+          style={{
+            color: textPrimary,
+            cursor: (isGuest || isSimulated) ? 'not-allowed' : 'pointer',
+            opacity: (isGuest || isSimulated) ? 0.55 : 1,
+          }}
+        >
+          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+          <span>Share</span>
         </button>
       </div>
 
       {chatOpen && (
         <div onClick={(e) => e.stopPropagation()}>
-          <LiveBattleChatPanel matchupId={battle.id} currentUser={currentUser} />
+          <BattleCommentThread
+            matchupId={battle.id}
+            currentUser={currentUser}
+            isGuest={isGuest}
+            onOpenProfile={onOpenProfile}
+            onCountChange={setCommentCount}
+          />
         </div>
       )}
 
@@ -1257,11 +1360,50 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser }) {
 // =============================================================================
 // ResultPost — Instagram-post-style card for a recently-completed battle.
 // =============================================================================
-function ResultPost({ highlight, onOpenProfile, onReplay }) {
+function ResultPost({ highlight, onOpenProfile, onReplay, currentUser, isGuest, onShare }) {
   const isBeta = useBetaMode();
   const winner = highlight.winner || {};
   const loser = highlight.loser || {};
   const pot = parseFloat(highlight.potSize) || 0;
+  const [liked, setLiked] = useState(!!highlight.likedByMe);
+  const [likeCount, setLikeCount] = useState(Number(highlight.likeCount) || 0);
+  const [likePending, setLikePending] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentCount, setCommentCount] = useState(Number(highlight.commentCount) || 0);
+
+  const handleLike = async () => {
+    if (isGuest || likePending) return;
+    setLikePending(true);
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikeCount((c) => Math.max(0, c + (wasLiked ? -1 : 1)));
+    try {
+      const res = await fetch(`/api/battles/${highlight.id}/like`, { method: 'POST' });
+      if (!res.ok) throw new Error('Like failed');
+      const json = await res.json();
+      if (typeof json.likeCount === 'number') setLikeCount(json.likeCount);
+      if (typeof json.liked === 'boolean') setLiked(json.liked);
+    } catch {
+      setLiked(wasLiked);
+      setLikeCount((c) => Math.max(0, c + (wasLiked ? 1 : -1)));
+    } finally {
+      setLikePending(false);
+    }
+  };
+
+  const handleShare = () => {
+    if (isGuest) return;
+    onShare?.({
+      type: 'result',
+      id: highlight.id,
+      snapshot: {
+        potSize: pot,
+        winner: { username: winner.username, avatar: winner.avatar },
+        loser: { username: loser.username, avatar: loser.avatar },
+      },
+    });
+  };
+
   return (
     <div className="rounded-2xl mb-4 overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
       <div className="flex items-center justify-between px-4 py-3">
@@ -1300,6 +1442,60 @@ function ResultPost({ highlight, onOpenProfile, onReplay }) {
         <Icon.Replay size={14} />
         Watch replay
       </button>
+      {(likeCount > 0 || commentCount > 0) && (
+        <div className="px-4 py-1.5 flex items-center gap-3 text-[11px]" style={{ borderTop: `1px solid ${border}`, color: textMuted }}>
+          {likeCount > 0 && <span>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>}
+          {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
+        </div>
+      )}
+      <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
+        <button
+          type="button"
+          onClick={handleLike}
+          disabled={isGuest || likePending}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: liked ? '#f87171' : textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.55 : 1 }}
+        >
+          <svg viewBox="0 0 24 24" width={16} height={16} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          <span>Like</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setCommentsOpen((v) => !v)}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: textPrimary }}
+        >
+          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+          </svg>
+          <span>Comment</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleShare}
+          disabled={isGuest}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.55 : 1 }}
+        >
+          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+          <span>Share</span>
+        </button>
+      </div>
+      {commentsOpen && (
+        <BattleCommentThread
+          matchupId={highlight.id}
+          currentUser={currentUser}
+          isGuest={isGuest}
+          onOpenProfile={onOpenProfile}
+          onCountChange={setCommentCount}
+        />
+      )}
     </div>
   );
 }
@@ -1455,6 +1651,292 @@ function FeedSidebar({ onStartBattle, friends, recentHighlights, onOpenProfile, 
 }
 
 // =============================================================================
+// FeedSkeleton — single matched placeholder shown while the initial parallel
+// live+posts fetches are in-flight. Avoids the previous "stories pop in,
+// then composer, then feed cards stagger in" two-stage flash by reserving
+// space for the whole page up-front.
+// =============================================================================
+function FeedSkeleton() {
+  const block = (h, extra = '') => (
+    <div
+      className={`rounded-2xl mb-4 ${extra}`}
+      style={{
+        backgroundColor: surface,
+        border: `1px solid ${border}`,
+        boxShadow: cardShadow,
+        height: h,
+      }}
+    />
+  );
+  return (
+    <div className="animate-pulse" aria-hidden="true">
+      {block(86)}
+      {block(118)}
+      {block(196)}
+      {block(196)}
+    </div>
+  );
+}
+
+// =============================================================================
+// ShareSheet — in-platform sharing modal. Picks one or more friends w/
+// search, optional 280-char note, and POSTs to /api/social/share. Each
+// recipient gets a separate DM (no group chats) rendered as a preview
+// bubble in Messenger via the new `shared_battle` / `shared_post`
+// message types. Touch devices automatically lose all hover styling
+// because Tailwind's `hover:` utilities are gated under
+// `@media (hover: hover)` (see tailwind.config.js).
+// =============================================================================
+function ShareSheet({ target, friends, currentUser, onClose }) {
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState(() => new Set());
+  const [note, setNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [done, setDone] = useState(false);
+  const [loadedFriends, setLoadedFriends] = useState(() => Array.isArray(friends) ? friends : []);
+  const [loadingFriends, setLoadingFriends] = useState(false);
+
+  // If the caller didn't pre-pass a friends list (or it's empty), fetch
+  // it on open so the share sheet is usable from anywhere.
+  useEffect(() => {
+    if (Array.isArray(friends) && friends.length > 0) {
+      setLoadedFriends(friends);
+      return;
+    }
+    let cancelled = false;
+    setLoadingFriends(true);
+    (async () => {
+      try {
+        const res = await fetch('/api/friends');
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!cancelled) setLoadedFriends(Array.isArray(json?.friends) ? json.friends : []);
+      } catch {} finally {
+        if (!cancelled) setLoadingFriends(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [friends]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return loadedFriends;
+    return loadedFriends.filter((f) => (f.username || '').toLowerCase().includes(q));
+  }, [loadedFriends, query]);
+
+  const toggle = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (submitting) return;
+    if (selected.size === 0) {
+      setError('Pick at least one friend');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/social/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientIds: Array.from(selected),
+          note: note.trim(),
+          item: target,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(json?.error || 'Failed to share');
+        return;
+      }
+      setDone(true);
+      // Auto-close after a short confirmation so the user gets a clear
+      // visual receipt without having to dismiss the sheet manually.
+      setTimeout(() => onClose?.(), 900);
+    } catch {
+      setError('Network error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const previewTitle = target?.type === 'battle' ? 'Share this battle' : 'Share this post';
+  const previewBody = target?.type === 'battle'
+    ? `${target?.snapshot?.user1?.username || 'P1'} vs ${target?.snapshot?.user2?.username || 'P2'}`
+    : (target?.snapshot?.body || '').slice(0, 120);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Share with friends"
+      className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      style={{ background: 'rgba(0,0,0,0.65)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col"
+        style={{
+          backgroundColor: surface,
+          border: `1px solid ${borderStrong}`,
+          maxHeight: '85vh',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="px-4 py-3 flex items-center justify-between flex-shrink-0"
+          style={{ borderBottom: `1px solid ${border}` }}
+        >
+          <div className="text-sm font-bold" style={{ color: textPrimary }}>{previewTitle}</div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-xl leading-none rounded-md px-2 py-0.5 hover:bg-white/5"
+            style={{ color: textSecondary }}
+          >×</button>
+        </div>
+
+        {/* Preview row */}
+        <div className="px-4 py-3 flex items-center gap-3 flex-shrink-0" style={{ borderBottom: `1px solid ${border}` }}>
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: target?.type === 'battle' ? 'linear-gradient(135deg,#2563eb,#f97316)' : 'linear-gradient(135deg,#06b6d4,#2563eb)' }}
+          >
+            <span className="text-[10px] font-black uppercase tracking-wider text-white">
+              {target?.type === 'battle' ? 'VS' : 'Post'}
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[12px] font-bold truncate" style={{ color: textPrimary }}>{previewBody || 'Shared item'}</div>
+            <div className="text-[10px]" style={{ color: textMuted }}>
+              {target?.type === 'battle' ? 'Live 1v1 battle' : 'User post'}
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="px-4 pt-3 pb-2 flex-shrink-0">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search friends…"
+            className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            style={{
+              backgroundColor: '#111',
+              border: `1px solid ${border}`,
+              color: textPrimary,
+            }}
+          />
+        </div>
+
+        {/* Friends list */}
+        <div className="flex-1 overflow-y-auto px-2" style={{ minHeight: 120 }}>
+          {loadingFriends ? (
+            <div className="px-2 py-6 text-center text-[12px]" style={{ color: textMuted }}>Loading friends…</div>
+          ) : filtered.length === 0 ? (
+            <div className="px-2 py-6 text-center text-[12px]" style={{ color: textMuted }}>
+              {loadedFriends.length === 0 ? 'Add friends to share with them.' : 'No friends match that search.'}
+            </div>
+          ) : (
+            filtered.map((f) => {
+              const isSel = selected.has(f.id);
+              return (
+                <button
+                  type="button"
+                  key={f.id}
+                  onClick={() => toggle(f.id)}
+                  className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 text-left transition-colors"
+                  aria-pressed={isSel}
+                >
+                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor="#1a1a1a" isOnline={f.isOnline} onlineDotBorderColor={surface} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13px] font-semibold truncate" style={{ color: textPrimary }}>{f.username}</div>
+                    <div className="text-[10px]" style={{ color: textMuted }}>{f.isOnline ? 'Online' : formatLastSeen(f.lastSeenAt)}</div>
+                  </div>
+                  <span
+                    className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: isSel ? 'linear-gradient(135deg,#2563eb,#06b6d4)' : 'transparent',
+                      border: `1.5px solid ${isSel ? '#06b6d4' : borderStrong}`,
+                    }}
+                    aria-hidden="true"
+                  >
+                    {isSel && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="text-white">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        {/* Note + actions */}
+        <div className="px-4 py-3 flex-shrink-0" style={{ borderTop: `1px solid ${border}` }}>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={280}
+            rows={2}
+            placeholder="Add a note (optional)"
+            className="w-full rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
+            style={{
+              backgroundColor: '#111',
+              border: `1px solid ${border}`,
+              color: textPrimary,
+            }}
+          />
+          {error && <div className="mt-1 text-[11px] text-red-400">{error}</div>}
+          {done && <div className="mt-1 text-[11px] text-emerald-400">Sent ✓</div>}
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <div className="text-[11px]" style={{ color: textMuted }}>
+              {selected.size === 0 ? 'Select friends' : `${selected.size} selected`}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-3 py-1.5 rounded-md text-[12px] font-semibold hover:bg-white/5"
+                style={{ color: textSecondary }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting || selected.size === 0 || done}
+                className="px-4 py-1.5 rounded-md text-[12px] font-bold text-white"
+                style={{
+                  background: (selected.size > 0 && !done)
+                    ? 'linear-gradient(135deg, #2563eb, #06b6d4)'
+                    : '#374151',
+                  cursor: (submitting || selected.size === 0 || done) ? 'not-allowed' : 'pointer',
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                {done ? 'Sent' : (submitting ? 'Sending…' : 'Send')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // Main page — composes everything into a feed-style layout.
 // =============================================================================
 export default function SocialFeedPage({ data }) {
@@ -1500,6 +1982,13 @@ export default function SocialFeedPage({ data }) {
   const [posts, setPosts] = useState([]);
   const sseRef = useRef(null);
 
+  // Track initial load so we can render a single matched skeleton until
+  // both live battles and posts have resolved (avoids a two-stage flash
+  // where one section pops in before the other).
+  const [liveLoaded, setLiveLoaded] = useState(false);
+  const [postsLoaded, setPostsLoaded] = useState(false);
+  const initialLoading = !liveLoaded || !postsLoaded;
+
   const loadLive = useCallback(async () => {
     try {
       const controller = new AbortController();
@@ -1509,12 +1998,22 @@ export default function SocialFeedPage({ data }) {
       if (!res.ok) return;
       const json = await res.json();
       const list = Array.isArray(json?.battles) ? json.battles : (Array.isArray(json) ? json : []);
-      if (list.length === 0) {
-        setLiveBattles(getSimulatedBattles([]));
-      } else {
+      // Mirror the dashboard's LiveBattlesSection padding: when we have
+      // fewer than 3 real lives, top up with simulated battles so the
+      // social feed never looks empty. (Previously we only padded when
+      // the list was completely empty, which left an awkward 1- or
+      // 2-card feed during slow hours.)
+      if (list.length >= 3) {
         setLiveBattles(list);
+      } else if (list.length > 0) {
+        const sim = getSimulatedBattles([]).slice(0, 3 - list.length);
+        setLiveBattles([...list, ...sim]);
+      } else {
+        setLiveBattles(getSimulatedBattles([]));
       }
-    } catch {}
+    } catch {} finally {
+      setLiveLoaded(true);
+    }
   }, []);
 
   const loadPosts = useCallback(async () => {
@@ -1526,24 +2025,30 @@ export default function SocialFeedPage({ data }) {
       if (!res.ok) return;
       const json = await res.json();
       setPosts(Array.isArray(json?.posts) ? json.posts : []);
-    } catch {}
+    } catch {} finally {
+      setPostsLoaded(true);
+    }
   }, []);
 
+  // Fire both initial loads in parallel on mount — they were already
+  // independent useEffects but splitting the fetches across two effect
+  // ticks was costing us a render's worth of latency before the second
+  // request even kicked off.
   useEffect(() => {
     loadPosts();
-    const onFocus = () => loadPosts();
+    loadLive();
+    const onFocus = () => { loadPosts(); loadLive(); };
     if (typeof window !== 'undefined') {
       window.addEventListener('focus', onFocus);
       return () => window.removeEventListener('focus', onFocus);
     }
-  }, [loadPosts]);
+  }, [loadPosts, loadLive]);
 
   const handlePosted = useCallback((post) => {
     setPosts((prev) => [post, ...prev]);
   }, []);
 
   useEffect(() => {
-    loadLive();
     try {
       const client = getBattleStreamClient();
       const handler = () => loadLive();
@@ -1554,6 +2059,17 @@ export default function SocialFeedPage({ data }) {
       };
     } catch {}
   }, [loadLive]);
+
+  // Share sheet — opened from a battle card or post card; renders a
+  // friend picker w/ search + optional note. On submit, fans out a
+  // dedicated DM (messageType `shared_battle` / `shared_post`) to each
+  // selected friend so they see a preview-card bubble in Messenger.
+  const [shareTarget, setShareTarget] = useState(null);
+  const handleOpenShare = useCallback((target) => {
+    if (!target || isGuest) return;
+    setShareTarget(target);
+  }, [isGuest]);
+  const handleCloseShare = useCallback(() => setShareTarget(null), []);
 
   const handleSpectate = useCallback((battle) => {
     if (!battle?.id) return;
@@ -1594,8 +2110,32 @@ export default function SocialFeedPage({ data }) {
       key: `post-${p.id}`,
       data: p,
     }));
-    return [...live, ...postItems].sort((a, b) => b.ts - a.ts);
-  }, [liveBattles, posts]);
+    // Result cards now live in the feed too (code-review blocker): the
+    // backend returns like/comment counts and likedByMe per matchup so
+    // they get the same Like/Comment/Share affordances as live battles.
+    const resultItems = (recentHighlights || []).map((r) => ({
+      kind: 'result',
+      ts: new Date(r.endedAt || r.completedAt || r.createdAt || 0).getTime(),
+      key: `result-${r.id}`,
+      data: r,
+    }));
+    return [...live, ...postItems, ...resultItems].sort((a, b) => b.ts - a.ts);
+  }, [liveBattles, posts, recentHighlights]);
+
+  // Deep-link to a specific post via `?post=<id>`: scroll the matching
+  // PostCard into view on mount and auto-expand its comment thread so
+  // shared posts open in the right place instead of dumping the user at
+  // the top of /battle.
+  const deepLinkPostId = typeof router.query.post === 'string' ? router.query.post : null;
+  useEffect(() => {
+    if (!deepLinkPostId) return;
+    // Wait one frame for the post to render, then scroll to it.
+    const t = setTimeout(() => {
+      const el = document.getElementById(`post-${deepLinkPostId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [deepLinkPostId, posts]);
 
   return (
     <div className="pb-8 w-full px-3 sm:px-4 lg:px-6">
@@ -1638,7 +2178,9 @@ export default function SocialFeedPage({ data }) {
           onOpenProfile={onOpenProfile}
         />
 
-        {feedItems.length === 0 ? (
+        {initialLoading && feedItems.length === 0 ? (
+          <FeedSkeleton />
+        ) : feedItems.length === 0 ? (
           <div className="rounded-2xl p-6 text-center" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
             <div className="text-sm font-semibold mb-1" style={{ color: textPrimary }}>Your feed is quiet</div>
             <div className="text-[12px]" style={{ color: textSecondary }}>
@@ -1655,17 +2197,35 @@ export default function SocialFeedPage({ data }) {
                   onSpectate={handleSpectate}
                   onOpenProfile={onOpenProfile}
                   currentUser={currentUser}
+                  isGuest={isGuest}
+                  onShare={handleOpenShare}
                 />
               );
             }
             if (item.kind === 'post') {
               return (
-                <PostCard
+                <div key={item.key} id={`post-${item.data.id}`}>
+                  <PostCard
+                    post={item.data}
+                    currentUser={currentUser}
+                    isGuest={isGuest}
+                    onOpenProfile={onOpenProfile}
+                    onShare={handleOpenShare}
+                    defaultOpen={deepLinkPostId === item.data.id}
+                  />
+                </div>
+              );
+            }
+            if (item.kind === 'result') {
+              return (
+                <ResultPost
                   key={item.key}
-                  post={item.data}
+                  highlight={item.data}
+                  onOpenProfile={onOpenProfile}
+                  onReplay={handleReplay}
                   currentUser={currentUser}
                   isGuest={isGuest}
-                  onOpenProfile={onOpenProfile}
+                  onShare={handleOpenShare}
                 />
               );
             }
@@ -1674,6 +2234,14 @@ export default function SocialFeedPage({ data }) {
         )}
       </div>
 
+      {shareTarget && (
+        <ShareSheet
+          target={shareTarget}
+          friends={friends}
+          currentUser={currentUser}
+          onClose={handleCloseShare}
+        />
+      )}
     </div>
   );
 }

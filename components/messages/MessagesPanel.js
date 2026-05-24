@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { formatSeenAgo } from '../../utils/relativeTime';
 import ActiveStatus, { isUserOnline } from '../ActiveStatus';
 import UserAvatar, { UserNameLink, useProfilePrefetchHandlers } from '../UserAvatar';
@@ -1086,6 +1087,84 @@ function VoiceWaveform({
 // VoiceWaveform and skip the bubble's mount-time fetch+decode entirely.
 // Older messages have no peaks stored: VoiceWaveform falls back to the
 // on-demand decode path (and to a flat baseline if that decode fails).
+// SharedItemBubble — renders a Messenger preview-card bubble for a battle
+// or post shared from the social feed. The payload lives in `m.content`
+// as JSON (`{v,type,id,note,snapshot}`); we parse defensively and fall
+// back to plain text if anything is off. Tapping the card deep-links to
+// the spectator page (battle) or the social feed (post).
+function SharedItemBubble({ raw, mine, onNavigate }) {
+  let payload = null;
+  try { payload = JSON.parse(raw); } catch { payload = null; }
+  if (!payload || !['battle', 'post', 'result'].includes(payload.type)) {
+    return <span>{raw}</span>;
+  }
+  const { type } = payload;
+  const snap = payload.snapshot || {};
+  const handleClick = () => {
+    if (!payload.id) return;
+    if (type === 'battle') onNavigate?.(`/battle/spectate/${payload.id}`);
+    else if (type === 'result') onNavigate?.(`/battle/replay/${payload.id}`);
+    // Post deep-link: SocialFeedPage reads ?post= and scrolls + opens
+    // the post's comment thread so the recipient lands on the original.
+    else if (type === 'post') onNavigate?.(`/battle?post=${encodeURIComponent(payload.id)}`);
+  };
+  const headerBg = type === 'battle'
+    ? 'linear-gradient(135deg,#2563eb,#f97316)'
+    : (type === 'result' ? 'linear-gradient(135deg,#10b981,#2563eb)' : 'linear-gradient(135deg,#06b6d4,#2563eb)');
+  const headerLabel = type === 'battle' ? 'Live Battle' : (type === 'result' ? 'Battle Result' : 'Post');
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={handleClick}
+        className="rounded-xl overflow-hidden text-left transition-transform active:scale-[0.98]"
+        style={{
+          background: mine ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          width: 240,
+        }}
+      >
+        <div className="px-3 py-2 flex items-center gap-2" style={{ background: headerBg }}>
+          <span className="text-[10px] font-black uppercase tracking-wider text-white">{headerLabel}</span>
+        </div>
+        <div className="px-3 py-2.5">
+          {type === 'battle' && (
+            <>
+              <div className="text-[13px] font-bold text-white truncate">
+                {(snap.user1?.username || 'P1')} vs {(snap.user2?.username || 'P2')}
+              </div>
+              <div className="text-[11px] text-white/70 mt-0.5">
+                {snap.durationType ? `${snap.durationType} · ` : ''}Tap to spectate
+              </div>
+            </>
+          )}
+          {type === 'result' && (
+            <>
+              <div className="text-[13px] font-bold text-white truncate">
+                <span className="text-emerald-300">{snap.winner?.username || 'Winner'}</span>
+                <span className="text-white/60"> beat </span>
+                {snap.loser?.username || 'Opponent'}
+              </div>
+              <div className="text-[11px] text-white/70 mt-0.5">Tap to watch the replay</div>
+            </>
+          )}
+          {type === 'post' && (
+            <>
+              <div className="text-[11px] text-white/70 mb-1">@{snap.author?.username || 'someone'}</div>
+              <div className="text-[13px] text-white leading-snug" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {snap.body || 'Shared post'}
+              </div>
+            </>
+          )}
+        </div>
+      </button>
+      {payload.note && (
+        <div className="text-[13px] leading-snug break-words">{payload.note}</div>
+      )}
+    </div>
+  );
+}
+
 function VoiceBubble({ url, durationMs, peaks, mine, messageId }) {
   return (
     <VoiceWaveform
@@ -1154,6 +1233,7 @@ function ProfileHeaderLink({ friend, textPrimary, textSecondary }) {
 
 export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack }) {
   const { hasActiveMatchup } = useMatchup();
+  const router = useRouter();
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -2686,6 +2766,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                   messageId={m.id}
                   mine={m.senderId === myId}
                 />
+              ) : (m.messageType === 'shared_battle' || m.messageType === 'shared_post' || m.messageType === 'shared_result') ? (
+                <SharedItemBubble
+                  raw={m.content}
+                  mine={m.senderId === myId}
+                  onNavigate={(href) => { try { router.push(href); } catch {} }}
+                />
               ) : (
                 m.content
               )}
@@ -3502,8 +3588,17 @@ export default function MessagesPanel({
               && Array.isArray(last.attachmentPeaks)
               && last.attachmentPeaks.length > 0
             );
+            // For shared_battle/shared_post, the raw content is JSON —
+            // render a friendly label instead of dumping `{v:1,...}` into
+            // the inbox row.
+            let rawPreview = last?.preview || last?.content || '';
+            if (last && (last.messageType === 'shared_battle' || last.messageType === 'shared_post' || last.messageType === 'shared_result')) {
+              rawPreview = last.messageType === 'shared_battle'
+                ? '📺 Shared a live battle'
+                : (last.messageType === 'shared_result' ? '🏆 Shared a battle result' : '📝 Shared a post');
+            }
             const previewText = last
-              ? `${last.fromMe ? 'You: ' : ''}${last.preview || last.content || ''}`
+              ? `${last.fromMe ? 'You: ' : ''}${rawPreview}`
               : `${f.battleWins || 0}W-${f.battleLosses || 0}L`;
             return (
               /* Cartoon-themed inbox row — selected gets a thicker

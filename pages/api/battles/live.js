@@ -1,6 +1,8 @@
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { matchups, profiles, userBets, fakeOpponentBets } from '../../../shared/schema';
-import { eq, or, and, gte, lte, desc } from 'drizzle-orm';
+import { matchups, profiles, userBets, fakeOpponentBets, battleLikes } from '../../../shared/schema';
+import { eq, or, and, gte, lte, desc, inArray, sql } from 'drizzle-orm';
 
 function shortenTeamName(name) {
   if (!name) return 'Pick';
@@ -48,6 +50,12 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  let viewerId = null;
+  try {
+    const session = await getServerSession(req, res, authOptions);
+    viewerId = session?.user?.id || null;
+  } catch (_e) {}
 
   try {
     const activeBattles = await db
@@ -100,6 +108,35 @@ export default async function handler(req, res) {
       const endTime = new Date(battle.endsAt).getTime();
       return endTime > Date.now();
     });
+
+    // Batch-load like counts (and viewer's liked rows) so each card in the
+    // social feed renders with current counts on first paint instead of
+    // flickering after a follow-up fetch.
+    const battleIds = filteredBattles.map((b) => b.id);
+    let likeCountMap = new Map();
+    let likedSet = new Set();
+    if (battleIds.length > 0) {
+      try {
+        const counts = await db
+          .select({
+            matchupId: battleLikes.matchupId,
+            count: sql`COUNT(*)::int`.as('count'),
+          })
+          .from(battleLikes)
+          .where(inArray(battleLikes.matchupId, battleIds))
+          .groupBy(battleLikes.matchupId);
+        likeCountMap = new Map(counts.map((c) => [c.matchupId, Number(c.count) || 0]));
+        if (viewerId) {
+          const mine = await db
+            .select({ matchupId: battleLikes.matchupId })
+            .from(battleLikes)
+            .where(and(eq(battleLikes.userId, viewerId), inArray(battleLikes.matchupId, battleIds)));
+          likedSet = new Set(mine.map((r) => r.matchupId));
+        }
+      } catch (_e) {
+        // Non-fatal: cards still render, just without like context.
+      }
+    }
 
     const enrichedBattles = await Promise.all(filteredBattles.map(async (battle) => {
       const startTime = new Date(battle.startsAt).getTime();
@@ -230,6 +267,8 @@ export default async function handler(req, res) {
           pnlPercent: user2PnLPercent,
           isFake: battle.isFakeOpponent || false,
         } : null,
+        likeCount: likeCountMap.get(battle.id) || 0,
+        likedByMe: likedSet.has(battle.id),
       };
     }));
 
