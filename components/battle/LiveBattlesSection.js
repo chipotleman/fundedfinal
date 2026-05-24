@@ -757,8 +757,8 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
         boxShadow: 'none',
       }}
     >
-      <div className="p-3.5" onClick={() => picks && setExpanded(!expanded)} style={{ cursor: picks ? 'pointer' : 'default' }}>
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-3.5 pt-2.5 pb-2" onClick={() => picks && setExpanded(!expanded)} style={{ cursor: picks ? 'pointer' : 'default' }}>
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-green-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
@@ -771,7 +771,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <PlayerAvatar user={user1} isWinning={user1Winning} size={40} bgColor="#1e40af" />
             <div className="min-w-0">
