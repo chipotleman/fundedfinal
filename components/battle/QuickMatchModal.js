@@ -215,8 +215,7 @@ function MatchFoundContent({
               fontSize: 32,
               lineHeight: 1,
               color: '#facc15',
-              filter:
-                'drop-shadow(0 0 14px rgba(251,146,60,0.9)) drop-shadow(0 0 22px rgba(236,72,153,0.55)) drop-shadow(0 2px 0 #0a0a0a)',
+              filter: 'drop-shadow(0 2px 0 #0a0a0a)',
               animation: 'qm-bolt-flicker 1.1s ease-in-out infinite',
             }}
           >
@@ -229,19 +228,13 @@ function MatchFoundContent({
               lineHeight: 0.9,
               letterSpacing: '0.01em',
               fontStyle: 'italic',
+              color: '#facc15',
               WebkitTextStroke: '2px #0a0a0a',
-              textShadow:
-                '0 4px 0 #0a0a0a,' +
-                '0 0 18px rgba(251,146,60,0.95),' +
-                '0 0 34px rgba(236,72,153,0.7),' +
-                '0 0 52px rgba(168,85,247,0.45)',
-              background: 'linear-gradient(180deg, #fef08a 0%, #facc15 45%, #fb923c 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              textShadow: '0 4px 0 #0a0a0a',
               whiteSpace: 'nowrap',
               margin: 0,
               animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.05s both',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontFamily: 'Impact, "Arial Black", system-ui, sans-serif',
             }}
           >
             You're Matched!
@@ -252,8 +245,7 @@ function MatchFoundContent({
               fontSize: 32,
               lineHeight: 1,
               color: '#facc15',
-              filter:
-                'drop-shadow(0 0 14px rgba(251,146,60,0.9)) drop-shadow(0 0 22px rgba(236,72,153,0.55)) drop-shadow(0 2px 0 #0a0a0a)',
+              filter: 'drop-shadow(0 2px 0 #0a0a0a)',
               animation: 'qm-bolt-flicker 1.1s ease-in-out infinite 0.15s',
             }}
           >
@@ -266,12 +258,12 @@ function MatchFoundContent({
           <span
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-black uppercase whitespace-nowrap"
             style={{
-              background: 'linear-gradient(180deg,#10b981,#047857)',
+              background: '#10b981',
               border: '2.5px solid #0a0a0a',
-              boxShadow: '0 3px 0 #0a0a0a, 0 0 18px rgba(16,185,129,0.55)',
+              boxShadow: '0 3px 0 #0a0a0a',
               color: '#ffffff',
               letterSpacing: '0.22em',
-              textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+              textShadow: '0 1px 0 rgba(0,0,0,0.45)',
             }}
           >
             <span aria-hidden="true" style={{ color: '#fef08a' }}>★</span>
@@ -289,9 +281,9 @@ function MatchFoundContent({
         <div
           className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 sm:gap-3 whitespace-nowrap"
           style={{
-            background: 'linear-gradient(180deg,#0b1220,#080a14)',
-            border: '2.5px solid #0a0a0a',
-            boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(6,182,212,0.35)',
+            background: '#0b1220',
+            border: '2.5px solid #facc15',
+            boxShadow: '0 4px 0 #0a0a0a',
             maxWidth: 420,
           }}
         >
@@ -373,7 +365,7 @@ function MatchFoundContent({
             style={{
               top: -18,
               fontSize: 24,
-              filter: 'drop-shadow(0 2px 0 #0a0a0a) drop-shadow(0 0 10px rgba(250,204,21,0.85))',
+              filter: 'drop-shadow(0 2px 0 #0a0a0a)',
               animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.25s both',
               zIndex: 20,
             }}
@@ -385,7 +377,7 @@ function MatchFoundContent({
               className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
               style={{
                 border: '4px solid #3b82f6',
-                boxShadow: '0 0 0 2px #0a0a0a, 0 0 22px rgba(59,130,246,0.65)',
+                boxShadow: '0 0 0 2.5px #0a0a0a, 0 4px 0 #0a0a0a',
                 background: th.avatarBg1,
               }}
             >
@@ -424,8 +416,10 @@ function MatchFoundContent({
             className="text-3xl md:text-5xl font-black italic"
             style={{
               color: '#facc15',
+              WebkitTextStroke: '1.5px #0a0a0a',
+              textShadow: '0 3px 0 #0a0a0a',
               animation: 'qm-vs-explode 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.4s both',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontFamily: 'Impact, "Arial Black", system-ui, sans-serif',
             }}
           >
             VS
@@ -453,7 +447,7 @@ function MatchFoundContent({
               className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
               style={{
                 border: '4px solid #fb923c',
-                boxShadow: '0 0 0 2px #0a0a0a, 0 0 22px rgba(251,146,60,0.65)',
+                boxShadow: '0 0 0 2.5px #0a0a0a, 0 4px 0 #0a0a0a',
                 background: th.avatarBg2,
               }}
             >
@@ -498,7 +492,9 @@ function MatchFoundContent({
             className="rounded-xl px-2 py-2 flex items-center gap-1.5"
             style={{
               background: '#1a0b0b',
-              border: '2px solid #ef4444',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 3px 0 #0a0a0a',
+              borderColor: '#ef4444',
             }}
           >
             <span style={{ fontSize: 18 }} aria-hidden="true">🔥</span>
@@ -511,7 +507,8 @@ function MatchFoundContent({
             className="rounded-xl px-2 py-2 flex items-center gap-1.5"
             style={{
               background: '#1a1505',
-              border: '2px solid #facc15',
+              border: '2.5px solid #facc15',
+              boxShadow: '0 3px 0 #0a0a0a',
             }}
           >
             <span style={{ fontSize: 18 }} aria-hidden="true">⭐</span>
@@ -524,7 +521,8 @@ function MatchFoundContent({
             className="rounded-xl px-2 py-2 flex items-center gap-1.5"
             style={{
               background: '#052016',
-              border: '2px solid #10b981',
+              border: '2.5px solid #10b981',
+              boxShadow: '0 3px 0 #0a0a0a',
             }}
           >
             <span style={{ fontSize: 18 }} aria-hidden="true">🎯</span>
@@ -555,7 +553,7 @@ function MatchFoundContent({
           >
             <span
               className="inline-block w-2 h-2 rounded-full"
-              style={{ background: '#fbbf24', boxShadow: '0 0 10px #fbbf24', animation: 'qm-bolt-flicker 0.9s ease-in-out infinite' }}
+              style={{ background: '#fbbf24', animation: 'qm-bolt-flicker 0.9s ease-in-out infinite' }}
             />
             <span style={{ color: '#fbbf24' }}>Loading live games…</span>
           </div>
@@ -567,10 +565,10 @@ function MatchFoundContent({
               style={{
                 background: 'linear-gradient(180deg,#fde047 0%, #f97316 60%, #ea580c 100%)',
                 border: '3px solid #0a0a0a',
-                boxShadow: '0 5px 0 #0a0a0a, 0 0 28px rgba(249,115,22,0.6), 0 0 48px rgba(236,72,153,0.35)',
+                boxShadow: '0 5px 0 #0a0a0a',
                 letterSpacing: '0.1em',
                 color: '#0a0a0a',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontFamily: 'Impact, "Arial Black", system-ui, sans-serif',
                 fontSize: 'clamp(22px, 6vw, 30px)',
                 fontStyle: 'italic',
               }}

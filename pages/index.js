@@ -1896,7 +1896,7 @@ export default function Dashboard() {
         const ctaLabel = walkthroughStep === 0 ? 'How Does It Work?' : walkthroughStep === 1 ? 'Got It, Any Tips?' : 'Start Picking';
         const Bolt = ({ size = 24, delay = 0 }) => (
           <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{
-            filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)',
+            filter: 'drop-shadow(0 2px 0 #0a0a0a)',
             animation: `wtBolt 0.9s ease-in-out ${delay}s infinite`,
           }}>
             <path d="M13 2L3 14h7l-2 8 11-13h-7l3-7z" fill="#facc15" stroke="#0a0a0a" strokeWidth="1.6" strokeLinejoin="round" />
@@ -1909,31 +1909,27 @@ export default function Dashboard() {
             @keyframes wtFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes wtBolt { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(0.92); } }
             @keyframes wtTitleBounce { 0% { transform: scale(0.6) rotate(-6deg); opacity: 0; } 60% { transform: scale(1.08) rotate(2deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
-            @keyframes wtCtaThrob { 0%,100% { transform: translateY(0); box-shadow: 0 6px 0 #0a0a0a, 0 0 30px rgba(250,204,21,0.55); } 50% { transform: translateY(-2px); box-shadow: 0 8px 0 #0a0a0a, 0 0 38px rgba(250,204,21,0.75); } }
+            @keyframes wtCtaThrob { 0%,100% { transform: translateY(0); box-shadow: 0 6px 0 #0a0a0a; } 50% { transform: translateY(-2px); box-shadow: 0 8px 0 #0a0a0a; } }
             @media (hover: hover) { .wt-back-btn:hover { background: linear-gradient(180deg,#262626,#171717) !important; } }
           `}</style>
           <div
             className="w-full max-w-[380px] rounded-2xl overflow-hidden flex flex-col relative"
             style={{
-              background: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: walkthroughStep === 0
-                ? '0 8px 0 #0a0a0a, 0 0 60px rgba(251,146,60,0.55), 0 0 90px rgba(251,146,60,0.25), inset 0 0 0 2px rgba(251,146,60,0.75)'
-                : '0 8px 0 #0a0a0a, 0 0 60px rgba(6,182,212,0.3), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
+              background: '#0b1322',
+              border: walkthroughStep === 0 ? '3px solid #fb923c' : '3px solid #06b6d4',
+              boxShadow: '0 8px 0 #0a0a0a',
               animation: 'wtSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both',
               maxHeight: 'calc(100dvh - 2rem)',
             }}
           >
-            {/* Neon corner brackets — cyan on most steps, orange on the
-                arcade-themed "You're Matched!" step 0 to match the
-                celebratory mockup. */}
+            {/* Arcade corner brackets — orange on the celebratory "You're
+                Matched!" step, cyan on info steps. No glow, just chunky
+                black borders for max readability. */}
             {['tl','tr','bl','br'].map(pos => {
               const base = { position: 'absolute', width: 20, height: 20, pointerEvents: 'none', zIndex: 3 };
               const isStep0 = walkthroughStep === 0;
               const stroke = isStep0 ? '2.5px solid #fb923c' : '2.5px solid #06b6d4';
-              const glow = isStep0
-                ? { filter: 'drop-shadow(0 0 8px rgba(251,146,60,0.9))' }
-                : { filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.8))' };
+              const glow = {};
               const map = {
                 tl: { top: 8, left: 8, borderTop: stroke, borderLeft: stroke, borderTopLeftRadius: 8 },
                 tr: { top: 8, right: 8, borderTop: stroke, borderRight: stroke, borderTopRightRadius: 8 },
@@ -1948,9 +1944,8 @@ export default function Dashboard() {
                 {[0, 1, 2].map(i => (
                   <div key={i} className="h-1.5 rounded-full transition-all duration-300" style={{
                     width: walkthroughStep === i ? '28px' : '10px',
-                    background: walkthroughStep >= i ? 'linear-gradient(90deg,#06b6d4,#3b82f6)' : '#1a1a1a',
+                    background: walkthroughStep >= i ? '#06b6d4' : '#1a1a1a',
                     border: '1.5px solid #0a0a0a',
-                    boxShadow: walkthroughStep >= i ? '0 0 6px rgba(6,182,212,0.6)' : 'none',
                   }} />
                 ))}
               </div>
@@ -1970,7 +1965,7 @@ export default function Dashboard() {
                         fontSize: 36,
                         lineHeight: 1,
                         color: '#facc15',
-                        filter: 'drop-shadow(0 0 14px rgba(250,204,21,0.95)) drop-shadow(0 0 6px rgba(251,146,60,0.9)) drop-shadow(0 2px 0 #0a0a0a)',
+                        filter: 'drop-shadow(0 2px 0 #0a0a0a)',
                         animation: 'wtBolt 0.9s ease-in-out 0s infinite',
                       }}>⚡</span>
                       <h2
@@ -1982,7 +1977,7 @@ export default function Dashboard() {
                           letterSpacing: '0.02em',
                           fontStyle: 'italic',
                           WebkitTextStroke: '2px #0a0a0a',
-                          textShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(251,146,60,0.85), 0 0 36px rgba(251,146,60,0.55), 0 0 60px rgba(239,68,68,0.35)',
+                          textShadow: '0 4px 0 #0a0a0a',
                           margin: 0,
                           animation: 'wtTitleBounce 0.6s cubic-bezier(0.34,1.56,0.64,1) both',
                           fontFamily: 'Impact, "Arial Black", system-ui, -apple-system, sans-serif',
@@ -1995,7 +1990,7 @@ export default function Dashboard() {
                         fontSize: 36,
                         lineHeight: 1,
                         color: '#facc15',
-                        filter: 'drop-shadow(0 0 14px rgba(250,204,21,0.95)) drop-shadow(0 0 6px rgba(251,146,60,0.9)) drop-shadow(0 2px 0 #0a0a0a)',
+                        filter: 'drop-shadow(0 2px 0 #0a0a0a)',
                         animation: 'wtBolt 0.9s ease-in-out 0.15s infinite',
                       }}>⚡</span>
                     </div>
@@ -2003,13 +1998,13 @@ export default function Dashboard() {
                         per mockup, with star accents and chunky border. */}
                     <div className="flex justify-center mt-3">
                       <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full" style={{
-                        background: 'linear-gradient(180deg,#10b981,#047857)',
+                        background: '#10b981',
                         border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(16,185,129,0.55)',
+                        boxShadow: '0 3px 0 #0a0a0a',
                       }}>
-                        <span aria-hidden="true" style={{ color: '#facc15', fontSize: 11, lineHeight: 1, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>★</span>
-                        <span className="text-white text-[10.5px] font-black uppercase tracking-[0.22em]" style={{ textShadow: '0 1px 0 rgba(0,0,0,0.4)' }}>Battle Started</span>
-                        <span aria-hidden="true" style={{ color: '#facc15', fontSize: 11, lineHeight: 1, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>★</span>
+                        <span aria-hidden="true" style={{ color: '#facc15', fontSize: 11, lineHeight: 1 }}>★</span>
+                        <span className="text-white text-[10.5px] font-black uppercase tracking-[0.22em]" style={{ textShadow: '0 1px 0 rgba(0,0,0,0.45)' }}>Battle Started</span>
+                        <span aria-hidden="true" style={{ color: '#facc15', fontSize: 11, lineHeight: 1 }}>★</span>
                       </div>
                     </div>
                   </div>
@@ -2019,11 +2014,11 @@ export default function Dashboard() {
                       mockup's information bar. */}
                   <div className="px-3 sm:px-5 pb-3">
                     <div className="mx-auto rounded-full px-2.5 sm:px-3.5 py-2 flex items-center justify-center flex-wrap gap-x-2 gap-y-1" style={{
-                      background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                      background: '#0a0e1c',
                       border: '2.5px solid #fb923c',
-                      boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(251,146,60,0.45), inset 0 0 0 1px rgba(251,146,60,0.4)',
+                      boxShadow: '0 4px 0 #0a0a0a',
                     }}>
-                      <span style={{ fontSize: 16, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }} aria-hidden="true">🏆</span>
+                      <span style={{ fontSize: 16 }} aria-hidden="true">🏆</span>
                       <span className="text-white font-black text-[12px] uppercase" style={{ letterSpacing: '0.08em' }}>
                         {modeLabel}
                       </span>
@@ -2032,9 +2027,9 @@ export default function Dashboard() {
                         Win <span style={{ color: '#facc15' }}>{potLabel}</span>
                       </span>
                       <span style={{ color: 'rgba(148,163,184,0.5)', fontSize: 12 }}>·</span>
-                      <span aria-hidden="true" style={{ fontSize: 14, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>⏱</span>
+                      <span aria-hidden="true" style={{ fontSize: 14 }}>⏱</span>
                       <span className="text-white font-black text-[12px] uppercase" style={{ color: '#facc15', letterSpacing: '0.06em' }}>{timeLabel}</span>
-                      <span style={{ fontSize: 16, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }} aria-hidden="true">🪙</span>
+                      <span style={{ fontSize: 16 }} aria-hidden="true">🪙</span>
                     </div>
                   </div>
 
@@ -2043,11 +2038,11 @@ export default function Dashboard() {
                       yellow VS in the middle and a record pill underneath. */}
                   <div className="flex items-start justify-center gap-2 sm:gap-3 px-3 sm:px-5 pb-3" style={{ position: 'relative' }}>
                     <div className="flex flex-col items-center flex-shrink min-w-0" style={{ flexBasis: 110, maxWidth: 110 }}>
-                      <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, marginBottom: 2, filter: 'drop-shadow(0 0 8px rgba(250,204,21,0.85)) drop-shadow(0 1px 0 #0a0a0a)' }}>👑</span>
+                      <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, marginBottom: 2, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>👑</span>
                       <div className="w-[68px] h-[68px] rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{
                         background: '#0a0a0a',
-                        border: '3.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a, 0 0 20px rgba(250,204,21,0.6), 0 0 6px rgba(251,146,60,0.6), inset 0 0 0 2.5px #facc15',
+                        border: '4px solid #3b82f6',
+                        boxShadow: '0 0 0 2.5px #0a0a0a, 0 4px 0 #0a0a0a',
                       }}>
                         {myAvatarUrl ? (
                           <img src={myAvatarUrl} alt="" className="w-full h-full object-cover" />
@@ -2056,13 +2051,13 @@ export default function Dashboard() {
                         )}
                       </div>
                       <p className="text-white text-[10px] font-black uppercase truncate w-full text-center px-2 py-1 rounded-lg" style={{
-                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                        border: '2.5px solid #facc15',
-                        boxShadow: '0 2px 0 #0a0a0a, 0 0 8px rgba(250,204,21,0.4)',
+                        background: '#0d0d0d',
+                        border: '2.5px solid #3b82f6',
+                        boxShadow: '0 2px 0 #0a0a0a',
                         letterSpacing: '0.06em',
                       }}>{myName}</p>
                       <p className="text-white text-[8.5px] font-black uppercase mt-1 px-2 py-0.5 rounded-md inline-flex items-center gap-1" style={{
-                        background: 'linear-gradient(180deg,#fb923c,#c2410c)',
+                        background: '#fb923c',
                         border: '2px solid #0a0a0a',
                         boxShadow: '0 2px 0 #0a0a0a',
                         letterSpacing: '0.14em',
@@ -2077,13 +2072,13 @@ export default function Dashboard() {
                         color: '#facc15',
                         fontFamily: 'Impact, "Arial Black", sans-serif',
                         WebkitTextStroke: '1.5px #0a0a0a',
-                        textShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(251,146,60,0.7)',
+                        textShadow: '0 3px 0 #0a0a0a',
                         letterSpacing: '0.04em',
                       }}>VS</div>
                       <p className="text-white text-[9px] font-black mt-1.5 px-2 py-0.5 rounded-md" style={{
-                        background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                        background: '#0a0e1c',
                         border: '2px solid #06b6d4',
-                        boxShadow: '0 2px 0 #0a0a0a, 0 0 6px rgba(6,182,212,0.5)',
+                        boxShadow: '0 2px 0 #0a0a0a',
                         letterSpacing: '0.08em',
                         color: '#7dd3fc',
                       }}>(0-0)</p>
@@ -2093,8 +2088,8 @@ export default function Dashboard() {
                       <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, marginBottom: 2, opacity: 0 }}>👑</span>
                       <div className="w-[68px] h-[68px] rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{
                         background: '#0a0a0a',
-                        border: '3.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a, 0 0 20px rgba(6,182,212,0.6), inset 0 0 0 2.5px #06b6d4',
+                        border: '4px solid #fb923c',
+                        boxShadow: '0 0 0 2.5px #0a0a0a, 0 4px 0 #0a0a0a',
                       }}>
                         {opponent?.avatar ? (
                           <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
@@ -2103,13 +2098,13 @@ export default function Dashboard() {
                         )}
                       </div>
                       <p className="text-white text-[10px] font-black uppercase truncate w-full text-center px-2 py-1 rounded-lg" style={{
-                        background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                        border: '2.5px solid #06b6d4',
-                        boxShadow: '0 2px 0 #0a0a0a, 0 0 8px rgba(6,182,212,0.4)',
+                        background: '#0d0d0d',
+                        border: '2.5px solid #fb923c',
+                        boxShadow: '0 2px 0 #0a0a0a',
                         letterSpacing: '0.06em',
                       }}>{oppName}</p>
                       <p className="text-white text-[8.5px] font-black uppercase mt-1 px-2 py-0.5 rounded-md inline-flex items-center gap-1" style={{
-                        background: 'linear-gradient(180deg,#3b82f6,#1d4ed8)',
+                        background: '#3b82f6',
                         border: '2px solid #0a0a0a',
                         boxShadow: '0 2px 0 #0a0a0a',
                         letterSpacing: '0.14em',
@@ -2125,22 +2120,23 @@ export default function Dashboard() {
                       borders + hard shadows + colored backgrounds. */}
                   <div className="grid grid-cols-3 gap-1.5 px-4 pb-3">
                     {[
-                      { icon: '🔥', label: 'Win Streak', value: 'On Fire', bg: 'linear-gradient(180deg,#fb923c,#c2410c)', glow: 'rgba(251,146,60,0.5)' },
-                      { icon: '⭐', label: 'Bonus XP', value: '+50 XP', bg: 'linear-gradient(180deg,#facc15,#ca8a04)', glow: 'rgba(250,204,21,0.5)' },
-                      { icon: '🎯', label: 'Daily Goal', value: 'In Progress', bg: 'linear-gradient(180deg,#10b981,#047857)', glow: 'rgba(16,185,129,0.5)' },
+                      { icon: '🔥', label: 'Win Streak', value: 'On Fire', bg: '#fb923c', borderColor: '#fb923c' },
+                      { icon: '⭐', label: 'Bonus XP', value: '+50 XP', bg: '#facc15', borderColor: '#facc15' },
+                      { icon: '🎯', label: 'Daily Goal', value: 'In Progress', bg: '#10b981', borderColor: '#10b981' },
                     ].map((s) => (
                       <div key={s.label} className="rounded-xl px-1.5 py-1.5 flex flex-col items-center text-center" style={{
-                        background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${s.glow}`,
+                        background: '#0a0e1c',
+                        border: `2.5px solid ${s.borderColor}`,
+                        boxShadow: '0 3px 0 #0a0a0a',
                       }}>
                         <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>{s.icon}</span>
                         <span className="text-white text-[8px] font-black uppercase mt-1" style={{ letterSpacing: '0.14em', opacity: 0.7 }}>{s.label}</span>
-                        <span className="text-white text-[10px] font-black uppercase mt-0.5 px-1.5 py-0.5 rounded-md w-full truncate" style={{
+                        <span className="text-[10px] font-black uppercase mt-0.5 px-1.5 py-0.5 rounded-md w-full truncate" style={{
                           background: s.bg,
                           border: '1.5px solid #0a0a0a',
                           letterSpacing: '0.06em',
-                          textShadow: '0 1px 0 rgba(0,0,0,0.4)',
+                          color: '#0a0a0a',
+                          textShadow: '0 1px 0 rgba(255,255,255,0.25)',
                         }}>{s.value}</span>
                       </div>
                     ))}
@@ -2152,7 +2148,7 @@ export default function Dashboard() {
                 <div className="px-5 py-4">
                   <div className="text-center mb-4 relative">
                     <div className="flex items-center justify-center gap-2.5">
-                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                       <h2
                         className="font-black uppercase text-center"
                         style={{
@@ -2160,50 +2156,48 @@ export default function Dashboard() {
                           lineHeight: 0.92,
                           letterSpacing: '0.015em',
                           fontStyle: 'italic',
-                          WebkitTextStroke: '1.2px #0a0a0a',
-                          textShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.75), 0 0 14px rgba(255,255,255,0.45)',
-                          background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
+                          color: '#ffffff',
+                          WebkitTextStroke: '1.5px #0a0a0a',
+                          textShadow: '0 3px 0 #0a0a0a',
                           whiteSpace: 'nowrap',
                           margin: 0,
                           animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
-                          fontFamily: 'system-ui, -apple-system, sans-serif',
+                          fontFamily: 'Impact, "Arial Black", system-ui, -apple-system, sans-serif',
                         }}
                       >
                         How It Works
                       </h2>
-                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
-                      <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}>
+                      <span aria-hidden="true" style={{ flex: 1, height: 2, background: '#06b6d4' }} />
+                      <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', margin: 0 }}>
                         Three Simple Steps To Win
                       </p>
-                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                      <span aria-hidden="true" style={{ flex: 1, height: 2, background: '#06b6d4' }} />
                     </div>
                   </div>
                   <div className="space-y-2.5">
                     {[
-                      { n: 1, color: '#3b82f6', glow: 'rgba(59,130,246,0.35)', icon: '🎯', title: 'Place Your Picks', desc: 'Browse games below and add bets to your slip — spreads, moneylines, or totals.' },
-                      { n: 2, color: '#10b981', glow: 'rgba(16,185,129,0.35)', icon: '📈', title: 'Grow Your Balance', desc: `You both start with ${startingLabel}. Winning picks grow your bankroll.` },
-                      { n: 3, color: '#fb923c', glow: 'rgba(251,146,60,0.35)', icon: '🏆', title: 'Highest Balance Wins', desc: 'When time runs out, the player with the higher balance takes the pot.' },
+                      { n: 1, color: '#3b82f6', icon: '🎯', title: 'Place Your Picks', desc: 'Browse games below and add bets to your slip — spreads, moneylines, or totals.' },
+                      { n: 2, color: '#10b981', icon: '📈', title: 'Grow Your Balance', desc: `You both start with ${startingLabel}. Winning picks grow your bankroll.` },
+                      { n: 3, color: '#fb923c', icon: '🏆', title: 'Highest Balance Wins', desc: 'When time runs out, the player with the higher balance takes the pot.' },
                     ].map((s) => (
                       <div key={s.n} className="flex items-start gap-2.5 rounded-xl p-2.5" style={{
-                        background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                        background: '#0a0e1c',
                         border: `2.5px solid ${s.color}`,
-                        boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${s.glow}`,
+                        boxShadow: '0 3px 0 #0a0a0a',
                       }}>
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
-                          background: `linear-gradient(180deg,${s.color},${s.color}cc)`,
+                          background: s.color,
                           border: '2px solid #0a0a0a',
                           boxShadow: '0 2px 0 #0a0a0a',
                         }}>
-                          <span className="text-white text-sm font-black">{s.n}</span>
+                          <span className="text-white text-sm font-black" style={{ textShadow: '0 1px 0 rgba(0,0,0,0.5)' }}>{s.n}</span>
                         </div>
                         <div className="min-w-0">
                           <p className="text-white text-sm font-extrabold flex items-center gap-1.5"><span aria-hidden="true">{s.icon}</span>{s.title}</p>
-                          <p className="text-gray-400 text-[11px] mt-0.5 leading-snug">{s.desc}</p>
+                          <p className="text-gray-300 text-[11px] mt-0.5 leading-snug">{s.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -2215,7 +2209,7 @@ export default function Dashboard() {
                 <div className="px-5 py-4">
                   <div className="text-center mb-4 relative">
                     <div className="flex items-center justify-center gap-2.5">
-                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                       <h2
                         className="font-black uppercase text-center"
                         style={{
@@ -2223,49 +2217,47 @@ export default function Dashboard() {
                           lineHeight: 0.92,
                           letterSpacing: '0.015em',
                           fontStyle: 'italic',
-                          WebkitTextStroke: '1.2px #0a0a0a',
-                          textShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.75), 0 0 14px rgba(255,255,255,0.45)',
-                          background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
+                          color: '#ffffff',
+                          WebkitTextStroke: '1.5px #0a0a0a',
+                          textShadow: '0 3px 0 #0a0a0a',
                           whiteSpace: 'nowrap',
                           margin: 0,
                           animation: 'wtTitleBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
-                          fontFamily: 'system-ui, -apple-system, sans-serif',
+                          fontFamily: 'Impact, "Arial Black", system-ui, -apple-system, sans-serif',
                         }}
                       >
                         Tips To Win
                       </h2>
-                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                      <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
-                      <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}>
+                      <span aria-hidden="true" style={{ flex: 1, height: 2, background: '#06b6d4' }} />
+                      <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', margin: 0 }}>
                         Quick Strategy Guide
                       </p>
-                      <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                      <span aria-hidden="true" style={{ flex: 1, height: 2, background: '#06b6d4' }} />
                     </div>
                   </div>
                   <div className="space-y-2.5">
                     {[
-                      { color: '#3b82f6', glow: 'rgba(59,130,246,0.35)', icon: '📊', title: 'Track the Banner', desc: 'Your battle status bar at the top shows both balances and time left in real-time.' },
-                      { color: '#fb923c', glow: 'rgba(251,146,60,0.35)', icon: '🔒', title: 'Hidden Bets', desc: "Your opponent can't see your picks until you've placed at least one bet — and vice versa." },
-                      { color: '#10b981', glow: 'rgba(16,185,129,0.35)', icon: '⚡', title: 'Manage Risk', desc: "Don't go all-in early. Spread your bets across games to build a steady lead." },
+                      { color: '#3b82f6', icon: '📊', title: 'Track the Banner', desc: 'Your battle status bar at the top shows both balances and time left in real-time.' },
+                      { color: '#fb923c', icon: '🔒', title: 'Hidden Bets', desc: "Your opponent can't see your picks until you've placed at least one bet — and vice versa." },
+                      { color: '#10b981', icon: '⚡', title: 'Manage Risk', desc: "Don't go all-in early. Spread your bets across games to build a steady lead." },
                     ].map((t) => (
                       <div key={t.title} className="flex items-start gap-2.5 rounded-xl p-2.5" style={{
-                        background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                        background: '#0a0e1c',
                         border: `2.5px solid ${t.color}`,
-                        boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${t.glow}`,
+                        boxShadow: '0 3px 0 #0a0a0a',
                       }}>
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
-                          background: `linear-gradient(180deg,${t.color},${t.color}cc)`,
+                          background: t.color,
                           border: '2px solid #0a0a0a',
                           boxShadow: '0 2px 0 #0a0a0a',
                           fontSize: 16,
                         }} aria-hidden="true">{t.icon}</div>
                         <div className="min-w-0">
                           <p className="text-white text-sm font-extrabold">{t.title}</p>
-                          <p className="text-gray-400 text-[11px] mt-0.5 leading-snug">{t.desc}</p>
+                          <p className="text-gray-300 text-[11px] mt-0.5 leading-snug">{t.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -2303,18 +2295,19 @@ export default function Dashboard() {
                 style={
                   walkthroughStep === 0
                     ? {
-                        background: 'linear-gradient(180deg,#fb923c 0%,#ea580c 55%,#c2410c 100%)',
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 5px 0 #0a0a0a, 0 0 32px rgba(251,146,60,0.65), inset 0 0 0 1.5px rgba(250,204,21,0.75)',
-                        textShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                        background: 'linear-gradient(180deg,#fde047 0%,#f97316 60%,#ea580c 100%)',
+                        border: '3px solid #0a0a0a',
+                        boxShadow: '0 5px 0 #0a0a0a',
+                        color: '#0a0a0a',
+                        textShadow: '0 2px 0 rgba(255,255,255,0.35)',
                         letterSpacing: '0.06em',
                         fontFamily: 'Impact, "Arial Black", system-ui, -apple-system, sans-serif',
                       }
                     : {
-                        background: 'linear-gradient(180deg,#3b82f6 0%,#1d4ed8 100%)',
+                        background: '#3b82f6',
                         border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 4px 0 #0a0a0a, 0 0 28px rgba(6,182,212,0.5), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
-                        textShadow: '0 1px 0 rgba(0,0,0,0.4)',
+                        boxShadow: '0 4px 0 #0a0a0a',
+                        textShadow: '0 1px 0 rgba(0,0,0,0.45)',
                         letterSpacing: '0.06em',
                         fontFamily: 'system-ui, -apple-system, sans-serif',
                       }
@@ -2322,15 +2315,15 @@ export default function Dashboard() {
               >
                 {walkthroughStep === 0 ? (
                   <span className="flex items-center justify-between gap-2 px-3 pt-3 pb-2.5">
-                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'linear-gradient(180deg,#0a0a0a,#1a1a1a)', border: '2.5px solid #facc15', boxShadow: '0 0 12px rgba(250,204,21,0.85), inset 0 0 6px rgba(250,204,21,0.3)', color: '#facc15', fontSize: 15 }}>»</span>
-                    <span style={{ fontSize: 22, fontStyle: 'italic', letterSpacing: '0.05em', WebkitTextStroke: '1px #0a0a0a' }}>Let&apos;s Go!</span>
-                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'linear-gradient(180deg,#0a0a0a,#1a1a1a)', border: '2.5px solid #facc15', boxShadow: '0 0 12px rgba(250,204,21,0.85), inset 0 0 6px rgba(250,204,21,0.3)', color: '#facc15', fontSize: 15 }}>«</span>
+                    <span aria-hidden="true" style={{ fontSize: 24, color: '#0a0a0a' }}>«</span>
+                    <span style={{ fontSize: 22, fontStyle: 'italic', letterSpacing: '0.05em' }}>Let&apos;s Go!</span>
+                    <span aria-hidden="true" style={{ fontSize: 24, color: '#0a0a0a' }}>»</span>
                   </span>
                 ) : (
                   <span className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-2">
-                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: 'linear-gradient(180deg,#0e1b3a,#050a18)', border: '2px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)', color: '#7dd3fc', fontSize: 13 }}>»</span>
+                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: '#050a18', border: '2px solid #06b6d4', color: '#7dd3fc', fontSize: 13 }}>»</span>
                     <span style={{ fontSize: 14 }}>{ctaLabel}</span>
-                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: 'linear-gradient(180deg,#0e1b3a,#050a18)', border: '2px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)', color: '#7dd3fc', fontSize: 13 }}>«</span>
+                    <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 26, height: 26, background: '#050a18', border: '2px solid #06b6d4', color: '#7dd3fc', fontSize: 13 }}>«</span>
                   </span>
                 )}
               </button>
@@ -2341,7 +2334,7 @@ export default function Dashboard() {
                 <span className="text-white text-[10px] font-black uppercase" style={{ letterSpacing: '0.18em', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>
                   Battle Locked In
                 </span>
-                <span className="text-gray-400 text-[10px] font-semibold normal-case" style={{ letterSpacing: '0.04em' }}>
+                <span className="text-gray-300 text-[10px] font-semibold normal-case" style={{ letterSpacing: '0.04em' }}>
                   · Both players are ready
                 </span>
               </div>
@@ -2361,9 +2354,9 @@ export default function Dashboard() {
                 className="inline-flex items-center justify-center rounded"
                 style={{
                   width: 16, height: 16,
-                  background: walkthroughDontShowAgain ? 'linear-gradient(180deg,#06b6d4,#0891b2)' : '#0a0f1c',
+                  background: walkthroughDontShowAgain ? '#06b6d4' : '#0a0f1c',
                   border: '2px solid #06b6d4',
-                  boxShadow: walkthroughDontShowAgain ? '0 0 10px rgba(6,182,212,0.7)' : 'none',
+                  boxShadow: 'none',
                 }}
               >
                 {walkthroughDontShowAgain && (
