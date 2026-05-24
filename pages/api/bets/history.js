@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { userBets, fakeOpponents, fakeOpponentBets, matchups, profiles, users } from '../../../shared/schema';
-import { eq, desc, or, inArray, and } from 'drizzle-orm';
+import { eq, desc, or, inArray, and, notInArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 
@@ -110,6 +110,23 @@ export default async function handler(req, res) {
 
     // Build battles map for any bets that have a matchupId
     const matchupIds = [...new Set(formattedBets.map(b => b.matchupId).filter(Boolean))];
+
+    // Also include any currently-active matchups the user is part of,
+    // even if they haven't placed a bet yet (e.g. Rush matches with no
+    // traditional bet rows, or matchups joined but not yet wagered in).
+    if (!fakeOpponent) {
+      const activeMatchupRows = await db
+        .select({ id: matchups.id })
+        .from(matchups)
+        .where(and(
+          or(eq(matchups.user1Id, userId), eq(matchups.user2Id, userId)),
+          notInArray(matchups.status, ['completed', 'cancelled']),
+        ));
+      for (const row of activeMatchupRows) {
+        if (!matchupIds.includes(row.id)) matchupIds.push(row.id);
+      }
+    }
+
     const battles = {};
 
     const formatRawBet = (bet) => ({
