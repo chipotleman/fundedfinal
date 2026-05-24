@@ -85,7 +85,13 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
         >
           <button
             type="button"
-            onClick={() => { onClose?.(); router.push(`/messenger?chat=${friend.id}`); }}
+            onClick={async () => {
+              try {
+                await router.push(`/messenger?chat=${friend.id}`);
+              } finally {
+                onClose?.();
+              }
+            }}
             className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 transition-colors"
           >
             Open full conversation →
