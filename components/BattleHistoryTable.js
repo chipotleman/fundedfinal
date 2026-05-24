@@ -271,6 +271,118 @@ function downloadCsv(csv, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function SortDropdown({ value, onChange, options }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [open]);
+  const current = options.find(o => o.value === value) || options[0];
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-colors"
+        style={{
+          background: '#111',
+          border: '1px solid rgba(75,85,99,0.5)',
+          color: '#d1d5db',
+          fontSize: 12,
+          letterSpacing: '0.08em',
+        }}
+      >
+        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9M3 12h5m4 0l4 4m0 0l4-4m-4 4V4" />
+        </svg>
+        <span className="uppercase">Sort: {current.label}</span>
+        <svg className={`w-3 h-3 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 mt-1 rounded-lg overflow-hidden z-20"
+          style={{
+            background: '#0a0a0a',
+            border: '1px solid rgba(75,85,99,0.5)',
+            minWidth: 200,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+          }}
+        >
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className="w-full text-left px-3 py-2 transition-colors"
+              style={{
+                background: opt.value === value ? 'rgba(59,130,246,0.15)' : 'transparent',
+                color: opt.value === value ? '#fff' : '#d1d5db',
+                fontSize: 12,
+                letterSpacing: '0.08em',
+              }}
+            >
+              <span className="uppercase font-semibold">{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SortableHeader({ label, column, sort, onSort, align = 'left' }) {
+  const active = sort.column === column;
+  const dir = active ? sort.direction : null;
+  const alignClass = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+  return (
+    <th
+      className={`${alignClass} px-3 py-3 text-gray-400 font-bold uppercase tracking-wider select-none`}
+      style={{ fontSize: 10, letterSpacing: '0.1em' }}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className="inline-flex items-center gap-1 transition-colors hover:text-white"
+        style={{
+          color: active ? '#fff' : 'inherit',
+          fontSize: 10,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          fontWeight: 700,
+        }}
+        aria-label={`Sort by ${label}`}
+      >
+        {label}
+        <span
+          className="inline-flex items-center justify-center"
+          style={{ width: 10, height: 10, opacity: active ? 1 : 0.3 }}
+        >
+          {dir === 'asc' ? (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+            </svg>
+          ) : dir === 'desc' ? (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+            </svg>
+          ) : (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+            </svg>
+          )}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 function ModeDropdown({ value, onChange, options }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -504,9 +616,37 @@ export default function BattleHistoryTable({
   const [page, setPage] = useState(1);
   const [modeFilter, setModeFilter] = useState('all');
   const [dateRange, setDateRange] = useState({ from: null, to: null });
+  const [sort, setSort] = useState(() => {
+    if (typeof window === 'undefined') return { column: null, direction: null };
+    try {
+      const raw = window.sessionStorage.getItem('piks:battleHistorySort');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (_) {}
+    return { column: null, direction: null };
+  });
 
-  // Reset page when filters change
-  useEffect(() => { setPage(1); }, [selectedFilter, modeFilter, dateRange.from, dateRange.to]);
+  // Persist sort for the session
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem('piks:battleHistorySort', JSON.stringify(sort));
+    } catch (_) {}
+  }, [sort]);
+
+  const handleSort = (column) => {
+    setSort(prev => {
+      if (prev.column !== column) return { column, direction: 'asc' };
+      if (prev.direction === 'asc') return { column, direction: 'desc' };
+      // asc → desc → off
+      return { column: null, direction: null };
+    });
+  };
+
+  // Reset page when filters or sort change
+  useEffect(() => { setPage(1); }, [selectedFilter, modeFilter, dateRange.from, dateRange.to, sort.column, sort.direction]);
 
   const modeOptions = useMemo(() => ([
     { value: 'all', label: 'All Modes' },
@@ -517,7 +657,7 @@ export default function BattleHistoryTable({
   ]), []);
 
   const filtered = useMemo(() => {
-    return rows.filter(r => {
+    const base = rows.filter(r => {
       if (modeFilter !== 'all' && r.mode !== modeFilter) return false;
       if (dateRange.from) {
         const fromTs = new Date(dateRange.from).getTime();
@@ -529,7 +669,63 @@ export default function BattleHistoryTable({
       }
       return true;
     });
-  }, [rows, modeFilter, dateRange.from, dateRange.to]);
+
+    if (!sort.column || !sort.direction) return base;
+
+    // Sort order rank for result column (LOST < TIE < OPEN < WON for asc)
+    const resultRank = { LOST: 0, TIE: 1, OPEN: 2, WON: 3 };
+    const modeRank = { rush: 0, original: 1, tournament: 2, standalone: 3 };
+
+    const getKey = (r) => {
+      switch (sort.column) {
+        case 'date': return r.dateRaw ? new Date(r.dateRaw).getTime() : 0;
+        case 'mode': return modeRank[r.mode] ?? 99;
+        case 'pot': return Number(r.pot) || 0;
+        case 'result': return resultRank[r.result] ?? -1;
+        case 'earnings': return Number(r.earnings) || 0;
+        default: return 0;
+      }
+    };
+
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    const sorted = [...base].sort((a, b) => {
+      const av = getKey(a);
+      const bv = getKey(b);
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      // Tie-break on date desc so equal-keyed rows stay newest-first
+      const aDate = a.dateRaw ? new Date(a.dateRaw).getTime() : 0;
+      const bDate = b.dateRaw ? new Date(b.dateRaw).getTime() : 0;
+      return bDate - aDate;
+    });
+    return sorted;
+  }, [rows, modeFilter, dateRange.from, dateRange.to, sort.column, sort.direction]);
+
+  const sortOptions = useMemo(() => ([
+    { value: 'date-desc', label: 'Date (Newest)' },
+    { value: 'date-asc', label: 'Date (Oldest)' },
+    { value: 'mode-asc', label: 'Mode (A–Z)' },
+    { value: 'mode-desc', label: 'Mode (Z–A)' },
+    { value: 'pot-desc', label: 'Pot (High → Low)' },
+    { value: 'pot-asc', label: 'Pot (Low → High)' },
+    { value: 'result-desc', label: 'Result (Won first)' },
+    { value: 'result-asc', label: 'Result (Lost first)' },
+    { value: 'earnings-desc', label: 'Earnings (High → Low)' },
+    { value: 'earnings-asc', label: 'Earnings (Low → High)' },
+    { value: 'default', label: 'Default' },
+  ]), []);
+
+  const sortDropdownValue = sort.column && sort.direction
+    ? `${sort.column}-${sort.direction}`
+    : 'default';
+
+  const onSortDropdownChange = (value) => {
+    if (value === 'default') { setSort({ column: null, direction: null }); return; }
+    const idx = value.lastIndexOf('-');
+    const column = value.slice(0, idx);
+    const direction = value.slice(idx + 1);
+    setSort({ column, direction });
+  };
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
   const safePage = Math.min(page, totalPages);
@@ -569,6 +765,9 @@ export default function BattleHistoryTable({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
+          <div className="md:hidden">
+            <SortDropdown value={sortDropdownValue} onChange={onSortDropdownChange} options={sortOptions} />
+          </div>
           <ModeDropdown value={modeFilter} onChange={setModeFilter} options={modeOptions} />
           <DateRangePicker from={dateRange.from} to={dateRange.to} onChange={setDateRange} />
           <button
@@ -605,13 +804,13 @@ export default function BattleHistoryTable({
           <table className="w-full" style={{ borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(75,85,99,0.35)' }}>
-                <th className="text-left px-4 py-3 text-gray-400 font-bold uppercase tracking-wider" style={{ fontSize: 10, letterSpacing: '0.1em' }}>Date</th>
-                <th className="text-left px-3 py-3 text-gray-400 font-bold uppercase tracking-wider" style={{ fontSize: 10, letterSpacing: '0.1em' }}>Mode</th>
+                <SortableHeader label="Date" column="date" sort={sort} onSort={handleSort} />
+                <SortableHeader label="Mode" column="mode" sort={sort} onSort={handleSort} />
                 <th className="text-left px-3 py-3 text-gray-400 font-bold uppercase tracking-wider" style={{ fontSize: 10, letterSpacing: '0.1em' }}>Players</th>
                 <th className="text-left px-3 py-3 text-gray-400 font-bold uppercase tracking-wider" style={{ fontSize: 10, letterSpacing: '0.1em' }}>Score</th>
-                <th className="text-left px-3 py-3 text-gray-400 font-bold uppercase tracking-wider" style={{ fontSize: 10, letterSpacing: '0.1em' }}>Pot</th>
-                <th className="text-left px-3 py-3 text-gray-400 font-bold uppercase tracking-wider" style={{ fontSize: 10, letterSpacing: '0.1em' }}>Result</th>
-                <th className="text-left px-3 py-3 text-gray-400 font-bold uppercase tracking-wider" style={{ fontSize: 10, letterSpacing: '0.1em' }}>Earnings</th>
+                <SortableHeader label="Pot" column="pot" sort={sort} onSort={handleSort} />
+                <SortableHeader label="Result" column="result" sort={sort} onSort={handleSort} />
+                <SortableHeader label="Earnings" column="earnings" sort={sort} onSort={handleSort} />
                 <th className="px-3 py-3"></th>
               </tr>
             </thead>
