@@ -268,6 +268,51 @@ const NCAAF = pairs([
   ['james madison', 256], ['james madison dukes', 256],
 ]);
 
+// Euroleague basketball — ESPN doesn't host these, so we use Wikipedia
+// commons logos that are stable, free to hot-link, and consistently sized.
+// Slug = direct PNG URL fragment under upload.wikimedia.org/wikipedia/.
+const EUROLEAGUE = {
+  'real madrid': 'en/thumb/d/d6/Real_Madrid_Baloncesto.svg/200px-Real_Madrid_Baloncesto.svg.png',
+  'fc barcelona': 'en/thumb/4/47/FC_Barcelona_Bàsquet_logo.svg/200px-FC_Barcelona_Bàsquet_logo.svg.png',
+  'barcelona': 'en/thumb/4/47/FC_Barcelona_Bàsquet_logo.svg/200px-FC_Barcelona_Bàsquet_logo.svg.png',
+  'anadolu efes': 'en/thumb/9/96/Anadolu_Efes_S.K._logo.svg/200px-Anadolu_Efes_S.K._logo.svg.png',
+  'fenerbahce': 'en/thumb/1/15/Fenerbahçe_Men%27s_Basketball_logo.svg/200px-Fenerbahçe_Men%27s_Basketball_logo.svg.png',
+  'fenerbahçe': 'en/thumb/1/15/Fenerbahçe_Men%27s_Basketball_logo.svg/200px-Fenerbahçe_Men%27s_Basketball_logo.svg.png',
+  'fenerbahce beko': 'en/thumb/1/15/Fenerbahçe_Men%27s_Basketball_logo.svg/200px-Fenerbahçe_Men%27s_Basketball_logo.svg.png',
+  'panathinaikos': 'en/thumb/9/97/Panathinaikos_BC_logo.svg/200px-Panathinaikos_BC_logo.svg.png',
+  'panathinaikos aktor': 'en/thumb/9/97/Panathinaikos_BC_logo.svg/200px-Panathinaikos_BC_logo.svg.png',
+  'olympiacos': 'en/thumb/e/e0/Olympiacos_BC_logo.svg/200px-Olympiacos_BC_logo.svg.png',
+  'olympiakos': 'en/thumb/e/e0/Olympiacos_BC_logo.svg/200px-Olympiacos_BC_logo.svg.png',
+  'cska moscow': 'en/thumb/a/a8/PBC_CSKA_Moscow_logo.svg/200px-PBC_CSKA_Moscow_logo.svg.png',
+  'maccabi tel aviv': 'en/thumb/4/4a/Maccabi_Tel_Aviv_BC_logo.svg/200px-Maccabi_Tel_Aviv_BC_logo.svg.png',
+  'maccabi playtika tel aviv': 'en/thumb/4/4a/Maccabi_Tel_Aviv_BC_logo.svg/200px-Maccabi_Tel_Aviv_BC_logo.svg.png',
+  'zalgiris kaunas': 'en/thumb/6/6b/Žalgiris_Kaunas_logo.svg/200px-Žalgiris_Kaunas_logo.svg.png',
+  'zalgiris': 'en/thumb/6/6b/Žalgiris_Kaunas_logo.svg/200px-Žalgiris_Kaunas_logo.svg.png',
+  'žalgiris kaunas': 'en/thumb/6/6b/Žalgiris_Kaunas_logo.svg/200px-Žalgiris_Kaunas_logo.svg.png',
+  'baskonia': 'en/thumb/3/3b/Saski_Baskonia_logo.svg/200px-Saski_Baskonia_logo.svg.png',
+  'baskonia vitoria-gasteiz': 'en/thumb/3/3b/Saski_Baskonia_logo.svg/200px-Saski_Baskonia_logo.svg.png',
+  'bayern munich': 'en/thumb/6/65/FC_Bayern_München_logo_%282017%29.svg/200px-FC_Bayern_München_logo_%282017%29.svg.png',
+  'fc bayern munich': 'en/thumb/6/65/FC_Bayern_München_logo_%282017%29.svg/200px-FC_Bayern_München_logo_%282017%29.svg.png',
+  'alba berlin': 'en/thumb/8/8d/ALBA_Berlin_logo.svg/200px-ALBA_Berlin_logo.svg.png',
+  'olimpia milano': 'en/thumb/c/c8/Olimpia_Milano_logo.svg/200px-Olimpia_Milano_logo.svg.png',
+  'ea7 emporio armani milan': 'en/thumb/c/c8/Olimpia_Milano_logo.svg/200px-Olimpia_Milano_logo.svg.png',
+  'virtus bologna': 'en/thumb/0/01/Virtus_Pallacanestro_Bologna_logo.svg/200px-Virtus_Pallacanestro_Bologna_logo.svg.png',
+  'virtus segafredo bologna': 'en/thumb/0/01/Virtus_Pallacanestro_Bologna_logo.svg/200px-Virtus_Pallacanestro_Bologna_logo.svg.png',
+  'asvel': 'en/thumb/4/4a/ASVEL_Basket_logo.svg/200px-ASVEL_Basket_logo.svg.png',
+  'ldlc asvel villeurbanne': 'en/thumb/4/4a/ASVEL_Basket_logo.svg/200px-ASVEL_Basket_logo.svg.png',
+  'monaco': 'en/thumb/8/8b/AS_Monaco_Basket_logo.svg/200px-AS_Monaco_Basket_logo.svg.png',
+  'as monaco basket': 'en/thumb/8/8b/AS_Monaco_Basket_logo.svg/200px-AS_Monaco_Basket_logo.svg.png',
+  'paris basketball': 'en/thumb/6/6e/Paris_Basketball_logo.svg/200px-Paris_Basketball_logo.svg.png',
+  'partizan': 'en/thumb/8/8b/KK_Partizan_logo.svg/200px-KK_Partizan_logo.svg.png',
+  'partizan mozzart bet belgrade': 'en/thumb/8/8b/KK_Partizan_logo.svg/200px-KK_Partizan_logo.svg.png',
+  'crvena zvezda': 'en/thumb/5/57/KK_Crvena_zvezda_logo.svg/200px-KK_Crvena_zvezda_logo.svg.png',
+  'red star belgrade': 'en/thumb/5/57/KK_Crvena_zvezda_logo.svg/200px-KK_Crvena_zvezda_logo.svg.png',
+  'valencia basket': 'en/thumb/9/9d/Valencia_Basket_logo.svg/200px-Valencia_Basket_logo.svg.png',
+  'valencia': 'en/thumb/9/9d/Valencia_Basket_logo.svg/200px-Valencia_Basket_logo.svg.png',
+  'dubai bc': 'en/thumb/d/d6/Dubai_Basketball_logo.svg/200px-Dubai_Basketball_logo.svg.png',
+  'hapoel tel aviv': 'en/thumb/0/0e/Hapoel_Tel_Aviv_B.C._logo.svg/200px-Hapoel_Tel_Aviv_B.C._logo.svg.png',
+};
+
 const SOCCER = pairs([
   // Premier League
   ['arsenal', 359],
@@ -433,6 +478,13 @@ function flagBuilder(code) {
   return `${FLAG_BASE}/${code}.png`;
 }
 
+// Euroleague logos live on wikimedia commons. The `slug` is already a
+// full path fragment (e.g. "en/thumb/...png") so we just prepend the
+// CDN host.
+function wikiBuilder(slug) {
+  return `https://upload.wikimedia.org/wikipedia/${slug}`;
+}
+
 // Keys here cover BOTH the short codes we use internally
 // ("nfl", "nba", …) AND the Odds-API / Goalserve style composite
 // keys that actually come back on game.sport in the wild
@@ -469,6 +521,46 @@ const SPORT_MAPS = {
   // Int'l Hockey (Goalserve "icehockey_intl") — country flags.
   icehockey_intl: { map: INTL_HOCKEY, buildUrl: flagBuilder },
   intl_hockey: { map: INTL_HOCKEY, buildUrl: flagBuilder },
+  // Euroleague basketball — wiki commons logos.
+  basketball_euroleague: { map: EUROLEAGUE, buildUrl: wikiBuilder },
+  euroleague: { map: EUROLEAGUE, buildUrl: wikiBuilder },
+  euro_basketball: { map: EUROLEAGUE, buildUrl: wikiBuilder },
+  'euro basketball': { map: EUROLEAGUE, buildUrl: wikiBuilder },
+};
+
+// Friendly league names (case-insensitive) that show up as `game.sportName`
+// — alias them to the canonical SPORT_MAPS keys so callers can pass either
+// `game.sport` (machine key) or `game.sportName` (display name) and still
+// resolve a logo. Without these, rows where `game.sport` is missing
+// rendered just initials even though `game.sportName` clearly said "MLB".
+const LEAGUE_ALIASES = {
+  'nba': 'nba',
+  'nfl': 'nfl',
+  'nhl': 'nhl',
+  'mlb': 'mlb',
+  'ncaab': 'ncaab',
+  'ncaaf': 'ncaaf',
+  'ncaa basketball': 'ncaab',
+  'ncaa football': 'ncaaf',
+  'college basketball': 'ncaab',
+  'college football': 'ncaaf',
+  'euroleague': 'basketball_euroleague',
+  'euro basketball': 'basketball_euroleague',
+  'european basketball': 'basketball_euroleague',
+  'turkey basketball': 'basketball_euroleague',
+  'italy basketball': 'basketball_euroleague',
+  'greece basketball': 'basketball_euroleague',
+  'spain basketball': 'basketball_euroleague',
+  'france basketball': 'basketball_euroleague',
+  'germany basketball': 'basketball_euroleague',
+  'basketball': 'basketball_euroleague',
+  'football': 'nfl',
+  'baseball': 'mlb',
+  'hockey': 'nhl',
+  "int'l hockey": 'icehockey_intl',
+  'intl hockey': 'icehockey_intl',
+  'international hockey': 'icehockey_intl',
+  'soccer': 'soccer',
 };
 
 function normalizeName(name) {
@@ -481,10 +573,15 @@ function normalizeName(name) {
 }
 
 function resolveSportEntry(key) {
+  if (!key) return null;
   if (SPORT_MAPS[key]) return SPORT_MAPS[key];
+  if (LEAGUE_ALIASES[key] && SPORT_MAPS[LEAGUE_ALIASES[key]]) {
+    return SPORT_MAPS[LEAGUE_ALIASES[key]];
+  }
   // Any soccer_<league> composite (soccer_epl, soccer_mls, soccer_uefa_*, ...)
   // routes to the shared SOCCER club map.
   if (key.startsWith('soccer')) return SPORT_MAPS.soccer;
+  if (key.startsWith('basketball_eur')) return SPORT_MAPS.basketball_euroleague;
   return null;
 }
 
@@ -513,7 +610,7 @@ export function getTeamLogo(name, sport) {
   return entry.buildUrl(slug);
 }
 
-const ANY_SPORT_FALLBACK_ORDER = ['nba', 'nfl', 'nhl', 'mlb'];
+const ANY_SPORT_FALLBACK_ORDER = ['nba', 'nfl', 'nhl', 'mlb', 'ncaab', 'ncaaf', 'basketball_euroleague', 'soccer', 'icehockey_intl'];
 
 export function getTeamLogoAnySport(name) {
   if (!name) return null;

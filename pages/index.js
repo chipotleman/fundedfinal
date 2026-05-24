@@ -1569,14 +1569,14 @@ export default function Dashboard() {
                     >
                       <div className="flex items-center justify-between mb-0.5">
                         <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: '190px' }}>
-                          <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} size={18} />
+                          <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={18} />
                           <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.awayTeamFull || game.awayTeam}</span>
                         </div>
                         {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>}
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: '190px' }}>
-                          <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport} size={18} />
+                          <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={18} />
                           <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.homeTeamFull || game.homeTeam}</span>
                         </div>
                         {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>}
@@ -1689,7 +1689,7 @@ export default function Dashboard() {
                       >
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: 'calc(100% - 40px)' }}>
-                            <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} size={20} />
+                            <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={20} />
                             <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.awayTeamFull || game.awayTeam}</span>
                           </div>
                           {(isLive || isFinal) ? (
@@ -1700,7 +1700,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: 'calc(100% - 40px)' }}>
-                            <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport} size={20} />
+                            <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={20} />
                             <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.homeTeamFull || game.homeTeam}</span>
                           </div>
                           {(isLive || isFinal) ? (

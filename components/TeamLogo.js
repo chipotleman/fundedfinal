@@ -31,12 +31,26 @@ function teamInitials(name) {
 export default function TeamLogo({
   name,
   sport,
+  sportName,
+  league,
   size = 20,
   accent,
   className = '',
   style: extraStyle,
 }) {
-  const logoUrl = sport ? getTeamLogo(name, sport) : getTeamLogoAnySport(name);
+  // Try every hint we were given (machine key first, then friendly
+  // names like "MLB" / "EUROLEAGUE"), and finally fall back to the
+  // any-sport probe so we still surface a logo when the caller can't
+  // tell us which league a team belongs to. Without the fallback,
+  // games whose `sport` field is missing render bare initials even
+  // for major leagues whose teams are all in our maps.
+  const hints = [sport, sportName, league].filter(Boolean);
+  let logoUrl = null;
+  for (const hint of hints) {
+    logoUrl = getTeamLogo(name, hint);
+    if (logoUrl) break;
+  }
+  if (!logoUrl) logoUrl = getTeamLogoAnySport(name);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
