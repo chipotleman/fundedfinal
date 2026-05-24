@@ -15,9 +15,9 @@ const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it be
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
-  { id: 'rush', label: 'RUSH', icon: '⚡', description: 'Pick 6 props from a live game', coins: 10000, color: '#f59e0b' },
-  { id: 'original', label: 'ORIGINAL', icon: '🏆', description: 'Highest balance after all games end', coins: 10000, recommended: true, color: '#3b82f6' },
-  { id: 'tournament', label: 'TOURNAMENT', icon: '👑', description: '3-day battle, massive bankroll', coins: 100000, color: '#10b981' },
+  { id: 'rush', label: 'RUSH', tagline: 'FAST · INTENSE', icon: '⚡', description: 'Pick 6 props from a live game', coins: 10000, color: '#10b981' },
+  { id: 'original', label: 'ORIGINAL', tagline: 'BALANCED · COMPETITIVE', icon: '🏆', description: 'Highest balance after all games end', coins: 10000, recommended: true, color: '#3b82f6' },
+  { id: 'tournament', label: 'TOURNAMENT', tagline: 'BIG STAKES · BIGGER WINS', icon: '👑', description: '3-day battle, massive bankroll', coins: 100000, color: '#f97316' },
 ];
 
 const INVITE_EXPIRY_HOURS = 24;
@@ -663,25 +663,65 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   smaller all-caps eyebrow for the subtitle. Keeps
                   PlayFriendModal in the same visual family as the rest
                   of the battle UI. */}
-              <h2
-                id="pfm-title"
-                className="font-black uppercase"
-                style={{
-                  color: textPrimary,
-                  fontSize: '20px',
-                  lineHeight: 1.05,
-                  letterSpacing: '0.06em',
-                  textShadow: '0 2px 0 #000',
-                }}
-              >
-                Play a Friend
-              </h2>
+              {/* Arcade-neon hero title — same italic gradient + lightning
+                  bolts as QuickMatchModal so both 1v1 entry flows share
+                  the same theme. */}
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  style={{
+                    fontSize: 22,
+                    lineHeight: 1,
+                    color: '#facc15',
+                    filter:
+                      'drop-shadow(0 0 10px rgba(251,146,60,0.9)) drop-shadow(0 0 16px rgba(236,72,153,0.55)) drop-shadow(0 2px 0 #0a0a0a)',
+                  }}
+                >
+                  ⚡
+                </span>
+                <h2
+                  id="pfm-title"
+                  className="font-black uppercase"
+                  style={{
+                    fontSize: 'clamp(22px, 5.5vw, 30px)',
+                    lineHeight: 0.95,
+                    letterSpacing: '0.01em',
+                    fontStyle: 'italic',
+                    WebkitTextStroke: '1.5px #0a0a0a',
+                    textShadow:
+                      '0 3px 0 #0a0a0a,' +
+                      '0 0 14px rgba(251,146,60,0.9),' +
+                      '0 0 26px rgba(236,72,153,0.6)',
+                    background: 'linear-gradient(180deg, #fef08a 0%, #facc15 45%, #fb923c 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    whiteSpace: 'nowrap',
+                    margin: 0,
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                  }}
+                >
+                  Play a Friend
+                </h2>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    fontSize: 22,
+                    lineHeight: 1,
+                    color: '#facc15',
+                    filter:
+                      'drop-shadow(0 0 10px rgba(251,146,60,0.9)) drop-shadow(0 0 16px rgba(236,72,153,0.55)) drop-shadow(0 2px 0 #0a0a0a)',
+                  }}
+                >
+                  ⚡
+                </span>
+              </div>
               <p
                 className="mt-1 font-extrabold uppercase"
                 style={{
-                  color: '#60a5fa',
+                  color: '#7dd3fc',
                   fontSize: '10px',
-                  letterSpacing: '0.18em',
+                  letterSpacing: '0.22em',
+                  textShadow: '0 0 8px rgba(6,182,212,0.55)',
                 }}
               >
                 Challenge someone to a 1v1 battle
@@ -1463,24 +1503,24 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                             }
                           }}
                           title={betaLocked ? 'Available after the public beta — Original is the only mode during beta.' : (locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined)}
-                          className="pfm-cartoon-btn flex flex-col items-center text-center px-1.5 py-2.5 rounded-2xl relative"
+                          className="pfm-cartoon-btn flex flex-col items-center text-center px-1.5 pt-6 pb-2.5 rounded-2xl relative overflow-hidden"
                           style={
                             selected
                               ? {
-                                  background: `linear-gradient(180deg,${tint},${elevatedBg})`,
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 16px ${glow}`,
+                                  background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.08) 100%), #0a0a0a`,
+                                  border: `2.5px solid ${mode.color}`,
+                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 26px ${glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
-                                  minHeight: 88,
+                                  minHeight: 132,
                                 }
                               : {
-                                  backgroundColor: elevatedBg,
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: '0 3px 0 #0a0a0a',
+                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), #0a0a0a`,
+                                  border: `2.5px solid ${mode.color}`,
+                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 18px ${glow}`,
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
-                                  minHeight: 88,
+                                  minHeight: 132,
                                 }
                           }
                         >
@@ -1544,11 +1584,111 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               Locked
                             </span>
                           )}
-                          <span className="text-lg leading-none mb-1">{mode.icon}</span>
-                          <span className="font-extrabold text-[11px] leading-tight uppercase tracking-wider" style={{ color: textPrimary }}>{mode.label}</span>
-                          <span className="text-[8px] uppercase tracking-wider mt-1 leading-none" style={{ color: textMuted }}>Start with</span>
-                          <span className="font-extrabold text-[11px] mt-0.5" style={{ color: textPrimary }}>{mode.coins.toLocaleString()}</span>
-                          <span className="text-[9px]" style={{ color: textMuted }}>coins</span>
+                          {/* Internal radial color glow + mode-specific
+                              themed backdrop — mirrors QuickMatchModal so
+                              the two 1v1 entry flows look identical. */}
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: `radial-gradient(ellipse at 50% 38%, ${glow} 0%, transparent 60%)`,
+                              borderRadius: 'inherit',
+                              opacity: 0.9,
+                            }}
+                          />
+                          {mode.id === 'rush' && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute inset-0 pointer-events-none overflow-hidden"
+                              style={{ borderRadius: 'inherit', opacity: 0.9 }}
+                            >
+                              <span
+                                className="absolute inset-0"
+                                style={{
+                                  background:
+                                    'repeating-linear-gradient(115deg, rgba(16,185,129,0.18) 0 6px, transparent 6px 16px)',
+                                }}
+                              />
+                              <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))' }}>⚡</span>
+                              <span style={{ position: 'absolute', bottom: 30, right: 6, fontSize: 14, opacity: 0.5, color: '#fde047', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))', transform: 'rotate(18deg)' }}>⚡</span>
+                            </span>
+                          )}
+                          {mode.id === 'original' && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute inset-0 pointer-events-none overflow-hidden"
+                              style={{ borderRadius: 'inherit', opacity: 0.85 }}
+                            >
+                              <span
+                                className="absolute inset-0"
+                                style={{
+                                  background:
+                                    'radial-gradient(ellipse at 50% 100%, rgba(250,204,21,0.22) 0%, transparent 55%)',
+                                }}
+                              />
+                              <span
+                                className="absolute"
+                                style={{
+                                  top: 14, left: '50%', transform: 'translateX(-50%)',
+                                  width: 56, height: 26, borderRadius: '50%',
+                                  background: 'radial-gradient(ellipse, rgba(250,204,21,0.45), transparent 70%)',
+                                  filter: 'blur(2px)',
+                                }}
+                              />
+                              <span style={{ position: 'absolute', top: 10, left: 8, fontSize: 9, color: '#facc15', opacity: 0.7 }}>★</span>
+                              <span style={{ position: 'absolute', top: 10, right: 8, fontSize: 9, color: '#facc15', opacity: 0.7 }}>★</span>
+                            </span>
+                          )}
+                          {mode.id === 'tournament' && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute inset-0 pointer-events-none overflow-hidden"
+                              style={{ borderRadius: 'inherit', opacity: 0.9 }}
+                            >
+                              <span
+                                className="absolute inset-0"
+                                style={{
+                                  background:
+                                    'repeating-linear-gradient(180deg, rgba(249,115,22,0.14) 0 3px, transparent 3px 9px)',
+                                }}
+                              />
+                              <span
+                                className="absolute"
+                                style={{
+                                  inset: 0,
+                                  background:
+                                    'radial-gradient(circle at 50% 28%, rgba(250,204,21,0.35) 0%, transparent 45%)',
+                                }}
+                              />
+                              <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
+                              <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
+                              <span style={{ position: 'absolute', bottom: 28, left: 8, fontSize: 9, color: '#fb923c', opacity: 0.7 }}>♛</span>
+                              <span style={{ position: 'absolute', bottom: 28, right: 8, fontSize: 9, color: '#fb923c', opacity: 0.7 }}>♛</span>
+                            </span>
+                          )}
+                          <span
+                            className="leading-none mb-2 relative"
+                            style={{
+                              fontSize: 38,
+                              filter: `drop-shadow(0 0 14px ${glow}) drop-shadow(0 2px 0 #000)`,
+                            }}
+                          >
+                            {mode.icon}
+                          </span>
+                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.label}</span>
+                          {mode.tagline && (
+                            <span
+                              className="text-[8px] font-extrabold uppercase mt-1 leading-none relative"
+                              style={{ color: '#e2e8f0', letterSpacing: '0.16em', opacity: 0.9 }}
+                            >
+                              {mode.tagline}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center gap-1.5 mt-2 relative">
+                            <span className="font-black text-[15px] leading-none" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
+                            <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, filter: 'drop-shadow(0 0 6px #fbbf24)' }}>🪙</span>
+                          </span>
+                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>coins</span>
                         </button>
                       );
                     })}
@@ -1648,16 +1788,31 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               onClick={sendInvite}
               disabled={sending || hasActiveMatchup}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
-              className="pfm-cartoon-btn w-full text-white font-extrabold uppercase tracking-wider py-3.5 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed relative"
+              className="pfm-cartoon-btn w-full font-black uppercase rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 sm:gap-4 relative"
               style={{
-                background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 5px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55)',
-                textShadow: '0 1px 0 rgba(0,0,0,0.35)',
-                fontSize: '15px',
+                background: hasActiveMatchup
+                  ? 'linear-gradient(180deg,#3b82f6,#2563eb)'
+                  : 'linear-gradient(180deg,#fde047 0%, #f97316 60%, #ea580c 100%)',
+                border: '3px solid #0a0a0a',
+                boxShadow: hasActiveMatchup
+                  ? '0 5px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55)'
+                  : '0 5px 0 #0a0a0a, 0 0 28px rgba(249,115,22,0.6), 0 0 48px rgba(236,72,153,0.35)',
+                color: hasActiveMatchup ? '#fff' : '#0a0a0a',
+                textShadow: hasActiveMatchup ? '0 1px 0 rgba(0,0,0,0.35)' : '0 2px 0 rgba(255,255,255,0.35)',
+                fontStyle: hasActiveMatchup ? 'normal' : 'italic',
+                letterSpacing: '0.08em',
+                padding: '14px 14px',
+                fontSize: 'clamp(16px, 4.5vw, 22px)',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
               }}
             >
+              {!hasActiveMatchup && !sending && (
+                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#0a0a0a' }}>«</span>
+              )}
               <span className="relative z-10">{sending ? 'Sending…' : hasActiveMatchup ? 'In a battle' : `Challenge ${selectedFriend.username}`}</span>
+              {!hasActiveMatchup && !sending && (
+                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#0a0a0a' }}>»</span>
+              )}
             </button>
           </div>
         )}
