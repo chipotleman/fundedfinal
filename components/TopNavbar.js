@@ -1162,7 +1162,7 @@ export default function TopNavbar({
           ref={condensedBarRef}
           data-topnavbar="true"
           data-condensed-topnavbar="true"
-          className="fixed top-0 left-0 right-0 z-50 piks-condensed-bar lg:hidden"
+          className="fixed top-0 left-0 right-0 z-50 piks-condensed-bar"
           style={{
             backgroundColor: '#000000',
             paddingTop: 'env(safe-area-inset-top, 0px)',
