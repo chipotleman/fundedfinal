@@ -1261,10 +1261,11 @@ function SlideToForfeit({ onConfirm, disabled = false }) {
       ref={trackRef}
       style={{
         position: 'relative',
-        height: 48,
-        borderRadius: 999,
-        background: trackBg,
-        border: '1px solid rgba(239,68,68,0.40)',
+        height: 52,
+        borderRadius: 14,
+        background: `linear-gradient(180deg, rgba(15,20,36,0.95), rgba(10,14,28,0.95)), ${trackBg}`,
+        border: '2.5px solid #0a0a0a',
+        boxShadow: `0 4px 0 #0a0a0a, inset 0 0 0 1.5px rgba(239,68,68,${0.35 + progress * 0.4}), inset 0 0 18px rgba(239,68,68,${0.12 + progress * 0.2})`,
         overflow: 'hidden',
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -1281,16 +1282,17 @@ function SlideToForfeit({ onConfirm, disabled = false }) {
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'none',
-          color: 'rgba(252,165,165,0.95)',
-          fontSize: 12,
-          fontWeight: 600,
-          letterSpacing: '0.06em',
+          color: '#fca5a5',
+          fontSize: 11.5,
+          fontWeight: 900,
+          letterSpacing: '0.18em',
           textTransform: 'uppercase',
+          textShadow: '0 2px 0 #0a0a0a, 0 0 10px rgba(239,68,68,0.5)',
           opacity: confirming ? 0 : Math.max(0.18, 1 - progress * 1.4),
           transition: dragging ? 'none' : 'opacity 200ms ease',
         }}
       >
-        {confirming ? 'Forfeiting…' : 'Slide to forfeit'}
+        {confirming ? 'Forfeiting…' : '→  Slide to Forfeit  →'}
       </div>
       <div
         role="button"
@@ -1307,8 +1309,9 @@ function SlideToForfeit({ onConfirm, disabled = false }) {
           width: THUMB,
           height: THUMB,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #ef4444, #f97316)',
-          boxShadow: '0 4px 14px rgba(239,68,68,0.45)',
+          background: 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)',
+          border: '2.5px solid #0a0a0a',
+          boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(239,68,68,0.65)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1319,7 +1322,7 @@ function SlideToForfeit({ onConfirm, disabled = false }) {
           touchAction: 'none',
         }}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>
           <path d="M9 5l7 7-7 7" />
         </svg>
       </div>
@@ -3123,39 +3126,79 @@ function YouVsCard({
               cursor: 'default',
             }}
           >
-            <div className="px-3.5 pt-3 pb-2 flex items-center gap-1.5">
-              <div
-                className={topDotColor === '#f59e0b' || topDotColor === '#06b6d4' ? 'pick-pending-dot' : ''}
-                style={{ width: 6, height: 6, borderRadius: '50%', background: topDotColor, boxShadow: `0 0 6px ${topDotColor}` }}
-              ></div>
-              <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: topDotColor }}>
-                {expandedHeadline}
+            {/* Cartoon-themed headline pill — same 2.5px black border +
+                hard shadow language as the rest of the popup, with the
+                live status color driving the pill background so the
+                headline reads as a "you are here" sticker. */}
+            <div className="px-3.5 pt-3 pb-2 flex items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                style={{
+                  background: `linear-gradient(180deg, ${topDotColor}, ${topDotColor}cc)`,
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 2px 0 #0a0a0a',
+                }}
+              >
+                <span
+                  className={topDotColor === '#f59e0b' || topDotColor === '#06b6d4' ? 'pick-pending-dot' : ''}
+                  style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', boxShadow: '0 0 6px rgba(255,255,255,0.7)' }}
+                />
+                <span className="text-white text-[10px] font-black uppercase tracking-[0.16em]">
+                  {expandedHeadline}
+                </span>
               </span>
             </div>
 
+            {/* Cartoon body card — navy gradient + 2.5px black border +
+                hard shadow + faint cyan inner glow so it matches the
+                modal frame language. */}
             <div className="px-3.5 pb-3">
               <div
-                className="rounded-md px-3 py-2 text-[11px] text-gray-400 leading-snug"
-                style={{ background: '#111', border: '1px solid #1a1a1a' }}
+                className="rounded-xl px-3 py-2.5 text-[11.5px] text-gray-300 leading-snug font-semibold"
+                style={{
+                  background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 3px 0 #0a0a0a, inset 0 0 0 1.5px rgba(6,182,212,0.18)',
+                }}
               >
                 {expandedBody}
               </div>
             </div>
 
+            {/* Cartoon CTA — blue→cyan gradient with chunky black
+                border, hard shadow, inset dark text bar, and a circular
+                cyan-bordered chevron cap on the right edge, matching
+                QuickMatchModal's "PLAY NOW" button language. */}
             <div className="px-3.5 pb-3.5">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleNavigate(); }}
-                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold text-white"
+                className="w-full relative flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-black text-white uppercase tracking-[0.12em]"
                 style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
-                  boxShadow: '0 4px 12px rgba(59,130,246,0.25)',
+                  background: 'linear-gradient(180deg,#3b82f6 0%,#0891b2 100%)',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(6,182,212,0.45)',
+                  letterSpacing: '0.14em',
+                  textShadow: '0 2px 0 rgba(0,0,0,0.45)',
                 }}
               >
                 {ctaText}
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                </svg>
+                <span
+                  aria-hidden="true"
+                  className="inline-flex items-center justify-center"
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    background: '#0a0e1c',
+                    border: '2px solid #67e8f9',
+                    boxShadow: '0 0 8px rgba(6,182,212,0.7)',
+                  }}
+                >
+                  <svg width="11" height="11" fill="none" stroke="#67e8f9" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
               </button>
             </div>
 
