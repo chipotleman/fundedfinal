@@ -313,6 +313,9 @@ export default function GameDetail() {
               homeTeam={game.homeTeam || game.homeTeamFull}
               awayTeam={game.awayTeam || game.awayTeamFull}
               liveOdds={{ home: moneyline.home, away: moneyline.away }}
+              commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
+              isLive={isLive}
+              isFinal={isFinal}
             />
           </div>
         )}

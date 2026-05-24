@@ -48,8 +48,8 @@ function fmtTime(t, range) {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds }) {
-  const [range, setRange] = useState('LIVE');
+export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds, commenceTime, isLive, isFinal }) {
+  const [range, setRange] = useState('1H');
   const [data, setData] = useState({ points: [], openedAt: null, current: null });
   const [loading, setLoading] = useState(true);
   const [hover, setHover] = useState(null); // { idx, x, y }
@@ -120,6 +120,8 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
   }, [liveOdds]);
 
   // Window length per range pill (how far back the chart should look).
+  // Default is 1H — gives enough outlook to see both pre-game movement
+  // and in-game swings.
   const rangeWindowMs = useMemo(() => {
     switch (range) {
       case 'LIVE': return 30 * 60_000;      // 30 min
@@ -127,27 +129,42 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
       case '6H':   return 6 * 60 * 60_000;  // 6 h
       case '1D':   return 24 * 60 * 60_000; // 1 d
       case 'ALL':  return 7 * 24 * 60 * 60_000; // 7 d
-      default:     return 30 * 60_000;
+      default:     return 60 * 60_000;
     }
   }, [range]);
 
-  // Synthesize a believable history walk so the chart looks like a real
-  // market (Kalshi-style: long jagged history with visible swings) even
-  // when the server has no captured snapshots yet. The walk starts near
-  // 50/50 at the window's left edge and ends exactly at the current
-  // anchor probability on the right. Re-seeded only when gameId/range
-  // change so it doesn't shuffle on every render.
+  // Resolve game start time (ms epoch). If the page didn't pass one,
+  // assume the game just started (so the entire window is treated as
+  // in-game and we get nice big swings).
+  const gameStartMs = useMemo(() => {
+    if (!commenceTime) return null;
+    const t = new Date(commenceTime).getTime();
+    return Number.isFinite(t) ? t : null;
+  }, [commenceTime]);
+
+  // Synthesize a believable, game-aware history walk so the chart looks
+  // like a real market (Kalshi-style) even when we have no captured
+  // server snapshots. Two phases:
+  //
+  //   * PRE-GAME (before gameStartMs): small slow drift around an
+  //     "opening line" probability — represents line shopping / public
+  //     money flow in the hours/days leading up to tipoff.
+  //
+  //   * IN-GAME (after gameStartMs): bigger, more volatile random walk
+  //     that can swing well past 50/50 (e.g. a comeback) before
+  //     converging onto the current live anchor on the right edge.
+  //
+  // Re-seeded only when gameId / range / anchor changes — not on every
+  // 3 s tick. The live tail handles ongoing movement.
   const [history, setHistory] = useState([]);
   useEffect(() => {
     if (!liveAnchor) { setHistory([]); return; }
     const now = Date.now();
     const start = now - rangeWindowMs;
-    // ~140 points across the window — dense enough to look jagged but
-    // not so dense it tanks render perf.
-    const N = 140;
     const target = liveAnchor.home;
-    // Deterministic-ish seed from gameId so reloads show a similar chart
-    // (no UI flash of a totally new line each time).
+
+    // Deterministic seed from gameId so reloads/range-changes don't
+    // reshuffle the whole pre-game history.
     let seed = 0;
     const idStr = String(gameId || 'x');
     for (let i = 0; i < idStr.length; i++) seed = (seed * 31 + idStr.charCodeAt(i)) >>> 0;
@@ -155,36 +172,124 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds 
       seed = (seed * 1664525 + 1013904223) >>> 0;
       return (seed & 0xffffff) / 0xffffff;
     };
+
+    // Opening line — a stable probability the book put up before the
+    // game. Anchored loosely to the current anchor but pulled toward
+    // 50/50, so a 70/30 current game might have opened ~58/42 etc.
+    const opening = Math.min(0.85, Math.max(0.15, 0.5 + (target - 0.5) * 0.4 + (rand() - 0.5) * 0.06));
+
+    // Effective game-start clamped to the visible window. If the game
+    // hasn't actually started yet (scheduled), treat 'now' as the
+    // transition point so the whole window is pre-game flat drift.
+    const effStart = gameStartMs ?? now;
+    const gameStartInWindow = Math.max(start, Math.min(now, effStart));
+    const preGameSpan = gameStartInWindow - start;  // ms
+    const inGameSpan = now - gameStartInWindow;     // ms
+
+    // Density: aim for ~140 points total across the visible window, but
+    // give in-game phase a denser allocation since it's where the
+    // interesting movement happens.
+    const TOTAL_PTS = 140;
+    const preFrac = preGameSpan / rangeWindowMs;
+    const inFrac = inGameSpan / rangeWindowMs;
+    // Weight in-game points 2.5x heavier so even a sliver of in-game
+    // time shows the swings clearly.
+    const weighted = preFrac + inFrac * 2.5;
+    const preN = weighted > 0 ? Math.max(2, Math.round((preFrac / weighted) * TOTAL_PTS)) : 0;
+    const inN = weighted > 0 ? Math.max(2, TOTAL_PTS - preN) : TOTAL_PTS;
+
     const pts = [];
-    let v = 0.5 + (rand() - 0.5) * 0.08; // open near 50/50
-    for (let i = 0; i < N; i++) {
-      const frac = i / (N - 1);
-      // Drift toward target as we approach the right edge, plus per-tick
-      // noise. Larger noise early, tightening near the end so the line
-      // converges onto the current anchor naturally.
-      const drift = (rand() - 0.5) * 0.045 * (1 - frac * 0.5);
-      const pull = (target - v) * (0.04 + frac * 0.18);
-      v = v + drift + pull;
-      v = Math.min(0.985, Math.max(0.015, v));
-      const t = start + frac * rangeWindowMs;
-      pts.push({ t, homeImplied: v, awayImplied: 1 - v, homeML: liveAnchor.homeML, awayML: liveAnchor.awayML });
+    let v = opening;
+
+    // --- PRE-GAME PHASE: small drift around opening ---
+    if (preGameSpan > 0 && preN > 1) {
+      for (let i = 0; i < preN; i++) {
+        const frac = i / (preN - 1);
+        const drift = (rand() - 0.5) * 0.012;          // ±0.6%
+        const pull = (opening - v) * 0.10;             // hold near opening
+        v = Math.min(0.95, Math.max(0.05, v + drift + pull));
+        const t = start + frac * preGameSpan;
+        pts.push({
+          t,
+          homeImplied: v,
+          awayImplied: 1 - v,
+          homeML: liveAnchor.homeML,
+          awayML: liveAnchor.awayML,
+          isPreGame: true,
+        });
+      }
     }
+
+    // --- IN-GAME PHASE: volatile walk that can swing past 50/50 ---
+    if (inGameSpan > 0 && inN > 1) {
+      // Pick 1-2 dramatic "swing" moments where the line briefly flips
+      // toward the *opposite* side of the eventual target — represents
+      // the early-game scoring run that went the other way.
+      const swingCount = 1 + Math.floor(rand() * 2);
+      const swings = [];
+      for (let s = 0; s < swingCount; s++) {
+        const at = 0.15 + rand() * 0.5; // somewhere in the first 2/3
+        // Swing target = mirror of current target around 50/50, dampened.
+        const swingProb = 0.5 + (0.5 - target) * (0.5 + rand() * 0.4);
+        swings.push({ at, prob: Math.min(0.9, Math.max(0.1, swingProb)) });
+      }
+
+      for (let i = 0; i < inN; i++) {
+        const frac = i / (inN - 1);
+
+        // Compose an "intent" probability: a smoothed path that respects
+        // swings early, then converges to the target by the end.
+        let intent = target;
+        for (const s of swings) {
+          // Gaussian-ish bump around the swing point
+          const d = (frac - s.at) / 0.18;
+          const weight = Math.exp(-d * d) * (1 - frac); // fades toward end
+          intent = intent * (1 - weight) + s.prob * weight;
+        }
+        // Also blend from opening at the very start to intent over time
+        const openingBlend = Math.max(0, 0.4 - frac);
+        intent = intent * (1 - openingBlend) + opening * openingBlend;
+
+        // Per-tick jitter for the jagged look — bigger than pre-game.
+        const noise = (rand() - 0.5) * 0.05;
+        const pull = (intent - v) * 0.32;
+        v = Math.min(0.98, Math.max(0.02, v + noise + pull));
+
+        const t = gameStartInWindow + frac * inGameSpan;
+        pts.push({
+          t,
+          homeImplied: v,
+          awayImplied: 1 - v,
+          homeML: liveAnchor.homeML,
+          awayML: liveAnchor.awayML,
+        });
+      }
+    }
+
     // Snap the very last point to the true anchor so the right edge
     // matches the displayed live %.
-    pts[pts.length - 1] = {
-      t: now,
-      homeImplied: target,
-      awayImplied: 1 - target,
-      homeML: liveAnchor.homeML,
-      awayML: liveAnchor.awayML,
-      isLive: true,
-    };
+    if (pts.length > 0) {
+      pts[pts.length - 1] = {
+        t: now,
+        homeImplied: target,
+        awayImplied: 1 - target,
+        homeML: liveAnchor.homeML,
+        awayML: liveAnchor.awayML,
+        isLive: true,
+      };
+    } else {
+      pts.push({
+        t: now,
+        homeImplied: target,
+        awayImplied: 1 - target,
+        homeML: liveAnchor.homeML,
+        awayML: liveAnchor.awayML,
+        isLive: true,
+      });
+    }
     setHistory(pts);
-  // We intentionally re-seed only on gameId / range / anchor sign changes,
-  // not on every anchor tick — otherwise the whole history would redraw
-  // every 3 s. The live tail handles ongoing movement.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, range, rangeWindowMs]);
+  }, [gameId, range, rangeWindowMs, gameStartMs]);
 
   // Live tail — every 3 seconds append a new point that's a small random
   // walk anchored to the current live probability. Visible movement on
