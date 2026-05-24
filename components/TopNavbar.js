@@ -146,18 +146,22 @@ export default function TopNavbar({
   useEffect(() => {
     const updateNavHeight = () => {
       let height = 0;
-      // The condensed bar is mobile-only (sm:hidden), so on sm+ desktop it
-      // never contributes to the pinned height even when `showCondensedBar`
+      // The condensed bar is mobile + iPad only (lg:hidden — hidden at
+      // ≥1024px). Per user prefs ("no hover effects on mobile/iPad")
+      // iPad is grouped with mobile, so the condensed scrolling bar
+      // shows everywhere below `lg`. On true desktop it never
+      // contributes to the pinned height even when `showCondensedBar`
       // is true. Detect that via the actual computed style of the bar.
       const condensedActive = showCondensedBar
         && condensedBarRef.current
         && typeof window !== 'undefined'
         && window.getComputedStyle(condensedBarRef.current).display !== 'none';
-      // The main nav is also sticky on desktop (sm+) regardless of `pinned`
-      // — driven by the `sm:sticky sm:top-0` class on the <nav>. Treat that
-      // as effectively pinned so downstream sticky children line up.
+      // The main nav is sticky on true desktop (lg+) regardless of
+      // `pinned` — driven by the `lg:sticky lg:top-0` class on the
+      // <nav>. Treat that as effectively pinned so downstream sticky
+      // children line up.
       const desktopSticky = typeof window !== 'undefined'
-        && window.matchMedia('(min-width: 640px)').matches;
+        && window.matchMedia('(min-width: 1024px)').matches;
       const navIsPinned = pinned || desktopSticky;
       if (condensedActive) {
         height = condensedBarRef.current.offsetHeight;
@@ -599,7 +603,7 @@ export default function TopNavbar({
       <nav
         ref={navRef}
         data-topnavbar="true"
-        className={`${pinned ? 'sticky top-0' : 'relative sm:sticky sm:top-0'} left-0 right-0 z-50`}
+        className={`${pinned ? 'sticky top-0' : 'relative lg:sticky lg:top-0'} left-0 right-0 z-50`}
         style={{ backgroundColor: '#000000' }}
       >
         <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
@@ -1158,7 +1162,7 @@ export default function TopNavbar({
           ref={condensedBarRef}
           data-topnavbar="true"
           data-condensed-topnavbar="true"
-          className="fixed top-0 left-0 right-0 z-50 piks-condensed-bar sm:hidden"
+          className="fixed top-0 left-0 right-0 z-50 piks-condensed-bar lg:hidden"
           style={{
             backgroundColor: '#000000',
             paddingTop: 'env(safe-area-inset-top, 0px)',
