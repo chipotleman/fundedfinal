@@ -61,6 +61,8 @@ export default function TopNavbar({
   const hasUnviewedAchievements = (unviewedAchievementCount || 0) > 0;
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const notifBellRef = useRef(null);
+  const notifBellRefCondensed = useRef(null);
+  const msgBtnRefCondensed = useRef(null);
   const [showMsgDropdown, setShowMsgDropdown] = useState(false);
   const msgBtnRef = useRef(null);
   const [messageFriend, setMessageFriend] = useState(null);
@@ -1179,6 +1181,153 @@ export default function TopNavbar({
             <div className="flex-1 min-w-0 overflow-hidden">
               {renderCondensedSportPills && renderCondensedSportPills()}
             </div>
+
+            {/* Right cluster: balance pills + notif + msg + (optional) Pik
+                Slip. These mirror the main top nav so the user retains
+                access to balance / alerts / DMs without scrolling back
+                up. Sized compact (icon-only, smaller pills) to share
+                the row with the horizontally-scrolling sport pills on
+                narrow viewports. */}
+            {isLoggedIn && hasActiveChallenge && userProfile && (
+              <button
+                onClick={() => setExplainerType('cash')}
+                title="Real cash balance — click for details"
+                className="no-hover-effect flex-shrink-0"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '4px 9px 4px 8px',
+                  borderRadius: 999,
+                  background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
+                  border: '1.5px solid #0d0d0d',
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                  color: '#04221a',
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                }}
+                aria-label="Cash balance"
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    fontSize: 12,
+                    lineHeight: 1,
+                    fontFamily:
+                      '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
+                    color: 'initial',
+                  }}
+                >
+                  {`💵\uFE0F`}
+                </span>
+                <span style={{ fontWeight: 900, fontSize: 12, letterSpacing: '0.02em' }}>
+                  ${formatMoney(parseFloat(userProfile.bankroll), 0)}
+                </span>
+              </button>
+            )}
+            {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
+              <button
+                onClick={() => setExplainerType('coins')}
+                title="In-battle play coins — click for details"
+                className="no-hover-effect flex-shrink-0"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '4px 9px 4px 8px',
+                  borderRadius: 999,
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
+                  border: '1.5px solid #0d0d0d',
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                  color: '#2a1404',
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                }}
+                aria-label="Matchup coins balance"
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    fontSize: 12,
+                    lineHeight: 1,
+                    fontFamily:
+                      '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
+                    color: 'initial',
+                  }}
+                >
+                  {`⚔\uFE0F`}
+                </span>
+                <span style={{ fontWeight: 900, fontSize: 12, letterSpacing: '0.02em' }}>
+                  {formatMoney(parseFloat(matchupBalance), 0)}
+                </span>
+              </button>
+            )}
+            {isLoggedIn && (
+              <button
+                ref={notifBellRefCondensed}
+                onClick={() => { setShowMsgDropdown(false); setShowNotifDropdown(v => !v); }}
+                className="relative w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 no-hover-effect"
+                title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
+                aria-label="Notifications"
+                aria-haspopup="true"
+                aria-expanded={showNotifDropdown}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {notifTotal > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                    style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
+                  >
+                    {notifTotal > 9 ? '9+' : notifTotal}
+                  </span>
+                )}
+              </button>
+            )}
+            {isLoggedIn && (
+              <button
+                ref={msgBtnRefCondensed}
+                onClick={() => { setShowNotifDropdown(false); setShowMsgDropdown(v => !v); }}
+                className="relative w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 no-hover-effect"
+                title={notifMessages > 0 ? `${notifMessages} unread message${notifMessages > 1 ? 's' : ''}` : 'Messages'}
+                aria-label="Messages"
+                aria-haspopup="true"
+                aria-expanded={showMsgDropdown}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                </svg>
+                {notifMessages > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                    style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
+                  >
+                    {notifMessages > 9 ? '9+' : notifMessages}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Dropdowns for the condensed bar's bell / chat icons.
+                Gated on `showCondensedBar` so they don't fight with the
+                main top-nav dropdowns (which themselves suppress while
+                the condensed bar is engaged). */}
+            {isLoggedIn && (
+              <>
+                <NotificationsDropdown
+                  open={showNotifDropdown && showCondensedBar}
+                  onClose={() => setShowNotifDropdown(false)}
+                  anchorRef={notifBellRefCondensed}
+                />
+                <MessagesDropdown
+                  open={showMsgDropdown && showCondensedBar}
+                  onClose={() => setShowMsgDropdown(false)}
+                  anchorRef={msgBtnRefCondensed}
+                  onSelectConversation={(friend) => setMessageFriend(friend)}
+                />
+              </>
+            )}
 
             {/* Pik Slip — only right-side affordance in the condensed bar.
                 Shown on both mobile and desktop so the bar reads identically
