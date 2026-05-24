@@ -5,6 +5,31 @@ import { messages, profiles, users, friendships } from '../../../shared/schema';
 import { eq, or, and, inArray, sql } from 'drizzle-orm';
 // inArray is still used by the friend-profile lookups below.
 
+// Shared-item messages stash a JSON payload in `content` (see
+// pages/api/social/share.js). Render a friendly one-liner for the
+// conversation list instead of dumping the raw JSON into the preview.
+function buildLastMessagePreview(last) {
+  if (!last) return '';
+  if (last.messageType === 'voice') return '🎤 Voice message';
+  if (
+    last.messageType === 'shared_battle' ||
+    last.messageType === 'shared_post' ||
+    last.messageType === 'shared_result'
+  ) {
+    let note = '';
+    try {
+      const parsed = JSON.parse(last.content || '');
+      if (parsed && typeof parsed.note === 'string') note = parsed.note.trim();
+    } catch (_e) {}
+    const label =
+      last.messageType === 'shared_battle' ? '⚔️ Shared a live battle'
+      : last.messageType === 'shared_result' ? '🏆 Shared a battle result'
+      : '📣 Shared a post';
+    return note ? `${label}: ${note.slice(0, 100)}` : label;
+  }
+  return (last.content || '').slice(0, 120);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -144,9 +169,7 @@ export default async function handler(req, res) {
             senderId: last.senderId,
             receiverId: last.receiverId,
             content: last.content,
-            preview: last.messageType === 'voice'
-              ? '🎤 Voice message'
-              : (last.content || '').slice(0, 120),
+            preview: buildLastMessagePreview(last),
             messageType: last.messageType,
             attachmentUrl: last.attachmentUrl,
             attachmentDurationMs: last.attachmentDurationMs,

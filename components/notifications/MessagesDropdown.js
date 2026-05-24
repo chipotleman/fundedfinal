@@ -3,6 +3,34 @@ import { useRouter } from 'next/router';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import UserAvatar from '../UserAvatar';
 
+// Mirror of pages/api/messages/conversations.js `buildLastMessagePreview`.
+// Shared-item messages stash a JSON payload in `content`; we render a
+// friendly one-liner instead of dumping the raw JSON. This client-side
+// fallback covers SSE-pushed messages that arrive before the next
+// conversations refresh.
+function formatLastMessagePreview(last) {
+  if (!last) return '';
+  if (last.preview && !last.preview.startsWith('{"v"')) return last.preview;
+  if (last.messageType === 'voice') return '🎤 Voice message';
+  if (
+    last.messageType === 'shared_battle' ||
+    last.messageType === 'shared_post' ||
+    last.messageType === 'shared_result'
+  ) {
+    let note = '';
+    try {
+      const parsed = JSON.parse(last.content || '');
+      if (parsed && typeof parsed.note === 'string') note = parsed.note.trim();
+    } catch (_e) {}
+    const label =
+      last.messageType === 'shared_battle' ? '⚔️ Shared a live battle'
+      : last.messageType === 'shared_result' ? '🏆 Shared a battle result'
+      : '📣 Shared a post';
+    return note ? `${label}: ${note.slice(0, 100)}` : label;
+  }
+  return last.preview || last.content || '';
+}
+
 function timeAgo(iso) {
   if (!iso) return '';
   const diff = Date.now() - new Date(iso).getTime();
@@ -251,7 +279,7 @@ export default function MessagesDropdown({ open, onClose, anchorRef, onSelectCon
                       typing<TypingDots />
                     </span>
                   ) : last ? (
-                    `${last.fromMe ? 'You: ' : ''}${last.preview || last.content || ''}`
+                    `${last.fromMe ? 'You: ' : ''}${formatLastMessagePreview(last)}`
                   ) : (
                     'Say hi!'
                   )}
