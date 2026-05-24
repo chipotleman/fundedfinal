@@ -4,43 +4,21 @@ import { trackPromoEvent } from '../lib/promoTracking';
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
+// Continuous slow-scroll speed for the promo strip. Tuned to feel
+// alive but not distracting; the same value is used on every device
+// (desktop, tablet, phone) so the experience is uniform.
 const SCROLL_SPEED_PX_PER_SEC = 45;
 
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = (e) => setReduced(e.matches);
-    setReduced(mq.matches);
-    if (mq.addEventListener) mq.addEventListener('change', handler);
-    else mq.addListener(handler);
-    return () => {
-      if (mq.removeEventListener) mq.removeEventListener('change', handler);
-      else mq.removeListener(handler);
-    };
-  }, []);
-  return reduced;
-}
+// After the user lifts their finger / pointer following a drag or
+// touch-pause, wait this long before resuming the auto-scroll. Long
+// enough for them to read what they paused on, short enough that the
+// strip feels alive when they look away.
+const RESUME_AFTER_INTERACTION_MS = 2000;
 
-// Tailwind's `sm` breakpoint = 640px. Anything below is treated as mobile
-// for the carousel: no auto-scroll, dots are the navigation affordance.
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(false);
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mq = window.matchMedia('(min-width: 640px)');
-    const handler = (e) => setIsDesktop(e.matches);
-    setIsDesktop(mq.matches);
-    if (mq.addEventListener) mq.addEventListener('change', handler);
-    else mq.addListener(handler);
-    return () => {
-      if (mq.removeEventListener) mq.removeEventListener('change', handler);
-      else mq.removeListener(handler);
-    };
-  }, []);
-  return isDesktop;
-}
+// A pointer movement under this many pixels between pointerdown and
+// pointerup is treated as a tap (lets clicks through to slide CTAs)
+// rather than a drag (which would steal the click).
+const DRAG_THRESHOLD_PX = 6;
 
 function SlideHost({
   slideKey,
@@ -101,18 +79,47 @@ function SlideHost({
 }
 
 export default function PromoCarousel({ slides }) {
-  const containerRef = useRef(null);
+  // The viewport is `overflow: hidden`; the actual scroll is driven by
+  // a `transform: translate3d(-x, 0, 0)` applied to the inner track.
+  // We deliberately moved away from animating `scrollLeft` because
+  // browsers round `scrollLeft` to integer pixels on most platforms
+  // (notably Windows Chrome and mobile Safari). At our slow speed
+  // (~45 px/sec ÷ 60fps ≈ 0.75 px/frame) integer rounding meant most
+  // frames produced zero motion and every ~1.3 frames produced a 1px
+  // jump — visible as the "choppy" stutter on Windows. Transforms
+  // keep subpixel precision and are GPU-composited, so the strip is
+  // butter-smooth at any speed on every device.
+  const viewportRef = useRef(null);
+  const trackRef = useRef(null);
   const slideRefs = useRef(new Map());
   const set1FirstRef = useRef(null);
   const setWidthRef = useRef(0);
+  const offsetRef = useRef(0); // current translateX, always >= 0
   const rafRef = useRef(null);
   const lastTimeRef = useRef(0);
   const seenImpressionsRef = useRef(new Set());
 
+  // Interaction state. Refs (not React state) because they're read
+  // inside the rAF loop and we don't want to thrash re-renders.
+  const pausedRef = useRef(false);
+  const dragRef = useRef({
+    active: false,
+    pointerId: null,
+    startX: 0,
+    startOffset: 0,
+    moved: false,
+  });
+  const resumeTimerRef = useRef(null);
+
   const [activeIndex, setActiveIndex] = useState(0);
+  // Mirror of `activeIndex` for use inside the rAF loop so we can
+  // bail out *before* calling setState when nothing has changed.
+  // Returning `curr` from setState's updater still enqueues an
+  // update every frame — skipping the call entirely is what keeps
+  // the scheduler quiet.
+  const activeIndexRef = useRef(0);
   const [emptyKeys, setEmptyKeys] = useState({});
   const [impressionsReady, setImpressionsReady] = useState(false);
-  const reducedMotion = usePrefersReducedMotion();
 
   const candidates = (slides || [])
     .map((s, i) => {
@@ -132,14 +139,15 @@ export default function PromoCarousel({ slides }) {
 
   const visible = candidates.filter((s) => !emptyKeys[s.key]);
   const count = visible.length;
-  // Auto-scroll is desktop-only. On mobile the auto-advance felt jittery
-  // and competed with native touch panning, so we let users swipe through
-  // the strip themselves and surface pagination dots as the affordance.
-  // We intentionally do NOT gate desktop on `prefersReducedMotion` because
-  // many iOS users have OS-level Reduce Motion enabled by default; that
-  // was making the promo strip appear static (per user feedback).
-  const isDesktop = useIsDesktop();
-  const showLoop = count > 1 && isDesktop;
+  // Auto-scroll runs on every device when there's something to loop.
+  // Previously this was desktop-only because the old `scrollLeft`
+  // animation competed with iOS touch panning; the transform-based
+  // engine has no such conflict (we explicitly handle pointer drag
+  // ourselves below) so we can give every user the same animated
+  // strip. We also no longer gate on `prefers-reduced-motion`
+  // because iOS users very commonly have Reduce Motion on by
+  // default, which was making the strip appear static.
+  const showLoop = count > 1;
 
   const reportContent = useCallback((key, isEmpty) => {
     setEmptyKeys((prev) => {
@@ -163,19 +171,20 @@ export default function PromoCarousel({ slides }) {
   // Reset index if it's out of bounds after the visible list shrinks
   useEffect(() => {
     if (count === 0) return;
-    if (activeIndex >= count) setActiveIndex(0);
+    if (activeIndex >= count) {
+      activeIndexRef.current = 0;
+      setActiveIndex(0);
+    }
   }, [count, activeIndex]);
 
-  // Sync activeIndex to whichever tile is actually centered on mount before any
-  // impression fires. Without this, narrow tiles (multiple visible at once)
-  // would always credit the leftmost tile (index 0) for the first impression
-  // instead of the slide actually centered in the viewport.
+  // Sync activeIndex to whichever tile is most centered in the viewport
+  // on mount before the first impression fires.
   useIsomorphicLayoutEffect(() => {
     if (impressionsReady || count === 0) return;
-    const container = containerRef.current;
-    if (!container) return;
+    const vp = viewportRef.current;
+    if (!vp) return;
     if (slideRefs.current.size === 0) return;
-    const center = container.scrollLeft + container.clientWidth / 2;
+    const center = offsetRef.current + vp.clientWidth / 2;
     let bestIdx = 0;
     let bestDist = Infinity;
     for (let i = 0; i < visible.length; i++) {
@@ -188,15 +197,12 @@ export default function PromoCarousel({ slides }) {
         bestIdx = i;
       }
     }
+    activeIndexRef.current = bestIdx;
     setActiveIndex(bestIdx);
     setImpressionsReady(true);
   }, [count, visible, impressionsReady]);
 
   // Fire an impression event whenever a new slide becomes the active one.
-  // Dedup per (slotIndex, containerType) for the lifetime of this mount so
-  // continuous scrolling past the same slide repeatedly doesn't inflate counts.
-  // Gated on impressionsReady so the first impression is for the actually
-  // centered tile, not the (possibly stale) initial activeIndex of 0.
   useEffect(() => {
     if (!impressionsReady) return;
     if (count === 0) return;
@@ -211,9 +217,8 @@ export default function PromoCarousel({ slides }) {
     });
   }, [activeIndex, count, visible, impressionsReady]);
 
-  // Measure the width of one full set of slides (distance from first slide of
-  // set 0 to first slide of set 1). This is the wrap distance for seamless
-  // looping. Returns true if a non-zero measurement was captured.
+  // Measure one full set's width (= offsetLeft of the first duplicate
+  // tile). This is the wrap distance for seamless looping.
   const tryMeasureSetWidth = useCallback(() => {
     const el = set1FirstRef.current;
     if (!el) return false;
@@ -229,9 +234,9 @@ export default function PromoCarousel({ slides }) {
     tryMeasureSetWidth();
   }, [tryMeasureSetWidth, count, showLoop, emptyKeys]);
 
-  // Re-measure on viewport resize, container/slide resize (image/font load,
-  // layout shift), font readiness, and image load events. Without these the
-  // initial measurement can stick at 0 and auto-scroll appears stalled.
+  // Re-measure on viewport resize, slide resize (image/font load), font
+  // readiness, and image load events. Without these the initial
+  // measurement can stick at 0 and auto-scroll appears stalled.
   useEffect(() => {
     if (typeof window === 'undefined' || !showLoop) return;
     const handle = () => tryMeasureSetWidth();
@@ -240,7 +245,7 @@ export default function PromoCarousel({ slides }) {
     let ro = null;
     if (typeof ResizeObserver !== 'undefined') {
       ro = new ResizeObserver(handle);
-      if (containerRef.current) ro.observe(containerRef.current);
+      if (viewportRef.current) ro.observe(viewportRef.current);
       slideRefs.current.forEach((el) => {
         if (el) ro.observe(el);
       });
@@ -256,8 +261,8 @@ export default function PromoCarousel({ slides }) {
         .catch(() => {});
     }
 
-    const container = containerRef.current;
-    const imgs = container ? Array.from(container.querySelectorAll('img')) : [];
+    const vp = viewportRef.current;
+    const imgs = vp ? Array.from(vp.querySelectorAll('img')) : [];
     imgs.forEach((img) => {
       if (!img.complete) img.addEventListener('load', handle);
     });
@@ -270,52 +275,17 @@ export default function PromoCarousel({ slides }) {
     };
   }, [tryMeasureSetWidth, showLoop, count, emptyKeys]);
 
-  // Continuous slow horizontal scroll using rAF, with seamless wraparound.
-  // The tick also retries measurement if setWidth is still 0, so the loop
-  // self-heals once slides settle into their final size (post image/font load).
-  // We deliberately ignore `reducedMotion` here so the strip auto-scrolls even
-  // when the user's device has OS-level Reduce Motion enabled (per feedback).
-  useEffect(() => {
-    if (!showLoop) return;
-    let raf;
-    const tick = (time) => {
-      if (lastTimeRef.current === 0) lastTimeRef.current = time;
-      const dt = Math.min((time - lastTimeRef.current) / 1000, 0.1);
-      lastTimeRef.current = time;
-      const container = containerRef.current;
-      let setWidth = setWidthRef.current;
-      if (setWidth <= 0) {
-        const el = set1FirstRef.current;
-        if (el && el.offsetLeft > 0) {
-          setWidth = el.offsetLeft;
-          setWidthRef.current = setWidth;
-        }
-      }
-      if (container && setWidth > 0) {
-        let next = container.scrollLeft + SCROLL_SPEED_PX_PER_SEC * dt;
-        if (next >= setWidth) next -= setWidth;
-        container.scrollLeft = next;
-      }
-      raf = requestAnimationFrame(tick);
-      rafRef.current = raf;
-    };
-    raf = requestAnimationFrame(tick);
-    rafRef.current = raf;
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      lastTimeRef.current = 0;
-    };
-  }, [reducedMotion, showLoop]);
-
-  // Track scroll → update active index based on which slide is most centered
-  // (after normalizing position into the first set's coordinate space).
-  const handleScroll = useCallback(() => {
-    const container = containerRef.current;
-    if (!container) return;
+  // Sync activeIndex to whichever tile is most centered in the viewport
+  // as the strip moves. Read inside rAF so we don't re-render every
+  // frame — we only call setActiveIndex when the centered tile
+  // actually changes.
+  const computeActiveIndex = useCallback(() => {
+    const vp = viewportRef.current;
+    if (!vp || visible.length === 0) return;
     const setWidth = setWidthRef.current;
-    let scrollLeft = container.scrollLeft;
-    if (setWidth > 0 && scrollLeft >= setWidth) scrollLeft -= setWidth;
-    const center = scrollLeft + container.clientWidth / 2;
+    let pos = offsetRef.current;
+    if (setWidth > 0 && pos >= setWidth) pos -= setWidth;
+    const center = pos + vp.clientWidth / 2;
     let bestIdx = 0;
     let bestDist = Infinity;
     for (let i = 0; i < visible.length; i++) {
@@ -328,31 +298,216 @@ export default function PromoCarousel({ slides }) {
         bestIdx = i;
       }
     }
-    setActiveIndex((curr) => (curr === bestIdx ? curr : bestIdx));
+    if (bestIdx === activeIndexRef.current) return;
+    activeIndexRef.current = bestIdx;
+    setActiveIndex(bestIdx);
   }, [visible]);
 
+  // Apply the current offset to the track. Uses translate3d to opt
+  // into the GPU compositor path on every browser.
+  const applyTransform = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
+  }, []);
+
+  // When looping turns off (slide count shrinks to ≤1, or we mount
+  // with a single slide), zero the offset and the track's transform
+  // so we never leave a stale translation on screen — without this,
+  // a strip that briefly had >1 slide and then collapsed to 1 would
+  // remain visually offset by whatever offsetRef.current happened to
+  // hold when the rAF loop stopped. Declared after applyTransform so
+  // the dep array doesn't hit a TDZ at render time.
+  useEffect(() => {
+    if (showLoop) return;
+    offsetRef.current = 0;
+    applyTransform();
+  }, [showLoop, applyTransform]);
+
+  // Continuous slow scroll using rAF + transform. The loop also retries
+  // measurement if setWidth is still 0, so it self-heals once slides
+  // settle into their final size (post image/font load).
+  useEffect(() => {
+    if (!showLoop) return;
+    let raf;
+    const tick = (time) => {
+      if (lastTimeRef.current === 0) lastTimeRef.current = time;
+      const dt = Math.min((time - lastTimeRef.current) / 1000, 0.1);
+      lastTimeRef.current = time;
+
+      let setWidth = setWidthRef.current;
+      if (setWidth <= 0) {
+        const el = set1FirstRef.current;
+        if (el && el.offsetLeft > 0) {
+          setWidth = el.offsetLeft;
+          setWidthRef.current = setWidth;
+        }
+      }
+
+      const interacting = pausedRef.current || dragRef.current.active;
+      if (setWidth > 0 && !interacting) {
+        let next = offsetRef.current + SCROLL_SPEED_PX_PER_SEC * dt;
+        if (next >= setWidth) next -= setWidth;
+        offsetRef.current = next;
+      }
+
+      applyTransform();
+      computeActiveIndex();
+
+      raf = requestAnimationFrame(tick);
+      rafRef.current = raf;
+    };
+    raf = requestAnimationFrame(tick);
+    rafRef.current = raf;
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      lastTimeRef.current = 0;
+    };
+  }, [showLoop, applyTransform, computeActiveIndex]);
+
+  // Pointer handlers — unified path for mouse, touch and stylus.
+  // Pointerdown pauses the auto-scroll; if the pointer then moves more
+  // than DRAG_THRESHOLD_PX we treat it as a manual scrub (the offset
+  // tracks the pointer 1:1). Pointerup schedules the auto-scroll to
+  // resume after RESUME_AFTER_INTERACTION_MS.
+  const clearResumeTimer = useCallback(() => {
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleResume = useCallback(() => {
+    clearResumeTimer();
+    resumeTimerRef.current = setTimeout(() => {
+      pausedRef.current = false;
+      resumeTimerRef.current = null;
+    }, RESUME_AFTER_INTERACTION_MS);
+  }, [clearResumeTimer]);
+
+  const handlePointerDown = useCallback((e) => {
+    // Ignore secondary buttons (right-click etc.) and synthetic mouse
+    // events that follow touch — Pointer Events normalize this but
+    // some browsers still fire phantom mouse events alongside touch.
+    if (e.button != null && e.button !== 0) return;
+    dragRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startOffset: offsetRef.current,
+      moved: false,
+    };
+    pausedRef.current = true;
+    clearResumeTimer();
+    // Capture so we keep receiving move/up even if the pointer leaves
+    // the viewport — important for desktop click-and-drag past the
+    // strip's edge.
+    try {
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    } catch (_err) {}
+  }, [clearResumeTimer]);
+
+  const handlePointerMove = useCallback((e) => {
+    const drag = dragRef.current;
+    if (!drag.active) return;
+    // Ignore events from a different pointer — protects against
+    // multi-touch / multi-pointer interference where a second finger
+    // lands while the first is still dragging.
+    if (drag.pointerId != null && e.pointerId !== drag.pointerId) return;
+    const delta = e.clientX - drag.startX;
+    if (!drag.moved && Math.abs(delta) >= DRAG_THRESHOLD_PX) {
+      drag.moved = true;
+    }
+    if (!drag.moved) return;
+    // Prevent native horizontal scroll/text-select hijack once we know
+    // this is a real drag.
+    if (e.cancelable) {
+      try { e.preventDefault(); } catch (_err) {}
+    }
+    const setWidth = setWidthRef.current;
+    let next = drag.startOffset - delta;
+    if (setWidth > 0) {
+      // Normalize into [0, setWidth) so wrapping stays seamless.
+      next = ((next % setWidth) + setWidth) % setWidth;
+    } else if (next < 0) {
+      next = 0;
+    }
+    offsetRef.current = next;
+    applyTransform();
+  }, [applyTransform]);
+
+  const handlePointerUp = useCallback((e) => {
+    const drag = dragRef.current;
+    if (!drag.active) return;
+    if (drag.pointerId != null && e.pointerId !== drag.pointerId) return;
+    const wasMove = drag.moved;
+    dragRef.current = {
+      active: false,
+      pointerId: null,
+      startX: 0,
+      startOffset: 0,
+      moved: false,
+    };
+    try {
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
+    } catch (_err) {}
+    // If the user actually dragged, suppress the click that would
+    // otherwise fall through to the slide CTA underneath.
+    if (wasMove) {
+      const swallow = (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+      };
+      const node = e.currentTarget;
+      node.addEventListener('click', swallow, { capture: true, once: true });
+      // Belt-and-suspenders: if no click ever fires, remove the
+      // capture handler on the next tick.
+      setTimeout(() => {
+        try { node.removeEventListener('click', swallow, { capture: true }); } catch (_err) {}
+      }, 0);
+    }
+    scheduleResume();
+  }, [scheduleResume]);
+
+  // Desktop hover-to-pause. Touch devices don't generate
+  // mouseenter/leave, so this only affects pointer users; touch
+  // pausing is handled by the pointerdown path above.
+  const handleMouseEnter = useCallback(() => {
+    if (dragRef.current.active) return;
+    pausedRef.current = true;
+    clearResumeTimer();
+  }, [clearResumeTimer]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (dragRef.current.active) return;
+    scheduleResume();
+  }, [scheduleResume]);
+
+  // Clean up rAF + pending timers on unmount.
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      clearResumeTimer();
     };
-  }, []);
+  }, [clearResumeTimer]);
 
   if (candidates.length === 0) return null;
 
   const handleDotClick = (idx) => {
-    const container = containerRef.current;
     const slideKey = visible[idx]?.key;
     const target = slideKey != null ? slideRefs.current.get(slideKey) : null;
-    if (!container || !target) {
+    if (!target) {
       setActiveIndex(idx);
       return;
     }
-    const setWidth = setWidthRef.current;
-    if (setWidth > 0 && container.scrollLeft >= setWidth) {
-      container.scrollLeft = container.scrollLeft - setWidth;
-    }
-    container.scrollLeft = target.offsetLeft;
+    offsetRef.current = target.offsetLeft;
+    applyTransform();
+    activeIndexRef.current = idx;
     setActiveIndex(idx);
+    // Treat a dot tap as an interaction so the strip pauses briefly
+    // on the chosen slide before resuming.
+    pausedRef.current = true;
+    scheduleResume();
   };
 
   const handleSlideClick = (slide) => {
@@ -366,61 +521,76 @@ export default function PromoCarousel({ slides }) {
   return (
     <div className="relative">
       <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="overflow-x-auto overflow-y-visible scrollbar-hide flex gap-3 py-1"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        ref={viewportRef}
+        className="overflow-hidden"
         role="region"
         aria-roledescription="carousel"
         aria-label="Promotions"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        // Let the page scroll vertically through the strip but claim
+        // horizontal gestures for ourselves so iOS Safari doesn't try
+        // to swipe-navigate back.
+        style={{ touchAction: 'pan-y', cursor: 'grab' }}
       >
-        {candidates.map((slide) => {
-          const isEmpty = !!emptyKeys[slide.key];
-          const visibleIdx = isEmpty
-            ? -1
-            : visible.findIndex((s) => s.key === slide.key);
-          const ariaLabel = isEmpty
-            ? undefined
-            : `Slide ${visibleIdx + 1} of ${count}`;
-          return (
-            <SlideHost
-              key={slide.key}
-              slideKey={slide.key}
-              isEmpty={isEmpty}
-              registerRef={registerRef}
-              onContentChange={reportContent}
-              onClickCapture={() => handleSlideClick(slide)}
-              ariaLabel={ariaLabel}
-            >
-              {slide.node}
-            </SlideHost>
-          );
-        })}
+        <div
+          ref={trackRef}
+          className="flex gap-3 py-1"
+          // GPU-compositor opt-in. backface-visibility hides the
+          // hairline shimmer some browsers render when translating a
+          // composited layer at non-integer offsets.
+          style={{
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+        >
+          {candidates.map((slide) => {
+            const isEmpty = !!emptyKeys[slide.key];
+            const visibleIdx = isEmpty
+              ? -1
+              : visible.findIndex((s) => s.key === slide.key);
+            const ariaLabel = isEmpty
+              ? undefined
+              : `Slide ${visibleIdx + 1} of ${count}`;
+            return (
+              <SlideHost
+                key={slide.key}
+                slideKey={slide.key}
+                isEmpty={isEmpty}
+                registerRef={registerRef}
+                onContentChange={reportContent}
+                onClickCapture={() => handleSlideClick(slide)}
+                ariaLabel={ariaLabel}
+              >
+                {slide.node}
+              </SlideHost>
+            );
+          })}
 
-        {showLoop &&
-          visible.map((slide, i) => (
-            <div
-              key={`loop-${slide.key}`}
-              ref={i === 0 ? set1FirstRef : null}
-              className="flex-shrink-0"
-              aria-hidden="true"
-              onClickCapture={() => handleSlideClick(slide)}
-            >
-              {slide.node}
-            </div>
-          ))}
+          {showLoop &&
+            visible.map((slide, i) => (
+              <div
+                key={`loop-${slide.key}`}
+                ref={i === 0 ? set1FirstRef : null}
+                className="flex-shrink-0"
+                aria-hidden="true"
+                onClickCapture={() => handleSlideClick(slide)}
+              >
+                {slide.node}
+              </div>
+            ))}
+        </div>
       </div>
 
-      {/* Pagination dots are visible at every breakpoint. On desktop they
-          double as a click-to-jump affordance for the auto-scrolling strip;
-          on mobile (where auto-scroll is disabled) they're the primary
-          orientation cue so users always know where they are in the strip. */}
+      {/* Pagination dots are visible at every breakpoint. They double as
+          a click-to-jump affordance for the auto-scrolling strip and
+          give a stable orientation cue. */}
       {count > 1 && (() => {
-        // Always render at most 3 dots so the indicator stays compact and
-        // doesn't visually crowd the sport-filter pills directly below.
-        // When there are more than 3 slides we map the active slide onto
-        // one of three buckets (start / middle / end) and clicking a dot
-        // jumps to that bucket's representative slide.
         const dotCount = Math.min(3, count);
         const activeDot = count <= 3
           ? activeIndex
@@ -446,10 +616,6 @@ export default function PromoCarousel({ slides }) {
                 className="relative flex items-center justify-center cursor-pointer bg-transparent p-0"
                 style={{ border: 0 }}
               >
-                {/* Tap-target extension. Vertical padding kept tight (-6)
-                    so the hit area doesn't bleed into the sport-filter
-                    pill row underneath; horizontal stays generous for
-                    small-phone tap comfort. */}
                 <span
                   aria-hidden="true"
                   className="absolute"
