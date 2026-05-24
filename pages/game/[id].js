@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useBetSlip } from '../../contexts/BetSlipContext';
@@ -13,6 +13,42 @@ export default function GameDetail() {
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Popular');
+  // `leaving` lets the back button feel instant: on click we
+  // immediately swap the entire heavy page tree for a tiny
+  // spinner, which (a) gives the user instant visual feedback
+  // and (b) unmounts the chart + odds tables + sticky headers
+  // *before* router.back() kicks off, so the browser isn't
+  // doing a giant reconcile + an SSR data round-trip at the
+  // same time.
+  const [leaving, setLeaving] = useState(false);
+  // Sync latch so a double-tap on the back button in the same tick
+  // (before React commits the `leaving` state) can't schedule two
+  // navigations.
+  const leavingRef = useRef(false);
+
+  // Prefetch the dashboard so router.back() lands on cached
+  // SSR JSON instead of round-tripping /_next/data. Pages-router
+  // router.prefetch fetches both the JS chunk and the page data
+  // in current Next.js, so this turns the back nav into a
+  // near-instant client transition.
+  useEffect(() => {
+    router.prefetch('/');
+    router.prefetch('/dashboard');
+  }, [router]);
+
+  const handleBack = () => {
+    if (leavingRef.current) return;
+    leavingRef.current = true;
+    setLeaving(true);
+    // Defer to the next tick so React commits the lightweight
+    // "leaving" view (unmounting the heavy tree) before we ask
+    // the router to navigate. Without this defer the unmount
+    // and the route change land in the same frame and we lose
+    // the snappiness.
+    setTimeout(() => {
+      leavePage({ router, fallbackHref: '/dashboard' });
+    }, 0);
+  };
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { getPossession, possessionConnected, apiGames, inplayEvents } = useGames();
   const { formatOdds: formatOddsPref } = useUserPreferences();
@@ -183,7 +219,7 @@ export default function GameDetail() {
     return isBetInSlip(game, betType, selection);
   };
 
-  if (loading) {
+  if (loading || leaving) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
@@ -196,7 +232,7 @@ export default function GameDetail() {
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <p className="text-xl mb-4">Game not found</p>
         <button 
-          onClick={() => leavePage({ router, fallbackHref: '/dashboard' })}
+          onClick={handleBack}
           className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
         >
           Go Back
@@ -247,14 +283,14 @@ export default function GameDetail() {
           betsForThisGame={betsForThisGame}
           playerProps={Array.isArray(game.playerProps) ? game.playerProps : []}
           globalBetSlipOpen={showBetSlip}
-          onBack={() => leavePage({ router, fallbackHref: '/dashboard' })}
+          onBack={handleBack}
           onOpenAllPicks={() => setShowBetSlip(true)}
         />
 
         <div className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a] md:hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <button 
-              onClick={() => leavePage({ router, fallbackHref: '/dashboard' })}
+              onClick={handleBack}
               className="p-2 -ml-2 rounded-full hover:bg-[#111]"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
