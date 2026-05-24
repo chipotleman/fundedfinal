@@ -10,6 +10,7 @@ import { formatMoney } from '../utils/formatMoney';
 import { NOTIF_TYPES, TypeChip, getResultStyle } from '../components/notifications/notificationTypeStyles';
 import FriendRequestCard from '../components/notifications/FriendRequestCard';
 import { useBetaMode } from '../contexts/SiteConfigContext';
+import { installTopNavClickTrapWatchdog } from '../utils/topNavClickTrapWatchdog';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -674,47 +675,14 @@ export default function NotificationsPage() {
     social: ctx.socialActivity?.length || 0,
   };
 
-  // Defensive: mirror the messenger page — proactively release any leftover
-  // body / html scroll-lock styles a previous modal may have left behind.
-  // Without this, navigating to /notifications while a modal was tearing
-  // down can leave `body { overflow: hidden }` in place, which on iOS Safari
-  // manifests as top-nav taps no longer navigating until a hard refresh.
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const releaseLocks = (reason) => {
-      const b = document.body.style;
-      b.overflow = '';
-      b.position = '';
-      b.top = '';
-      b.left = '';
-      b.right = '';
-      b.width = '';
-      b.height = '';
-      b.overscrollBehavior = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-      if (reason) {
-        try { console.warn('[notifications] released stale body scroll lock:', reason); } catch {}
-      }
-    };
-    releaseLocks(null);
-
-    // Periodic watchdog: if body has been left scroll-locked but no real
-    // modal is open, clear the lock so top-bar taps register on first try.
-    const interval = setInterval(() => {
-      if (typeof document === 'undefined') return;
-      const b = document.body.style;
-      const isLocked = b.position === 'fixed' || b.overflow === 'hidden';
-      if (!isLocked) return;
-      const hasOpenModal = !!document.querySelector(
-        '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"]'
-      );
-      if (!hasOpenModal) {
-        releaseLocks('no open modal but body lock present');
-      }
-    }, 1500);
-    return () => clearInterval(interval);
-  }, []);
+  // Defensive: install the shared top-nav click-trap watchdog. Clears any
+  // leftover body scroll-lock a crashed modal left behind AND detects +
+  // neutralizes orphan full-viewport `position:fixed` overlays that would
+  // otherwise silently swallow taps on the centered nav links
+  // (Battle / Social / Leaderboard) while leaving the logo and right-side
+  // icons clickable. See utils/topNavClickTrapWatchdog.js for the full
+  // root-cause writeup and detection rules.
+  useEffect(() => installTopNavClickTrapWatchdog('notifications'), []);
 
   // ?chat=<id> deep link → forward to /messenger.
   useEffect(() => {

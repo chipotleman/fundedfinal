@@ -37,6 +37,8 @@ export default function TopNavbar({
   // scroll-up-then-down pass.
   const showCondensedBar = hasCondensedBar && sportsRowPassed;
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
+  const userMenuBtnRef = useRef(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -93,6 +95,35 @@ export default function TopNavbar({
       router.events.off('routeChangeStart', closeAll);
     };
   }, [router]);
+
+  // Close the user-menu dropdown on outside click / Escape. Previously this
+  // was implemented as a `<div className="fixed inset-0 z-[45]" onClick=...>`
+  // backdrop rendered inside the nav. That backdrop sits ABOVE the
+  // centered nav links (Battle / Social / Leaderboard) within the nav's
+  // own stacking context whenever it's mounted — and if it ever fails to
+  // unmount (route-change race, React batching across an SSE re-render,
+  // etc.) it silently swallows every tap on the middle of the navbar
+  // while leaving the logo and right-side icons (which sit above default
+  // z in their own absolute clusters) clickable. Switching to a document
+  // click listener removes the fullscreen overlay entirely, so there is
+  // no orphan node left to trap clicks — matching the pattern that
+  // NotificationsDropdown / MessagesDropdown already use.
+  useEffect(() => {
+    if (!showUserMenu) return undefined;
+    const handleClick = (e) => {
+      if (userMenuRef.current && userMenuRef.current.contains(e.target)) return;
+      if (userMenuBtnRef.current && userMenuBtnRef.current.contains(e.target)) return;
+      if (typeof document !== 'undefined' && !document.contains(e.target)) return;
+      setShowUserMenu(false);
+    };
+    const handleKey = (e) => { if (e.key === 'Escape') setShowUserMenu(false); };
+    document.addEventListener('click', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [showUserMenu]);
 
   // When the condensed bar engages or disengages, close any open notifications
   // / messages dropdown. Two reasons:
@@ -934,12 +965,15 @@ export default function TopNavbar({
                 {isLoggedIn ? (
                   <div className="relative">
                     <button
+                      ref={userMenuBtnRef}
                       onClick={() => setShowUserMenu(!showUserMenu)}
                       aria-label={
                         hasUnviewedAchievements
                           ? 'Open user menu (you have new achievements)'
                           : 'Open user menu'
                       }
+                      aria-haspopup="true"
+                      aria-expanded={showUserMenu}
                       className="relative flex items-center justify-center w-10 h-10 hover:bg-[#1a1a1a] rounded-full transition-all duration-300"
                     >
                       <span className="block w-10 h-10 rounded-full overflow-hidden">
@@ -963,37 +997,21 @@ export default function TopNavbar({
                       )}
                     </button>
 
-                    {/* Dropdown Menu */}
+                    {/* Dropdown Menu — outside-click / Escape dismissal is
+                        wired up via the document-level listener in the
+                        showUserMenu useEffect above (no fixed-inset
+                        backdrop, which used to silently cover the
+                        centered nav links inside the nav's stacking
+                        context if it ever failed to unmount). */}
                     {showUserMenu && (
                       <>
-                        <div
-                          className="fixed inset-0 z-[45]"
-                          onClick={(e) => {
-                            setShowUserMenu(false);
-                            // Allow a single click on the messages or notifications
-                            // buttons to fall through: detect what's underneath the
-                            // backdrop at the click point and forward the click.
-                            const backdrop = e.currentTarget;
-                            const x = e.clientX;
-                            const y = e.clientY;
-                            const prevPE = backdrop.style.pointerEvents;
-                            backdrop.style.pointerEvents = 'none';
-                            const el = typeof document !== 'undefined'
-                              ? document.elementFromPoint(x, y)
-                              : null;
-                            backdrop.style.pointerEvents = prevPE;
-                            if (el) {
-                              if (msgBtnRef.current && msgBtnRef.current.contains(el)) {
-                                msgBtnRef.current.click();
-                              } else if (notifBellRef.current && notifBellRef.current.contains(el)) {
-                                notifBellRef.current.click();
-                              }
-                            }
-                          }}
-                        />
-                        
                         {/* Menu */}
-                        <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-[#1a1a1a]/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div
+                          ref={userMenuRef}
+                          role="menu"
+                          aria-label="User menu"
+                          className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-[#1a1a1a]/50 rounded-xl shadow-2xl z-50 overflow-hidden"
+                        >
                           {/* User Info */}
                           <div className="px-4 py-3 border-b border-[#1a1a1a]/50 bg-[#111111]">
                             <p className="text-sm text-gray-500">Signed in as</p>

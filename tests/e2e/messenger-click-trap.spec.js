@@ -117,6 +117,85 @@ test('desktop: bell "View all" navigates to /notifications and back', async ({ p
   await runDropdownChecks(page);
 });
 
+// Regression: opening + dismissing the user-menu (avatar) used to leave
+// a `<div class="fixed inset-0 z-[45]">` backdrop mounted inside the nav's
+// own stacking context. That backdrop silently swallowed every tap on
+// the centered nav links (Battle → /dashboard, Social → /battle,
+// Leaderboard → /leaderboard) while the logo and right-side icons
+// stayed clickable. This test exercises the regression directly: open
+// the avatar menu, dismiss by outside click, then assert each centered
+// nav link navigates on the FIRST click.
+for (const path of TARGET_PAGES) {
+  test(`centered nav links keep responding after user-menu dismiss on ${path}`, async ({ page, viewport }) => {
+    test.skip((viewport?.width || 0) < 1024, 'user-menu trigger is desktop-only (lg breakpoint)');
+    await setupStubs(page);
+    await page.goto(path);
+
+    const userMenuBtn = page.getByRole('button', { name: /Open user menu/ });
+    await expect(userMenuBtn).toBeVisible();
+
+    const checks = [
+      { name: 'Battle', urlRe: /\/dashboard(\?|$)/, returnTo: path },
+      { name: 'Social', urlRe: /\/battle(\?|$)/, returnTo: path },
+      { name: 'Leaderboard', urlRe: /\/leaderboard(\?|$)/, returnTo: path },
+    ];
+    for (const { name, urlRe, returnTo } of checks) {
+      // Open the user menu, dismiss via outside click.
+      await userMenuBtn.click();
+      await expect(page.getByRole('menu', { name: 'User menu' })).toBeVisible();
+      await page.mouse.click(10, 400);
+      await expect(page.getByRole('menu', { name: 'User menu' })).toHaveCount(0);
+      await expectNoFullscreenOverlay(page);
+
+      // The next centered-nav link click must navigate on the FIRST try.
+      const link = page.getByRole('link', { name, exact: true }).first();
+      await expect(link).toBeVisible();
+      await link.click();
+      await page.waitForURL(urlRe);
+      await page.goto(returnTo);
+    }
+  });
+}
+
+// Watchdog: orphan full-viewport overlay (not a body scroll-lock) must
+// be neutralized so taps on the centered nav links register on the
+// first try. Simulates the exact regression vector: a `position:fixed`
+// element covering the entire viewport with no associated open modal.
+for (const path of TARGET_PAGES) {
+  test(`watchdog: orphan fullscreen overlay is auto-neutralized on ${path}`, async ({ page }) => {
+    await setupStubs(page);
+    await page.goto(path);
+
+    // Inject a leftover full-viewport fixed div with no accessible
+    // modal ancestor — exactly the shape of the user-menu backdrop bug.
+    await page.evaluate(() => {
+      const d = document.createElement('div');
+      d.id = 'e2e-orphan-overlay';
+      d.style.cssText =
+        'position:fixed;inset:0;background:transparent;z-index:99999;';
+      document.body.appendChild(d);
+    });
+
+    // Watchdog ticks ~1.5s; give it a couple of cycles.
+    await page.waitForTimeout(3500);
+    await expectNoFullscreenOverlay(page);
+
+    // The overlay should have been removed (or at minimum made
+    // pointer-events:none, which expectNoFullscreenOverlay also tolerates).
+    const stillBlocks = await page.evaluate(() => {
+      const el = document.getElementById('e2e-orphan-overlay');
+      if (!el) return false;
+      return window.getComputedStyle(el).pointerEvents !== 'none';
+    });
+    expect(stillBlocks, 'orphan overlay must be removed or set to pointer-events:none').toBe(false);
+
+    // Top-bar icons must still respond.
+    const bell = page.getByRole('button', { name: 'Notifications' });
+    await bell.click();
+    await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible();
+  });
+}
+
 // Additional coverage for the voice-note send-pipeline error paths and the
 // scroll-lock watchdog that runs on /messenger and /notifications.
 for (const path of TARGET_PAGES) {
