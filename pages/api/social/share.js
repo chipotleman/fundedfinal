@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { messages, friendships } from '../../../shared/schema';
+import { messages, friendships, profiles } from '../../../shared/schema';
 import { and, eq, or, inArray } from 'drizzle-orm';
 const { publishBattleEvent } = require('../../../lib/battle-events');
 const { sendPushToUsers } = require('../../../lib/web-push');
@@ -162,19 +162,67 @@ export default async function handler(req, res) {
       } catch (_e) {}
     }
 
-    // Best-effort push for offline recipients.
+    // Best-effort push for offline recipients. We send a single batch
+    // (sender + thread are the same for all recipients) with a richer
+    // payload: the sender's avatar drives the OS notification icon, and
+    // we include a small snapshot so the system tray can preview what
+    // was shared (battle pot / post body / result). Tapping the push
+    // deep-links to /messenger?chat=<senderId> so the recipient lands
+    // directly in the thread with the sender.
     try {
+      const senderRows = await db
+        .select({ username: profiles.username, avatar: profiles.avatar })
+        .from(profiles)
+        .where(eq(profiles.id, userId));
+      const senderName = senderRows[0]?.username || 'A friend';
+      // Web push payloads are capped (~4KB on most pushers), so refuse
+      // to inline a giant base64 data: URL as the icon — fall back to
+      // the default app icon. Only http(s) URLs are passed through.
+      const rawAvatar = senderRows[0]?.avatar || null;
+      const senderAvatar = rawAvatar && /^https?:\/\//i.test(rawAvatar) && rawAvatar.length <= 500
+        ? rawAvatar
+        : null;
+
+      const itemLabel = itemType === 'battle'
+        ? 'a battle'
+        : (itemType === 'result' ? 'a battle result' : 'a post');
+
+      // One-line preview of the shared item for the notification body
+      // (falls back to a generic CTA when there's nothing meaningful).
+      let preview = '';
+      if (snapshot) {
+        if (itemType === 'battle' && snapshot.user1 && snapshot.user2) {
+          preview = `${snapshot.user1.username || 'P1'} vs ${snapshot.user2.username || 'P2'}`;
+          if (snapshot.potSize) preview += ` · ${snapshot.potSize.toLocaleString()} pot`;
+        } else if (itemType === 'result' && snapshot.winner) {
+          preview = `${snapshot.winner.username || 'Winner'} beat ${snapshot.loser?.username || 'opponent'}`;
+        } else if (itemType === 'post' && snapshot.body) {
+          preview = snapshot.body;
+        }
+      }
+      const body = cleanNote
+        ? `"${cleanNote}"`
+        : (preview || (itemType === 'battle'
+            ? 'Tap to spectate the battle'
+            : (itemType === 'result' ? 'Tap to watch the replay' : 'Tap to read the post')));
+
       sendPushToUsers(validRecipients, {
         category: 'social',
-        title: itemType === 'battle'
-          ? 'A battle was shared with you'
-          : (itemType === 'result' ? 'A battle result was shared with you' : 'A post was shared with you'),
-        body: cleanNote || (itemType === 'battle'
-          ? 'Tap to spectate the battle'
-          : (itemType === 'result' ? 'Tap to watch the replay' : 'Tap to read the post')),
-        url: '/messenger',
+        title: `${senderName} shared ${itemLabel} with you`,
+        body,
+        icon: senderAvatar || undefined,
+        url: `/messenger?chat=${encodeURIComponent(userId)}`,
         tag: `social:share:${item.id}:${userId}`,
-        data: { type: 'social_share', itemType, itemId: item.id, actorId: userId },
+        data: {
+          type: 'social_share',
+          itemType,
+          itemId: item.id,
+          actorId: userId,
+          actorName: senderName,
+          actorAvatar: senderAvatar,
+          snapshot,
+          threadId: userId,
+        },
       }).catch(() => {});
     } catch (_e) {}
 
