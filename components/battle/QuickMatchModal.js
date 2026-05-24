@@ -37,7 +37,7 @@ const GAME_MODE_OPTIONS = [
     coins: 10000,
     durationMinutes: 180,
     durationType: 'rush',
-    color: '#f59e0b',
+    color: '#10b981',
   },
   {
     id: 'original',
@@ -60,7 +60,7 @@ const GAME_MODE_OPTIONS = [
     coins: 100000,
     durationMinutes: 4320,
     durationType: 'tournament',
-    color: '#10b981',
+    color: '#f97316',
   },
 ];
 
@@ -1655,26 +1655,26 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           style={
                             betaLocked
                               ? {
-                                  background: 'linear-gradient(180deg, #050505 0%, #020202 100%)',
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04), 0 3px 0 #000',
+                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.06) 100%), #0a0a0a`,
+                                  border: `2.5px solid ${mode.color}`,
+                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 18px ${glow}`,
                                   cursor: 'not-allowed',
                                   minHeight: 132,
                                 }
                               : selected
                               ? {
-                                  background: `linear-gradient(180deg,${tint},#111)`,
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 16px ${glow}`,
-                                  opacity: locked ? 0.45 : 1,
+                                  background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.08) 100%), #0a0a0a`,
+                                  border: `2.5px solid ${mode.color}`,
+                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 26px ${glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
+                                  opacity: locked ? 0.5 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
                                 }
                               : {
-                                  backgroundColor: '#111',
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: '0 3px 0 #0a0a0a',
-                                  opacity: locked ? 0.45 : 1,
+                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), #0a0a0a`,
+                                  border: `2.5px solid ${mode.color}`,
+                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 18px ${glow}`,
+                                  opacity: locked ? 0.5 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
                                 }
@@ -1692,7 +1692,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                 className="absolute inset-0 pointer-events-none"
                                 style={{
                                   background:
-                                    'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.7) 100%)',
+                                    'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 100%)',
                                   borderRadius: 'inherit',
                                 }}
                               />
