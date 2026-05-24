@@ -32,6 +32,7 @@ const GAME_MODE_OPTIONS = [
     id: 'rush',
     label: 'RUSH',
     icon: '⚡',
+    tagline: 'FAST · INTENSE',
     description: 'Pick 6 props from a live game',
     coins: 10000,
     durationMinutes: 180,
@@ -42,6 +43,7 @@ const GAME_MODE_OPTIONS = [
     id: 'original',
     label: 'ORIGINAL',
     icon: '🏆',
+    tagline: 'BALANCED · COMPETITIVE',
     description: 'Highest balance after all games end wins',
     coins: 10000,
     durationMinutes: 1440,
@@ -53,6 +55,7 @@ const GAME_MODE_OPTIONS = [
     id: 'tournament',
     label: 'TOURNAMENT',
     icon: '👑',
+    tagline: 'BIG STAKES · BIGGER WINS',
     description: '3-day battle with a massive bankroll',
     coins: 100000,
     durationMinutes: 4320,
@@ -1488,23 +1491,26 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                         className="font-black uppercase"
                         style={{
                           color: '#fff',
-                          fontSize: '20px',
-                          lineHeight: 1.05,
-                          letterSpacing: '0.06em',
-                          textShadow: '0 2px 0 #000',
+                          fontSize: '34px',
+                          lineHeight: 0.95,
+                          letterSpacing: '0.02em',
+                          fontStyle: 'italic',
+                          WebkitTextStroke: '1.5px #0a0a0a',
+                          textShadow: '0 3px 0 #0a0a0a, 0 0 28px rgba(59,130,246,0.55)',
                         }}
                       >
                         Quick Match
                       </h2>
                       <p
-                        className="mt-1 font-extrabold uppercase"
+                        className="mt-1.5 font-extrabold uppercase"
                         style={{
                           color: '#60a5fa',
                           fontSize: '10px',
-                          letterSpacing: '0.18em',
+                          letterSpacing: '0.22em',
+                          textShadow: '0 0 10px rgba(59,130,246,0.45)',
                         }}
                       >
-                        Find a random opponent instantly
+                        Instant matchmaking · Real competition
                       </p>
                     </div>
                   </div>
@@ -1547,21 +1553,26 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
 
                 {/* Buy-in tiles — hidden during beta (ranking-only, no $). */}
                 {isBeta ? (
-                  <div
-                    className="rounded-2xl p-3 flex items-start gap-3"
-                    style={{
-                      background: 'linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 4px 0 #0a0a0a',
-                    }}
-                  >
-                    <span className="text-lg leading-none" aria-hidden="true">🛡️</span>
-                    <div className="min-w-0">
-                      <div className="text-[10px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#34d399' }}>Beta — Ranking Only</div>
-                      <div className="text-[11px] mt-1" style={{ color: '#cbd5e1', lineHeight: 1.4 }}>
-                        No buy-in during the public beta. Equal stacks, zero excuses — every win climbs the leaderboard and proves who's the sharper bettor.
-                      </div>
+                  <div className="flex flex-col items-center text-center gap-1.5">
+                    <div
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(16,185,129,0.22), rgba(16,185,129,0.08))',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 18px rgba(16,185,129,0.35)',
+                      }}
+                    >
+                      <span className="text-sm leading-none" aria-hidden="true">🛡️</span>
+                      <span
+                        className="font-black uppercase"
+                        style={{ color: '#34d399', fontSize: 10, letterSpacing: '0.22em' }}
+                      >
+                        Beta · Ranking Enabled
+                      </span>
                     </div>
+                    <p className="text-[11px]" style={{ color: '#94a3b8', lineHeight: 1.4 }}>
+                      Climb the leaderboard. Prove you're the best.
+                    </p>
                   </div>
                 ) : (
                 <div>
@@ -1604,9 +1615,20 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     Identical to PlayFriendModal so both modals share
                     one mental model. */}
                 <div>
-                  <div className="flex items-baseline justify-between mb-2 gap-2">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Game Mode</label>
-                    <span className="text-[10px]" style={{ color: '#6b7280' }}>Coins = starting bankroll</span>
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(96,165,250,0.45))' }} />
+                    <span
+                      className="font-black uppercase whitespace-nowrap"
+                      style={{
+                        color: '#bfdbfe',
+                        fontSize: 10,
+                        letterSpacing: '0.28em',
+                        textShadow: '0 0 10px rgba(59,130,246,0.4)',
+                      }}
+                    >
+                      ◆ Choose Your Game Mode ◆
+                    </span>
+                    <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'linear-gradient(270deg, transparent, rgba(96,165,250,0.45))' }} />
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {GAME_MODE_OPTIONS.map(mode => {
@@ -1637,7 +1659,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                   border: '2.5px solid #0a0a0a',
                                   boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04), 0 3px 0 #000',
                                   cursor: 'not-allowed',
-                                  minHeight: 88,
+                                  minHeight: 132,
                                 }
                               : selected
                               ? {
@@ -1646,7 +1668,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                   boxShadow: `0 4px 0 #0a0a0a, 0 0 16px ${glow}`,
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
-                                  minHeight: 88,
+                                  minHeight: 132,
                                 }
                               : {
                                   backgroundColor: '#111',
@@ -1654,7 +1676,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                   boxShadow: '0 3px 0 #0a0a0a',
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
-                                  minHeight: 88,
+                                  minHeight: 132,
                                 }
                           }
                         >
@@ -1767,11 +1789,21 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               Locked
                             </span>
                           )}
-                          <span className="text-lg leading-none mb-1">{mode.icon}</span>
-                          <span className="font-extrabold text-[11px] leading-tight uppercase tracking-wider" style={{ color: '#fff' }}>{mode.label}</span>
-                          <span className="text-[8px] uppercase tracking-wider mt-1 leading-none" style={{ color: '#6b7280' }}>Start with</span>
-                          <span className="font-extrabold text-[11px] mt-0.5" style={{ color: '#fff' }}>{mode.coins.toLocaleString()}</span>
-                          <span className="text-[9px]" style={{ color: '#6b7280' }}>coins</span>
+                          <span className="text-2xl leading-none mb-1.5">{mode.icon}</span>
+                          <span className="font-black text-[12px] leading-tight uppercase tracking-wider" style={{ color: '#fff' }}>{mode.label}</span>
+                          {mode.tagline && (
+                            <span
+                              className="text-[7.5px] font-extrabold uppercase mt-0.5 leading-none"
+                              style={{ color: selected ? '#cbd5e1' : '#6b7280', letterSpacing: '0.14em' }}
+                            >
+                              {mode.tagline}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center gap-1 mt-1.5">
+                            <span className="font-black text-[12px] leading-none" style={{ color: '#fff' }}>{mode.coins.toLocaleString()}</span>
+                            <span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>🪙</span>
+                          </span>
+                          <span className="text-[8px] uppercase tracking-wider mt-0.5 leading-none font-bold" style={{ color: '#6b7280' }}>coins</span>
                         </button>
                       );
                     })}
@@ -1820,17 +1852,31 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
 
                 <button
                   onClick={startSearch}
-                  className="msg-cartoon-btn w-full text-white font-extrabold uppercase tracking-wider py-3.5 rounded-2xl"
+                  className="msg-cartoon-btn w-full text-white font-black uppercase rounded-2xl flex flex-col items-center justify-center gap-1 py-3.5"
                   style={{
                     background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
                     border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 5px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55)',
+                    boxShadow: '0 5px 0 #0a0a0a, 0 0 28px rgba(59,130,246,0.6)',
                     textShadow: '0 1px 0 rgba(0,0,0,0.35)',
-                    fontSize: 15,
                   }}
                 >
-                  Find Opponent
+                  <span className="inline-flex items-center gap-2.5" style={{ fontSize: 17, letterSpacing: '0.08em' }}>
+                    <span aria-hidden="true" className="qm-cta-chev" style={{ fontSize: 14, opacity: 0.9 }}>»</span>
+                    Find Opponent
+                    <span aria-hidden="true" className="qm-cta-chev" style={{ fontSize: 14, opacity: 0.9 }}>«</span>
+                  </span>
+                  <span style={{ fontSize: 9, letterSpacing: '0.28em', color: '#bfdbfe', textShadow: 'none' }}>
+                    Play Now · Win Big
+                  </span>
                 </button>
+                <style jsx>{`
+                  @keyframes qmCtaChev {
+                    0%, 100% { transform: translateX(0); opacity: 0.9; }
+                    50% { transform: translateX(3px); opacity: 1; }
+                  }
+                  .qm-cta-chev:first-child { animation: qmCtaChev 1.2s ease-in-out infinite; }
+                  .qm-cta-chev:last-child { animation: qmCtaChev 1.2s ease-in-out infinite reverse; }
+                `}</style>
               </div>
             </>
           )}
