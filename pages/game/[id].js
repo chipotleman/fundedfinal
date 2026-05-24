@@ -576,13 +576,18 @@ function teamInitials(name) {
 }
 
 function DesktopMarketCard({ title, children }) {
+  // `h-full` makes the card stretch to fill its grid row, and the
+  // inner flex column lets the children area (`flex-1`) expand so
+  // every card in a row ends up the same height even when one
+  // market (e.g. Moneyline) has fewer rows than another (Spread /
+  // Total Points each have a sub line under the team name).
   return (
-    <div className="bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a] overflow-hidden">
+    <div className="bg-[#0f0f0f] rounded-2xl border border-[#1a1a1a] overflow-hidden h-full flex flex-col">
       <div className="flex items-center justify-between px-5 py-3 border-b border-[#1a1a1a]">
         <span className="text-sm font-bold text-white tracking-wide">{title}</span>
         <span className="text-[10px] font-bold text-gray-500 bg-[#161616] px-2 py-1 rounded uppercase tracking-wider">SGP</span>
       </div>
-      <div className="p-4 space-y-2">{children}</div>
+      <div className="p-4 space-y-2 flex-1 flex flex-col justify-start">{children}</div>
     </div>
   );
 }
@@ -604,7 +609,14 @@ function DesktopOptionButton({ active, disabled, label, value, sub, onClick, acc
     >
       <div className="flex flex-col items-start">
         <span className="text-sm font-semibold text-gray-200">{label}</span>
-        {sub != null && <span className="text-xs text-gray-500 mt-0.5">{sub}</span>}
+        {/* Always render the sub line (with a non-breaking space when
+            absent) so every option row has the same height. Without
+            this, Moneyline rows are shorter than Spread / Total rows
+            and the three market cards in the Popular grid end up
+            visually unequal. */}
+        <span className="text-xs text-gray-500 mt-0.5 leading-4">
+          {sub != null ? sub : '\u00a0'}
+        </span>
       </div>
       <span
         className="text-lg font-extrabold tabular-nums"
