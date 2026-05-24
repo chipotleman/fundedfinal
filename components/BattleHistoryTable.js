@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { formatMoney } from '../utils/formatMoney';
 import UserAvatar from './UserAvatar';
 import BattleOverviewPopup from './BattleOverviewPopup';
+import UsernameLink from './social/UsernameLink';
 
 const MODE_THEMES = {
   rush: {
@@ -177,7 +178,13 @@ function PlayersCell({ me, opponent }) {
         size={26}
         bgColor="#111"
       />
-      <span className="text-white text-[12px] font-medium truncate max-w-[110px]">{me.username}</span>
+      <UsernameLink
+        user={me}
+        className="text-white text-[12px] font-medium truncate max-w-[110px]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {me.username}
+      </UsernameLink>
       <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">vs</span>
       <UserAvatar
         avatar={opponent.avatar}
@@ -186,7 +193,13 @@ function PlayersCell({ me, opponent }) {
         size={26}
         bgColor="#111"
       />
-      <span className="text-white text-[12px] font-medium truncate max-w-[110px]">{opponent.username}</span>
+      <UsernameLink
+        user={opponent}
+        className="text-white text-[12px] font-medium truncate max-w-[110px]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {opponent.username}
+      </UsernameLink>
     </div>
   );
 }
