@@ -177,25 +177,65 @@ function MatchFoundContent({
     </svg>
   );
 
+  // Mode label + 24h-style countdown chip (purely visual — the actual
+  // match timer is enforced server-side later). Falls back gracefully
+  // for non-original modes.
+  const modeLabel = (gameMode || 'original').toUpperCase();
+  const timeChipLabel = gameMode === 'rush' ? 'LIVE NOW' : '24H';
+
   return (
     <div className="relative z-10">
-      {/* Centered hero title — same brushed-silver gradient + gold
-          lightning bolts + cyan accent-line subtitle as the config
-          and searching steps. Keeps the whole popup feeling like one
-          cohesive flow instead of three different screens. */}
-      <div className="px-5 pt-7 pb-1 text-center relative">
-        <div className="flex items-center justify-center gap-2.5">
-          <span aria-hidden="true" style={{ fontSize: 26, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+      {/* Confetti / spark backdrop — pure CSS so the whole panel feels
+          like the arcade "you're matched" reference instead of a flat
+          dialog. Lives behind everything (z-0) with pointer-events:none. */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 0,
+          background:
+            'radial-gradient(circle at 18% 12%, rgba(251,191,36,0.18), transparent 18%),' +
+            'radial-gradient(circle at 82% 10%, rgba(236,72,153,0.16), transparent 20%),' +
+            'radial-gradient(circle at 50% 95%, rgba(6,182,212,0.18), transparent 30%),' +
+            'radial-gradient(circle at 8% 70%, rgba(16,185,129,0.14), transparent 22%),' +
+            'radial-gradient(circle at 92% 78%, rgba(249,115,22,0.18), transparent 24%)',
+        }}
+      />
+
+      {/* ─── Hero title ──────────────────────────────────────────────
+          Big neon italic "YOU'RE MATCHED!" with yellow→orange gradient
+          fill, thick black outline, and multi-layer pink/orange/cyan
+          glow to match the arcade reference. Lightning bolts on each
+          side stay on the same baseline. */}
+      <div className="px-5 pt-7 pb-2 text-center relative">
+        <div className="flex items-center justify-center gap-3">
+          <span
+            aria-hidden="true"
+            style={{
+              fontSize: 32,
+              lineHeight: 1,
+              color: '#facc15',
+              filter:
+                'drop-shadow(0 0 14px rgba(251,146,60,0.9)) drop-shadow(0 0 22px rgba(236,72,153,0.55)) drop-shadow(0 2px 0 #0a0a0a)',
+              animation: 'qm-bolt-flicker 1.1s ease-in-out infinite',
+            }}
+          >
+            ⚡
+          </span>
           <h3
             className="font-black uppercase text-center"
             style={{
-              fontSize: 'clamp(34px, 9vw, 44px)',
-              lineHeight: 0.92,
-              letterSpacing: '0.015em',
+              fontSize: 'clamp(34px, 9.5vw, 52px)',
+              lineHeight: 0.9,
+              letterSpacing: '0.01em',
               fontStyle: 'italic',
-              WebkitTextStroke: '1.3px #0a0a0a',
-              textShadow: '0 3px 0 #0a0a0a, 0 0 32px rgba(6,182,212,0.75), 0 0 16px rgba(255,255,255,0.45)',
-              background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
+              WebkitTextStroke: '2px #0a0a0a',
+              textShadow:
+                '0 4px 0 #0a0a0a,' +
+                '0 0 18px rgba(251,146,60,0.95),' +
+                '0 0 34px rgba(236,72,153,0.7),' +
+                '0 0 52px rgba(168,85,247,0.45)',
+              background: 'linear-gradient(180deg, #fef08a 0%, #facc15 45%, #fb923c 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               whiteSpace: 'nowrap',
@@ -204,55 +244,73 @@ function MatchFoundContent({
               fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           >
-            Match Found!
+            You're Matched!
           </h3>
-          <span aria-hidden="true" style={{ fontSize: 26, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
-        </div>
-        <div className="flex items-center gap-2 mt-2">
-          <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
-          <p
-            className="font-black uppercase whitespace-nowrap text-center"
-            style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.24em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}
+          <span
+            aria-hidden="true"
+            style={{
+              fontSize: 32,
+              lineHeight: 1,
+              color: '#facc15',
+              filter:
+                'drop-shadow(0 0 14px rgba(251,146,60,0.9)) drop-shadow(0 0 22px rgba(236,72,153,0.55)) drop-shadow(0 2px 0 #0a0a0a)',
+              animation: 'qm-bolt-flicker 1.1s ease-in-out infinite 0.15s',
+            }}
           >
-            Opponent Locked In
-          </p>
-          <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+            ⚡
+          </span>
+        </div>
+
+        {/* Green "BATTLE STARTED" pill */}
+        <div className="mt-3 flex justify-center">
+          <span
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-black uppercase whitespace-nowrap"
+            style={{
+              background: 'linear-gradient(180deg,#10b981,#047857)',
+              border: '2.5px solid #0a0a0a',
+              boxShadow: '0 3px 0 #0a0a0a, 0 0 18px rgba(16,185,129,0.55)',
+              color: '#ffffff',
+              letterSpacing: '0.22em',
+              textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+            }}
+          >
+            <span aria-hidden="true" style={{ color: '#fef08a' }}>★</span>
+            Battle Started
+            <span aria-hidden="true" style={{ color: '#fef08a' }}>★</span>
+          </span>
         </div>
       </div>
 
-      {/* Buy-in / pot pill with trophy + coins.
-          Single-line layout — labels are compacted so they never wrap. */}
-      <div className="px-4 pb-2">
+      {/* ─── Mode / pot / timer strip ────────────────────────────────
+          Trophy · MODE · WIN X COINS · 24H · coin — single neon
+          capsule with cyan border so it reads as one bar of meta info,
+          matching the reference. */}
+      <div className="px-4 pb-3 relative z-10">
         <div
-          className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 whitespace-nowrap"
+          className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 sm:gap-3 whitespace-nowrap"
           style={{
-            background: '#0f1424',
-            border: '2px solid #3b82f6',
-            maxWidth: 360,
+            background: 'linear-gradient(180deg,#0b1220,#080a14)',
+            border: '2.5px solid #0a0a0a',
+            boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(6,182,212,0.35)',
+            maxWidth: 420,
           }}
         >
-          <span style={{ fontSize: 22 }} aria-hidden="true">🏆</span>
-          <span className="text-white font-extrabold text-sm md:text-base" style={{ letterSpacing: '0.02em' }}>
-            <span style={{ color: '#facc15' }}>{buyInLabel}</span>
-            <span className="text-gray-400 mx-1.5">·</span>
-            <span style={{ color: '#facc15' }}>{potLabel}</span>
+          <span style={{ fontSize: 20 }} aria-hidden="true">🏆</span>
+          <span className="text-white font-extrabold text-[11px] sm:text-xs" style={{ letterSpacing: '0.14em' }}>
+            {modeLabel}
           </span>
-          <span style={{ fontSize: 22 }} aria-hidden="true">🪙</span>
-        </div>
-        <div className="mt-2 flex justify-center">
-          <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase"
-            style={{
-              background: '#10b981',
-              border: '2px solid #047857',
-              color: '#fff',
-              letterSpacing: '0.12em',
-            }}
-          >
-            <span aria-hidden="true">✨</span>
-            +{xpBonus} XP STREAK BONUS
-            <span aria-hidden="true">✨</span>
+          <span aria-hidden="true" style={{ width: 1.5, height: 16, background: '#1e293b' }} />
+          <span className="font-extrabold text-[11px] sm:text-xs" style={{ color: '#facc15', letterSpacing: '0.06em' }}>
+            {potLabel}
           </span>
+          <span aria-hidden="true" style={{ width: 1.5, height: 16, background: '#1e293b' }} />
+          <span className="inline-flex items-center gap-1.5">
+            <span style={{ fontSize: 14 }} aria-hidden="true">⏱️</span>
+            <span className="text-white font-extrabold text-[11px] sm:text-xs" style={{ letterSpacing: '0.08em' }}>
+              {timeChipLabel}
+            </span>
+          </span>
+          <span style={{ fontSize: 20 }} aria-hidden="true">🪙</span>
         </div>
       </div>
 
@@ -306,11 +364,28 @@ function MatchFoundContent({
           className="flex flex-col items-center relative z-10"
           style={{ animation: 'qm-slam-from-left 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}
         >
+          {/* Crown — visual flair to match the arcade reference. The
+              royal/winner connotation makes the YOU avatar feel like
+              the hero of the screen even before the match starts. */}
+          <span
+            aria-hidden="true"
+            className="absolute"
+            style={{
+              top: -18,
+              fontSize: 24,
+              filter: 'drop-shadow(0 2px 0 #0a0a0a) drop-shadow(0 0 10px rgba(250,204,21,0.85))',
+              animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.25s both',
+              zIndex: 20,
+            }}
+          >
+            👑
+          </span>
           <div className="relative mb-2">
             <div
               className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
               style={{
-                border: '3px solid #3b82f6',
+                border: '4px solid #3b82f6',
+                boxShadow: '0 0 0 2px #0a0a0a, 0 0 22px rgba(59,130,246,0.65)',
                 background: th.avatarBg1,
               }}
             >
@@ -377,7 +452,8 @@ function MatchFoundContent({
             <div
               className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
               style={{
-                border: '3px solid #fb923c',
+                border: '4px solid #fb923c',
+                boxShadow: '0 0 0 2px #0a0a0a, 0 0 22px rgba(251,146,60,0.65)',
                 background: th.avatarBg2,
               }}
             >
@@ -460,44 +536,12 @@ function MatchFoundContent({
         </div>
       </div>
 
-      {/* Confirms-in countdown bar */}
-      {gameMode !== 'rush' && (
-        <div className="px-4 pb-3">
-          <div
-            className="rounded-2xl px-3 py-2.5 flex items-center gap-3"
-            style={{
-              background: '#0f1424',
-              border: '2px solid #3b82f6',
-            }}
-          >
-            <span style={{ fontSize: 16 }} aria-hidden="true">⏱️</span>
-            <span className="text-[10px] font-extrabold uppercase text-blue-200 whitespace-nowrap" style={{ letterSpacing: '0.14em' }}>
-              Match Confirms In:
-            </span>
-            <span className="text-white font-black text-sm" style={{ letterSpacing: '0.04em' }}>
-              {secondsLeft}s
-            </span>
-            <div className="flex-1 flex items-center gap-1 ml-1">
-              {Array.from({ length: totalSegments }).map((_, i) => {
-                const filled = i < filledSegments;
-                return (
-                  <span
-                    key={i}
-                    className="flex-1 rounded-sm"
-                    style={{
-                      height: 10,
-                      background: filled ? '#3b82f6' : '#1a1a1a',
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CTA */}
-      <div className="px-4 pb-5">
+      {/* ─── CTA + lock footer ──────────────────────────────────────
+          Big arcade "LET'S GO!" button with chevron arrows on each
+          side + neon orange→pink fill + chunky black border / hard
+          shadow. Footer underneath reads "BATTLE LOCKED IN — Both
+          players must be ready" with a padlock to match the reference. */}
+      <div className="px-4 pt-1 pb-5 relative z-10">
         {gameMode === 'rush' ? (
           <div
             className="w-full py-3.5 rounded-2xl text-center font-extrabold text-white uppercase flex items-center justify-center gap-2"
@@ -517,32 +561,51 @@ function MatchFoundContent({
           </div>
         ) : (
           <>
-            <div className="text-center mb-2 inline-flex items-center justify-center gap-1.5 w-full">
-              <span style={{ fontSize: 14 }} aria-hidden="true">🚀</span>
-              <span className="text-[10.5px] font-extrabold uppercase text-blue-200" style={{ letterSpacing: '0.16em' }}>
-                Lock in this matchup and earn rewards!
-              </span>
-              <span style={{ fontSize: 14 }} aria-hidden="true">⭐</span>
-            </div>
             <button
               onClick={() => { firedRef.current = true; onContinue(); }}
-              className="msg-cartoon-btn w-full py-4 rounded-2xl font-black text-2xl uppercase flex items-center justify-center gap-2"
+              className="msg-cartoon-btn w-full py-4 rounded-2xl font-black uppercase flex items-center justify-center gap-3 sm:gap-4 relative"
               style={{
-                background: '#facc15',
-                border: '2px solid #ca8a04',
-                letterSpacing: '0.08em',
+                background: 'linear-gradient(180deg,#fde047 0%, #f97316 60%, #ea580c 100%)',
+                border: '3px solid #0a0a0a',
+                boxShadow: '0 5px 0 #0a0a0a, 0 0 28px rgba(249,115,22,0.6), 0 0 48px rgba(236,72,153,0.35)',
+                letterSpacing: '0.1em',
                 color: '#0a0a0a',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontSize: 'clamp(22px, 6vw, 30px)',
+                fontStyle: 'italic',
               }}
             >
-              PLAY NOW
+              <span aria-hidden="true" style={{ fontSize: '1.4em', lineHeight: 1, color: '#0a0a0a' }}>«</span>
+              <span style={{ textShadow: '0 2px 0 rgba(255,255,255,0.35)' }}>Let's Go!</span>
+              <span aria-hidden="true" style={{ fontSize: '1.4em', lineHeight: 1, color: '#0a0a0a' }}>»</span>
             </button>
+
+            {/* Lock footer */}
+            <div className="mt-3 text-center">
+              <div
+                className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase"
+                style={{ color: '#cbd5e1', letterSpacing: '0.18em' }}
+              >
+                <span aria-hidden="true" style={{ fontSize: 12 }}>🔒</span>
+                Battle Locked In
+              </div>
+              <div className="text-[11px] mt-0.5" style={{ color: '#94a3b8' }}>
+                Both players must be ready
+                {gameMode !== 'rush' && (
+                  <>
+                    <span className="mx-1.5" style={{ color: '#475569' }}>·</span>
+                    <span style={{ color: '#7dd3fc' }}>{secondsLeft}s</span>
+                  </>
+                )}
+              </div>
+            </div>
+
             <button
               onClick={() => { firedRef.current = true; onCancel?.(); }}
-              className="block mx-auto mt-3 text-gray-400 text-xs font-bold underline-offset-4 hover:text-white hover:underline transition-colors"
+              className="block mx-auto mt-3 text-gray-500 text-[11px] font-bold underline-offset-4 hover:text-white hover:underline transition-colors"
               style={{ background: 'transparent' }}
             >
-              Maybe later
+              Skip
             </button>
           </>
         )}
