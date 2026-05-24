@@ -28,6 +28,86 @@ function Avatar(props) {
   return <UserAvatar {...props} />;
 }
 
+// In-thread bell toggle for muting a friend's push notifications. Surfaces
+// the same per-friend mute that lives on the Friends page, but right where
+// the user is staring at the noisy person's messages. Self-fetches the
+// initial state from GET /api/friends/:id/mute so it works regardless of
+// whether the caller seeded `friend.pushMuted` (the conversations endpoint
+// doesn't include it). Optimistic POST/DELETE with revert on failure.
+function FriendMuteToggle({ friend }) {
+  const seed = typeof friend?.pushMuted === 'boolean' ? friend.pushMuted : null;
+  const [muted, setMuted] = useState(seed);
+  const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    // Reset to the latest seed whenever the friend changes; if the caller
+    // didn't pass pushMuted, fall back to a fresh GET so we don't leak the
+    // previous friend's state into the new thread.
+    setMuted(typeof friend?.pushMuted === 'boolean' ? friend.pushMuted : null);
+  }, [friend?.id, friend?.pushMuted]);
+
+  useEffect(() => {
+    if (!friend?.id) return undefined;
+    if (typeof friend?.pushMuted === 'boolean') return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/friends/${friend.id}/mute`, { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setMuted(!!data.muted);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [friend?.id, friend?.pushMuted]);
+
+  if (!friend?.id || muted === null) return null;
+
+  const handleToggle = async () => {
+    if (pending) return;
+    const next = !muted;
+    setMuted(next);
+    setPending(true);
+    try {
+      const res = await fetch(`/api/friends/${friend.id}/mute`, {
+        method: next ? 'POST' : 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch {
+      setMuted(!next);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const label = muted ? 'Unmute notifications' : 'Mute notifications';
+
+  return (
+    <button
+      type="button"
+      onClick={handleToggle}
+      disabled={pending}
+      title={label}
+      aria-label={label}
+      aria-pressed={muted}
+      className={`inline-flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 transition-colors disabled:opacity-60 ${muted ? 'text-orange-400 hover:bg-orange-500/15' : 'text-gray-400 hover:bg-white/10'}`}
+      style={{ WebkitTapHighlightColor: 'transparent' }}
+    >
+      {muted ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l4-4m0 4l-4-4" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 // Scroll only the inner chat container — never call scrollIntoView, which can
 // scroll the outer page if the chat body isn't itself the nearest scrollable
 // ancestor. This fixes the long-standing scroll-hijack bug.
@@ -2648,6 +2728,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             inconsistent. A single Link guarantees the entire row is
             tappable, including any whitespace around the name. */}
         <ProfileHeaderLink friend={friend} textPrimary={textPrimary} textSecondary={textSecondary} />
+        <FriendMuteToggle friend={friend} />
         {onStartBattle && (
           <>
             {/* Mobile: square icon-only Start Battle button — cartoon
