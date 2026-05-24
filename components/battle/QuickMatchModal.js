@@ -1487,65 +1487,67 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   popups read as one design system. The only thing
                   that changes between them is the title copy and the
                   "challenging" card below. */}
-              <div className="px-5 pt-5 pb-0 flex-shrink-0">
-                <div className="flex items-center justify-between mb-4 gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {onBack && (
-                      <button
-                        aria-label="Back"
-                        onClick={onBack}
-                        className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: '#111', border: '2.5px solid #0a0a0a', boxShadow: '0 3px 0 #0a0a0a' }}
-                      >
-                        <svg className="w-4 h-4" style={{ color: '#fff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
-                      </button>
-                    )}
-                    <div className="min-w-0">
-                      <h2
-                        id="qm-title"
-                        className="font-black uppercase inline-flex items-center gap-2.5"
-                        style={{
-                          color: '#fff',
-                          fontSize: '40px',
-                          lineHeight: 0.95,
-                          letterSpacing: '0.015em',
-                          fontStyle: 'italic',
-                          WebkitTextStroke: '1.5px #0a0a0a',
-                          textShadow: '0 3px 0 #0a0a0a, 0 0 32px rgba(6,182,212,0.7), 0 0 14px rgba(255,255,255,0.4)',
-                          background: 'linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        <span aria-hidden="true" style={{ color: '#06b6d4', WebkitTextFillColor: '#06b6d4', WebkitTextStroke: '0', fontSize: 26, filter: 'drop-shadow(0 0 10px rgba(6,182,212,0.9))' }}>⚡</span>
-                        Quick Match
-                        <span aria-hidden="true" style={{ color: '#06b6d4', WebkitTextFillColor: '#06b6d4', WebkitTextStroke: '0', fontSize: 26, filter: 'drop-shadow(0 0 10px rgba(6,182,212,0.9))' }}>⚡</span>
-                      </h2>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
-                        <p
-                          className="font-black uppercase whitespace-nowrap"
-                          style={{
-                            color: '#7dd3fc',
-                            fontSize: '11px',
-                            letterSpacing: '0.22em',
-                            textShadow: '0 0 10px rgba(6,182,212,0.6)',
-                          }}
-                        >
-                          Instant Matchmaking · Real Competition
-                        </p>
-                        <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
-                      </div>
-                    </div>
-                  </div>
+              <div className="px-5 pt-7 pb-0 flex-shrink-0 relative">
+                {/* Floating close button — sits in the top-right HUD
+                    corner instead of competing with the centered title. */}
+                <button
+                  aria-label="Close"
+                  onClick={onClose}
+                  className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center absolute"
+                  style={{ top: 18, right: 18, backgroundColor: '#0a0f1c', border: '2px solid #06b6d4', boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(6,182,212,0.6)', zIndex: 5 }}
+                >
+                  <svg className="w-4 h-4" style={{ color: '#7dd3fc' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                {onBack && (
                   <button
-                    aria-label="Close"
-                    onClick={onClose}
-                    className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: '#111', border: '2.5px solid #0a0a0a', boxShadow: '0 3px 0 #0a0a0a' }}
+                    aria-label="Back"
+                    onClick={onBack}
+                    className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center absolute"
+                    style={{ top: 18, left: 18, backgroundColor: '#0a0f1c', border: '2px solid #06b6d4', boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(6,182,212,0.6)', zIndex: 5 }}
                   >
-                    <svg className="w-4 h-4" style={{ color: '#fff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                    <svg className="w-4 h-4" style={{ color: '#7dd3fc' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
                   </button>
+                )}
+                {/* Centered hero title — full-width "QUICK MATCH" with
+                    decorative lightning bolts flanking it on both sides. */}
+                <div className="flex items-center justify-center gap-3 mb-2 mt-1">
+                  <span aria-hidden="true" style={{ fontSize: 30, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                  <h2
+                    id="qm-title"
+                    className="font-black uppercase text-center"
+                    style={{
+                      fontSize: 'clamp(44px, 12vw, 60px)',
+                      lineHeight: 0.92,
+                      letterSpacing: '0.01em',
+                      fontStyle: 'italic',
+                      WebkitTextStroke: '1.5px #0a0a0a',
+                      textShadow: '0 3px 0 #0a0a0a, 0 0 38px rgba(6,182,212,0.75), 0 0 18px rgba(255,255,255,0.45)',
+                      background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      whiteSpace: 'nowrap',
+                      margin: 0,
+                    }}
+                  >
+                    Quick Match
+                  </h2>
+                  <span aria-hidden="true" style={{ fontSize: 30, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
+                  <p
+                    className="font-black uppercase whitespace-nowrap text-center"
+                    style={{
+                      color: '#7dd3fc',
+                      fontSize: '11px',
+                      letterSpacing: '0.22em',
+                      textShadow: '0 0 10px rgba(6,182,212,0.7)',
+                      margin: 0,
+                    }}
+                  >
+                    Instant Matchmaking · Real Competition
+                  </p>
+                  <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
                 </div>
               </div>
 
@@ -1675,7 +1677,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           aria-disabled={locked || undefined}
                           aria-pressed={selected}
                           title={betaLocked ? 'Available after the public beta — Original is the only mode during beta.' : (locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined)}
-                          className="msg-cartoon-btn flex flex-col items-center text-center px-1.5 pt-6 pb-2.5 rounded-2xl relative overflow-hidden"
+                          className={`msg-cartoon-btn flex flex-col items-center text-center px-1.5 pt-6 rounded-2xl relative overflow-hidden ${betaLocked ? 'pb-7' : 'pb-2.5'}`}
                           style={
                             betaLocked
                               ? {
@@ -1706,43 +1708,45 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                         >
                           {betaLocked && (
                             <>
-                              {/* Subtle dark veil over the tile contents so
-                                  the mode label reads as greyed-out and the
-                                  "Soon" pill at the bottom carries the
-                                  status. Pointer-events:none so the parent
-                                  button still owns the click. */}
+                              {/* Dark veil + heavy desaturation so the
+                                  tile reads as inactive at a glance,
+                                  without losing its mode-color identity
+                                  completely. */}
                               <span
                                 aria-hidden="true"
                                 className="absolute inset-0 pointer-events-none"
                                 style={{
                                   background:
-                                    'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 100%)',
+                                    'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.6) 100%)',
+                                  backdropFilter: 'grayscale(0.5)',
+                                  WebkitBackdropFilter: 'grayscale(0.5)',
                                   borderRadius: 'inherit',
+                                  zIndex: 1,
                                 }}
                               />
-                              {/* "Coming Soon" pill — yellow text on a
-                                  subtle dark background, no glow. The
-                                  yellow makes the upcoming-mode status
-                                  read at a glance without the gold
-                                  watermark glow that used to clip the
-                                  neighboring "Popular" badge. */}
+                              {/* Full-width yellow "🔒 COMING SOON" footer
+                                  bar — unmistakable inactivity signal
+                                  spanning the entire bottom edge of the
+                                  tile, with reserved tile padding so
+                                  the icon/label/coins still sit above
+                                  the bar instead of overlapping it. */}
                               <span
                                 aria-hidden="true"
-                                className="absolute left-1/2 -translate-x-1/2 pointer-events-none font-black uppercase tracking-wider select-none"
+                                className="absolute left-0 right-0 bottom-0 inline-flex items-center justify-center gap-1 pointer-events-none font-black uppercase select-none"
                                 style={{
-                                  bottom: 6,
-                                  fontSize: 8,
-                                  letterSpacing: '0.12em',
-                                  color: '#facc15',
-                                  background: 'rgba(20,20,20,0.92)',
-                                  border: '1.5px solid #0a0a0a',
-                                  padding: '2px 6px',
-                                  borderRadius: 6,
+                                  fontSize: 9,
+                                  letterSpacing: '0.18em',
+                                  color: '#0a0a0a',
+                                  background: 'linear-gradient(180deg,#fde047,#facc15)',
+                                  borderTop: '2px solid #0a0a0a',
+                                  padding: '4px 4px 5px',
                                   lineHeight: 1,
-                                  zIndex: 2,
+                                  zIndex: 4,
                                   whiteSpace: 'nowrap',
+                                  textShadow: 'none',
                                 }}
                               >
+                                <span style={{ fontSize: 10 }}>🔒</span>
                                 Coming Soon
                               </span>
                             </>
