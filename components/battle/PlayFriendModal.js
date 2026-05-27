@@ -673,8 +673,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     fontSize: 22,
                     lineHeight: 1,
                     color: '#facc15',
-                    filter:
-                      'drop-shadow(0 0 10px rgba(251,146,60,0.9)) drop-shadow(0 0 16px rgba(236,72,153,0.55)) drop-shadow(0 2px 0 #0a0a0a)',
+                    filter: 'drop-shadow(0 2px 0 #0a0a0a)',
                   }}
                 >
                   ⚡
@@ -688,10 +687,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     letterSpacing: '0.01em',
                     fontStyle: 'italic',
                     WebkitTextStroke: '1.5px #0a0a0a',
-                    textShadow:
-                      '0 3px 0 #0a0a0a,' +
-                      '0 0 14px rgba(251,146,60,0.9),' +
-                      '0 0 26px rgba(236,72,153,0.6)',
+                    textShadow: '0 3px 0 #0a0a0a',
                     background: 'linear-gradient(180deg, #fef08a 0%, #facc15 45%, #fb923c 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
@@ -708,8 +704,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     fontSize: 22,
                     lineHeight: 1,
                     color: '#facc15',
-                    filter:
-                      'drop-shadow(0 0 10px rgba(251,146,60,0.9)) drop-shadow(0 0 16px rgba(236,72,153,0.55)) drop-shadow(0 2px 0 #0a0a0a)',
+                    filter: 'drop-shadow(0 2px 0 #0a0a0a)',
                   }}
                 >
                   ⚡
@@ -1452,7 +1447,11 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                             boxShadow: '0 5px 0 #0a0a0a, 0 12px 24px rgba(0,0,0,0.6)',
                           }}
                         >
-                          The <span style={{ color: textPrimary, fontWeight: 800 }}>${buyIn}</span> above is each player&apos;s wager. The coins below are the in-battle starting bankroll each player gets to bet with.
+                          {isBeta ? (
+                            <>During the public beta there&apos;s no money wager — both players start with the same coin stack and the winner takes the W on the leaderboard.</>
+                          ) : (
+                            <>The <span style={{ color: textPrimary, fontWeight: 800 }}>${buyIn}</span> above is each player&apos;s wager. The coins below are the in-battle starting bankroll each player gets to bet with.</>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1609,8 +1608,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                                     'repeating-linear-gradient(115deg, rgba(16,185,129,0.18) 0 6px, transparent 6px 16px)',
                                 }}
                               />
-                              <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))' }}>⚡</span>
-                              <span style={{ position: 'absolute', bottom: 30, right: 6, fontSize: 14, opacity: 0.5, color: '#fde047', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))', transform: 'rotate(18deg)' }}>⚡</span>
+                              <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>⚡</span>
+                              <span style={{ position: 'absolute', bottom: 30, right: 6, fontSize: 14, opacity: 0.5, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)', transform: 'rotate(18deg)' }}>⚡</span>
                             </span>
                           )}
                           {mode.id === 'original' && (
@@ -1796,7 +1795,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 border: '3px solid #0a0a0a',
                 boxShadow: hasActiveMatchup
                   ? '0 5px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55)'
-                  : '0 5px 0 #0a0a0a, 0 0 28px rgba(249,115,22,0.6), 0 0 48px rgba(236,72,153,0.35)',
+                  : '0 5px 0 #0a0a0a, 0 0 28px rgba(249,115,22,0.55), 0 0 48px rgba(251,191,36,0.25)',
                 color: hasActiveMatchup ? '#fff' : '#0a0a0a',
                 textShadow: hasActiveMatchup ? '0 1px 0 rgba(0,0,0,0.35)' : '0 2px 0 rgba(255,255,255,0.35)',
                 fontStyle: hasActiveMatchup ? 'normal' : 'italic',
@@ -1807,11 +1806,42 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               }}
             >
               {!hasActiveMatchup && !sending && (
-                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#0a0a0a' }}>«</span>
+                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#0a0a0a', flexShrink: 0 }}>«</span>
               )}
-              <span className="relative z-10">{sending ? 'Sending…' : hasActiveMatchup ? 'In a battle' : `Challenge ${selectedFriend.username}`}</span>
+              <span
+                className="relative z-10"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'baseline',
+                  gap: '0.35em',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                }}
+              >
+                {sending ? (
+                  'Sending…'
+                ) : hasActiveMatchup ? (
+                  'In a battle'
+                ) : (
+                  <>
+                    <span style={{ flexShrink: 0 }}>Challenge</span>
+                    <span
+                      style={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {selectedFriend.username}
+                    </span>
+                  </>
+                )}
+              </span>
               {!hasActiveMatchup && !sending && (
-                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#0a0a0a' }}>»</span>
+                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#0a0a0a', flexShrink: 0 }}>»</span>
               )}
             </button>
           </div>

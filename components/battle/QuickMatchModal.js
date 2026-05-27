@@ -185,20 +185,17 @@ function MatchFoundContent({
 
   return (
     <div className="relative z-10">
-      {/* Confetti / spark backdrop — pure CSS so the whole panel feels
-          like the arcade "you're matched" reference instead of a flat
-          dialog. Lives behind everything (z-0) with pointer-events:none. */}
+      {/* Subtle cyan accent backdrop — kept very light so the card
+          doesn't get a heavy yellow/pink wash. Lives behind everything
+          (z-0) with pointer-events:none. */}
       <span
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none"
         style={{
           zIndex: 0,
           background:
-            'radial-gradient(circle at 18% 12%, rgba(251,191,36,0.18), transparent 18%),' +
-            'radial-gradient(circle at 82% 10%, rgba(236,72,153,0.16), transparent 20%),' +
-            'radial-gradient(circle at 50% 95%, rgba(6,182,212,0.18), transparent 30%),' +
-            'radial-gradient(circle at 8% 70%, rgba(16,185,129,0.14), transparent 22%),' +
-            'radial-gradient(circle at 92% 78%, rgba(249,115,22,0.18), transparent 24%)',
+            'radial-gradient(circle at 50% 0%, rgba(6,182,212,0.10), transparent 40%),' +
+            'radial-gradient(circle at 50% 100%, rgba(59,130,246,0.08), transparent 45%)',
         }}
       />
 
@@ -1593,7 +1590,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     Padded horizontally so the title never slides under
                     the back / close HUD buttons. */}
                 <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 mt-1 px-12 sm:px-14">
-                  <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                  <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                   <h2
                     id="qm-title"
                     className="font-black uppercase text-center"
@@ -1613,7 +1610,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   >
                     Quick Match
                   </h2>
-                  <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 12px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                  <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
@@ -1928,8 +1925,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                     'repeating-linear-gradient(115deg, rgba(16,185,129,0.18) 0 6px, transparent 6px 16px)',
                                 }}
                               />
-                              <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))' }}>⚡</span>
-                              <span style={{ position: 'absolute', bottom: 30, right: 6, fontSize: 14, opacity: 0.5, color: '#fde047', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.8))', transform: 'rotate(18deg)' }}>⚡</span>
+                              <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>⚡</span>
+                              <span style={{ position: 'absolute', bottom: 30, right: 6, fontSize: 14, opacity: 0.5, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)', transform: 'rotate(18deg)' }}>⚡</span>
                             </span>
                           )}
                           {mode.id === 'original' && (
@@ -2184,7 +2181,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   as one cohesive popup. */}
               <div className="px-5 pt-7 pb-1 flex-shrink-0 relative">
                 <div className="flex items-center justify-center gap-2.5">
-                  <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 10px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                  <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                   <h2
                     className="font-black uppercase text-center"
                     style={{
@@ -2203,7 +2200,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   >
                     Finding Opponent
                   </h2>
-                  <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 0 10px rgba(250,204,21,0.85)) drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                  <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
@@ -2635,7 +2632,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
               <div
                 className="absolute inset-0 pointer-events-none z-40"
                 style={{
-                  background: 'radial-gradient(ellipse at center, rgba(250,204,21,0.55) 0%, rgba(16,185,129,0.25) 45%, transparent 70%)',
+                  background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.35) 0%, rgba(59,130,246,0.18) 45%, transparent 70%)',
                   animation: 'qm-found-flash 0.55s ease-out forwards',
                 }}
                 aria-hidden="true"
