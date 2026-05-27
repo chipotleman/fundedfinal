@@ -134,7 +134,12 @@ export default function GameDetail() {
         status: 'IN_PROGRESS',
         period: event.period || event.quarter || '',
         lines,
-        odds: event.odds
+        odds: event.odds,
+        // Preserve raw event payload + stats so Box Score / Gamecast
+        // modals can render the per-period breakdown the Goalserve
+        // feed already gives us.
+        stats: event.stats,
+        events: event.events || event.commentary || null,
       };
     };
 
@@ -664,6 +669,56 @@ function DesktopGameDetail({
   const periodCount = Math.max(awayPeriods.length, homePeriods.length);
   const periodLabel = (game.sport === 'nhl' || game.sport === 'hockey') ? 'P' : 'Q';
 
+  // Box Score / Gamecast overlay state. `null` = nothing open.
+  const [activeOverlay, setActiveOverlay] = useState(null);
+
+  // Build the per-period score line from whichever source the game
+  // object happens to carry. Goalserve inplay events expose stats as
+  // an object keyed by index where each entry has {name, home, away}
+  // — 'name' is the period label ('1','2',...,'T') for MLB innings
+  // or ('Q1','Q2',...) for NBA/NFL. Fall back to the API `scores`
+  // shape (homePeriods/awayPeriods arrays) when stats isn't present.
+  const periodRows = useMemo(() => {
+    if (game?.stats && typeof game.stats === 'object') {
+      const entries = Object.values(game.stats).filter(
+        (s) => s && s.name && s.name !== 'T' && s.name !== 'ITeam'
+      );
+      if (entries.length) {
+        return entries.map((s) => ({
+          label: String(s.name),
+          home: s.home ?? '-',
+          away: s.away ?? '-',
+        }));
+      }
+    }
+    if (awayPeriods.length || homePeriods.length) {
+      const max = Math.max(awayPeriods.length, homePeriods.length);
+      return Array.from({ length: max }, (_, i) => ({
+        label: `${periodLabel}${i + 1}`,
+        home: homePeriods[i] ?? '-',
+        away: awayPeriods[i] ?? '-',
+      }));
+    }
+    return [];
+  }, [game?.stats, awayPeriods, homePeriods, periodLabel]);
+
+  // Lightweight commentary feed for Gamecast — Goalserve passes
+  // `events`/`commentary` arrays on some sports. Normalize to a
+  // simple {time, text} list if present.
+  const commentaryItems = useMemo(() => {
+    const raw = game?.events;
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+    return raw
+      .slice(-25)
+      .reverse()
+      .map((e, i) => ({
+        key: e.id || `${i}-${e.minute || e.time || ''}`,
+        time: e.minute || e.time || e.period || '',
+        text: e.description || e.comment || e.text || e.type || '',
+      }))
+      .filter((e) => e.text);
+  }, [game?.events]);
+
   return (
     <div className="hidden md:block">
       <div className="max-w-[1400px] mx-auto px-6 xl:px-10 py-6">
@@ -693,12 +748,14 @@ function DesktopGameDetail({
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => setActiveOverlay('boxscore')}
                 className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#141414] border border-[#1f1f1f] text-gray-300 hover:text-white hover:border-gray-600 transition-colors"
               >
                 Box Score
               </button>
               <button
                 type="button"
+                onClick={() => setActiveOverlay('gamecast')}
                 className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#141414] border border-[#1f1f1f] text-gray-300 hover:text-white hover:border-gray-600 transition-colors"
               >
                 Gamecast
@@ -1134,6 +1191,121 @@ function DesktopGameDetail({
           </aside>
         </div>
       </div>
+
+      {/* Box Score / Gamecast overlay */}
+      {activeOverlay && (
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm"
+          onClick={() => setActiveOverlay(null)}
+        >
+          <div
+            className="w-full max-w-2xl bg-[#0d0d0d] border border-[#1f1f1f] rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a1a]">
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
+                  {game.sportName || game.sport || 'Sports'}
+                </div>
+                <div className="text-lg font-black text-white">
+                  {activeOverlay === 'boxscore' ? 'Box Score' : 'Gamecast'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveOverlay(null)}
+                className="w-9 h-9 rounded-lg bg-[#141414] border border-[#1f1f1f] text-gray-400 hover:text-white hover:border-gray-600 flex items-center justify-center transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              {activeOverlay === 'boxscore' ? (
+                periodRows.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                          <th className="text-left py-2 pr-3">Team</th>
+                          {periodRows.map((p) => (
+                            <th key={p.label} className="px-2 py-2 text-center w-10">{p.label}</th>
+                          ))}
+                          <th className="px-2 py-2 text-center w-12 text-white">T</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-t border-[#1a1a1a]">
+                          <td className="py-3 pr-3 font-bold text-white truncate">{awayName}</td>
+                          {periodRows.map((p) => (
+                            <td key={`a-${p.label}`} className="px-2 py-3 text-center text-gray-300 font-semibold">{p.away}</td>
+                          ))}
+                          <td className="px-2 py-3 text-center font-black text-orange-400">{awayScore}</td>
+                        </tr>
+                        <tr className="border-t border-[#1a1a1a]">
+                          <td className="py-3 pr-3 font-bold text-white truncate">{homeName}</td>
+                          {periodRows.map((p) => (
+                            <td key={`h-${p.label}`} className="px-2 py-3 text-center text-gray-300 font-semibold">{p.home}</td>
+                          ))}
+                          <td className="px-2 py-3 text-center font-black text-blue-400">{homeScore}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-10 text-gray-500 text-sm">
+                    Per-period box score isn't available for this game yet.
+                    {isLive ? ' Check back once the feed catches up.' : ''}
+                  </div>
+                )
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-[#141414] border border-[#1f1f1f] rounded-xl p-4">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-400 mb-1">Away</div>
+                      <div className="text-white font-bold truncate">{awayName}</div>
+                      <div className="text-3xl font-black text-orange-400 mt-1">{awayScore}</div>
+                    </div>
+                    <div className="bg-[#141414] border border-[#1f1f1f] rounded-xl p-4">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-400 mb-1">Home</div>
+                      <div className="text-white font-bold truncate">{homeName}</div>
+                      <div className="text-3xl font-black text-blue-400 mt-1">{homeScore}</div>
+                    </div>
+                  </div>
+                  <div className="bg-[#141414] border border-[#1f1f1f] rounded-xl p-4 flex items-center justify-between text-sm">
+                    <span className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.18em]">Status</span>
+                    <span className="text-white font-bold">
+                      {isLive ? `LIVE${game.period ? ` · ${game.period}` : ''}` : isFinal ? 'Final' : (game.time || 'Scheduled')}
+                    </span>
+                  </div>
+                  {commentaryItems.length > 0 ? (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500 mb-2">Play-by-play</div>
+                      <ul className="space-y-2">
+                        {commentaryItems.map((c) => (
+                          <li key={c.key} className="bg-[#141414] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-gray-300 flex gap-3">
+                            {c.time && (
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-0.5 shrink-0">{c.time}</span>
+                            )}
+                            <span className="flex-1">{c.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-gray-500 text-sm">
+                      Live play-by-play isn't available for this game yet.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
