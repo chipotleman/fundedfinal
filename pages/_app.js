@@ -60,25 +60,25 @@ function AnalyticsTracker() {
   return null;
 }
 
-// Global top-nav click-trap watchdog. Originally installed only on
-// /messenger and /notifications because that's where the regression
-// surfaced first, but the underlying class of bug — an orphan
-// full-viewport overlay or stale body scroll-lock left behind by a
-// crashed modal / dropdown teardown — can happen on any route that
-// mounts modals (dashboard, battle, education marketplace, etc.).
-// Installed once per route here so a recurrence on a new page is
-// auto-recovered with the same single-warn-per-page-load behavior.
-// Suppressed on chrome-less routes (admin/debug/checkout/replay) that
-// don't mount the top navbar.
+// Top-nav click-trap watchdog. Scoped to /messenger and /notifications
+// — the two routes where the regression actually surfaces. An earlier
+// revision installed this on every route to defend against a generic
+// "orphan overlay" class of bug, but the watchdog's heuristic (any
+// fixed-position element ≥90% × 90% of the viewport that isn't
+// tagged `data-allow-fixed-overlay="true"` gets auto-removed every
+// 1.5s) also matches LEGITIMATE UI: the mobile bet slip when expanded
+// to fullscreen, walkthrough popups that mount over the dashboard,
+// rush ready/voting overlays, etc. Users saw the bet slip and post-
+// walkthrough popups flash on for a half-second and vanish — that was
+// the watchdog destroying them mid-mount. We keep coverage on the
+// two pages where the bug originated and let every other surface
+// render its modals without interference.
 function GlobalClickTrapWatchdog() {
   const router = useRouter();
   const pathname = router?.pathname || '';
   useEffect(() => {
-    if (isChromelessRoute(pathname)) return undefined;
-    // Tag the warning with the current route so logs surface which page
-    // hit the regression. Falls back to "global" for an empty pathname.
-    const tag = pathname ? `global:${pathname}` : 'global';
-    return installTopNavClickTrapWatchdog(tag);
+    if (pathname !== '/messenger' && pathname !== '/notifications') return undefined;
+    return installTopNavClickTrapWatchdog(pathname.slice(1));
   }, [pathname]);
   return null;
 }

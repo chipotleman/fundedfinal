@@ -1164,7 +1164,14 @@ export default function TopNavbar({
           ref={condensedBarRef}
           data-topnavbar="true"
           data-condensed-topnavbar="true"
-          className="fixed top-0 left-0 right-0 z-50 piks-condensed-bar"
+          // Desktop / tablet only. On phone-width viewports the balance
+          // pills + bell + chat + Pik Slip already eat the right-hand
+          // half of the row, leaving the horizontally-scrolling sport
+          // pills clipped by the right cluster (the "sports header is
+          // cut off by balance" report). There simply isn't room for
+          // a second pills row on a phone, so the condensed bar is
+          // hidden below the `sm` breakpoint.
+          className="hidden sm:block fixed top-0 left-0 right-0 z-50 piks-condensed-bar"
           style={{
             backgroundColor: '#000000',
             paddingTop: 'env(safe-area-inset-top, 0px)',
