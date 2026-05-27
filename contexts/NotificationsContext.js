@@ -581,6 +581,24 @@ export function NotificationsProvider({ children }) {
         // (no-op for outgoing messages from the sender's own session).
         refresh();
         refreshConversations();
+      } else if (ev.type === 'notification:message_deleted') {
+        // Sender unsent a message. Re-broadcast so any open thread can
+        // drop the bubble immediately; also refresh the inbox so the
+        // last-message preview row updates if the deleted message was
+        // the most recent one in that conversation.
+        if (ev.messageId && typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('piks:message:deleted', {
+              detail: {
+                messageId: ev.messageId,
+                senderId: ev.senderId,
+                receiverId: ev.receiverId,
+              },
+            })
+          );
+        }
+        refresh();
+        refreshConversations();
       } else if (ev.type === 'notification:invite') {
         // Rich invite payload — surface the full-screen modal instantly
         // without waiting on a /api/notifications round-trip.

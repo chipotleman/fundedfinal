@@ -1329,6 +1329,83 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
+  // Track which message IDs are mid-delete so we can disable the
+  // delete affordance and gray the bubble while the request is in
+  // flight (prevents double-deletes from impatient double-taps).
+  const [deletingIds, setDeletingIds] = useState(() => new Set());
+
+  // Unsend / delete an outgoing message. Optimistically removes the
+  // bubble first, then DELETEs on the server. On failure we restore
+  // the bubble and surface a lightweight inline error. The server
+  // broadcasts `notification:message_deleted` so the recipient's
+  // open thread (and our other tabs) drop the bubble too.
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    if (!messageId) return;
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      const ok = window.confirm('Delete this message for everyone? This cannot be undone.');
+      if (!ok) return;
+    }
+    let removed = null;
+    setThread((prev) => {
+      const idx = prev.findIndex((x) => x.id === messageId);
+      if (idx === -1) return prev;
+      removed = { msg: prev[idx], idx };
+      const next = prev.slice();
+      next.splice(idx, 1);
+      return next;
+    });
+    setDeletingIds((prev) => {
+      const next = new Set(prev);
+      next.add(messageId);
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/messages/${encodeURIComponent(messageId)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok && res.status !== 404) {
+        throw new Error('delete_failed');
+      }
+    } catch (_e) {
+      if (removed) {
+        setThread((prev) => {
+          if (prev.some((x) => x.id === messageId)) return prev;
+          const next = prev.slice();
+          const insertAt = Math.min(removed.idx, next.length);
+          next.splice(insertAt, 0, removed.msg);
+          return next;
+        });
+      }
+      setSendError('Could not delete message. Try again.');
+    } finally {
+      setDeletingIds((prev) => {
+        if (!prev.has(messageId)) return prev;
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
+    }
+  }, []);
+
+  // Drop a bubble when the server broadcasts a deletion (e.g. the
+  // other party unsent a message, or this user unsent from another
+  // tab). The optimistic path above already removes locally, so this
+  // is a no-op for the originating tab.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handler = (e) => {
+      const id = e?.detail?.messageId;
+      if (!id) return;
+      setThread((prev) => {
+        if (!prev.some((x) => x.id === id)) return prev;
+        return prev.filter((x) => x.id !== id);
+      });
+    };
+    window.addEventListener('piks:message:deleted', handler);
+    return () => window.removeEventListener('piks:message:deleted', handler);
+  }, []);
+
   const [recording, setRecording] = useState(false);
   const [paused, setPaused] = useState(false);
   // Set when the most recent pause was *not* a manual Pause tap, so we can
@@ -2818,55 +2895,97 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             No messages yet. Say hi!
           </div>
         )}
-        {!loading && !loadError && thread.map((m, idx) => (
+        {!loading && !loadError && thread.map((m, idx) => {
+          const mine = m.senderId === myId;
+          const isDeleting = deletingIds.has(m.id);
+          return (
           <div
             key={m.id}
-            className={`flex flex-col ${m.senderId === myId ? 'items-end' : 'items-start'}`}
+            className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}
           >
-            {/* Cartoon-themed bubbles — chunky black border + offset
-                shadow on both sides. Mine uses a bold blue gradient
-                (matches the "Start Battle" CTA), theirs uses a dark
-                slate gradient so the contrast still reads cleanly. */}
+            {/* Bubble row. For own messages we add a small unsend
+                affordance to the LEFT of the bubble (since the row is
+                right-aligned). The `group` class lets desktop hover
+                reveal it; on touch (no hover) we keep it visible at
+                low opacity so it's always tappable — per the
+                no-hover-on-touch app preference. */}
             <div
-              className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-sm leading-snug break-words ${
-                m.senderId === myId
-                  ? 'text-white rounded-br-sm'
-                  : 'text-white rounded-bl-sm'
+              className={`flex items-center gap-1.5 max-w-full group ${
+                mine ? 'flex-row' : 'flex-row-reverse'
               }`}
-              style={
-                m.senderId === myId
-                  ? {
-                      background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.35)',
-                      textShadow: '0 1px 0 rgba(0,0,0,0.25)',
-                    }
-                  : {
-                      background: 'linear-gradient(180deg,#1f2937,#111827)',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 3px 0 #0a0a0a',
-                    }
-              }
             >
-              {m.messageType === 'voice' && m.attachmentUrl ? (
-                <VoiceBubble
-                  url={m.attachmentUrl}
-                  durationMs={m.attachmentDurationMs}
-                  peaks={m.attachmentPeaks}
-                  messageId={m.id}
-                  mine={m.senderId === myId}
-                />
-              ) : (m.messageType === 'shared_battle' || m.messageType === 'shared_post' || m.messageType === 'shared_result') ? (
-                <SharedItemBubble
-                  raw={m.content}
-                  mine={m.senderId === myId}
-                  senderId={m.senderId === myId ? myId : friend?.id}
-                  senderUsername={m.senderId === myId ? undefined : friend?.username}
-                  onNavigate={(href) => { try { router.push(href); } catch {} }}
-                />
-              ) : (
-                m.content
+              {mine && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteMessage(m.id)}
+                  disabled={isDeleting}
+                  aria-label="Unsend message"
+                  title="Unsend message"
+                  className="flex-shrink-0 inline-flex items-center justify-center rounded-full transition-opacity opacity-60 lg:opacity-0 lg:group-hover:opacity-80 lg:hover:opacity-100"
+                  style={{
+                    width: 26,
+                    height: 26,
+                    background: 'rgba(15,23,42,0.6)',
+                    border: '1.5px solid rgba(248,113,113,0.45)',
+                    color: '#f87171',
+                    cursor: isDeleting ? 'wait' : 'pointer',
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                  </svg>
+                </button>
               )}
+              {/* Cartoon-themed bubbles — chunky black border + offset
+                  shadow on both sides. Mine uses a bold blue gradient
+                  (matches the "Start Battle" CTA), theirs uses a dark
+                  slate gradient so the contrast still reads cleanly. */}
+              <div
+                className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-sm leading-snug break-words ${
+                  mine
+                    ? 'text-white rounded-br-sm'
+                    : 'text-white rounded-bl-sm'
+                }`}
+                style={{
+                  ...(mine
+                    ? {
+                        background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.35)',
+                        textShadow: '0 1px 0 rgba(0,0,0,0.25)',
+                      }
+                    : {
+                        background: 'linear-gradient(180deg,#1f2937,#111827)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a',
+                      }),
+                  ...(isDeleting ? { opacity: 0.5 } : null),
+                }}
+              >
+                {m.messageType === 'voice' && m.attachmentUrl ? (
+                  <VoiceBubble
+                    url={m.attachmentUrl}
+                    durationMs={m.attachmentDurationMs}
+                    peaks={m.attachmentPeaks}
+                    messageId={m.id}
+                    mine={mine}
+                  />
+                ) : (m.messageType === 'shared_battle' || m.messageType === 'shared_post' || m.messageType === 'shared_result') ? (
+                  <SharedItemBubble
+                    raw={m.content}
+                    mine={mine}
+                    senderId={mine ? myId : friend?.id}
+                    senderUsername={mine ? undefined : friend?.username}
+                    onNavigate={(href) => { try { router.push(href); } catch {} }}
+                  />
+                ) : (
+                  m.content
+                )}
+              </div>
             </div>
             {showSeen && idx === lastOutgoingIdx && (
               <p
@@ -2880,7 +2999,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
               </p>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="h-5 px-4 flex-shrink-0" aria-live="polite">
