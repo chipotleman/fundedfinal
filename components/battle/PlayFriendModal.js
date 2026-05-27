@@ -1362,20 +1362,20 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
 
                 {isBeta ? (
                   <div
-                    className="rounded-2xl p-3 flex items-start gap-3"
+                    className="rounded-2xl overflow-hidden"
                     style={{
-                      background: 'linear-gradient(180deg, rgba(16,185,129,0.16), rgba(16,185,129,0.05))',
                       border: '2.5px solid #0a0a0a',
                       boxShadow: '0 4px 0 #0a0a0a',
+                      backgroundColor: '#0a0a0a',
+                      lineHeight: 0,
                     }}
                   >
-                    <span className="text-lg leading-none" aria-hidden="true">🛡️</span>
-                    <div className="min-w-0">
-                      <div className="text-[10px] font-extrabold uppercase tracking-[0.18em]" style={{ color: '#34d399' }}>Beta — Ranking Only</div>
-                      <div className="text-[11px] mt-1" style={{ color: '#cbd5e1', lineHeight: 1.4 }}>
-                        No buy-in during the public beta. Both players start with the same coin stack — winner takes the W on the leaderboard.
-                      </div>
-                    </div>
+                    <img
+                      src="/promos/beta-challenge.png"
+                      alt="Beta Challenge — Free 10,000 coins. Top score at the end of the beta wins $1,000."
+                      className="block w-full h-auto"
+                      style={{ display: 'block' }}
+                    />
                   </div>
                 ) : (
                 <div>
