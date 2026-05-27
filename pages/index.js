@@ -1937,14 +1937,18 @@ export default function Dashboard() {
         const potLabel = isBeta ? `${compact(potDollars)} Coins` : `$${potDollars.toLocaleString()}`;
         const startingBalance = parseFloat(matchup.startingBalance || 10000);
         const startingLabel = isBeta ? `${compact(startingBalance)} coins` : `$${startingBalance.toLocaleString()}`;
-        const timeLabel = timeRemaining ? (() => {
+        const timeLabel = (() => {
+          if (timeRemaining == null) return 'Starting';
+          // Pick deadline (midnight ET for day battles) passed — matchup
+          // stays active until the last picked game grades.
+          if (timeRemaining <= 0) return 'Settling';
           const m = Math.floor(timeRemaining / 60000);
           const h = Math.floor(m / 60);
           const d = Math.floor(h / 24);
           if (d > 0) return `${d}d ${h % 24}h`;
           if (h > 0) return `${h}h ${m % 60}m`;
           return `${m}m`;
-        })() : 'Starting';
+        })();
         const ctaLabel = walkthroughStep === 0 ? 'How Does It Work?' : walkthroughStep === 1 ? 'Got It, Any Tips?' : 'Start Picking';
         const Bolt = ({ size = 24, delay = 0 }) => (
           <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{

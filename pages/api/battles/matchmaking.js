@@ -6,6 +6,7 @@ import { eq, and, ne } from 'drizzle-orm';
 import { readSiteFlags } from '../site-config';
 const { publishMatchupStart } = require('../../../lib/battle-events');
 const { sendFriendLivePush } = require('../../../lib/web-push');
+const { computeBattleEndsAt } = require('../../../lib/battleEndTime');
 
 export default async function handler(req, res) {
   if (req.method === 'DELETE') {
@@ -104,7 +105,10 @@ export default async function handler(req, res) {
       const durationMinutes = mode.durationMinutes;
       const startingCoins = mode.coins;
       const now = new Date();
-      const endsAt = new Date(Date.now() + durationMinutes * 60 * 1000);
+      const endsAt = computeBattleEndsAt({
+        durationType: mode.durationType,
+        durationMinutes,
+      }, now);
 
       const [newMatchup] = await db
         .insert(matchups)

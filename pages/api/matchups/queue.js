@@ -5,6 +5,7 @@ import { matchups, matchupQueue, fakeOpponents, profiles, userChallenges, poolPa
 import { eq, and, ne, or, inArray } from 'drizzle-orm';
 const { sendFriendLivePush } = require('../../../lib/web-push');
 const { publishMatchupStart } = require('../../../lib/battle-events');
+const { computeBattleEndsAt } = require('../../../lib/battleEndTime');
 
 const DURATION_CONFIGS = {
   '30_min': { minutes: 30, label: '30 Minutes' },
@@ -125,7 +126,7 @@ export default async function handler(req, res) {
         const platformFee = potSize * PLATFORM_FEE_PERCENT;
         const winnerPayout = potSize - platformFee;
         const now = new Date();
-        const endsAt = new Date(now.getTime() + durationConfig.minutes * 60 * 1000);
+        const endsAt = computeBattleEndsAt({ durationType, durationMinutes: durationConfig.minutes }, now);
 
         const [newMatchup] = await db.insert(matchups).values({
           challengeType,

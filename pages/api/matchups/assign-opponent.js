@@ -4,6 +4,7 @@ import { db } from '../../../lib/db';
 import { matchups, matchupQueue, matchmakingQueue, fakeOpponents, profiles, users } from '../../../shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 const { publishMatchupStart } = require('../../../lib/battle-events');
+const { computeBattleEndsAt } = require('../../../lib/battleEndTime');
 
 const DURATION_CONFIGS = {
   '30_min': { minutes: 30, label: '30 Minutes' },
@@ -116,7 +117,7 @@ export default async function handler(req, res) {
     const winnerPayout = potSize - platformFee;
 
     const now = new Date();
-    const endsAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
+    const endsAt = computeBattleEndsAt({ durationType, durationMinutes }, now);
 
     const [newMatchup] = await db.insert(matchups).values({
       challengeType,

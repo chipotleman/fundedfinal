@@ -83,6 +83,19 @@ export default async function handler(req, res) {
       .limit(1);
 
     if (userActiveMatchup) {
+      // Hard lockout: once the battle's pick deadline (midnight ET for
+      // day-based modes — see lib/battleEndTime.js) has passed, no new
+      // picks can be placed even though the matchup is still in
+      // 'active' status (it stays active until every picked game is
+      // graded). Any pick attempted after midnight belongs to the NEXT
+      // day's battle, which the user must explicitly start.
+      if (userActiveMatchup.endsAt && new Date(userActiveMatchup.endsAt).getTime() <= Date.now()) {
+        return res.status(403).json({
+          error: 'Pick deadline passed',
+          code: 'battle_picks_locked',
+          message: 'Picks for this battle are locked. The battle is settling — start a new battle to keep picking.',
+        });
+      }
       challengeType = '1v1';
       activeChallenge = userActiveMatchup;
       const isUser1 = userActiveMatchup.user1Id === userId;

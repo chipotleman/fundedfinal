@@ -5,6 +5,7 @@ import { matchups, profiles, users } from '../../../../shared/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../../lib/battle-events';
 import { sendPushToUsers } from '../../../../lib/web-push';
+const { computeBattleEndsAt } = require('../../../../lib/battleEndTime');
 
 function buildState(m) {
   const myAt = (col) => (m[col] ? new Date(m[col]).toISOString() : null);
@@ -93,7 +94,10 @@ export default async function handler(req, res) {
       //    winning rematch as the single source of truth.
       const startingBalance = updated.startingBalance;
       const startsAt = new Date();
-      const endsAt = new Date(Date.now() + (updated.durationMinutes || 1440) * 60 * 1000);
+      const endsAt = computeBattleEndsAt({
+        durationType: updated.durationType,
+        durationMinutes: updated.durationMinutes || 1440,
+      }, startsAt);
 
       const [newMatchup] = await db.insert(matchups).values({
         challengeType: updated.challengeType,

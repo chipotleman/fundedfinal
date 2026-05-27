@@ -5,6 +5,7 @@ import { battleInvites, matchups, profiles, matchupQueue, matchmakingQueue } fro
 import { eq, and, or, ne, inArray, isNotNull } from 'drizzle-orm';
 const { publishBattleEvent, publishMatchupStart } = require('../../../../lib/battle-events');
 const { sendPushToUsers, sendFriendLivePush } = require('../../../../lib/web-push');
+const { computeBattleEndsAt } = require('../../../../lib/battleEndTime');
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -237,7 +238,10 @@ export default async function handler(req, res) {
         const startingCoins = mode.coins;
 
         const now = new Date();
-        const endsAt = new Date(Date.now() + durationMinutes * 60 * 1000);
+        const endsAt = computeBattleEndsAt({
+          durationType: mode.durationType,
+          durationMinutes,
+        }, now);
         const potSize = buyIn * 2;
         const platformFee = potSize * 0.1;
         const winnerPayout = potSize - platformFee;

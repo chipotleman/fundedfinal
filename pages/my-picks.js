@@ -28,7 +28,11 @@ function normalizeBet(bet) {
 // Format the remaining battle time — same vocabulary used on the
 // dashboard hero card.
 function formatTimeRemaining(ms) {
-  if (ms == null || !Number.isFinite(ms) || ms <= 0) return '—';
+  if (ms == null || !Number.isFinite(ms)) return '—';
+  // Once the pick deadline (midnight ET for day battles) has passed,
+  // the matchup stays active until the last picked game grades —
+  // surface that state explicitly instead of an em-dash.
+  if (ms <= 0) return 'Settling';
   const totalSec = Math.floor(ms / 1000);
   const hours = Math.floor(totalSec / 3600);
   const minutes = Math.floor((totalSec % 3600) / 60);

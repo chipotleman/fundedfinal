@@ -5,6 +5,7 @@ import { matchups, profiles } from '../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { readSiteFlags } from '../site-config';
 const { sendFriendLivePush } = require('../../../lib/web-push');
+const { computeBattleEndsAt } = require('../../../lib/battleEndTime');
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -119,7 +120,10 @@ export default async function handler(req, res) {
       }
 
       const now = new Date();
-      const endsAt = new Date(now.getTime() + matchup.durationMinutes * 60 * 1000);
+      const endsAt = computeBattleEndsAt({
+        durationType: matchup.durationType,
+        durationMinutes: matchup.durationMinutes,
+      }, now);
 
       const [updated] = await db
         .update(matchups)
