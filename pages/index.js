@@ -14,6 +14,7 @@ import ReferralBonusContainer from '../components/ReferralBonusContainer';
 import MostSharedBadgeContainer from '../components/MostSharedBadgeContainer';
 import RushExplainerContainer from '../components/RushExplainerContainer';
 import PickBattlesContainer from '../components/PickBattlesContainer';
+import BetaChallengeContainer from '../components/BetaChallengeContainer';
 import PremiumDiscordContainer from '../components/PremiumDiscordContainer';
 import FreePickContainer from '../components/FreePickContainer';
 import TopCappersContainer from '../components/TopCappersContainer';
@@ -234,6 +235,7 @@ export default function Dashboard() {
       pool: () => <PoolContainer />,
       referral: () => <ReferralBonusContainer />,
       most_shared_badge: () => <MostSharedBadgeContainer />,
+      beta_challenge: () => <BetaChallengeContainer />,
       rush_explainer: () => <RushExplainerContainer />,
       pick_battles: () => <PickBattlesContainer />,
       premium_discord: () => <PremiumDiscordContainer />,
