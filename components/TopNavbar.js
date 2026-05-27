@@ -75,6 +75,7 @@ export default function TopNavbar({
     router.prefetch('/dashboard');
     router.prefetch('/leaderboard');
     router.prefetch('/battle');
+    router.prefetch('/my-picks');
     router.prefetch('/messenger');
     router.prefetch('/notifications');
     router.prefetch('/withdrawal');
@@ -699,6 +700,7 @@ export default function TopNavbar({
                 return isLoggedIn ? (
                   <>
                     {renderNavLink('/dashboard', 'Battle')}
+                    {renderNavLink('/my-picks', 'My Picks')}
                     {renderNavLink('/battle', 'Social')}
                     {renderNavLink('/leaderboard', 'Leaderboard')}
                   </>

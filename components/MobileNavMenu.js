@@ -357,6 +357,18 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 );
               })()}
               <Link
+                href="/my-picks"
+                onClick={handleNavigation('/my-picks')}
+                aria-current={router.pathname === '/my-picks' ? 'page' : undefined}
+                className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname === '/my-picks'
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
+              >
+                My Picks
+              </Link>
+              <Link
                 href="/bet-history"
                 onClick={handleNavigation('/bet-history')}
                 aria-current={router.pathname === '/bet-history' ? 'page' : undefined}
