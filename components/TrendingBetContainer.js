@@ -20,14 +20,14 @@ export default function TrendingBetContainer() {
       style={{ backgroundColor: '#000' }}
       onClick={handleClick}
       role="button"
-      aria-label="Trending now — see what the public is betting on"
+      aria-label="Refer a friend — earn 2,000 points per signup"
     >
       {/* Container is 4:3 to match the source banner art (1448×1086).
           object-cover gives a perfect edge-to-edge fill with no
           letterboxing or cropping. */}
       <img
-        src="/promos/trending-picks.png"
-        alt="Trending now — 1.6k picks on PUR ML -133 with 78% public confidence"
+        src="/promos/refer-a-friend.png"
+        alt="Refer a friend — earn 2,000 points for every friend who signs up and completes a battle"
         className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
         draggable={false}
         loading="lazy"
