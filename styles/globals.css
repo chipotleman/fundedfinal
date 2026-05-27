@@ -1264,3 +1264,149 @@ html.light .divide-white\/5 > * + *,
 html.light .divide-white\/10 > * + * {
   border-color: rgba(15, 23, 42, 0.08) !important;
 }
+
+/* ───────────────────────── LIGHT THEME, PASS 2 ─────────────────────
+   User reported that several surfaces were still pure-black on the
+   off-white page and that some text colors (game odds line, scores,
+   team names) became invisible on the white cards. The earlier pass
+   missed:
+     • Tailwind arbitrary-value bg classes for #111111 / #141414 /
+       #1a1a1a / #111827 / #0f172a (slate-900) — game-detail hero,
+       featured battle cards, My Picks side card, Game Info side card.
+     • Tailwind gradient stops (`from-[#0d0d0d]`, `to-[#0a0a0a]`,
+       `to-[#111827]`, etc.) — the game-detail hero uses
+       `bg-gradient-to-b from-[#0d0d0d] to-[#0a0a0a]` which bypasses
+       background-color entirely.
+     • Sport-pill row and condensed bar on the dashboard rendered
+       with `bg-black` *and* `bg-[#0a0a0a]` on inner shells —
+       captured by the bg-black override but not the pills inside.
+     • `text-gray-300/400/500` on white cards becomes #64748b which
+       is too light for fine print (odds line, sub-labels). Bump to
+       #334155 so it actually reads.
+
+   These rules are scoped under `html.light` so dark mode is
+   completely untouched. */
+
+/* Additional dark bg utilities — Tailwind arbitrary values. */
+html.light .bg-\[\#111111\],
+html.light .bg-\[\#141414\],
+html.light .bg-\[\#1a1a1a\],
+html.light .bg-\[\#1f1f1f\],
+html.light .bg-\[\#111827\],
+html.light .bg-\[\#0f172a\],
+html.light .bg-\[\#1e293b\],
+html.light .bg-\[\#0b0f1a\],
+html.light .bg-\[\#0a0e16\] {
+  background-color: #ffffff !important;
+  color: #0f172a;
+}
+
+/* Light tint variants for nested "elevated" surfaces — keeps the
+   visual hierarchy by giving inner cards a faint slate fill instead
+   of pure white-on-white. */
+html.light .bg-\[\#141414\].border-\[\#1f1f1f\],
+html.light .bg-\[\#1a1a1a\].border-\[\#1f1f1f\] {
+  background-color: #f1ecdf !important;
+}
+
+/* Border utilities for dark inline values. */
+html.light .border-\[\#111111\],
+html.light .border-\[\#141414\],
+html.light .border-\[\#1f1f1f\],
+html.light .border-\[\#0d0d0d\],
+html.light .border-\[\#0a0a0a\] {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Tailwind gradient stops — `bg-gradient-to-*` renders via the
+   --tw-gradient-from / --tw-gradient-to CSS vars, not background-
+   color. Force the dark stops to white so the gradient resolves to
+   a flat light surface. (We don't try to remap to a "light gradient"
+   because there's no signal which direction to go — flat-white reads
+   correctly in every context we found.) */
+html.light .from-\[\#0d0d0d\],
+html.light .from-\[\#0a0a0a\],
+html.light .from-\[\#111111\],
+html.light .from-\[\#141414\],
+html.light .from-\[\#1a1a1a\],
+html.light .from-\[\#111827\],
+html.light .from-\[\#0f172a\],
+html.light .from-black {
+  --tw-gradient-from: #ffffff !important;
+  --tw-gradient-to: rgb(255 255 255 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+html.light .to-\[\#0d0d0d\],
+html.light .to-\[\#0a0a0a\],
+html.light .to-\[\#111111\],
+html.light .to-\[\#141414\],
+html.light .to-\[\#1a1a1a\],
+html.light .to-\[\#111827\],
+html.light .to-\[\#0f172a\],
+html.light .to-black {
+  --tw-gradient-to: #ffffff !important;
+}
+html.light .via-\[\#0d0d0d\],
+html.light .via-\[\#0a0a0a\],
+html.light .via-\[\#111111\],
+html.light .via-\[\#111827\],
+html.light .via-black {
+  --tw-gradient-stops: var(--tw-gradient-from), #ffffff var(--tw-gradient-via-position, 50%), var(--tw-gradient-to) !important;
+}
+
+/* Inline `background: linear-gradient(... rgb(17,24,39) ...)` and
+   the navy `#111827` (slate-900) variants used in inline styles. */
+html.light [style*="rgb(17, 24, 39)" i],
+html.light [style*="#111827" i],
+html.light [style*="rgb(15, 23, 42)" i],
+html.light [style*="rgb(31, 41, 55)" i],
+html.light [style*="rgb(30, 41, 59)" i] {
+  background-color: #ffffff !important;
+  color: #0f172a;
+}
+
+/* The condensed sports-pill bar (`piks-condensed-bar`) and individual
+   pill buttons rendered with hard inline backgrounds — most pills use
+   #0d0d0d / #141414 already covered, but the row wrapper inlines
+   `background: #000`. Match it. */
+html.light .piks-condensed-bar,
+html.light .piks-condensed-bar [style*="background: rgb(0, 0, 0)" i],
+html.light .piks-condensed-bar [style*="background:#000" i],
+html.light .piks-condensed-bar [style*="background: #000" i] {
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Darker text on light cards. The earlier pass mapped gray-300/400/
+   500 to #475569/#64748b which is fine on the page background but
+   too washed-out on a white card. Bump to a deeper slate so the
+   odds line, team labels, and sub-headings actually read. */
+html.light .text-gray-300 { color: #334155 !important; }
+html.light .text-gray-400 { color: #475569 !important; }
+html.light .text-gray-500 { color: #475569 !important; }
+html.light .text-gray-600 { color: #334155 !important; }
+html.light .text-gray-700 { color: #1f2937 !important; }
+
+/* `text-white` on a now-white card is invisible. Force dark when
+   nested inside any of our overridden card surfaces. */
+html.light .bg-\[\#0d0d0d\] .text-white,
+html.light .bg-\[\#0a0a0a\] .text-white,
+html.light .bg-\[\#141414\] .text-white,
+html.light .bg-\[\#1a1a1a\] .text-white,
+html.light .bg-\[\#111111\] .text-white,
+html.light .bg-\[\#111827\] .text-white,
+html.light .bg-\[\#0f172a\] .text-white,
+html.light .from-\[\#0d0d0d\] .text-white,
+html.light .from-\[\#0a0a0a\] .text-white,
+html.light .from-\[\#111827\] .text-white {
+  color: #0f172a !important;
+}
+
+/* Inline `color: '#ffffff'` / `color: 'white'` inside overridden
+   cards — catch the inline-style version too. */
+html.light [style*="background-color: rgb(13, 13, 13)"] [style*="color: #ffffff" i],
+html.light [style*="background-color: rgb(20, 20, 20)"] [style*="color: #ffffff" i],
+html.light [style*="background-color: #0d0d0d"] [style*="color: #ffffff" i],
+html.light [style*="background-color: #141414"] [style*="color: #ffffff" i] {
+  color: #0f172a !important;
+}
