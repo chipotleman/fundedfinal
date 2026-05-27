@@ -362,8 +362,30 @@ export default function MyPicksPage() {
 
   // Picks list — each card is wrapped in a clickable container that
   // selects the bet for the right-rail analytics panel (desktop only).
+  // The wrapper now carries the cartoon 2.5px black border + hard
+  // shadow so the picks read as distinct framed cards instead of
+  // blending into the page background. The selected pick swaps the
+  // shadow for a chunky cyan glow + adds a small "TRACKING" badge
+  // overlay so it's obvious which pick is driving the right-rail
+  // chart (desktop only — hidden on mobile where there's no chart).
   const renderPicksList = () => (
     <div className="space-y-3 sm:space-y-4">
+      {/* Desktop-only hint so users discover the click-to-track
+          interaction. Hidden on mobile where there's no right rail. */}
+      {sortedBets.length > 1 && (
+        <div
+          className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+          style={{
+            background: 'rgba(34,211,238,0.08)',
+            color: '#67e8f9',
+            border: '1px solid rgba(34,211,238,0.35)',
+          }}
+        >
+          <span aria-hidden="true">👆</span>
+          <span>Tap any pick to track its live odds →</span>
+        </div>
+      )}
+
       {sortedBets.map((bet) => {
         const isSelected = bet.id === selectedBetId;
         return (
@@ -378,19 +400,34 @@ export default function MyPicksPage() {
                 setSelectedBetId(bet.id);
               }
             }}
-            className="rounded-2xl transition-shadow"
+            className="relative rounded-2xl transition-all"
             style={{
               outline: 'none',
-              // On desktop, highlight the selected pick with a cyan
-              // ring so the user can see what's driving the right
-              // panel. On mobile (lg:hidden right rail) the ring is
-              // invisible because there's no panel — but it still
-              // shows on tablet/desktop widths where the rail exists.
-              boxShadow: isSelected ? '0 0 0 2px rgba(34,211,238,0.55)' : 'none',
+              background: '#0a0a0a',
+              border: isSelected
+                ? '2.5px solid #22d3ee'
+                : '2.5px solid #0a0a0a',
+              boxShadow: isSelected
+                ? '0 0 0 3px rgba(34,211,238,0.25), 0 4px 0 rgba(0,0,0,0.55)'
+                : '0 4px 0 rgba(0,0,0,0.55)',
               borderRadius: 16,
               cursor: 'pointer',
             }}
           >
+            {isSelected && (
+              <div
+                className="hidden lg:flex absolute -top-2 left-3 z-10 items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                style={{
+                  background: '#22d3ee',
+                  color: '#0a0a0a',
+                  border: '1.5px solid #0a0a0a',
+                  boxShadow: '0 2px 0 #0a0a0a',
+                }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-pulse" />
+                Tracking
+              </div>
+            )}
             <PiksBetCard bet={bet} compactHeader isBattleEnded={false} />
           </div>
         );
@@ -498,6 +535,34 @@ export default function MyPicksPage() {
       // (stops the live-tail random walk).
       const isFinal = ['won', 'lost', 'cashed_out', 'voided', 'pushed'].includes(selectedBet.status);
 
+      // Synthesize a liveOdds pair from the bet's own American odds so
+      // the chart has an anchor to plot around even when the server has
+      // no captured history. Mirrors the picked side's implied
+      // probability to derive the opposite side's American moneyline.
+      // Without this the chart sat on a perpetual spinner because the
+      // synthesized history path requires a non-null anchor.
+      const derivedLiveOdds = (() => {
+        const oddsRaw = Number(selectedBet.odds ?? firstLeg?.odds);
+        if (!Number.isFinite(oddsRaw) || oddsRaw === 0) return null;
+        const myImplied = oddsRaw > 0 ? 100 / (oddsRaw + 100) : -oddsRaw / (-oddsRaw + 100);
+        const oppImplied = Math.min(0.95, Math.max(0.05, 1 - myImplied));
+        const oppAmerican = oppImplied >= 0.5
+          ? Math.round(-(oppImplied / (1 - oppImplied)) * 100)
+          : Math.round(((1 - oppImplied) / oppImplied) * 100);
+        // Map "selection" to home or away by simple substring match on
+        // the team names. Falls back to treating selection as home.
+        const sel = String(selectedBet.selection || '').toLowerCase();
+        const homeKey = String(homeTeam || '').toLowerCase().split(/\s+/)[0];
+        const awayKey = String(awayTeam || '').toLowerCase().split(/\s+/)[0];
+        const selectionIsAway = awayKey && sel.includes(awayKey);
+        const selectionIsHome = homeKey && sel.includes(homeKey) && !selectionIsAway;
+        if (selectionIsAway) return { home: oppAmerican, away: oddsRaw };
+        if (selectionIsHome) return { home: oddsRaw, away: oppAmerican };
+        // Couldn't match — default to picked-side-is-home so the chart
+        // still gets an anchor instead of spinning.
+        return { home: oddsRaw, away: oppAmerican };
+      })();
+
       panelBody = (
         <div className="space-y-3">
           <div>
@@ -516,7 +581,7 @@ export default function MyPicksPage() {
             gameId={gameId}
             homeTeam={homeTeam}
             awayTeam={awayTeam}
-            liveOdds={null}
+            liveOdds={derivedLiveOdds}
             commenceTime={selectedBet.placedAt}
             isLive={isLive}
             isFinal={isFinal}

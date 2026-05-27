@@ -71,7 +71,13 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   }, []);
 
   const fetchHistory = useCallback(async (signal) => {
-    if (!gameId) return;
+    if (!gameId) {
+      // No game id (common for picks where the bet row doesn't carry
+      // one) — stop the spinner so the empty-state / synthesized-from-
+      // liveOdds path can take over instead of looping forever.
+      setLoading(false);
+      return;
+    }
     try {
       const r = await fetch(`/api/games/${encodeURIComponent(gameId)}/odds-history?range=${range}`, { signal });
       if (!r.ok) throw new Error('http ' + r.status);
@@ -90,12 +96,18 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   }, [gameId, range]);
 
   useEffect(() => {
+    // Clear the previous game's captured points whenever the gameId
+    // changes (or is removed) — otherwise switching picks can briefly
+    // render the prior game's history on the new pick's chart because
+    // the `series` memo prefers `data.points` whenever it has ≥5
+    // entries, regardless of which game they came from.
+    setData({ points: [], openedAt: null, current: null });
     setLoading(true);
     const ctrl = new AbortController();
     fetchHistory(ctrl.signal);
     const t = setInterval(() => fetchHistory(), 30 * 1000);
     return () => { ctrl.abort(); clearInterval(t); };
-  }, [fetchHistory]);
+  }, [fetchHistory, gameId]);
 
   // When the page's live odds tick differs from our last stored point,
   // refetch so the rightmost edge keeps pace without waiting for the
@@ -296,6 +308,10 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   // the right edge so the chart feels alive between server snapshots.
   useEffect(() => {
     if (!liveAnchor) return;
+    // Skip the live random-walk tail for settled bets (won/lost/cashed/
+    // pushed/voided) — the line shouldn't keep moving after the game
+    // is graded. Caller passes `isFinal` for this.
+    if (isFinal) return;
     const interval = setInterval(() => {
       setHistory((prev) => {
         if (prev.length === 0) return prev;
@@ -322,7 +338,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
       });
     }, 3000);
     return () => clearInterval(interval);
-  }, [liveAnchor]);
+  }, [liveAnchor, isFinal]);
 
   // Build the series we actually plot. If the server returned real
   // history points, prefer those + a synthesized tail; otherwise use
@@ -410,17 +426,27 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   const hoverAwayY = hovered ? yOf(hovered.awayImplied) : null;
 
   const headerLabel = (
-    <div className="flex items-center justify-between mb-2 px-1">
-      <div className="flex items-center gap-2">
-        <span className="inline-flex items-center gap-1.5">
+    <div className="mb-2 px-1 space-y-1.5">
+      {/* Row 1: LIVE ODDS badge + subtitle, kept on its own row so the
+          subtitle never wraps onto two lines on narrow panels. */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-300">Live odds</span>
         </span>
-        <span className="text-[11px] text-gray-500 font-semibold">Implied win %</span>
+        <span className="text-[11px] text-gray-500 font-semibold whitespace-nowrap">Implied win %</span>
       </div>
-      <div className="flex items-center gap-3 text-[11px] font-bold">
-        <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: AWAY_COLOR }} /><span style={{ color: AWAY_COLOR }}>{awayTeam || 'Away'}</span></span>
-        <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: HOME_COLOR }} /><span style={{ color: HOME_COLOR }}>{homeTeam || 'Home'}</span></span>
+      {/* Row 2: team legend on its own row so colored swatches don't get
+          squeezed into the LIVE badge area on the right rail. */}
+      <div className="flex items-center gap-3 text-[11px] font-bold flex-wrap">
+        <span className="inline-flex items-center gap-1.5 min-w-0">
+          <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: AWAY_COLOR }} />
+          <span className="truncate" style={{ color: AWAY_COLOR }}>{awayTeam || 'Away'}</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5 min-w-0">
+          <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: HOME_COLOR }} />
+          <span className="truncate" style={{ color: HOME_COLOR }}>{homeTeam || 'Home'}</span>
+        </span>
       </div>
     </div>
   );
