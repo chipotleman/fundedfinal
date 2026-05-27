@@ -261,8 +261,14 @@ export default function MyPicksPage() {
         challenge a friend, or set up a private match — your picks will show
         up here in real time.
       </p>
+      {/* Deep-link to the same mode-chooser popup that the homepage
+          "Play Now" CTA opens — `/battle?openChooser=1` is handled by
+          the effect in pages/battle.js which auto-opens the battle
+          options chooser (Quick Match / Challenge Friend / Private
+          Match). Previously this just sent the user to the homepage,
+          which dumped them on the dashboard with no clear next step. */}
       <Link
-        href="/"
+        href="/battle?openChooser=1"
         className="inline-block px-6 py-3 rounded-xl font-black text-base"
         style={{
           background: '#2563eb',
