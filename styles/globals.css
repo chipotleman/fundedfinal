@@ -1114,9 +1114,153 @@ html.light [style*="border-color: #1a1a1a"] {
 }
 
 /* Logo swap — the white-on-transparent Piks logo disappears on the
-   off-white page. Invert it so it reads as the dark navy mark. */
+   off-white page. Invert it so it reads as the dark navy mark.
+   IMPORTANT: TopNavbar applies an inline style={{ filter: '...' }} to
+   animate the logo glow, and inline styles outrank class CSS. We
+   override via attribute selector + `!important` so light mode wins
+   regardless of what's set inline. We also kill the keyframe
+   animation in light mode so the inverted glow doesn't flash. */
 html.light img[src*="pikslogotransparent"],
 html.light img[src*="piks-logo"],
 html.light img[alt*="Piks" i][src*="logo" i] {
-  filter: invert(1) hue-rotate(180deg) brightness(0.85);
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) !important;
+  animation: none !important;
+}
+
+/* ───────────────────────── EXTENDED LIGHT THEME ─────────────────────
+   Many components apply dark colors via inline `style={{}}` props
+   that the earlier overrides don't catch. The DOM serializes those
+   to rgb(...) so we match on the most common values used across
+   pages/components. */
+
+/* TopNavbar is a <div data-topnavbar="true">, not a <nav>, so the
+   earlier `html.light nav .text-white` rule never matched the active
+   tab label (MY PICKS / SOCIAL / LEADERBOARD). Repeat the same
+   color overrides scoped to data-topnavbar so the active link is
+   visible on the white nav. */
+html.light [data-topnavbar="true"] a,
+html.light [data-topnavbar="true"] span,
+html.light [data-topnavbar="true"] button,
+html.light [data-topnavbar="true"] div {
+  color: inherit;
+}
+html.light [data-topnavbar="true"] .text-white {
+  color: #0f172a !important;
+}
+html.light [data-topnavbar="true"] .text-gray-300,
+html.light [data-topnavbar="true"] .text-gray-400,
+html.light [data-topnavbar="true"] .text-gray-500 {
+  color: #475569 !important;
+}
+
+/* Card / panel surfaces — most cards inline an rgba(15,23,42,...)
+   or rgba(8,12,24,...) navy background (sometimes wrapped in a
+   linear-gradient). Lift them to white in light mode. The `i` flag
+   makes the substring match case-insensitive so different React
+   serializations (`rgba(15, 23, 42, 0.95)` vs `rgba(15,23,42,.95)`)
+   all match. */
+html.light [style*="rgba(15, 23, 42" i],
+html.light [style*="rgba(15,23,42" i],
+html.light [style*="rgb(15, 23, 42)" i],
+html.light [style*="rgba(8, 12, 24" i],
+html.light [style*="rgba(8,12,24" i],
+html.light [style*="rgb(8, 12, 24)" i],
+html.light [style*="rgba(10, 10, 10" i],
+html.light [style*="rgba(10,10,10" i],
+html.light [style*="rgba(20, 20, 20" i],
+html.light [style*="rgba(0, 0, 0, 0.55)" i],
+html.light [style*="rgba(0,0,0,0.55)" i],
+html.light [style*="rgba(0, 0, 0, 0.6)" i],
+html.light [style*="rgba(0,0,0,0.6)" i],
+html.light [style*="rgba(0, 0, 0, 0.7)" i],
+html.light [style*="rgba(0,0,0,0.7)" i],
+html.light [style*="rgba(0, 0, 0, 0.8)" i],
+html.light [style*="rgba(0,0,0,0.8)" i],
+html.light [style*="rgba(0, 0, 0, 0.85)" i],
+html.light [style*="rgba(0,0,0,0.85)" i],
+html.light [style*="rgba(0, 0, 0, 0.88)" i],
+html.light [style*="rgba(0,0,0,0.88)" i],
+html.light [style*="rgba(0, 0, 0, 0.9)" i],
+html.light [style*="rgba(0,0,0,0.9)" i],
+html.light [style*="rgba(0, 0, 0, 0.95)" i],
+html.light [style*="rgba(0,0,0,0.95)" i] {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* `box-shadow: 0 4px 0 rgba(0,0,0,0.55)` is the cartoon hard drop
+   shadow used on every card. Soften it to a slate tint so cards
+   sit on the off-white page without a harsh black shadow. */
+html.light [style*="box-shadow: 0 4px 0 rgba(0, 0, 0, 0.55)" i],
+html.light [style*="boxShadow: 0 4px 0 rgba(0,0,0,0.55)" i] {
+  box-shadow: 0 4px 0 rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Text colors on those inverted cards — the inline `color: '#ffffff'`
+   and `color: '#9ca3af'` (gray-400) are baked into many cards, but
+   on a white background they're invisible. Force them dark. */
+html.light [style*="rgba(15, 23, 42" i] [style*="color: #ffffff" i],
+html.light [style*="rgba(15, 23, 42" i] [style*="color:#ffffff" i],
+html.light [style*="rgba(15,23,42" i] [style*="color: #ffffff" i],
+html.light [style*="rgba(8, 12, 24" i] [style*="color: #ffffff" i] {
+  color: #0f172a !important;
+}
+html.light [style*="rgba(15, 23, 42" i] [style*="color: #9ca3af" i],
+html.light [style*="rgba(15,23,42" i] [style*="color: #9ca3af" i],
+html.light [style*="rgba(8, 12, 24" i] [style*="color: #9ca3af" i] {
+  color: #64748b !important;
+}
+
+/* Modal / popup overlays — BalanceModal, ChallengePopup, etc. cover
+   the screen with a fixed dark backdrop AND a dark card. Lift the
+   inner card (the backdrop stays dim so the popup pops). The
+   backdrop selectors above already handle most overlays; here we
+   target the inner card via its common inline color value. */
+html.light [style*="background: linear-gradient(135deg, rgba(15, 23, 42" i],
+html.light [style*="background:linear-gradient(135deg,rgba(15,23,42" i],
+html.light [style*="background: linear-gradient(135deg, rgba(8, 12, 24" i],
+html.light [style*="background:linear-gradient(135deg,rgba(8,12,24" i] {
+  background: #ffffff !important;
+}
+
+/* Hover surfaces — many buttons use `hover:bg-white/5`, `bg-white/10`
+   which on the off-white page become invisible. Map them to a soft
+   slate tint. (Tailwind compiles these to bg-white/N → rgba(255,...,
+   N/100); we just override by class.) */
+html.light .bg-white\/5,
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+}
+html.light .bg-white\/10,
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/20 {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+/* `bg-[#0a0a0a]/40` style — the game detail page wraps its main
+   container in dark blocks. Force-light all bg-black variants since
+   we've already preserved truly intentional dark surfaces via the
+   inline-color allow-list. */
+html.light .bg-black,
+html.light .bg-\[\#000000\],
+html.light .bg-\[\#0a0a0a\],
+html.light .bg-\[\#0d0d0d\] {
+  background-color: #ffffff !important;
+  color: #1f2937;
+}
+html.light .bg-black\/40,
+html.light .bg-black\/50,
+html.light .bg-black\/60,
+html.light .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Divide-x / divide-y use border colors. Soften white dividers. */
+html.light .divide-white\/5 > * + *,
+html.light .divide-white\/10 > * + * {
+  border-color: rgba(15, 23, 42, 0.08) !important;
 }
