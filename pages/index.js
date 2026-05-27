@@ -227,7 +227,10 @@ export default function Dashboard() {
 
   const promoSlides = useMemo(() => {
     const renderers = {
-      reload_match: () => <DepositMatchContainer />,
+      // Temporarily hidden per product request — return null so even
+      // stored promo-slot configs that still reference these types are
+      // dropped at render time (the slot loop filters out null nodes).
+      reload_match: () => null,
       trending: () => <TrendingBetContainer />,
       deposit_match_applied: () => <DepositMatchAppliedBanner />,
       casino_match: () => <CasinoDepositMatchContainer />,
@@ -236,10 +239,10 @@ export default function Dashboard() {
       referral: () => <ReferralBonusContainer />,
       most_shared_badge: () => <MostSharedBadgeContainer />,
       beta_challenge: () => <BetaChallengeContainer />,
-      rush_explainer: () => <RushExplainerContainer />,
+      rush_explainer: () => null,
       pick_battles: () => <PickBattlesContainer />,
       premium_discord: () => <PremiumDiscordContainer />,
-      free_pick: () => <FreePickContainer />,
+      free_pick: () => null,
       top_cappers: () => <TopCappersContainer />,
       empty: () => null,
     };
