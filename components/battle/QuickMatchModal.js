@@ -204,7 +204,7 @@ function MatchFoundContent({
           fill, thick black outline, and multi-layer pink/orange/cyan
           glow to match the arcade reference. Lightning bolts on each
           side stay on the same baseline. */}
-      <div className="px-5 pt-7 pb-2 text-center relative">
+      <div className="px-5 pt-8 pb-4 text-center relative">
         <div className="flex items-center justify-center gap-3">
           <span
             aria-hidden="true"
@@ -251,7 +251,7 @@ function MatchFoundContent({
         </div>
 
         {/* Green "BATTLE STARTED" pill */}
-        <div className="mt-3 flex justify-center">
+        <div className="mt-4 flex justify-center">
           <span
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-black uppercase whitespace-nowrap"
             style={{
@@ -274,9 +274,9 @@ function MatchFoundContent({
           Trophy · MODE · WIN X COINS · 24H · coin — single neon
           capsule with cyan border so it reads as one bar of meta info,
           matching the reference. */}
-      <div className="px-4 pb-3 relative z-10">
+      <div className="px-4 pb-5 relative z-10">
         <div
-          className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 sm:gap-3 whitespace-nowrap"
+          className="mx-auto rounded-2xl px-4 py-3 flex items-center justify-center gap-3 sm:gap-4 whitespace-nowrap"
           style={{
             background: '#0b1220',
             border: '2.5px solid #facc15',
@@ -310,7 +310,7 @@ function MatchFoundContent({
           avatars (z-0) with pointer-events:none; the avatars and VS
           stay on top (z-10/z-20) and are unaffected. */}
       <div
-        className="flex items-center justify-center gap-4 md:gap-8 py-4 px-4 relative overflow-hidden"
+        className="flex items-center justify-center gap-5 md:gap-10 py-7 px-4 relative overflow-hidden"
         style={{ background: '#0a0a0a' }}
       >
         <span
@@ -483,10 +483,10 @@ function MatchFoundContent({
       </div>
 
       {/* Mini chip row: Win Streak / Bonus XP / Daily Challenge */}
-      <div className="px-4 pb-3">
-        <div className="grid grid-cols-3 gap-2">
+      <div className="px-4 pt-5 pb-5">
+        <div className="grid grid-cols-3 gap-2.5">
           <div
-            className="rounded-xl px-2 py-2 flex items-center gap-1.5"
+            className="rounded-xl px-2.5 py-2.5 flex items-center gap-2"
             style={{
               background: '#1a0b0b',
               border: '2.5px solid #0a0a0a',
@@ -497,11 +497,11 @@ function MatchFoundContent({
             <span style={{ fontSize: 18 }} aria-hidden="true">🔥</span>
             <div className="min-w-0">
               <div className="text-[8.5px] font-extrabold uppercase text-red-300 leading-none" style={{ letterSpacing: '0.1em' }}>Win Streak</div>
-              <div className="text-white font-extrabold text-xs mt-0.5 leading-none">{winStreak} {winStreak === 1 ? 'Win' : 'Wins'}</div>
+              <div className="text-white font-extrabold text-xs mt-1 leading-none">{winStreak} {winStreak === 1 ? 'Win' : 'Wins'}</div>
             </div>
           </div>
           <div
-            className="rounded-xl px-2 py-2 flex items-center gap-1.5"
+            className="rounded-xl px-2.5 py-2.5 flex items-center gap-2"
             style={{
               background: '#1a1505',
               border: '2.5px solid #facc15',
@@ -511,11 +511,11 @@ function MatchFoundContent({
             <span style={{ fontSize: 18 }} aria-hidden="true">⭐</span>
             <div className="min-w-0">
               <div className="text-[8.5px] font-extrabold uppercase text-yellow-300 leading-none" style={{ letterSpacing: '0.1em' }}>Bonus XP</div>
-              <div className="text-white font-extrabold text-xs mt-0.5 leading-none">+{xpBonus} XP</div>
+              <div className="text-white font-extrabold text-xs mt-1 leading-none">+{xpBonus} XP</div>
             </div>
           </div>
           <div
-            className="rounded-xl px-2 py-2 flex items-center gap-1.5"
+            className="rounded-xl px-2.5 py-2.5 flex items-center gap-2"
             style={{
               background: '#052016',
               border: '2.5px solid #10b981',
@@ -525,7 +525,7 @@ function MatchFoundContent({
             <span style={{ fontSize: 18 }} aria-hidden="true">🎯</span>
             <div className="min-w-0">
               <div className="text-[8.5px] font-extrabold uppercase text-emerald-300 leading-none" style={{ letterSpacing: '0.1em' }}>Daily Challenge</div>
-              <div className="text-white font-extrabold text-[10px] mt-0.5 leading-none">In Progress</div>
+              <div className="text-white font-extrabold text-[10px] mt-1 leading-none">In Progress</div>
             </div>
           </div>
         </div>
@@ -536,7 +536,7 @@ function MatchFoundContent({
           side + neon orange→pink fill + chunky black border / hard
           shadow. Footer underneath reads "BATTLE LOCKED IN — Both
           players must be ready" with a padlock to match the reference. */}
-      <div className="px-4 pt-1 pb-5 relative z-10">
+      <div className="px-4 pt-2 pb-6 relative z-10">
         {gameMode === 'rush' ? (
           <div
             className="w-full py-3.5 rounded-2xl text-center font-extrabold text-white uppercase flex items-center justify-center gap-2"
@@ -576,7 +576,7 @@ function MatchFoundContent({
             </button>
 
             {/* Lock footer */}
-            <div className="mt-3 text-center">
+            <div className="mt-4 text-center">
               <div
                 className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase"
                 style={{ color: '#cbd5e1', letterSpacing: '0.18em' }}
@@ -584,7 +584,7 @@ function MatchFoundContent({
                 <span aria-hidden="true" style={{ fontSize: 12 }}>🔒</span>
                 Battle Locked In
               </div>
-              <div className="text-[11px] mt-0.5" style={{ color: '#94a3b8' }}>
+              <div className="text-[11px] mt-1.5" style={{ color: '#94a3b8' }}>
                 Both players must be ready
                 {gameMode !== 'rush' && (
                   <>
@@ -597,7 +597,7 @@ function MatchFoundContent({
 
             <button
               onClick={() => { firedRef.current = true; onCancel?.(); }}
-              className="block mx-auto mt-3 text-gray-500 text-[11px] font-bold underline-offset-4 hover:text-white hover:underline transition-colors"
+              className="block mx-auto mt-4 text-gray-500 text-[11px] font-bold underline-offset-4 hover:text-white hover:underline transition-colors"
               style={{ background: 'transparent' }}
             >
               Skip
