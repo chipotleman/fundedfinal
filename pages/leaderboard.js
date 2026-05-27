@@ -292,15 +292,90 @@ const Leaderboard = () => {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div
-        className="max-w-7xl mx-auto px-3 sm:px-5 pb-32"
-        style={{ paddingTop: 'calc(var(--top-nav-height, 0px) + 16px)' }}
-      >
+      <div className="max-w-7xl mx-auto px-3 sm:px-5 pt-3 sm:pt-4 pb-32">
+        {/* TopNavbar is `sticky` (not `fixed`), so it already occupies
+            its own height in document flow. Padding the container by
+            `--top-nav-height` again would double-count it and leave a
+            ~200px empty band on desktop (because the navbar's giant
+            "piks" logo makes navRef.current.offsetHeight ~230px). A
+            small fixed top padding is correct here. */}
+
+        {/* Cartoon-themed hero banner — gives the page a clear, gamified
+            identity so it matches the rest of the site (chunky black
+            border + 4px hard shadow, bright yellow trophy chip, no
+            purple). Sits above the filter/board grid. */}
+        <div
+          className="relative mb-4 sm:mb-5 rounded-2xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #0d0d0d 0%, #111827 100%)',
+            border: '3px solid #0d0d0d',
+            boxShadow: '5px 5px 0 #0d0d0d',
+          }}
+        >
+          {/* Subtle dot grid for arcade feel */}
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.08]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+              backgroundSize: '14px 14px',
+            }}
+          />
+          <div className="relative flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4">
+            <div
+              className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl text-2xl sm:text-3xl flex-shrink-0"
+              style={{
+                background: '#fbbf24',
+                border: '3px solid #0d0d0d',
+                boxShadow: '3px 3px 0 #0d0d0d',
+              }}
+            >
+              🏆
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white truncate">
+                  Leaderboard
+                </h1>
+                <span
+                  className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
+                  style={{
+                    background: '#10b981',
+                    color: '#0d0d0d',
+                    border: '2px solid #0d0d0d',
+                    boxShadow: '2px 2px 0 #0d0d0d',
+                  }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0d0d0d] animate-pulse" />
+                  Live
+                </span>
+              </div>
+              <div className="text-[11px] sm:text-xs text-gray-400 font-bold mt-0.5">
+                Climb the ranks. Real bettors, real winnings, updated live.
+              </div>
+            </div>
+            {userRank && (
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Your rank</span>
+                <span
+                  className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-black"
+                  style={{
+                    background: '#3b82f6',
+                    color: '#fff',
+                    border: '2.5px solid #0d0d0d',
+                    boxShadow: '2px 2px 0 #0d0d0d',
+                  }}
+                >
+                  #{userRank.rank}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Two-column layout on desktop: filter sidebar (left) + board (right).
             On mobile filters collapse into horizontal chip rows above the
-            board. Removed the big "Who's Winning?" hero + community stats
-            line and the top-3 podium boxes (didn't fit on mobile) — the
-            board itself is now the main view, more chart-like. */}
+            board. */}
         <div className="lg:grid lg:grid-cols-[224px_minmax(0,1fr)] lg:gap-5">
 
           {/* ── Filter sidebar (desktop) / chip rows (mobile) ─────── */}
