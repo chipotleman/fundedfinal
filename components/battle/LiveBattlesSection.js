@@ -3655,7 +3655,11 @@ export default function LiveBattlesSection({
             row feel broken. Letting cards grow naturally keeps the visual
             simple: collapsed cards stay short, expanded cards extend down,
             and the carousel stays horizontally scrollable either way. */}
-        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* Edge-to-edge: negative margin cancels the dashboard's
+            px-4/sm:px-6/lg:px-8 wrapper so this row runs to the
+            viewport edges; inner left padding keeps the first card
+            aligned with the "Featured Battles" header above. */}
+        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:-mx-8 pl-4 sm:pl-6 lg:pl-8 pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
               youVsState={youVsState}

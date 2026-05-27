@@ -1410,8 +1410,12 @@ export default function Dashboard() {
       <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {/* Carousel→pills gap halved per user feedback: was
             `mb-2 sm:mb-4` + `py-2` (16px mobile / 24px sm+), now
-            `mb-1 sm:mb-2` + `py-1` (8px mobile / 12px sm+). */}
-        <div className="mb-1 sm:mb-2">
+            `mb-1 sm:mb-2` + `py-1` (8px mobile / 12px sm+).
+            Negative horizontal margin breaks the carousel out of the
+            outer page padding so it runs edge-to-edge across the
+            viewport — partial-card peeks should bleed off the screen,
+            not stop short with a visible side gutter. */}
+        <div className="mb-1 sm:mb-2 -mx-4 sm:-mx-6 lg:-mx-8">
           <PromoCarousel slides={promoSlides} />
         </div>
 
@@ -1505,7 +1509,12 @@ export default function Dashboard() {
               </p>
             </div>
           ) : (
-          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
+          // Edge-to-edge scroll row: negative margin cancels the
+          // outer page padding so the row runs to the viewport
+          // edges; inner left padding keeps the first card aligned
+          // with the "Close Games" header above. Right side bleeds
+          // so the trailing card peeks off-screen.
+          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:-mx-8 pl-4 sm:pl-6 lg:pl-8 pr-2">
             {closeGames.map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               const isTightened = !!tightenedGames[game.id];
