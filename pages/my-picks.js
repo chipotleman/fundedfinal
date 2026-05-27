@@ -446,7 +446,11 @@ export default function MyPicksPage() {
     if (!matchup || !hasActiveMatchup) return null;
     return (
       <aside className="hidden lg:block lg:col-span-3">
-        <div className="sticky top-24 space-y-4">
+        {/* Drop `sticky` so the rail stretches to the grid row height
+            (default `items-stretch` on the parent grid). The bottom
+            stats card flex-grows so the column matches the picks
+            column and the right analytics rail. */}
+        <div className="flex flex-col gap-4 h-full">
           <div
             className="rounded-2xl p-5"
             style={{
@@ -466,7 +470,7 @@ export default function MyPicksPage() {
 
           {sortedBets.length > 0 && (
             <div
-              className="rounded-2xl p-3"
+              className="rounded-2xl p-3 flex-1 flex flex-col justify-center"
               style={{
                 background: 'rgba(15,23,42,0.6)',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -591,26 +595,46 @@ export default function MyPicksPage() {
             isFinal={isFinal}
           />
 
-          <Link
-            href={gameId ? `/game/${encodeURIComponent(gameId)}` : '/'}
-            className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
-            style={{
-              background: 'rgba(59,130,246,0.15)',
-              color: '#93c5fd',
-              border: '1px solid rgba(59,130,246,0.4)',
-            }}
-          >
-            Open Game →
-          </Link>
+          {gameId ? (
+            <Link
+              href={`/game/${encodeURIComponent(gameId)}`}
+              prefetch
+              className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
+              style={{
+                background: 'rgba(59,130,246,0.15)',
+                color: '#93c5fd',
+                border: '1px solid rgba(59,130,246,0.4)',
+              }}
+            >
+              Open Game →
+            </Link>
+          ) : (
+            // No gameId on this pick — disable the button instead of
+            // falling back to '/', which previously caused a flash
+            // back to the home page when the user expected the game
+            // summary.
+            <div
+              className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider cursor-not-allowed select-none"
+              style={{
+                background: 'rgba(75,85,99,0.15)',
+                color: '#6b7280',
+                border: '1px solid rgba(75,85,99,0.3)',
+              }}
+              title="Game summary not available for this pick"
+            >
+              Game Unavailable
+            </div>
+          )}
         </div>
       );
     }
 
     return (
       <aside className="hidden lg:block lg:col-span-4">
-        <div className="sticky top-24 space-y-4">
+        {/* Stretch to match the picks column + left rail height. */}
+        <div className="flex flex-col h-full">
           <div
-            className="rounded-2xl p-4"
+            className="rounded-2xl p-4 flex-1 flex flex-col"
             style={{
               background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(8,12,24,0.95) 100%)',
               border: '2.5px solid #0d0d0d',
