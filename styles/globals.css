@@ -949,3 +949,114 @@ button.no-hover-effect.rounded-lg:focus-visible {
     filter: brightness(1.08);
   }
 }
+
+/* ===== Light theme (off-white, easy on the eyes) =====
+   Owned by `contexts/ThemeContext.js` + the no-FOUC bootstrap in
+   `pages/_document.js`. Toggle UI lives in the hidden menus (mobile
+   drawer + desktop user-menu dropdown).
+
+   The site is dark-first — almost every component sets its own
+   background via inline `style={{ backgroundColor: '#000' }}` or
+   the literal class `bg-black` (~thousands of usages). Re-skinning
+   every component to use CSS vars is a huge surface change, so the
+   light theme works at the **canvas level**: we paint a warm
+   off-white (#f5f1ea) behind everything, soften the chrome shadows,
+   and override the most common page wrappers / text utilities so
+   the off-white shows through where it matters.
+
+   This intentionally leaves heavily-styled cards (Pik Slip, hero
+   cards, etc.) dark — they read as "dark UI on a clean off-white
+   page", which is the look the user asked for. */
+
+html.light {
+  color-scheme: light;
+  background-color: #f5f1ea;
+}
+html.light body {
+  background-color: #f5f1ea !important;
+  color: #1f2937;
+}
+
+/* Override the fixed black canvas painted by `pages/_app.js` (the
+   `position: fixed; backgroundColor: #000000; z-index: -1` div). */
+html.light body > div[style*="z-index: -1"][style*="background-color: rgb(0, 0, 0)"],
+html.light body > div[style*="zIndex: -1"][style*="backgroundColor: #000000"] {
+  background-color: #f5f1ea !important;
+}
+
+/* Common Tailwind primitives: swap pure-black page wrappers for
+   off-white. We intentionally do NOT swap `bg-black` *everywhere*
+   because some components (Pik Slip, action sheets, popovers) use it
+   on purpose for contrast. Page roots typically pair `bg-black` with
+   `min-h-screen` so we scope by that selector. */
+html.light .min-h-screen.bg-black,
+html.light .min-h-screen.bg-\[\#000000\],
+html.light .min-h-screen.bg-\[\#0a0a0a\] {
+  background-color: #f5f1ea !important;
+  color: #1f2937;
+}
+
+/* Soften the top nav + condensed bar so it doesn't slam against the
+   off-white page. */
+html.light nav[class*="bg-black"],
+html.light [data-topnavbar="true"],
+html.light .piks-condensed-bar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  color: #1f2937;
+}
+html.light nav a,
+html.light nav span,
+html.light nav button {
+  color: #1f2937;
+}
+html.light nav .text-gray-300,
+html.light nav .text-gray-400,
+html.light nav .text-gray-500 {
+  color: #475569 !important;
+}
+html.light nav .text-white {
+  color: #0f172a !important;
+}
+
+/* Mobile drawer + desktop user-menu dropdown — keep them dark in
+   light mode looks weird, so paint them white-with-shadow. */
+html.light .mobile-menu-drawer,
+html.light .mobile-menu-drawer + div,
+html.light div[class*="bg-black"][class*="lg:hidden"][class*="w-64"] {
+  background-color: #ffffff !important;
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.12);
+  color: #1f2937;
+}
+html.light .mobile-menu-drawer .text-gray-300,
+html.light .mobile-menu-drawer .text-gray-400,
+html.light .mobile-menu-drawer .text-gray-500 {
+  color: #475569 !important;
+}
+html.light .mobile-menu-drawer .text-white {
+  color: #0f172a !important;
+}
+html.light .mobile-menu-drawer .border-\[\#1a1a1a\] {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+html.light .mobile-menu-drawer svg {
+  color: #475569;
+}
+
+/* User-menu dropdown in TopNavbar — picks up these overrides too. */
+html.light .bg-\[\#0a0a0a\],
+html.light .bg-\[\#111111\] {
+  background-color: #ffffff !important;
+  color: #1f2937;
+}
+html.light .bg-\[\#1a1a1a\] {
+  background-color: #f1ecdf !important;
+}
+html.light .border-\[\#1a1a1a\],
+html.light .border-\[\#1a1a1a\]\/50 {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+html.light .text-gray-300 { color: #475569; }
+html.light .text-gray-400 { color: #64748b; }
+html.light .text-gray-500 { color: #64748b; }

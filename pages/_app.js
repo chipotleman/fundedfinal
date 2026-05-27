@@ -13,6 +13,7 @@ import { NotificationsProvider } from '../contexts/NotificationsContext';
 import { PushNotificationsProvider } from '../contexts/PushNotificationsContext';
 import { UserPreviewProvider } from '../contexts/UserPreviewContext';
 import { SiteConfigProvider } from '../contexts/SiteConfigContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import GlobalToastContainer from '../components/notifications/GlobalToastContainer';
 import AchievementUnlockOverlay from '../components/notifications/AchievementUnlockOverlay';
 import IncomingInviteModal from '../components/battle/IncomingInviteModal';
@@ -259,18 +260,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
   const [betaAuthenticated, setBetaAuthenticated] = useState(initialBetaAccess);
   const [justAuthenticated, setJustAuthenticated] = useState(false);
 
-  // Force dark theme on root element and clear any legacy theme preference.
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    }
-    if (typeof window !== 'undefined') {
-      try {
-        window.localStorage.removeItem('piks-theme');
-      } catch (_e) {}
-    }
-  }, []);
+  // Theme state is now owned by `ThemeContext` (mounted below) — it
+  // hydrates from `localStorage` (`piks-theme`) and a no-FOUC inline
+  // script in `pages/_document.js` applies the right class before
+  // first paint. No legacy clearing needed here.
 
   // Dev-only kill-switch for stale service workers. PWA is disabled in
   // development (next.config.js: `disable: NODE_ENV === 'development'`),
@@ -667,6 +660,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
       {battlePreviewHead}
       {profilePreviewHead}
       <SiteConfigProvider>
+      <ThemeProvider>
       <AuthProvider>
           <UserPreferencesProvider>
           <BetSlipProvider>
@@ -789,6 +783,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
           </BetSlipProvider>
           </UserPreferencesProvider>
         </AuthProvider>
+      </ThemeProvider>
       </SiteConfigProvider>
     </SessionProvider>
   );

@@ -931,7 +931,18 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
 
   const handleLike = async (e) => {
     e?.stopPropagation?.();
-    if (isGuest || likePending || isSimulated) return;
+    if (isGuest || likePending) return;
+    // Simulated battles aren't persisted, so we can't round-trip the
+    // like to the server. Do a local-only toggle so the button still
+    // feels responsive on placeholder cards (user request: "let me
+    // like bot battles"). Real `isFakeOpponent` matchups have UUIDs
+    // and go through the normal API path below.
+    if (isSimulated) {
+      const wasLiked = liked;
+      setLiked(!wasLiked);
+      setLikeCount((c) => Math.max(0, c + (wasLiked ? -1 : 1)));
+      return;
+    }
     setLikePending(true);
     const wasLiked = liked;
     setLiked(!wasLiked);
@@ -1313,14 +1324,14 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
         <button
           type="button"
           onClick={handleLike}
-          disabled={isGuest || likePending || isSimulated}
+          disabled={isGuest || likePending}
           aria-pressed={liked}
           className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
           style={{
             color: liked ? '#f87171' : textPrimary,
             borderRight: `2px solid ${HH_BORDER}`,
-            cursor: (isGuest || isSimulated) ? 'not-allowed' : 'pointer',
-            opacity: (isGuest || isSimulated) ? 0.55 : 1,
+            cursor: isGuest ? 'not-allowed' : 'pointer',
+            opacity: isGuest ? 0.55 : 1,
           }}
         >
           <svg viewBox="0 0 24 24" width={14} height={14} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
@@ -1344,13 +1355,13 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
         </button>
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); if (!isGuest && !isSimulated) onShare?.({ type: 'battle', id: battle.id, snapshot: { potSize: battle.potSize, durationType: battle.durationType, user1: { username: u1.username, avatar: u1.avatar }, user2: { username: u2.username, avatar: u2.avatar } } }); }}
-          disabled={isGuest || isSimulated}
+          onClick={(e) => { e.stopPropagation(); if (!isGuest) onShare?.({ type: 'battle', id: battle.id, isSimulated, snapshot: { potSize: battle.potSize, durationType: battle.durationType, user1: { username: u1.username, avatar: u1.avatar }, user2: { username: u2.username, avatar: u2.avatar } } }); }}
+          disabled={isGuest}
           className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
           style={{
             color: textPrimary,
-            cursor: (isGuest || isSimulated) ? 'not-allowed' : 'pointer',
-            opacity: (isGuest || isSimulated) ? 0.55 : 1,
+            cursor: isGuest ? 'not-allowed' : 'pointer',
+            opacity: isGuest ? 0.55 : 1,
           }}
         >
           <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 import { useNotifications } from '../contexts/NotificationsContext';
+import { useTheme } from '../contexts/ThemeContext';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { formatMoney } from '../utils/formatMoney';
 
@@ -18,6 +19,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const router = useRouter();
   const { data: session, status } = useSession();
   const { counts: notifCounts, unviewedAchievementCount } = useNotifications();
+  const { theme, toggleTheme } = useTheme();
   const alertsBadge = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0);
   const notificationsBadge = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0) + (notifCounts?.gameResults || 0);
   const messagesBadge = notifCounts?.unreadMessages || 0;
@@ -450,6 +452,33 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               </Link>
 
               <div className="border-t border-[#1a1a1a] pt-4 mt-6">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); toggleTheme(); }}
+                  className="w-full flex items-center justify-between py-3 mb-2"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+                >
+                  <span className="text-gray-300 font-light text-base uppercase tracking-wider">
+                    {theme === 'light' ? 'Dark Theme' : 'Light Theme'}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="relative inline-flex w-11 h-6 rounded-full transition-colors"
+                    style={{
+                      background: theme === 'light' ? '#fbbf24' : 'rgba(255,255,255,0.18)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                    }}
+                  >
+                    <span
+                      className="absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white transition-all"
+                      style={{
+                        left: theme === 'light' ? '21px' : '3px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                      }}
+                    />
+                  </span>
+                </button>
                 <div className="mb-4">
                   <p className="text-sm text-gray-400 mb-1">Signed in as</p>
                   <p className="text-white font-semibold text-sm truncate max-w-full" title={currentUser?.email || currentUser?.phone || 'User'}>
