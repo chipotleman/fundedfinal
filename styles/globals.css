@@ -1060,3 +1060,63 @@ html.light .border-\[\#1a1a1a\]\/50 {
 html.light .text-gray-300 { color: #475569; }
 html.light .text-gray-400 { color: #64748b; }
 html.light .text-gray-500 { color: #64748b; }
+
+/* ─── Inline-style black background overrides ────────────────────
+   Many page roots (pages/index.js, pages/battle.js, my-picks, etc.)
+   and the fixed z:-1 backdrop in pages/_app.js paint black via
+   inline React style (`backgroundColor: '#000000'`) instead of the
+   `bg-black` Tailwind class, so the class-based light overrides
+   above don't catch them. React serializes those inline styles to
+   either `rgb(0, 0, 0)` or `#000000` in the DOM, so we match both. */
+html.light .min-h-screen[style*="rgb(0, 0, 0)"],
+html.light .min-h-screen[style*="#000000"],
+html.light .min-h-screen[style*="#0a0a0a"],
+html.light .min-h-screen[style*="#000"],
+html.light .min-h-screen[style*="rgb(10, 10, 10)"] {
+  background-color: #f5f1ea !important;
+  color: #1f2937;
+}
+
+/* Fixed z:-1 black backdrop divs from _app.js — they're nested
+   inside many providers, so the `body > div` selector above misses
+   them. Match the inline style anywhere in the tree. */
+html.light div[style*="z-index: -1"][style*="rgb(0, 0, 0)"],
+html.light div[style*="z-index:-1"][style*="rgb(0, 0, 0)"],
+html.light div[style*="zIndex: -1"][style*="#000000"],
+html.light div[style*="position: fixed"][style*="rgb(0, 0, 0)"][style*="100vh"] {
+  background-color: #f5f1ea !important;
+}
+
+/* Promo / hero / featured-battle cards that inline very dark
+   surfaces (#0d0d0d / #111111 / #141414) — lift them so they don't
+   slam against the off-white page in light mode. */
+html.light [style*="background-color: rgb(13, 13, 13)"],
+html.light [style*="background-color:#0d0d0d"],
+html.light [style*="background-color: #0d0d0d"],
+html.light [style*="background-color: rgb(17, 17, 17)"],
+html.light [style*="background-color:#111111"],
+html.light [style*="background-color: #111111"],
+html.light [style*="background-color: rgb(20, 20, 20)"],
+html.light [style*="background-color:#141414"],
+html.light [style*="background-color: #141414"] {
+  background-color: #ffffff !important;
+  color: #1f2937;
+}
+
+/* Borders rendered via inline #1a1a1a — match the class-based
+   override above so cards in light mode get a soft slate border. */
+html.light [style*="border: 1px solid rgb(26, 26, 26)"],
+html.light [style*="border: 1px solid #1a1a1a"],
+html.light [style*="border-color: rgb(26, 26, 26)"],
+html.light [style*="border-color:#1a1a1a"],
+html.light [style*="border-color: #1a1a1a"] {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+/* Logo swap — the white-on-transparent Piks logo disappears on the
+   off-white page. Invert it so it reads as the dark navy mark. */
+html.light img[src*="pikslogotransparent"],
+html.light img[src*="piks-logo"],
+html.light img[alt*="Piks" i][src*="logo" i] {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85);
+}
