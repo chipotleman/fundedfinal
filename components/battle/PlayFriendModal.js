@@ -671,7 +671,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               {/* Arcade-neon hero title — same italic gradient + lightning
                   bolts as QuickMatchModal so both 1v1 entry flows share
                   the same theme. */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" style={{ paddingTop: 6 }}>
                 <span
                   aria-hidden="true"
                   style={{
@@ -688,7 +688,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   className="font-black uppercase"
                   style={{
                     fontSize: 'clamp(22px, 5.5vw, 30px)',
-                    lineHeight: 0.95,
+                    lineHeight: 1.15,
                     letterSpacing: '0.01em',
                     fontStyle: 'italic',
                     WebkitTextStroke: '1.5px #0a0a0a',
@@ -698,6 +698,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     WebkitTextFillColor: 'transparent',
                     whiteSpace: 'nowrap',
                     margin: 0,
+                    padding: '2px 0',
                     fontFamily: 'system-ui, -apple-system, sans-serif',
                   }}
                 >
@@ -1365,24 +1366,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   )}
                 </div>
 
-                {isBeta ? (
-                  <div
-                    className="rounded-2xl overflow-hidden"
-                    style={{
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 4px 0 #0a0a0a',
-                      backgroundColor: '#0a0a0a',
-                      lineHeight: 0,
-                    }}
-                  >
-                    <img
-                      src="/promos/beta-challenge.png"
-                      alt="Beta Challenge — Free 10,000 coins. Top score at the end of the beta wins $1,000."
-                      className="block w-full h-auto"
-                      style={{ display: 'block' }}
-                    />
-                  </div>
-                ) : (
+                {isBeta ? null : (
                 <div>
                   <label className="text-[11px] font-extrabold uppercase tracking-wider mb-2 block" style={{ color: textMuted }}>Buy-In</label>
                   <div className="grid grid-cols-5 gap-2">
@@ -1513,7 +1497,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               ? {
                                   background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.08) 100%), #0a0a0a`,
                                   border: `2.5px solid ${mode.color}`,
-                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 26px ${glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
+                                  boxShadow: `0 4px 0 #0a0a0a, inset 0 0 0 1px rgba(255,255,255,0.06)`,
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
@@ -1521,7 +1505,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               : {
                                   background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), #0a0a0a`,
                                   border: `2.5px solid ${mode.color}`,
-                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 18px ${glow}`,
+                                  boxShadow: `0 4px 0 #0a0a0a`,
                                   opacity: locked ? 0.45 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
@@ -1591,15 +1575,6 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           {/* Internal radial color glow + mode-specific
                               themed backdrop — mirrors QuickMatchModal so
                               the two 1v1 entry flows look identical. */}
-                          <span
-                            aria-hidden="true"
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              background: `radial-gradient(ellipse at 50% 38%, ${glow} 0%, transparent 60%)`,
-                              borderRadius: 'inherit',
-                              opacity: 0.9,
-                            }}
-                          />
                           {mode.id === 'rush' && (
                             <span
                               aria-hidden="true"
@@ -1674,7 +1649,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                             className="leading-none mb-2 relative"
                             style={{
                               fontSize: 38,
-                              filter: `drop-shadow(0 0 14px ${glow}) drop-shadow(0 2px 0 #000)`,
+                              filter: `drop-shadow(0 2px 0 #000)`,
                             }}
                           >
                             {mode.icon}
@@ -1690,7 +1665,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           )}
                           <span className="inline-flex items-center gap-1.5 mt-2 relative">
                             <span className="font-black text-[15px] leading-none" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
-                            <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, filter: 'drop-shadow(0 0 6px #fbbf24)' }}>🪙</span>
+                            <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1 }}>🪙</span>
                           </span>
                           <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>coins</span>
                         </button>
@@ -1739,7 +1714,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         style={{
                           background: `linear-gradient(180deg, ${selectedMode.color}1f, ${selectedMode.color}0a)`,
                           border: '2.5px solid #0a0a0a',
-                          boxShadow: `0 4px 0 #0a0a0a, 0 0 14px ${selectedMode.color}40`,
+                          boxShadow: `0 4px 0 #0a0a0a`,
                         }}
                       >
                         <span className="text-sm leading-none mt-0.5" aria-hidden="true">{selectedMode.icon}</span>
@@ -1796,13 +1771,12 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               style={{
                 background: hasActiveMatchup
                   ? 'linear-gradient(180deg,#3b82f6,#2563eb)'
-                  : 'linear-gradient(180deg,#fde047 0%, #f97316 60%, #ea580c 100%)',
+                  : 'linear-gradient(180deg,#fb923c 0%, #f97316 55%, #ea580c 100%)',
                 border: '3px solid #0a0a0a',
-                boxShadow: hasActiveMatchup
-                  ? '0 5px 0 #0a0a0a, 0 0 22px rgba(59,130,246,0.55)'
-                  : '0 5px 0 #0a0a0a, 0 0 28px rgba(249,115,22,0.55), 0 0 48px rgba(251,191,36,0.25)',
-                color: hasActiveMatchup ? '#fff' : '#0a0a0a',
-                textShadow: hasActiveMatchup ? '0 1px 0 rgba(0,0,0,0.35)' : '0 2px 0 rgba(255,255,255,0.35)',
+                boxShadow: '0 5px 0 #0a0a0a',
+                color: '#ffffff',
+                WebkitTextStroke: '0.75px #0a0a0a',
+                textShadow: '0 2px 0 #0a0a0a',
                 fontStyle: hasActiveMatchup ? 'normal' : 'italic',
                 letterSpacing: '0.08em',
                 padding: '14px 14px',
@@ -1811,7 +1785,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               }}
             >
               {!hasActiveMatchup && !sending && (
-                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#0a0a0a', flexShrink: 0 }}>«</span>
+                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#ffffff', flexShrink: 0 }}>«</span>
               )}
               <span
                 className="relative z-10"
@@ -1846,7 +1820,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 )}
               </span>
               {!hasActiveMatchup && !sending && (
-                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#0a0a0a', flexShrink: 0 }}>»</span>
+                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#ffffff', flexShrink: 0 }}>»</span>
               )}
             </button>
           </div>
