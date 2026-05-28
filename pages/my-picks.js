@@ -292,13 +292,19 @@ export default function MyPicksPage() {
     if (!matchup || !hasActiveMatchup) return null;
     const startingBalance = parseFloat(matchup.startingBalance || 0) || 0;
 
+    // IMPORTANT: must match the field the TopNavbar coin pill reads
+    // (`myBalance` from useMatchup()), otherwise the top-nav number
+    // and the active-battle-card number diverge by the unrealized
+    // P&L on open picks and the two reads look "random / wrong" to
+    // the user. We deliberately use the SETTLED balance here, not
+    // `myLiveBalance`, so the two values are always identical.
     const myLive =
-      myLiveBalance != null ? parseFloat(myLiveBalance)
-        : myBalance != null ? parseFloat(myBalance)
+      myBalance != null ? parseFloat(myBalance)
+        : myLiveBalance != null ? parseFloat(myLiveBalance)
         : startingBalance;
     const oppLive =
-      opponentLiveBalance != null ? parseFloat(opponentLiveBalance)
-        : opponentBalance != null ? parseFloat(opponentBalance)
+      opponentBalance != null ? parseFloat(opponentBalance)
+        : opponentLiveBalance != null ? parseFloat(opponentLiveBalance)
         : startingBalance;
 
     const showingOpp = balanceView === 'opp' && !!opponent;
