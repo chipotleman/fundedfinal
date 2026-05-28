@@ -1087,63 +1087,34 @@ html.light div[style*="position: fixed"][style*="rgb(0, 0, 0)"][style*="100vh"] 
   background-color: #f5f1ea !important;
 }
 
-/* Promo / hero / featured-battle cards that inline very dark
-   surfaces (#0d0d0d / #111111 / #141414) — lift them so they don't
-   slam against the off-white page in light mode. */
-html.light [style*="background-color: rgb(13, 13, 13)"],
-html.light [style*="background-color:#0d0d0d"],
-html.light [style*="background-color: #0d0d0d"],
-html.light [style*="background-color: rgb(17, 17, 17)"],
-html.light [style*="background-color:#111111"],
-html.light [style*="background-color: #111111"],
-html.light [style*="background-color: rgb(20, 20, 20)"],
-html.light [style*="background-color:#141414"],
-html.light [style*="background-color: #141414"] {
-  background-color: #ffffff !important;
-  color: #1f2937;
-}
 
-/* Borders rendered via inline #1a1a1a — match the class-based
-   override above so cards in light mode get a soft slate border. */
-html.light [style*="border: 1px solid rgb(26, 26, 26)"],
-html.light [style*="border: 1px solid #1a1a1a"],
-html.light [style*="border-color: rgb(26, 26, 26)"],
-html.light [style*="border-color:#1a1a1a"],
-html.light [style*="border-color: #1a1a1a"] {
-  border-color: rgba(15, 23, 42, 0.1) !important;
-}
+/* ───────────────────── LIGHT THEME — PAGE CHROME ONLY ─────────────────
+   Earlier passes tried to blanket-convert every dark surface (every
+   inline `rgba(15,23,42…)`, `bg-[#0d0d0d]`, Tailwind dark gradient
+   stop, etc.) into white. That destroyed the cartoon-themed modals
+   and hero cards (QuickMatchModal, FindingMatchup, MatchupLobby,
+   OnboardingPopup, BattleModeChooser, the PLAY NOW hero card) which
+   are *intentionally* dark navy + bright neon accents in BOTH themes.
+   It also softened modal backdrops to invisibility, so opening a
+   popup looked like the whole page went white.
 
-/* Logo swap — the white-on-transparent Piks logo disappears on the
-   off-white page. Invert it so it reads as the dark navy mark.
-   IMPORTANT: TopNavbar applies an inline style={{ filter: '...' }} to
-   animate the logo glow, and inline styles outrank class CSS. We
-   override via attribute selector + `!important` so light mode wins
-   regardless of what's set inline. We also kill the keyframe
-   animation in light mode so the inverted glow doesn't flash. */
-html.light img[src*="pikslogotransparent"],
-html.light img[src*="piks-logo"],
-html.light img[alt*="Piks" i][src*="logo" i] {
-  filter: invert(1) hue-rotate(180deg) brightness(0.85) !important;
-  animation: none !important;
-}
+   New rule: only **page chrome** gets light treatment here —
+     • TopNavbar (data-topnavbar)
+     • Sports-pills row + condensed pills bar
+     • Dashboard game-row cards (.piks-game-card)
+     • PickPill chips (.pick-chip-card)
+     • Generic Tailwind utilities `bg-white/N`, `border-white/N`,
+       `divide-white/N`, `text-gray-*` (text contrast tweaks)
+     • Soft tints for nested low-opacity overlays
+   Cartoon hero/modal classes (`.youvs-card`, `.cartoon-chooser-*`,
+   modal cards, promo strip cards) are LEFT ALONE so they keep
+   their cartoon dark navy aesthetic.
 
-/* ───────────────────────── EXTENDED LIGHT THEME ─────────────────────
-   Many components apply dark colors via inline `style={{}}` props
-   that the earlier overrides don't catch. The DOM serializes those
-   to rgb(...) so we match on the most common values used across
-   pages/components. */
+   Modal backdrops (`.bg-black/40`, `/50`, `/60`, `/80`) stay DIM
+   (rgba(15,23,42,0.55-0.75)) so popups read as "popped" over the
+   page, never as floating-in-white. */
 
-/* TopNavbar is a <div data-topnavbar="true">, not a <nav>, so the
-   earlier `html.light nav .text-white` rule never matched the active
-   tab label (MY PICKS / SOCIAL / LEADERBOARD). Repeat the same
-   color overrides scoped to data-topnavbar so the active link is
-   visible on the white nav. */
-html.light [data-topnavbar="true"] a,
-html.light [data-topnavbar="true"] span,
-html.light [data-topnavbar="true"] button,
-html.light [data-topnavbar="true"] div {
-  color: inherit;
-}
+/* ── TopNavbar ───────────────────────────────────────────────── */
 html.light [data-topnavbar="true"] .text-white {
   color: #0f172a !important;
 }
@@ -1152,81 +1123,41 @@ html.light [data-topnavbar="true"] .text-gray-400,
 html.light [data-topnavbar="true"] .text-gray-500 {
   color: #475569 !important;
 }
-
-/* Card / panel surfaces — most cards inline an rgba(15,23,42,...)
-   or rgba(8,12,24,...) navy background (sometimes wrapped in a
-   linear-gradient). Lift them to white in light mode. The `i` flag
-   makes the substring match case-insensitive so different React
-   serializations (`rgba(15, 23, 42, 0.95)` vs `rgba(15,23,42,.95)`)
-   all match. */
-html.light [style*="rgba(15, 23, 42" i],
-html.light [style*="rgba(15,23,42" i],
-html.light [style*="rgb(15, 23, 42)" i],
-html.light [style*="rgba(8, 12, 24" i],
-html.light [style*="rgba(8,12,24" i],
-html.light [style*="rgb(8, 12, 24)" i],
-html.light [style*="rgba(10, 10, 10" i],
-html.light [style*="rgba(10,10,10" i],
-html.light [style*="rgba(20, 20, 20" i],
-html.light [style*="rgba(0, 0, 0, 0.55)" i],
-html.light [style*="rgba(0,0,0,0.55)" i],
-html.light [style*="rgba(0, 0, 0, 0.6)" i],
-html.light [style*="rgba(0,0,0,0.6)" i],
-html.light [style*="rgba(0, 0, 0, 0.7)" i],
-html.light [style*="rgba(0,0,0,0.7)" i],
-html.light [style*="rgba(0, 0, 0, 0.8)" i],
-html.light [style*="rgba(0,0,0,0.8)" i],
-html.light [style*="rgba(0, 0, 0, 0.85)" i],
-html.light [style*="rgba(0,0,0,0.85)" i],
-html.light [style*="rgba(0, 0, 0, 0.88)" i],
-html.light [style*="rgba(0,0,0,0.88)" i],
-html.light [style*="rgba(0, 0, 0, 0.9)" i],
-html.light [style*="rgba(0,0,0,0.9)" i],
-html.light [style*="rgba(0, 0, 0, 0.95)" i],
-html.light [style*="rgba(0,0,0,0.95)" i] {
-  background: #ffffff !important;
-  color: #1f2937 !important;
-}
-
-/* `box-shadow: 0 4px 0 rgba(0,0,0,0.55)` is the cartoon hard drop
-   shadow used on every card. Soften it to a slate tint so cards
-   sit on the off-white page without a harsh black shadow. */
-html.light [style*="box-shadow: 0 4px 0 rgba(0, 0, 0, 0.55)" i],
-html.light [style*="boxShadow: 0 4px 0 rgba(0,0,0,0.55)" i] {
-  box-shadow: 0 4px 0 rgba(15, 23, 42, 0.12) !important;
-}
-
-/* Text colors on those inverted cards — the inline `color: '#ffffff'`
-   and `color: '#9ca3af'` (gray-400) are baked into many cards, but
-   on a white background they're invisible. Force them dark. */
-html.light [style*="rgba(15, 23, 42" i] [style*="color: #ffffff" i],
-html.light [style*="rgba(15, 23, 42" i] [style*="color:#ffffff" i],
-html.light [style*="rgba(15,23,42" i] [style*="color: #ffffff" i],
-html.light [style*="rgba(8, 12, 24" i] [style*="color: #ffffff" i] {
+/* renderNavLink inlines `color: '#ffffff'` (active) and
+   `color: '#d1d5db'` (inactive). Inline beats class — override via
+   attribute selector. */
+html.light [data-topnavbar="true"] a[style*="color: rgb(255, 255, 255)"],
+html.light [data-topnavbar="true"] a[style*="color: #ffffff"] {
   color: #0f172a !important;
 }
-html.light [style*="rgba(15, 23, 42" i] [style*="color: #9ca3af" i],
-html.light [style*="rgba(15,23,42" i] [style*="color: #9ca3af" i],
-html.light [style*="rgba(8, 12, 24" i] [style*="color: #9ca3af" i] {
-  color: #64748b !important;
+html.light [data-topnavbar="true"] a[style*="color: rgb(209, 213, 219)"],
+html.light [data-topnavbar="true"] a[style*="color: #d1d5db"] {
+  color: #475569 !important;
 }
 
-/* Modal / popup overlays — BalanceModal, ChallengePopup, etc. cover
-   the screen with a fixed dark backdrop AND a dark card. Lift the
-   inner card (the backdrop stays dim so the popup pops). The
-   backdrop selectors above already handle most overlays; here we
-   target the inner card via its common inline color value. */
-html.light [style*="background: linear-gradient(135deg, rgba(15, 23, 42" i],
-html.light [style*="background:linear-gradient(135deg,rgba(15,23,42" i],
-html.light [style*="background: linear-gradient(135deg, rgba(8, 12, 24" i],
-html.light [style*="background:linear-gradient(135deg,rgba(8,12,24" i] {
+/* ── Sports-pills row (page chrome strip on dashboard) ──────── */
+html.light .piks-sports-pills-row {
+  background-color: #f5f1ea !important;
+}
+html.light .piks-condensed-bar {
   background: #ffffff !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
 }
 
-/* Hover surfaces — many buttons use `hover:bg-white/5`, `bg-white/10`
-   which on the off-white page become invisible. Map them to a soft
-   slate tint. (Tailwind compiles these to bg-white/N → rgba(255,...,
-   N/100); we just override by class.) */
+/* ── Modal / overlay backdrops ───────────────────────────────────
+   Tailwind compiles `.bg-black/40` → rgba(0,0,0,0.4). On a light
+   page that black overlay reads as a heavy stain; we soften it to
+   slate-900 alpha so it's still a clear DIM (not invisible) layer
+   that lets the popup pop. */
+html.light .bg-black\/40 { background-color: rgba(15, 23, 42, 0.45) !important; }
+html.light .bg-black\/50 { background-color: rgba(15, 23, 42, 0.55) !important; }
+html.light .bg-black\/60 { background-color: rgba(15, 23, 42, 0.62) !important; }
+html.light .bg-black\/70 { background-color: rgba(15, 23, 42, 0.68) !important; }
+html.light .bg-black\/80 { background-color: rgba(15, 23, 42, 0.72) !important; }
+html.light .bg-black\/90 { background-color: rgba(15, 23, 42, 0.80) !important; }
+
+/* Generic translucent-white utilities used for hover/divider tints —
+   on the cream page these need to be slate-tinted instead. */
 html.light .bg-white\/5,
 html.light .hover\:bg-white\/5:hover {
   background-color: rgba(15, 23, 42, 0.05) !important;
@@ -1238,54 +1169,21 @@ html.light .hover\:bg-white\/10:hover {
 html.light .border-white\/5,
 html.light .border-white\/10,
 html.light .border-white\/20 {
-  border-color: rgba(15, 23, 42, 0.1) !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+}
+html.light .divide-white\/5 > * + *,
+html.light .divide-white\/10 > * + * {
+  border-color: rgba(15, 23, 42, 0.08) !important;
 }
 
-/* `bg-[#0a0a0a]/40` style — the game detail page wraps its main
-   container in dark blocks. Force-light all bg-black variants since
-   we've already preserved truly intentional dark surfaces via the
-   inline-color allow-list. */
-html.light .bg-black,
-html.light .bg-\[\#000000\],
-html.light .bg-\[\#0a0a0a\],
-html.light .bg-\[\#0d0d0d\] {
-  background-color: #ffffff !important;
-  color: #1f2937;
-}
-html.light .bg-black\/40,
-html.light .bg-black\/50,
-html.light .bg-black\/60,
-html.light .bg-black\/80 {
-  background-color: rgba(15, 23, 42, 0.06) !important;
-}
+/* ── Gray text scale — text-gray-* on a white-ish page ────────── */
+html.light .text-gray-300 { color: #334155 !important; }
+html.light .text-gray-400 { color: #475569 !important; }
+html.light .text-gray-500 { color: #475569 !important; }
+html.light .text-gray-600 { color: #334155 !important; }
+html.light .text-gray-700 { color: #1f2937 !important; }
 
-/* Dashboard sports-pills row wrapper paints an inline black bg so the
-   pills strip bleeds edge-to-edge in dark mode. In light mode that
-   leaves a black band under the pills. Match the page off-white. */
-html.light .piks-sports-pills-row {
-  background-color: #f5f1ea !important;
-}
-
-/* "YOUR BATTLE / PLAY NOW" featured-battle card (`.youvs-card`) sets a
-   complex inline `background: linear-gradient(...) #0d0d0d` which the
-   substring overrides above don't catch (different shorthand form).
-   Repaint to white-on-cream with a soft mint tint so the cartoon
-   PLAY NOW sticker still pops. */
-html.light .youvs-card {
-  background: linear-gradient(180deg, rgba(16,185,129,0.10) 0%, rgba(6,182,212,0.06) 45%, #ffffff 100%), #ffffff !important;
-  border-color: rgba(16, 185, 129, 0.55) !important;
-  box-shadow: 0 0 0 1px rgba(16,185,129,0.18) inset, 0 4px 14px rgba(15,23,42,0.08) !important;
-  color: #1f2937;
-}
-html.light .youvs-card .text-white,
-html.light .youvs-card p,
-html.light .youvs-card span:not([style*="color"]) {
-  color: #0f172a;
-}
-
-/* PickPill bet chips (`.pick-chip-card`) use slate-400 text and an
-   off-white "$amount" — both invisible on a white card. Darken them
-   plus give the chip a soft slate background. */
+/* ── PickPill chips (page-level bet chips) ──────────────────── */
 html.light .pick-chip-card {
   background: rgba(15, 23, 42, 0.04) !important;
 }
@@ -1300,296 +1198,52 @@ html.light .pick-chip-card span[style*="#e5e7eb" i] {
   color: #0f172a !important;
 }
 
-/* Divide-x / divide-y use border colors. Soften white dividers. */
-html.light .divide-white\/5 > * + *,
-html.light .divide-white\/10 > * + * {
-  border-color: rgba(15, 23, 42, 0.08) !important;
-}
-
-/* ─── Dashboard live game cards (.piks-game-card) ────────────────
-   The card wrapper already gets repainted by the inline-color
-   substring rules above, but the internal odds cells inline-style
-   `backgroundColor: '#111'` (dark cell), `color: '#d1d5db'` (the
-   inactive line numbers like +8.5 / -110), and `color: '#4b5563'`
-   (the SPREAD / ML / TOTAL labels). All are invisible / unreadable
-   on a white card. Repaint them. */
-html.light .piks-game-card div[style*="background-color: rgb(17, 17, 17)"],
-html.light .piks-game-card div[style*="backgroundColor: #111"],
-html.light .piks-game-card div[style*="background-color: #111"] {
-  background-color: rgba(15, 23, 42, 0.04) !important;
-}
-html.light .piks-game-card [style*="color: #d1d5db" i],
-html.light .piks-game-card [style*="color:#d1d5db" i],
-html.light .piks-game-card [style*="color: rgb(209, 213, 219)" i] {
-  color: #1f2937 !important;
-}
-html.light .piks-game-card [style*="color: #4b5563" i],
-html.light .piks-game-card [style*="color:#4b5563" i],
-html.light .piks-game-card [style*="color: rgb(75, 85, 99)" i] {
-  color: #475569 !important;
-}
-html.light .piks-game-card [style*="color: #ffffff" i],
-html.light .piks-game-card [style*="color:#ffffff" i],
-html.light .piks-game-card [style*="color: rgb(255, 255, 255)" i] {
-  color: #0f172a !important;
-}
-html.light .piks-game-card .text-gray-500,
-html.light .piks-game-card .text-gray-600 {
-  color: #475569 !important;
-}
-/* Inactive-cell lock icons stroked with #4b5563 — keep visible. */
-html.light .piks-game-card svg[stroke="#4b5563"] {
-  stroke: #94a3b8 !important;
-}
-
-/* ─── TopNavbar nav-link labels ─────────────────────────────────
-   `renderNavLink` in TopNavbar.js inlines `color: '#ffffff'` for
-   the active tab and `color: '#d1d5db'` for inactive tabs. Inline
-   styles trump the class-based `.text-white` overrides earlier in
-   this file, so on the light-mode white nav those reads as white
-   and light-gray (both invisible). Force them dark via the
-   `data-topnavbar` attribute scope. */
-html.light [data-topnavbar="true"] a[style*="color: rgb(255, 255, 255)"],
-html.light [data-topnavbar="true"] a[style*="color: #ffffff"] {
-  color: #0f172a !important;
-}
-html.light [data-topnavbar="true"] a[style*="color: rgb(209, 213, 219)"],
-html.light [data-topnavbar="true"] a[style*="color: #d1d5db"] {
-  color: #475569 !important;
-}
-
-/* ─── BattleModeChooser ("Choose Battle Mode") ──────────────────
-   The modal card paints `background: #0d0d0d` via styled-jsx
-   (`.cartoon-chooser-card`). Repaint to white-on-cream so the
-   modal matches the rest of the light theme. The bright gradient
-   action buttons (blue / orange / emerald) stay as-is — they're
-   meant to pop against any surface. */
-html.light .cartoon-chooser-card {
-  background: #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.15) !important;
-  box-shadow: 0 10px 0 rgba(15, 23, 42, 0.08), 0 14px 40px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.04) inset !important;
-}
-html.light .cartoon-chooser-title {
-  color: #0f172a !important;
-  text-shadow: none !important;
-}
-html.light .cartoon-chooser-subtitle {
-  color: rgba(71, 85, 105, 0.85) !important;
-}
-html.light .cartoon-chooser-cancel {
-  border-color: rgba(15, 23, 42, 0.18) !important;
-  color: #475569 !important;
-}
-html.light .cartoon-chooser-cancel:active {
-  background: rgba(15, 23, 42, 0.06) !important;
-  color: #0f172a !important;
-}
-@media (hover: hover) {
-  html.light .cartoon-chooser-cancel:hover {
-    background: rgba(15, 23, 42, 0.05) !important;
-    color: #0f172a !important;
-  }
-}
-
-/* ───────────────────────── LIGHT THEME, PASS 2 ─────────────────────
-   User reported that several surfaces were still pure-black on the
-   off-white page and that some text colors (game odds line, scores,
-   team names) became invisible on the white cards. The earlier pass
-   missed:
-     • Tailwind arbitrary-value bg classes for #111111 / #141414 /
-       #1a1a1a / #111827 / #0f172a (slate-900) — game-detail hero,
-       featured battle cards, My Picks side card, Game Info side card.
-     • Tailwind gradient stops (`from-[#0d0d0d]`, `to-[#0a0a0a]`,
-       `to-[#111827]`, etc.) — the game-detail hero uses
-       `bg-gradient-to-b from-[#0d0d0d] to-[#0a0a0a]` which bypasses
-       background-color entirely.
-     • Sport-pill row and condensed bar on the dashboard rendered
-       with `bg-black` *and* `bg-[#0a0a0a]` on inner shells —
-       captured by the bg-black override but not the pills inside.
-     • `text-gray-300/400/500` on white cards becomes #64748b which
-       is too light for fine print (odds line, sub-labels). Bump to
-       #334155 so it actually reads.
-
-   These rules are scoped under `html.light` so dark mode is
-   completely untouched. */
-
-/* Additional dark bg utilities — Tailwind arbitrary values. */
-html.light .bg-\[\#111111\],
-html.light .bg-\[\#141414\],
-html.light .bg-\[\#1a1a1a\],
-html.light .bg-\[\#1f1f1f\],
-html.light .bg-\[\#111827\],
-html.light .bg-\[\#0f172a\],
-html.light .bg-\[\#1e293b\],
-html.light .bg-\[\#0b0f1a\],
-html.light .bg-\[\#0a0e16\] {
-  background-color: #ffffff !important;
-  color: #0f172a;
-}
-
-/* Light tint variants for nested "elevated" surfaces — keeps the
-   visual hierarchy by giving inner cards a faint slate fill instead
-   of pure white-on-white. */
-html.light .bg-\[\#141414\].border-\[\#1f1f1f\],
-html.light .bg-\[\#1a1a1a\].border-\[\#1f1f1f\] {
-  background-color: #f1ecdf !important;
-}
-
-/* Border utilities for dark inline values. */
-html.light .border-\[\#111111\],
-html.light .border-\[\#141414\],
-html.light .border-\[\#1f1f1f\],
-html.light .border-\[\#0d0d0d\],
-html.light .border-\[\#0a0a0a\] {
-  border-color: rgba(15, 23, 42, 0.12) !important;
-}
-
-/* Tailwind gradient stops — `bg-gradient-to-*` renders via the
-   --tw-gradient-from / --tw-gradient-to CSS vars, not background-
-   color. Force the dark stops to white so the gradient resolves to
-   a flat light surface. (We don't try to remap to a "light gradient"
-   because there's no signal which direction to go — flat-white reads
-   correctly in every context we found.) */
-html.light .from-\[\#0d0d0d\],
-html.light .from-\[\#0a0a0a\],
-html.light .from-\[\#111111\],
-html.light .from-\[\#141414\],
-html.light .from-\[\#1a1a1a\],
-html.light .from-\[\#111827\],
-html.light .from-\[\#0f172a\],
-html.light .from-black {
-  --tw-gradient-from: #ffffff !important;
-  --tw-gradient-to: rgb(255 255 255 / 0) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-}
-html.light .to-\[\#0d0d0d\],
-html.light .to-\[\#0a0a0a\],
-html.light .to-\[\#111111\],
-html.light .to-\[\#141414\],
-html.light .to-\[\#1a1a1a\],
-html.light .to-\[\#111827\],
-html.light .to-\[\#0f172a\],
-html.light .to-black {
-  --tw-gradient-to: #ffffff !important;
-}
-html.light .via-\[\#0d0d0d\],
-html.light .via-\[\#0a0a0a\],
-html.light .via-\[\#111111\],
-html.light .via-\[\#111827\],
-html.light .via-black {
-  --tw-gradient-stops: var(--tw-gradient-from), #ffffff var(--tw-gradient-via-position, 50%), var(--tw-gradient-to) !important;
-}
-
-/* Inline `background: linear-gradient(... rgb(17,24,39) ...)` and
-   the navy `#111827` (slate-900) variants used in inline styles. */
-html.light [style*="rgb(17, 24, 39)" i],
-html.light [style*="#111827" i],
-html.light [style*="rgb(15, 23, 42)" i],
-html.light [style*="rgb(31, 41, 55)" i],
-html.light [style*="rgb(30, 41, 59)" i] {
-  background-color: #ffffff !important;
-  color: #0f172a;
-}
-
-/* The condensed sports-pill bar (`piks-condensed-bar`) and individual
-   pill buttons rendered with hard inline backgrounds — most pills use
-   #0d0d0d / #141414 already covered, but the row wrapper inlines
-   `background: #000`. Match it. */
-html.light .piks-condensed-bar,
-html.light .piks-condensed-bar [style*="background: rgb(0, 0, 0)" i],
-html.light .piks-condensed-bar [style*="background:#000" i],
-html.light .piks-condensed-bar [style*="background: #000" i] {
-  background: #ffffff !important;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
-}
-
-/* Darker text on light cards. The earlier pass mapped gray-300/400/
-   500 to #475569/#64748b which is fine on the page background but
-   too washed-out on a white card. Bump to a deeper slate so the
-   odds line, team labels, and sub-headings actually read. */
-html.light .text-gray-300 { color: #334155 !important; }
-html.light .text-gray-400 { color: #475569 !important; }
-html.light .text-gray-500 { color: #475569 !important; }
-html.light .text-gray-600 { color: #334155 !important; }
-html.light .text-gray-700 { color: #1f2937 !important; }
-
-/* `text-white` on a now-white card is invisible. Force dark when
-   nested inside any of our overridden card surfaces. */
-html.light .bg-\[\#0d0d0d\] .text-white,
-html.light .bg-\[\#0a0a0a\] .text-white,
-html.light .bg-\[\#141414\] .text-white,
-html.light .bg-\[\#1a1a1a\] .text-white,
-html.light .bg-\[\#111111\] .text-white,
-html.light .bg-\[\#111827\] .text-white,
-html.light .bg-\[\#0f172a\] .text-white,
-html.light .from-\[\#0d0d0d\] .text-white,
-html.light .from-\[\#0a0a0a\] .text-white,
-html.light .from-\[\#111827\] .text-white {
-  color: #0f172a !important;
-}
-
-/* Inline `color: '#ffffff'` / `color: 'white'` inside overridden
-   cards — catch the inline-style version too. React serializes
-   `style={{ backgroundColor: '#0d0d0d' }}` to
-   `style="background-color:#0d0d0d"` (no space after `:`). The
-   earlier ruleset used the spaced form so it never matched in
-   practice. Cover both forms here for safety. */
-html.light [style*="background-color:rgb(13, 13, 13)"] [style*="color:#ffffff" i],
-html.light [style*="background-color: rgb(13, 13, 13)"] [style*="color: #ffffff" i],
-html.light [style*="background-color:#0d0d0d" i] [style*="color:#ffffff" i],
-html.light [style*="background-color: #0d0d0d" i] [style*="color: #ffffff" i],
-html.light [style*="background-color:#141414" i] [style*="color:#ffffff" i],
-html.light [style*="background-color: #141414" i] [style*="color: #ffffff" i] {
-  color: #0f172a !important;
-}
-
-/* --------------------------------------------------------------
-   Dashboard game-row cards (`.piks-game-card`) — the LIVE NOW /
-   Upcoming list on pages/index.js is authored with hardcoded dark
-   inline styles (#0d0d0d card, #111/#141414 cell bg, #1a1a1a /
-   #222 borders, #ffffff / #d1d5db / #6b7280 text). In light mode
-   the card surfaces flip via the rules below, but inline text and
-   borders stay dark — which produced white-on-white team names
-   and invisible spread/total numbers. We scope these overrides to
-   `.piks-game-card` so they don't leak into modals, the bet slip,
-   or other cards that use the same inline color values
-   intentionally. `!important` is required because they fight
-   inline `style="..."` declarations.
-   -------------------------------------------------------------- */
+/* ── Dashboard game-row cards (.piks-game-card) ─────────────────
+   These are page-level content cards. The card wrapper, inner odds
+   cells, team names, spreads and labels are all hand-authored with
+   dark inline styles. We scope every override to `.piks-game-card`
+   so it can NEVER bleed into a cartoon modal that happens to share
+   inline color values. */
 html.light .piks-game-card {
   background-color: #ffffff !important;
   border-color: rgba(15, 23, 42, 0.10) !important;
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05) !important;
+  color: #1f2937;
 }
-
-/* Team names + scores rendered with inline `color: '#ffffff'`. */
+/* Team names + scores (inline `color: '#ffffff'`). */
 html.light .piks-game-card [style*="color:#ffffff" i],
 html.light .piks-game-card [style*="color: #ffffff" i],
 html.light .piks-game-card [style*="color:rgb(255, 255, 255)"],
 html.light .piks-game-card [style*="color: rgb(255, 255, 255)"] {
   color: #0f172a !important;
 }
-
-/* Spread / total point values rendered with inline `color:'#d1d5db'`
-   (gray-300). Bump to slate-700 so they're legible on white. */
+/* Line values inline `color:'#d1d5db'` (gray-300). */
 html.light .piks-game-card [style*="color:#d1d5db" i],
-html.light .piks-game-card [style*="color: #d1d5db" i] {
+html.light .piks-game-card [style*="color: #d1d5db" i],
+html.light .piks-game-card [style*="color: rgb(209, 213, 219)" i] {
   color: #334155 !important;
 }
-
-/* Inner cell backgrounds (#111 / #141414 / #1a1a1a — odds tiles,
-   locked placeholders) need a light slate so the white-on-white
-   text isn't sitting on a now-white tile. */
+/* Inactive labels inline `color:'#4b5563'`. */
+html.light .piks-game-card [style*="color:#4b5563" i],
+html.light .piks-game-card [style*="color: #4b5563" i],
+html.light .piks-game-card [style*="color: rgb(75, 85, 99)" i] {
+  color: #475569 !important;
+}
+html.light .piks-game-card .text-gray-500,
+html.light .piks-game-card .text-gray-600 {
+  color: #475569 !important;
+}
+/* Inner odds-cell backgrounds inline `#111` / `#141414` / `#1a1a1a`. */
 html.light .piks-game-card [style*="background-color:#111" i]:not([style*="#111111"]),
 html.light .piks-game-card [style*="background-color: #111" i]:not([style*="#111111"]),
 html.light .piks-game-card [style*="background-color:#141414" i],
 html.light .piks-game-card [style*="background-color: #141414" i],
 html.light .piks-game-card [style*="background-color:#1a1a1a" i],
-html.light .piks-game-card [style*="background-color: #1a1a1a" i] {
+html.light .piks-game-card [style*="background-color: #1a1a1a" i],
+html.light .piks-game-card [style*="background-color: rgb(17, 17, 17)"] {
   background-color: #f1f5f9 !important;
 }
-
-/* Inner cell borders (#1a1a1a / #222 / #141414). */
+/* Inner odds-cell borders. */
 html.light .piks-game-card [style*="border:1px solid #1a1a1a" i],
 html.light .piks-game-card [style*="border: 1px solid #1a1a1a" i],
 html.light .piks-game-card [style*="border:1px solid #222" i]:not([style*="#2222"]),
@@ -1598,7 +1252,7 @@ html.light .piks-game-card [style*="border:1px solid #141414" i],
 html.light .piks-game-card [style*="border: 1px solid #141414" i] {
   border-color: rgba(15, 23, 42, 0.12) !important;
 }
-
-/* Some odds-button SVG strokes use #4b5563/#6b7280 inline — they
-   stay legible on light, no override needed. The #3b82f6 blue
-   odds digits also stay (high contrast on white). */
+/* Locked-cell SVG icons keep visible. */
+html.light .piks-game-card svg[stroke="#4b5563"] {
+  stroke: #94a3b8 !important;
+}
