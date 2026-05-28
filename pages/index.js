@@ -1429,7 +1429,7 @@ export default function Dashboard() {
         />
 
         <div
-          className="-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-1 mb-3"
+          className="piks-sports-pills-row -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-1 mb-3"
           style={{ backgroundColor: '#000000' }}
         >
           {renderSportPills('inline')}

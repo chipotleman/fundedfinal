@@ -1259,6 +1259,47 @@ html.light .bg-black\/80 {
   background-color: rgba(15, 23, 42, 0.06) !important;
 }
 
+/* Dashboard sports-pills row wrapper paints an inline black bg so the
+   pills strip bleeds edge-to-edge in dark mode. In light mode that
+   leaves a black band under the pills. Match the page off-white. */
+html.light .piks-sports-pills-row {
+  background-color: #f5f1ea !important;
+}
+
+/* "YOUR BATTLE / PLAY NOW" featured-battle card (`.youvs-card`) sets a
+   complex inline `background: linear-gradient(...) #0d0d0d` which the
+   substring overrides above don't catch (different shorthand form).
+   Repaint to white-on-cream with a soft mint tint so the cartoon
+   PLAY NOW sticker still pops. */
+html.light .youvs-card {
+  background: linear-gradient(180deg, rgba(16,185,129,0.10) 0%, rgba(6,182,212,0.06) 45%, #ffffff 100%), #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(16,185,129,0.18) inset, 0 4px 14px rgba(15,23,42,0.08) !important;
+  color: #1f2937;
+}
+html.light .youvs-card .text-white,
+html.light .youvs-card p,
+html.light .youvs-card span:not([style*="color"]) {
+  color: #0f172a;
+}
+
+/* PickPill bet chips (`.pick-chip-card`) use slate-400 text and an
+   off-white "$amount" — both invisible on a white card. Darken them
+   plus give the chip a soft slate background. */
+html.light .pick-chip-card {
+  background: rgba(15, 23, 42, 0.04) !important;
+}
+html.light .pick-chip-card span {
+  color: #1f2937 !important;
+}
+html.light .pick-chip-card span[style*="rgba(148, 163, 184" i],
+html.light .pick-chip-card span[style*="rgba(148,163,184" i] {
+  color: #475569 !important;
+}
+html.light .pick-chip-card span[style*="#e5e7eb" i] {
+  color: #0f172a !important;
+}
+
 /* Divide-x / divide-y use border colors. Soften white dividers. */
 html.light .divide-white\/5 > * + *,
 html.light .divide-white\/10 > * + * {
