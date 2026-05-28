@@ -557,7 +557,7 @@ export default function MyPicksPage() {
           >
             {isSelected && (
               <div
-                className="hidden lg:flex absolute -top-2 left-3 z-10 items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                className="hidden lg:flex absolute top-2 left-2 z-10 items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
                 style={{
                   background: '#22d3ee',
                   color: '#0a0a0a',
