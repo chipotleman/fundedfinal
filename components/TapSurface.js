@@ -21,8 +21,15 @@ export default function TapSurface({
       disabled={disabled}
       onClick={() => { if (!disabled && onTap) onTap(); }}
       style={{
-        backgroundColor: isActive ? activeColor : inactiveColor,
-        color: isActive ? activeTextColor : inactiveTextColor,
+        // Use CSS-var fallbacks for the inactive (default) palette so
+        // light mode can recolor every TapSurface globally via
+        // `--tap-inactive-bg` / `--tap-inactive-text` without losing
+        // the caller-provided props (the prop value is the fallback).
+        // Active state is left as the raw prop so caller-driven
+        // selection highlights (e.g. blue when a bet is in the slip)
+        // always win.
+        backgroundColor: isActive ? activeColor : `var(--tap-inactive-bg, ${inactiveColor})`,
+        color: isActive ? activeTextColor : `var(--tap-inactive-text, ${inactiveTextColor})`,
         cursor: disabled ? 'default' : 'pointer',
         userSelect: 'none',
         WebkitUserSelect: 'none',

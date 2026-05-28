@@ -1233,13 +1233,41 @@ html.light .piks-game-card {
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05) !important;
   color: #1f2937;
 }
-/* Team names + scores (inline `color: '#ffffff'`). */
-html.light .piks-game-card [style*="color:#ffffff" i],
-html.light .piks-game-card [style*="color: #ffffff" i],
-html.light .piks-game-card [style*="color:rgb(255, 255, 255)"],
-html.light .piks-game-card [style*="color: rgb(255, 255, 255)"] {
+/* Team names + scores (inline `color: '#ffffff'`). Restricted to
+   <span> only so it doesn't hit the active TapSurface button's
+   inner `<div style={{color:'#fff'}}>` (which must stay white on
+   its blue active background, otherwise selected odds cells go
+   navy-on-blue and become unreadable). */
+html.light .piks-game-card span[style*="color:#ffffff" i],
+html.light .piks-game-card span[style*="color: #ffffff" i],
+html.light .piks-game-card span[style*="color:rgb(255, 255, 255)"],
+html.light .piks-game-card span[style*="color: rgb(255, 255, 255)"] {
   color: #0f172a !important;
 }
+
+/* TapSurface inactive-state theming. TapSurface now uses CSS-var
+   fallbacks (`var(--tap-inactive-bg)` / `var(--tap-inactive-text)`)
+   for its inactive palette, so we re-skin every TapSurface inside
+   a game card via two scoped vars. Active cells (which use a raw
+   inline `background-color: rgb(37, 99, 235)`) bypass the var and
+   stay royal blue with white text. */
+html.light .piks-game-card {
+  --tap-inactive-bg: #f3efe6;
+  --tap-inactive-text: #1e3a8a;
+}
+/* The inner odds-number `<div style={{color:'#3b82f6'}}>` inside
+   an inactive TapSurface is invisible-on-blue-tinted on light. The
+   active variant of that div uses `color:'#fff'` and lives inside
+   the blue button — keep it white. Exclude active via the parent
+   button's inline blue bg. */
+html.light .piks-game-card button.no-hover-effect:not([style*="rgb(37, 99, 235)"]) [style*="color: rgb(59, 130, 246)"],
+html.light .piks-game-card button.no-hover-effect:not([style*="rgb(37, 99, 235)"]) [style*="color:#3b82f6" i],
+html.light .piks-game-card button.no-hover-effect:not([style*="rgb(37, 99, 235)"]) [style*="color: #3b82f6" i] {
+  color: #1e3a8a !important;
+}
+/* Inactive spread/total VALUE text (`color:'#d1d5db'`) — already
+   covered by the `[style*="color:#d1d5db"] → #334155` rule above,
+   no extra needed. */
 /* Line values inline `color:'#d1d5db'` (gray-300). */
 html.light .piks-game-card [style*="color:#d1d5db" i],
 html.light .piks-game-card [style*="color: #d1d5db" i],
