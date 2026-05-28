@@ -9,7 +9,79 @@ import UserAvatar from '../components/UserAvatar';
 import OddsHistoryChart from '../components/game/OddsHistoryChart';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
+
+// Theme-aware palette. The page was authored dark-first with
+// hardcoded #000 / rgba navy / #fff / #9ca3af / etc. baked into
+// inline styles — those bypass globals.css overrides, which is
+// why light mode looked broken (white nav over black page,
+// dark picks panels floating on cream, invisible labels). We
+// flip every surface/text token through this palette instead.
+function getPalette(isLight) {
+  if (isLight) {
+    return {
+      pageBg: '#f8fafc',
+      // Solid card surface (was navy gradient on dark).
+      cardSurface: '#ffffff',
+      // Subtle inset surface (was rgba(15,23,42,0.6)).
+      innerSurface: '#f1f5f9',
+      // Pick card body (was #0a0a0a).
+      pickSurface: '#ffffff',
+      // Skeleton block.
+      skeletonSurface: 'rgba(148,163,184,0.25)',
+      // Cartoon border stays black — looks identical on white.
+      cartoonBorder: '#0d0d0d',
+      // Soft 1px border for inner surfaces.
+      softBorder: 'rgba(15,23,42,0.10)',
+      // Dashed empty-state border.
+      dashedBorder: '2.5px dashed rgba(37,99,235,0.45)',
+      // Hard cartoon shadow — lighter on white so it doesn't bruise.
+      hardShadow: '0 4px 0 rgba(15,23,42,0.18)',
+      pickShadow: '0 4px 0 rgba(15,23,42,0.18)',
+      pickShadowSelected: '0 0 0 3px rgba(34,211,238,0.35), 0 4px 0 rgba(15,23,42,0.18)',
+      vsText: '#0f172a',
+      bodyText: '#0f172a',
+      mutedText: '#64748b',
+      hintBg: 'rgba(34,211,238,0.12)',
+      hintBorder: '1px solid rgba(34,211,238,0.45)',
+      hintText: '#0891b2',
+      openGameBg: 'rgba(59,130,246,0.12)',
+      openGameBorder: '1px solid rgba(59,130,246,0.45)',
+      openGameText: '#1d4ed8',
+      disabledGameBg: 'rgba(148,163,184,0.18)',
+      disabledGameBorder: '1px solid rgba(148,163,184,0.4)',
+      disabledGameText: '#64748b',
+      divider: 'border-slate-900/10',
+    };
+  }
+  return {
+    pageBg: '#000000',
+    cardSurface: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(8,12,24,0.95) 100%)',
+    innerSurface: 'rgba(15,23,42,0.6)',
+    pickSurface: '#0a0a0a',
+    skeletonSurface: 'rgba(15,23,42,0.55)',
+    cartoonBorder: '#0d0d0d',
+    softBorder: 'rgba(255,255,255,0.08)',
+    dashedBorder: '2.5px dashed rgba(59,130,246,0.4)',
+    hardShadow: '0 4px 0 rgba(0,0,0,0.55)',
+    pickShadow: '0 4px 0 rgba(0,0,0,0.55)',
+    pickShadowSelected: '0 0 0 3px rgba(34,211,238,0.25), 0 4px 0 rgba(0,0,0,0.55)',
+    vsText: '#ffffff',
+    bodyText: '#ffffff',
+    mutedText: '#9ca3af',
+    hintBg: 'rgba(34,211,238,0.08)',
+    hintBorder: '1px solid rgba(34,211,238,0.35)',
+    hintText: '#67e8f9',
+    openGameBg: 'rgba(59,130,246,0.15)',
+    openGameBorder: '1px solid rgba(59,130,246,0.4)',
+    openGameText: '#93c5fd',
+    disabledGameBg: 'rgba(75,85,99,0.15)',
+    disabledGameBorder: '1px solid rgba(75,85,99,0.3)',
+    disabledGameText: '#6b7280',
+    divider: 'border-white/10',
+  };
+}
 
 // Normalize a raw user_bets / fake_opponent_bets row into the shape
 // PiksBetCard expects. The DB column defaults to 'pending' for ungraded
@@ -71,6 +143,9 @@ export default function MyPicksPage() {
     loading,
   } = useMatchup();
   const { betSlip, setShowBetSlip } = useBetSlip();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const p = getPalette(isLight);
 
   const isLoggedIn = sessionStatus === 'authenticated';
 
@@ -147,7 +222,7 @@ export default function MyPicksPage() {
           />
           <div className="text-xs font-black" style={{ color: '#3b82f6' }}>YOU</div>
         </div>
-        <div className="text-xl font-black px-1" style={{ color: '#ffffff' }}>VS</div>
+        <div className="text-xl font-black px-1" style={{ color: p.vsText }}>VS</div>
         <div className="flex flex-col items-center gap-1">
           <UserAvatar
             avatar={opponent?.avatar}
@@ -183,10 +258,10 @@ export default function MyPicksPage() {
     return (
       <div className={vertical ? 'flex flex-col gap-3' : 'flex items-center gap-5'}>
         <div className={cellBase}>
-          <div className="text-[10px] uppercase tracking-wider" style={{ color: '#9ca3af' }}>Balance</div>
+          <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>Balance</div>
           <div className="text-lg font-black inline-flex items-center gap-1">
             <span style={{ color: '#fb923c' }}>⚔</span>
-            <span style={{ color: '#ffffff' }}>{formatMoney(live, 0)}</span>
+            <span style={{ color: p.bodyText }}>{formatMoney(live, 0)}</span>
           </div>
           {(isUp || isDown) && (
             <div className="text-[11px] font-bold" style={{ color: isUp ? '#34d399' : '#f87171' }}>
@@ -195,8 +270,8 @@ export default function MyPicksPage() {
           )}
         </div>
         <div className={cellBase}>
-          <div className="text-[10px] uppercase tracking-wider" style={{ color: '#9ca3af' }}>Time Left</div>
-          <div className="text-lg font-black" style={{ color: '#ffffff' }}>{formatTimeRemaining(timeRemaining)}</div>
+          <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>Time Left</div>
+          <div className="text-lg font-black" style={{ color: p.bodyText }}>{formatTimeRemaining(timeRemaining)}</div>
         </div>
       </div>
     );
@@ -209,9 +284,9 @@ export default function MyPicksPage() {
       <div
         className="lg:hidden rounded-2xl p-4 mb-5"
         style={{
-          background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(8,12,24,0.95) 100%)',
-          border: '2.5px solid #0d0d0d',
-          boxShadow: '0 4px 0 rgba(0,0,0,0.55)',
+          background: p.cardSurface,
+          border: `2.5px solid ${p.cartoonBorder}`,
+          boxShadow: p.hardShadow,
         }}
       >
         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -226,14 +301,14 @@ export default function MyPicksPage() {
     if (sortedBets.length === 0) return null;
     const cell = (label, value, color) => (
       <div className={`${compact ? 'flex-1' : 'flex-1'} text-center px-2 py-2`}>
-        <div className="text-[10px] uppercase tracking-wider" style={{ color: '#9ca3af' }}>{label}</div>
+        <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>{label}</div>
         <div className={`${compact ? 'text-base' : 'text-lg'} font-black mt-0.5`} style={{ color }}>{value}</div>
       </div>
     );
     return (
       <div
-        className={`rounded-xl mb-5 grid ${compact ? 'grid-cols-3 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-5'} divide-x divide-white/5`}
-        style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
+        className={`rounded-xl mb-5 grid ${compact ? 'grid-cols-3 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-5'} ${isLight ? 'divide-x divide-slate-900/5' : 'divide-x divide-white/5'}`}
+        style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}` }}
       >
         {cell('Open', counts.open, '#3b82f6')}
         {cell('Won', counts.won, '#34d399')}
@@ -249,13 +324,13 @@ export default function MyPicksPage() {
     <div
       className="rounded-2xl p-8 text-center"
       style={{
-        background: 'rgba(15,23,42,0.6)',
-        border: '2.5px dashed rgba(59,130,246,0.4)',
+        background: p.innerSurface,
+        border: p.dashedBorder,
       }}
     >
       <div className="text-5xl mb-3" aria-hidden="true">⚔️</div>
-      <div className="text-xl font-black mb-2" style={{ color: '#ffffff' }}>No active battle</div>
-      <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: '#9ca3af' }}>
+      <div className="text-xl font-black mb-2" style={{ color: p.bodyText }}>No active battle</div>
+      <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: p.mutedText }}>
         You need to be in a battle to place picks. Jump into a Quick Match,
         challenge a friend, or set up a private match — your picks will show
         up here in real time.
@@ -272,8 +347,8 @@ export default function MyPicksPage() {
         style={{
           background: '#2563eb',
           color: '#ffffff',
-          border: '2.5px solid #0d0d0d',
-          boxShadow: '0 4px 0 rgba(0,0,0,0.55)',
+          border: `2.5px solid ${p.cartoonBorder}`,
+          boxShadow: p.hardShadow,
         }}
       >
         Start a Battle
@@ -286,13 +361,13 @@ export default function MyPicksPage() {
     <div
       className="rounded-2xl p-8 text-center"
       style={{
-        background: 'rgba(15,23,42,0.6)',
-        border: '2.5px dashed rgba(59,130,246,0.4)',
+        background: p.innerSurface,
+        border: p.dashedBorder,
       }}
     >
       <div className="text-5xl mb-3" aria-hidden="true">🎯</div>
-      <div className="text-xl font-black mb-2" style={{ color: '#ffffff' }}>No picks placed yet</div>
-      <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: '#9ca3af' }}>
+      <div className="text-xl font-black mb-2" style={{ color: p.bodyText }}>No picks placed yet</div>
+      <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: p.mutedText }}>
         Pick a side on any game from the Battle board, add it to your Pik
         Slip, and submit. Your picks will land here the moment they're
         placed.
@@ -304,8 +379,8 @@ export default function MyPicksPage() {
           style={{
             background: '#2563eb',
             color: '#ffffff',
-            border: '2.5px solid #0d0d0d',
-            boxShadow: '0 4px 0 rgba(0,0,0,0.55)',
+            border: `2.5px solid ${p.cartoonBorder}`,
+            boxShadow: p.hardShadow,
           }}
         >
           Browse Games
@@ -318,8 +393,8 @@ export default function MyPicksPage() {
             style={{
               background: '#fb923c',
               color: '#1a0a02',
-              border: '2.5px solid #0d0d0d',
-              boxShadow: '0 4px 0 rgba(0,0,0,0.55)',
+              border: `2.5px solid ${p.cartoonBorder}`,
+              boxShadow: p.hardShadow,
               cursor: 'pointer',
               appearance: 'none',
               WebkitAppearance: 'none',
@@ -336,12 +411,12 @@ export default function MyPicksPage() {
     <div
       className="rounded-2xl p-8 text-center"
       style={{
-        background: 'rgba(15,23,42,0.6)',
-        border: '2.5px dashed rgba(59,130,246,0.4)',
+        background: p.innerSurface,
+        border: p.dashedBorder,
       }}
     >
-      <div className="text-xl font-black mb-2" style={{ color: '#ffffff' }}>Sign in to see your picks</div>
-      <p className="text-sm mb-5" style={{ color: '#9ca3af' }}>
+      <div className="text-xl font-black mb-2" style={{ color: p.bodyText }}>Sign in to see your picks</div>
+      <p className="text-sm mb-5" style={{ color: p.mutedText }}>
         My Picks pulls from your active battle. Log in to start placing picks.
       </p>
       <Link
@@ -350,8 +425,8 @@ export default function MyPicksPage() {
         style={{
           background: '#2563eb',
           color: '#ffffff',
-          border: '2.5px solid #0d0d0d',
-          boxShadow: '0 4px 0 rgba(0,0,0,0.55)',
+          border: `2.5px solid ${p.cartoonBorder}`,
+          boxShadow: p.hardShadow,
         }}
       >
         Back Home
@@ -375,9 +450,9 @@ export default function MyPicksPage() {
         <div
           className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider"
           style={{
-            background: 'rgba(34,211,238,0.08)',
-            color: '#67e8f9',
-            border: '1px solid rgba(34,211,238,0.35)',
+            background: p.hintBg,
+            color: p.hintText,
+            border: p.hintBorder,
           }}
         >
           <span aria-hidden="true">👆</span>
@@ -402,13 +477,11 @@ export default function MyPicksPage() {
             className="relative rounded-2xl transition-all"
             style={{
               outline: 'none',
-              background: '#0a0a0a',
+              background: p.pickSurface,
               border: isSelected
                 ? '2.5px solid #22d3ee'
-                : '2.5px solid #0a0a0a',
-              boxShadow: isSelected
-                ? '0 0 0 3px rgba(34,211,238,0.25), 0 4px 0 rgba(0,0,0,0.55)'
-                : '0 4px 0 rgba(0,0,0,0.55)',
+                : `2.5px solid ${p.pickSurface}`,
+              boxShadow: isSelected ? p.pickShadowSelected : p.pickShadow,
               borderRadius: 16,
               cursor: 'pointer',
             }}
@@ -449,16 +522,16 @@ export default function MyPicksPage() {
           <div
             className="rounded-2xl p-5"
             style={{
-              background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(8,12,24,0.95) 100%)',
-              border: '2.5px solid #0d0d0d',
-              boxShadow: '0 4px 0 rgba(0,0,0,0.55)',
+              background: p.cardSurface,
+              border: `2.5px solid ${p.cartoonBorder}`,
+              boxShadow: p.hardShadow,
             }}
           >
-            <div className="text-[10px] uppercase tracking-wider mb-3 text-center" style={{ color: '#9ca3af' }}>
+            <div className="text-[10px] uppercase tracking-wider mb-3 text-center" style={{ color: p.mutedText }}>
               Active Battle
             </div>
             {renderVsRow({ stacked: true })}
-            <div className="mt-4 pt-4 border-t border-white/10">
+            <div className={`mt-4 pt-4 border-t ${p.divider}`}>
               {renderBalanceTimeRow({ vertical: true })}
             </div>
           </div>
@@ -467,11 +540,11 @@ export default function MyPicksPage() {
             <div
               className="rounded-2xl p-3 flex-1 flex flex-col justify-center"
               style={{
-                background: 'rgba(15,23,42,0.6)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: p.innerSurface,
+                border: `1px solid ${p.softBorder}`,
               }}
             >
-              <div className="text-[10px] uppercase tracking-wider mb-2 text-center" style={{ color: '#9ca3af' }}>
+              <div className="text-[10px] uppercase tracking-wider mb-2 text-center" style={{ color: p.mutedText }}>
                 This Battle
               </div>
               <div className="grid grid-cols-2 gap-y-3">
@@ -482,18 +555,18 @@ export default function MyPicksPage() {
                   ['Cashed', counts.cashedOut, '#fb923c'],
                 ].map(([label, value, color]) => (
                   <div key={label} className="text-center">
-                    <div className="text-[10px] uppercase tracking-wider" style={{ color: '#9ca3af' }}>{label}</div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>{label}</div>
                     <div className="text-lg font-black" style={{ color }}>{value}</div>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-2 gap-y-2">
+              <div className={`mt-3 pt-3 border-t ${p.divider} grid grid-cols-2 gap-y-2`}>
                 <div className="text-center">
-                  <div className="text-[10px] uppercase tracking-wider" style={{ color: '#9ca3af' }}>At Risk</div>
+                  <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>At Risk</div>
                   <div className="text-sm font-black" style={{ color: '#fed7aa' }}>${formatMoney(counts.totalStake, 0)}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-[10px] uppercase tracking-wider" style={{ color: '#9ca3af' }}>To Win</div>
+                  <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>To Win</div>
                   <div className="text-sm font-black" style={{ color: '#34d399' }}>
                     ${formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}
                   </div>
@@ -516,8 +589,8 @@ export default function MyPicksPage() {
       panelBody = (
         <div className="text-center py-6">
           <div className="text-3xl mb-2" aria-hidden="true">📈</div>
-          <div className="text-sm font-bold mb-1" style={{ color: '#ffffff' }}>Live odds tracker</div>
-          <p className="text-xs" style={{ color: '#9ca3af' }}>
+          <div className="text-sm font-bold mb-1" style={{ color: p.bodyText }}>Live odds tracker</div>
+          <p className="text-xs" style={{ color: p.mutedText }}>
             Place a pick and we'll plot how its odds move in real time
             right here.
           </p>
@@ -569,13 +642,13 @@ export default function MyPicksPage() {
       panelBody = (
         <div className="space-y-3">
           <div>
-            <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#9ca3af' }}>
+            <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: p.mutedText }}>
               Tracking your pick
             </div>
-            <div className="text-sm font-black truncate" style={{ color: '#ffffff' }}>
+            <div className="text-sm font-black truncate" style={{ color: p.bodyText }}>
               {selectedBet.selection || '—'}
             </div>
-            <div className="text-[11px] truncate" style={{ color: '#9ca3af' }}>
+            <div className="text-[11px] truncate" style={{ color: p.mutedText }}>
               {awayTeam} @ {homeTeam}
             </div>
           </div>
@@ -596,9 +669,9 @@ export default function MyPicksPage() {
               prefetch
               className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
               style={{
-                background: 'rgba(59,130,246,0.15)',
-                color: '#93c5fd',
-                border: '1px solid rgba(59,130,246,0.4)',
+                background: p.openGameBg,
+                color: p.openGameText,
+                border: p.openGameBorder,
               }}
             >
               Open Game →
@@ -611,9 +684,9 @@ export default function MyPicksPage() {
             <div
               className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider cursor-not-allowed select-none"
               style={{
-                background: 'rgba(75,85,99,0.15)',
-                color: '#6b7280',
-                border: '1px solid rgba(75,85,99,0.3)',
+                background: p.disabledGameBg,
+                color: p.disabledGameText,
+                border: p.disabledGameBorder,
               }}
               title="Game summary not available for this pick"
             >
@@ -631,13 +704,13 @@ export default function MyPicksPage() {
           <div
             className="rounded-2xl p-4 flex-1 flex flex-col"
             style={{
-              background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(8,12,24,0.95) 100%)',
-              border: '2.5px solid #0d0d0d',
-              boxShadow: '0 4px 0 rgba(0,0,0,0.55)',
+              background: p.cardSurface,
+              border: `2.5px solid ${p.cartoonBorder}`,
+              boxShadow: p.hardShadow,
             }}
           >
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] uppercase tracking-wider" style={{ color: '#9ca3af' }}>
+              <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>
                 Analytics
               </div>
               <div
@@ -668,7 +741,7 @@ export default function MyPicksPage() {
           <div
             key={i}
             className="h-40 rounded-2xl animate-pulse"
-            style={{ background: 'rgba(15,23,42,0.55)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ background: p.skeletonSurface, border: `1px solid ${p.softBorder}` }}
           />
         ))}
       </div>
@@ -691,7 +764,7 @@ export default function MyPicksPage() {
         <title>My Picks · Piks</title>
         <meta name="description" content="See every pick you've placed in your current battle." />
       </Head>
-      <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
+      <div className="min-h-screen" style={{ backgroundColor: p.pageBg }}>
         <TopNavbar />
         <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16 max-w-7xl mx-auto">
           {renderHeader()}
