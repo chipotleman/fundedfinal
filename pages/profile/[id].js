@@ -950,6 +950,12 @@ export default function PublicProfile() {
                   role={isOwnProfile ? 'button' : undefined}
                   aria-label={isOwnProfile ? 'Change profile picture' : undefined}
                 >
+                  {/* No `isOnline` dot here on purpose — the camera
+                      badge sits in the bottom-right corner and was
+                      overlapping the dot, AND the <ActiveStatus />
+                      line right below the username already conveys
+                      online state textually. Showing both is just
+                      visual noise per user feedback. */}
                   <UserAvatar
                     avatar={profile.avatar}
                     username={profile.username}
@@ -957,8 +963,6 @@ export default function PublicProfile() {
                     size={96}
                     bgColor={'#1a1a1a'}
                     textColor={'#fff'}
-                    isOnline={!profile.isFakeOpponent && !!profile.isOnline}
-                    onlineDotBorderColor={'#0d0d0d'}
                   />
                   {isOwnProfile && (
                     <>
