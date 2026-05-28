@@ -145,32 +145,24 @@ export default function MyPicksPage() {
     loading,
   } = useMatchup();
 
-  // Active battle card flips between YOUR balance and your OPPONENT's
-  // every 3.5s so both are visible at a glance. Tapping the label or
-  // the balance row also flips it instantly (and pauses the auto-flip
-  // for ~6s so a deliberate tap isn't immediately overridden).
+  // Active battle card shows YOUR balance by default. The opponent's
+  // balance is only shown when the user explicitly clicks the
+  // opponent's avatar (or the balance row itself, which then flips
+  // back to "me" on a second tap). Earlier this auto-flipped every
+  // 3.5s, which read as "random balances changing on their own" per
+  // user feedback — gone.
   const [balanceView, setBalanceView] = useState('me');
-  const [autoPausedUntil, setAutoPausedUntil] = useState(0);
   const opponentId = opponent?.id || null;
   // Reset view back to "me" whenever the opponent changes so we
   // never carry the prior battle's flip state into a new one.
   useEffect(() => {
     setBalanceView('me');
   }, [opponentId]);
-  // Depend only on stable primitives — the useMatchup context
-  // returns a fresh `opponent` object on every poll tick, which
-  // would otherwise tear down and recreate the interval before
-  // it ever fired.
-  useEffect(() => {
-    if (!hasActiveMatchup || !opponentId) return undefined;
-    const id = setInterval(() => {
-      if (Date.now() < autoPausedUntil) return;
-      setBalanceView((v) => (v === 'me' ? 'opp' : 'me'));
-    }, 3500);
-    return () => clearInterval(id);
-  }, [hasActiveMatchup, opponentId, autoPausedUntil]);
+  const showMyBalance = useCallback(() => setBalanceView('me'), []);
+  const showOppBalance = useCallback(() => setBalanceView('opp'), []);
+  // Balance-row tap toggles between the two — gives the user a
+  // second affordance besides the avatars without auto-changing.
   const flipBalanceView = useCallback(() => {
-    setAutoPausedUntil(Date.now() + 6000);
     setBalanceView((v) => (v === 'me' ? 'opp' : 'me'));
   }, []);
   const { betSlip, setShowBetSlip } = useBetSlip();
@@ -243,33 +235,37 @@ export default function MyPicksPage() {
   // VS row — used both inline (mobile) and stacked (desktop sidebar).
   // "You" matches the casing convention of the opponent's display name
   // (we don't uppercase the opponent's handle, so we shouldn't shout
-  // YOU at the user either). The opponent half is a button that
-  // navigates to their public profile.
+  // YOU at the user either). Tapping either avatar switches the
+  // balance row below to show that player's balance — and the active
+  // side gets a colored ring so it's obvious whose balance you're
+  // looking at. Profile navigation moved off this card (the opponent's
+  // profile is still reachable from elsewhere).
   const renderVsRow = ({ stacked = false } = {}) => {
     if (!matchup || !hasActiveMatchup) return null;
     const oppName = opponent?.username || 'Opponent';
-    const oppClickable = !!opponent?.id;
-    const goToOpponentProfile = () => {
-      if (!oppClickable) return;
-      router.push(`/profile/${opponent.id}`);
-    };
+    const hasOpponent = !!opponent;
     return (
       <div className={`flex items-center ${stacked ? 'justify-center' : 'justify-start'} gap-3`}>
-        <div className="flex flex-col items-center gap-1">
+        <button
+          type="button"
+          onClick={showMyBalance}
+          className={`flex flex-col items-center gap-1 rounded-lg px-1 py-0.5 -mx-1 cursor-pointer active:scale-95 transition ${balanceView === 'me' ? 'ring-2 ring-blue-400/60' : ''}`}
+          title="Show your balance"
+        >
           <UserAvatar
             avatar={myProfile?.avatar}
             username={myProfile?.username || 'You'}
             size={stacked ? 48 : 40}
           />
           <div className="text-xs font-black" style={{ color: '#3b82f6' }}>You</div>
-        </div>
+        </button>
         <div className="text-xl font-black px-1" style={{ color: p.vsText }}>VS</div>
         <button
           type="button"
-          onClick={goToOpponentProfile}
-          disabled={!oppClickable}
-          className={`flex flex-col items-center gap-1 rounded-lg px-1 py-0.5 -mx-1 ${oppClickable ? 'cursor-pointer hover:bg-white/5 active:scale-95 transition' : 'cursor-default'}`}
-          title={oppClickable ? `View ${oppName}'s profile` : oppName}
+          onClick={hasOpponent ? showOppBalance : undefined}
+          disabled={!hasOpponent}
+          className={`flex flex-col items-center gap-1 rounded-lg px-1 py-0.5 -mx-1 ${hasOpponent ? `cursor-pointer active:scale-95 transition ${balanceView === 'opp' ? 'ring-2 ring-orange-400/60' : ''}` : 'cursor-default'}`}
+          title={hasOpponent ? `Show ${oppName}'s balance` : oppName}
         >
           <UserAvatar
             avatar={opponent?.avatar}
