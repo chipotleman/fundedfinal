@@ -7,7 +7,7 @@ packages = ["imagemagick"]
 
 [deployment]
 run = ["npm", "run", "start"]
-deploymentTarget = "autoscale"
+deploymentTarget = "vm"
 build = ["npm", "run", "build"]
 
 [[ports]]
