@@ -1008,7 +1008,13 @@ html.light .piks-condensed-bar {
 }
 html.light nav a,
 html.light nav span,
-html.light nav button {
+html.light nav button:not([class*="bg-"]) {
+  /* `:not([class*="bg-"])` keeps this from clobbering buttons that
+     bring their own Tailwind background utility (e.g. the
+     `bg-gray-800 text-gray-200` Dismiss button inside the
+     NotificationsDropdown). Without that exclusion, our specificity
+     (0,2,1) wins over Tailwind's text-* (0,1,0) and the button's
+     text becomes the same color as its bg — invisible. */
   color: #1f2937;
 }
 html.light nav .text-gray-300,
