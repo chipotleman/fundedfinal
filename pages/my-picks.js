@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -138,10 +138,41 @@ export default function MyPicksPage() {
     myProfile,
     myBalance,
     myLiveBalance,
+    opponentBalance,
+    opponentLiveBalance,
     timeRemaining,
     hasActiveMatchup,
     loading,
   } = useMatchup();
+
+  // Active battle card flips between YOUR balance and your OPPONENT's
+  // every 3.5s so both are visible at a glance. Tapping the label or
+  // the balance row also flips it instantly (and pauses the auto-flip
+  // for ~6s so a deliberate tap isn't immediately overridden).
+  const [balanceView, setBalanceView] = useState('me');
+  const [autoPausedUntil, setAutoPausedUntil] = useState(0);
+  const opponentId = opponent?.id || null;
+  // Reset view back to "me" whenever the opponent changes so we
+  // never carry the prior battle's flip state into a new one.
+  useEffect(() => {
+    setBalanceView('me');
+  }, [opponentId]);
+  // Depend only on stable primitives — the useMatchup context
+  // returns a fresh `opponent` object on every poll tick, which
+  // would otherwise tear down and recreate the interval before
+  // it ever fired.
+  useEffect(() => {
+    if (!hasActiveMatchup || !opponentId) return undefined;
+    const id = setInterval(() => {
+      if (Date.now() < autoPausedUntil) return;
+      setBalanceView((v) => (v === 'me' ? 'opp' : 'me'));
+    }, 3500);
+    return () => clearInterval(id);
+  }, [hasActiveMatchup, opponentId, autoPausedUntil]);
+  const flipBalanceView = useCallback(() => {
+    setAutoPausedUntil(Date.now() + 6000);
+    setBalanceView((v) => (v === 'me' ? 'opp' : 'me'));
+  }, []);
   const { betSlip, setShowBetSlip } = useBetSlip();
   const { theme } = useTheme();
   const isLight = theme === 'light';
@@ -210,8 +241,18 @@ export default function MyPicksPage() {
   const renderHeader = () => null;
 
   // VS row — used both inline (mobile) and stacked (desktop sidebar).
+  // "You" matches the casing convention of the opponent's display name
+  // (we don't uppercase the opponent's handle, so we shouldn't shout
+  // YOU at the user either). The opponent half is a button that
+  // navigates to their public profile.
   const renderVsRow = ({ stacked = false } = {}) => {
     if (!matchup || !hasActiveMatchup) return null;
+    const oppName = opponent?.username || 'Opponent';
+    const oppClickable = !!opponent?.id;
+    const goToOpponentProfile = () => {
+      if (!oppClickable) return;
+      router.push(`/profile/${opponent.id}`);
+    };
     return (
       <div className={`flex items-center ${stacked ? 'justify-center' : 'justify-start'} gap-3`}>
         <div className="flex flex-col items-center gap-1">
@@ -220,45 +261,73 @@ export default function MyPicksPage() {
             username={myProfile?.username || 'You'}
             size={stacked ? 48 : 40}
           />
-          <div className="text-xs font-black" style={{ color: '#3b82f6' }}>YOU</div>
+          <div className="text-xs font-black" style={{ color: '#3b82f6' }}>You</div>
         </div>
         <div className="text-xl font-black px-1" style={{ color: p.vsText }}>VS</div>
-        <div className="flex flex-col items-center gap-1">
+        <button
+          type="button"
+          onClick={goToOpponentProfile}
+          disabled={!oppClickable}
+          className={`flex flex-col items-center gap-1 rounded-lg px-1 py-0.5 -mx-1 ${oppClickable ? 'cursor-pointer hover:bg-white/5 active:scale-95 transition' : 'cursor-default'}`}
+          title={oppClickable ? `View ${oppName}'s profile` : oppName}
+        >
           <UserAvatar
             avatar={opponent?.avatar}
-            username={opponent?.username || 'Opponent'}
+            username={oppName}
             size={stacked ? 48 : 40}
           />
           <div
             className="text-xs font-black truncate max-w-[88px] text-center"
             style={{ color: '#fb923c' }}
-            title={opponent?.username || 'OPP'}
           >
-            {opponent?.username || 'OPP'}
+            {oppName}
           </div>
-        </div>
+        </button>
       </div>
     );
   };
 
   // Balance + Time Left pair (compact, fits both mobile inline and
-  // desktop sidebar).
+  // desktop sidebar). The Balance cell alternates between YOUR and
+  // your OPPONENT's live balance (auto every ~3.5s, or tap to flip).
+  // We keep the cell itself clickable so the toggle target is large
+  // and obvious without extra chrome.
   const renderBalanceTimeRow = ({ vertical = false } = {}) => {
     if (!matchup || !hasActiveMatchup) return null;
     const startingBalance = parseFloat(matchup.startingBalance || 0) || 0;
-    const live =
+
+    const myLive =
       myLiveBalance != null ? parseFloat(myLiveBalance)
         : myBalance != null ? parseFloat(myBalance)
         : startingBalance;
+    const oppLive =
+      opponentLiveBalance != null ? parseFloat(opponentLiveBalance)
+        : opponentBalance != null ? parseFloat(opponentBalance)
+        : startingBalance;
+
+    const showingOpp = balanceView === 'opp' && !!opponent;
+    const live = showingOpp ? oppLive : myLive;
     const liveDelta = live - startingBalance;
     const isUp = liveDelta > 0;
     const isDown = liveDelta < 0;
     const cellBase = vertical ? 'text-center w-full' : 'text-right';
+    const labelColor = showingOpp ? '#fb923c' : '#3b82f6';
+    const labelText = showingOpp
+      ? `${(opponent?.username || 'Opponent').slice(0, 14)} Balance`
+      : 'Your Balance';
 
     return (
       <div className={vertical ? 'flex flex-col gap-3' : 'flex items-center gap-5'}>
-        <div className={cellBase}>
-          <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>Balance</div>
+        <button
+          type="button"
+          onClick={opponent ? flipBalanceView : undefined}
+          disabled={!opponent}
+          className={`${cellBase} ${opponent ? 'cursor-pointer active:scale-95 transition' : 'cursor-default'}`}
+          title={opponent ? 'Tap to see the other balance' : 'Balance'}
+        >
+          <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: labelColor }}>
+            {labelText}
+          </div>
           <div className="text-lg font-black inline-flex items-center gap-1">
             <span style={{ color: '#fb923c' }}>⚔</span>
             <span style={{ color: p.bodyText }}>{formatMoney(live, 0)}</span>
@@ -268,7 +337,7 @@ export default function MyPicksPage() {
               {isUp ? '+' : ''}{formatMoney(liveDelta, 0)}
             </div>
           )}
-        </div>
+        </button>
         <div className={cellBase}>
           <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>Time Left</div>
           <div className="text-lg font-black" style={{ color: p.bodyText }}>{formatTimeRemaining(timeRemaining)}</div>
