@@ -39,14 +39,14 @@ export default function PickBattlesContainer() {
       style={{ backgroundColor: '#000' }}
       onClick={handleClick}
       role="button"
-      aria-label="Enter a 1v1 Pick Battle"
+      aria-label="RUSH — the fastest way to battle. Tap to start."
     >
       {/* Container is 4:3 to match the source banner art (1448×1086).
           object-cover gives a perfect edge-to-edge fill with no
           letterboxing or cropping. */}
       <img
         src="/promos/pick-battles.png"
-        alt="1v1 Pick Battles — fast, competitive, head-to-head matchups"
+        alt="RUSH — coming soon. The fastest way to battle. Pick fast, beat the clock, most right wins."
         className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
         draggable={false}
         loading="lazy"
