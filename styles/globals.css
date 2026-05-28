@@ -1134,6 +1134,17 @@ html.light [data-topnavbar="true"] a[style*="color: rgb(209, 213, 219)"],
 html.light [data-topnavbar="true"] a[style*="color: #d1d5db"] {
   color: #475569 !important;
 }
+/* Bell / chat / hamburger SVG icons inline `stroke="#e5e7eb"` (gray-
+   200) and a few inline `text-gray-300` strokes. On the white light-
+   mode nav those are basically invisible — darken to slate-700. */
+html.light [data-topnavbar="true"] svg[stroke="#e5e7eb"],
+html.light [data-topnavbar="true"] svg[stroke="#E5E7EB"] {
+  stroke: #334155 !important;
+}
+html.light [data-topnavbar="true"] svg.text-gray-300,
+html.light [data-topnavbar="true"] svg.text-gray-400 {
+  color: #334155 !important;
+}
 
 /* ── Sports-pills row (page chrome strip on dashboard) ──────── */
 html.light .piks-sports-pills-row {
