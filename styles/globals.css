@@ -1251,8 +1251,23 @@ html.light .piks-game-card [style*="background-color:#141414" i],
 html.light .piks-game-card [style*="background-color: #141414" i],
 html.light .piks-game-card [style*="background-color:#1a1a1a" i],
 html.light .piks-game-card [style*="background-color: #1a1a1a" i],
-html.light .piks-game-card [style*="background-color: rgb(17, 17, 17)"] {
+html.light .piks-game-card [style*="background-color: rgb(17, 17, 17)"],
+html.light .piks-game-card [style*="background-color: rgb(20, 20, 20)"],
+html.light .piks-game-card [style*="background-color: rgb(26, 26, 26)"],
+html.light .piks-game-card [style*="background-color: rgb(13, 13, 13)"] {
   background-color: #f1f5f9 !important;
+}
+/* Borders inline as `border: 1px solid #222` serialize to
+   `rgb(34, 34, 34)`; #1a1a1a → `rgb(26, 26, 26)`. */
+html.light .piks-game-card [style*="border: 1px solid rgb(34, 34, 34)"],
+html.light .piks-game-card [style*="border: 1px solid rgb(26, 26, 26)"],
+html.light .piks-game-card [style*="border: 1px solid rgb(20, 20, 20)"] {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+/* Inline `color: '#6b7280'` (gray-500) on the team-name sub-labels
+   inside odds cells — serializes to `rgb(107, 114, 128)`. */
+html.light .piks-game-card [style*="color: rgb(107, 114, 128)"] {
+  color: #475569 !important;
 }
 /* Inner odds-cell borders. */
 html.light .piks-game-card [style*="border:1px solid #1a1a1a" i],
