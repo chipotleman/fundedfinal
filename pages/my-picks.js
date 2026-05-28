@@ -127,17 +127,12 @@ export default function MyPicksPage() {
 
   // -------- Sub-renderers --------
 
-  // Header (page title only — no "FanDuel-style" subtitle).
-  const renderHeader = () => (
-    <div className="mb-4 sm:mb-6">
-      <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: '#ffffff' }}>
-        My Picks
-      </h1>
-      <p className="text-sm mt-1" style={{ color: '#9ca3af' }}>
-        Every pick you've placed in your current battle.
-      </p>
-    </div>
-  );
+  // Header intentionally omitted: the top-nav already shows the
+  // active "My Picks" tab underline, so repeating the page title +
+  // subtitle here was just redundant chrome. The renderer is kept
+  // as a no-op so call sites elsewhere in the file don't need to
+  // change.
+  const renderHeader = () => null;
 
   // VS row — used both inline (mobile) and stacked (desktop sidebar).
   const renderVsRow = ({ stacked = false } = {}) => {
