@@ -1088,6 +1088,18 @@ html.light div[style*="position: fixed"][style*="rgb(0, 0, 0)"][style*="100vh"] 
 }
 
 
+/* ── Piks logo — the wordmark is white-on-transparent, so on the
+   white light-mode nav it's invisible. Invert to render as a dark
+   navy wordmark. Kill the animated glow keyframe in light mode so
+   the inverted glow doesn't strobe. `!important` is required
+   because TopNavbar.js applies its own inline `filter` style. */
+html.light img[src*="pikslogotransparent"],
+html.light img[src*="piks-logo"],
+html.light img[alt="Piks"] {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) !important;
+  animation: none !important;
+}
+
 /* ───────────────────── LIGHT THEME — PAGE CHROME ONLY ─────────────────
    Earlier passes tried to blanket-convert every dark surface (every
    inline `rgba(15,23,42…)`, `bg-[#0d0d0d]`, Tailwind dark gradient
