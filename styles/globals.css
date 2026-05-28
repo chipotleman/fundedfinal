@@ -1159,12 +1159,21 @@ html.light [data-topnavbar="true"] svg.text-gray-400 {
 }
 
 /* ── Sports-pills row (page chrome strip on dashboard) ──────── */
+/* TapSurface now reads `var(--tap-inactive-text, <prop>)` for its
+   inactive text color, so we re-skin the inactive pill label from
+   the hard-coded `#9ca3af` (gray-400) down to a near-black slate
+   in light mode — the cream pill bg made the gray label look washed
+   out. We do NOT set `--tap-inactive-bg` here because the pill's
+   inactive bg is intentionally `transparent` (the row bg shows
+   through); leaving the var unset preserves that. */
 html.light .piks-sports-pills-row {
   background-color: #f5f1ea !important;
+  --tap-inactive-text: #0f172a;
 }
 html.light .piks-condensed-bar {
   background: #ffffff !important;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+  --tap-inactive-text: #0f172a;
 }
 
 /* ── Modal / overlay backdrops ───────────────────────────────────
