@@ -373,6 +373,26 @@ export default async function handler(req, res) {
         const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
         const potentialPayout = calculatePayout(oddsValue, bet.stake);
 
+        // Persist gameId + team metadata in the `legs` JSONB so the
+        // My Picks right rail can deep-link to /game/[id] and the live
+        // odds chart can fetch real history. userBets has no top-level
+        // gameId column, so the frontend's
+        // `selectedBet.gameId || firstLeg?.gameId` fallback needs this
+        // single-leg entry for non-parlay bets — otherwise the "Open
+        // Game" CTA collapses to the disabled "Game Unavailable"
+        // state even though the user just placed the pick.
+        const singleLeg = [{
+          gameId: bet.gameId,
+          selection: bet.selection,
+          matchup: bet.matchup,
+          betType: bet.betType,
+          odds: oddsValue,
+          homeTeamFull: bet.homeTeamFull,
+          awayTeamFull: bet.awayTeamFull,
+          homeTeam: bet.homeTeam,
+          awayTeam: bet.awayTeam,
+        }];
+
         if (isFakeOpponent && activeMatchup) {
           fakeRows.push({
             matchupId: activeMatchup.id,
@@ -386,6 +406,7 @@ export default async function handler(req, res) {
             status: 'pending',
             homeTeamFull: bet.homeTeamFull,
             awayTeamFull: bet.awayTeamFull,
+            legs: singleLeg,
           });
         } else if (challengeType === 'pool' && activeChallenge) {
           poolRows.push({
@@ -402,6 +423,7 @@ export default async function handler(req, res) {
             balanceAfter: (currentBankroll - bet.stake).toFixed(2),
             homeTeamFull: bet.homeTeamFull,
             awayTeamFull: bet.awayTeamFull,
+            legs: singleLeg,
           });
         } else {
           userRows.push({
@@ -418,6 +440,7 @@ export default async function handler(req, res) {
             balanceAfter: (currentBankroll - bet.stake).toFixed(2),
             homeTeamFull: bet.homeTeamFull,
             awayTeamFull: bet.awayTeamFull,
+            legs: singleLeg,
           });
         }
       }
