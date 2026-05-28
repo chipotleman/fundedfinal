@@ -1403,10 +1403,76 @@ html.light .from-\[\#111827\] .text-white {
 }
 
 /* Inline `color: '#ffffff'` / `color: 'white'` inside overridden
-   cards — catch the inline-style version too. */
+   cards — catch the inline-style version too. React serializes
+   `style={{ backgroundColor: '#0d0d0d' }}` to
+   `style="background-color:#0d0d0d"` (no space after `:`). The
+   earlier ruleset used the spaced form so it never matched in
+   practice. Cover both forms here for safety. */
+html.light [style*="background-color:rgb(13, 13, 13)"] [style*="color:#ffffff" i],
 html.light [style*="background-color: rgb(13, 13, 13)"] [style*="color: #ffffff" i],
-html.light [style*="background-color: rgb(20, 20, 20)"] [style*="color: #ffffff" i],
-html.light [style*="background-color: #0d0d0d"] [style*="color: #ffffff" i],
-html.light [style*="background-color: #141414"] [style*="color: #ffffff" i] {
+html.light [style*="background-color:#0d0d0d" i] [style*="color:#ffffff" i],
+html.light [style*="background-color: #0d0d0d" i] [style*="color: #ffffff" i],
+html.light [style*="background-color:#141414" i] [style*="color:#ffffff" i],
+html.light [style*="background-color: #141414" i] [style*="color: #ffffff" i] {
   color: #0f172a !important;
 }
+
+/* --------------------------------------------------------------
+   Dashboard game-row cards (`.piks-game-card`) — the LIVE NOW /
+   Upcoming list on pages/index.js is authored with hardcoded dark
+   inline styles (#0d0d0d card, #111/#141414 cell bg, #1a1a1a /
+   #222 borders, #ffffff / #d1d5db / #6b7280 text). In light mode
+   the card surfaces flip via the rules below, but inline text and
+   borders stay dark — which produced white-on-white team names
+   and invisible spread/total numbers. We scope these overrides to
+   `.piks-game-card` so they don't leak into modals, the bet slip,
+   or other cards that use the same inline color values
+   intentionally. `!important` is required because they fight
+   inline `style="..."` declarations.
+   -------------------------------------------------------------- */
+html.light .piks-game-card {
+  background-color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Team names + scores rendered with inline `color: '#ffffff'`. */
+html.light .piks-game-card [style*="color:#ffffff" i],
+html.light .piks-game-card [style*="color: #ffffff" i],
+html.light .piks-game-card [style*="color:rgb(255, 255, 255)"],
+html.light .piks-game-card [style*="color: rgb(255, 255, 255)"] {
+  color: #0f172a !important;
+}
+
+/* Spread / total point values rendered with inline `color:'#d1d5db'`
+   (gray-300). Bump to slate-700 so they're legible on white. */
+html.light .piks-game-card [style*="color:#d1d5db" i],
+html.light .piks-game-card [style*="color: #d1d5db" i] {
+  color: #334155 !important;
+}
+
+/* Inner cell backgrounds (#111 / #141414 / #1a1a1a — odds tiles,
+   locked placeholders) need a light slate so the white-on-white
+   text isn't sitting on a now-white tile. */
+html.light .piks-game-card [style*="background-color:#111" i]:not([style*="#111111"]),
+html.light .piks-game-card [style*="background-color: #111" i]:not([style*="#111111"]),
+html.light .piks-game-card [style*="background-color:#141414" i],
+html.light .piks-game-card [style*="background-color: #141414" i],
+html.light .piks-game-card [style*="background-color:#1a1a1a" i],
+html.light .piks-game-card [style*="background-color: #1a1a1a" i] {
+  background-color: #f1f5f9 !important;
+}
+
+/* Inner cell borders (#1a1a1a / #222 / #141414). */
+html.light .piks-game-card [style*="border:1px solid #1a1a1a" i],
+html.light .piks-game-card [style*="border: 1px solid #1a1a1a" i],
+html.light .piks-game-card [style*="border:1px solid #222" i]:not([style*="#2222"]),
+html.light .piks-game-card [style*="border: 1px solid #222" i]:not([style*="#2222"]),
+html.light .piks-game-card [style*="border:1px solid #141414" i],
+html.light .piks-game-card [style*="border: 1px solid #141414" i] {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Some odds-button SVG strokes use #4b5563/#6b7280 inline — they
+   stay legible on light, no override needed. The #3b82f6 blue
+   odds digits also stay (high contrast on white). */

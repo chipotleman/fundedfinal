@@ -1532,7 +1532,7 @@ export default function Dashboard() {
               return (
                 <div 
                   key={game.id} 
-                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden flex flex-col ${pulseClass}`}
+                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden flex flex-col piks-game-card ${pulseClass}`}
                   style={{
                     backgroundColor: '#0d0d0d',
                     border: `1px solid ${accentBorder}`,
@@ -1672,7 +1672,7 @@ export default function Dashboard() {
                 return (
                   <div 
                     key={game.id} 
-                    className="rounded-xl overflow-hidden" 
+                    className="rounded-xl overflow-hidden piks-game-card" 
                     style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}
                   >
                     <div className="px-3.5 py-3">
