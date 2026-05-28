@@ -1306,6 +1306,91 @@ html.light .divide-white\/10 > * + * {
   border-color: rgba(15, 23, 42, 0.08) !important;
 }
 
+/* ─── Dashboard live game cards (.piks-game-card) ────────────────
+   The card wrapper already gets repainted by the inline-color
+   substring rules above, but the internal odds cells inline-style
+   `backgroundColor: '#111'` (dark cell), `color: '#d1d5db'` (the
+   inactive line numbers like +8.5 / -110), and `color: '#4b5563'`
+   (the SPREAD / ML / TOTAL labels). All are invisible / unreadable
+   on a white card. Repaint them. */
+html.light .piks-game-card div[style*="background-color: rgb(17, 17, 17)"],
+html.light .piks-game-card div[style*="backgroundColor: #111"],
+html.light .piks-game-card div[style*="background-color: #111"] {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+html.light .piks-game-card [style*="color: #d1d5db" i],
+html.light .piks-game-card [style*="color:#d1d5db" i],
+html.light .piks-game-card [style*="color: rgb(209, 213, 219)" i] {
+  color: #1f2937 !important;
+}
+html.light .piks-game-card [style*="color: #4b5563" i],
+html.light .piks-game-card [style*="color:#4b5563" i],
+html.light .piks-game-card [style*="color: rgb(75, 85, 99)" i] {
+  color: #475569 !important;
+}
+html.light .piks-game-card [style*="color: #ffffff" i],
+html.light .piks-game-card [style*="color:#ffffff" i],
+html.light .piks-game-card [style*="color: rgb(255, 255, 255)" i] {
+  color: #0f172a !important;
+}
+html.light .piks-game-card .text-gray-500,
+html.light .piks-game-card .text-gray-600 {
+  color: #475569 !important;
+}
+/* Inactive-cell lock icons stroked with #4b5563 — keep visible. */
+html.light .piks-game-card svg[stroke="#4b5563"] {
+  stroke: #94a3b8 !important;
+}
+
+/* ─── TopNavbar nav-link labels ─────────────────────────────────
+   `renderNavLink` in TopNavbar.js inlines `color: '#ffffff'` for
+   the active tab and `color: '#d1d5db'` for inactive tabs. Inline
+   styles trump the class-based `.text-white` overrides earlier in
+   this file, so on the light-mode white nav those reads as white
+   and light-gray (both invisible). Force them dark via the
+   `data-topnavbar` attribute scope. */
+html.light [data-topnavbar="true"] a[style*="color: rgb(255, 255, 255)"],
+html.light [data-topnavbar="true"] a[style*="color: #ffffff"] {
+  color: #0f172a !important;
+}
+html.light [data-topnavbar="true"] a[style*="color: rgb(209, 213, 219)"],
+html.light [data-topnavbar="true"] a[style*="color: #d1d5db"] {
+  color: #475569 !important;
+}
+
+/* ─── BattleModeChooser ("Choose Battle Mode") ──────────────────
+   The modal card paints `background: #0d0d0d` via styled-jsx
+   (`.cartoon-chooser-card`). Repaint to white-on-cream so the
+   modal matches the rest of the light theme. The bright gradient
+   action buttons (blue / orange / emerald) stay as-is — they're
+   meant to pop against any surface. */
+html.light .cartoon-chooser-card {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+  box-shadow: 0 10px 0 rgba(15, 23, 42, 0.08), 0 14px 40px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.04) inset !important;
+}
+html.light .cartoon-chooser-title {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+html.light .cartoon-chooser-subtitle {
+  color: rgba(71, 85, 105, 0.85) !important;
+}
+html.light .cartoon-chooser-cancel {
+  border-color: rgba(15, 23, 42, 0.18) !important;
+  color: #475569 !important;
+}
+html.light .cartoon-chooser-cancel:active {
+  background: rgba(15, 23, 42, 0.06) !important;
+  color: #0f172a !important;
+}
+@media (hover: hover) {
+  html.light .cartoon-chooser-cancel:hover {
+    background: rgba(15, 23, 42, 0.05) !important;
+    color: #0f172a !important;
+  }
+}
+
 /* ───────────────────────── LIGHT THEME, PASS 2 ─────────────────────
    User reported that several surfaces were still pure-black on the
    off-white page and that some text colors (game odds line, scores,
