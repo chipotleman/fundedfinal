@@ -691,11 +691,12 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     lineHeight: 1.2,
                     letterSpacing: '0.01em',
                     fontStyle: 'italic',
-                    WebkitTextStroke: '0.6px #0a0a0a',
-                    textShadow: '0 2px 0 #0a0a0a',
+                    textShadow: '-1px 0 0 #0a0a0a, 1px 0 0 #0a0a0a, 0 -1px 0 #0a0a0a, 0 1px 0 #0a0a0a, 0 3px 0 #0a0a0a',
                     background: 'linear-gradient(180deg, #fef08a 0%, #facc15 45%, #fb923c 100%)',
                     WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
+                    color: 'transparent',
                     whiteSpace: 'nowrap',
                     margin: 0,
                     padding: '2px 0',
@@ -1767,7 +1768,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               onClick={sendInvite}
               disabled={sending || hasActiveMatchup}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
-              className="pfm-cartoon-btn w-full font-black uppercase rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 sm:gap-4 relative"
+              className="pfm-cartoon-btn w-full font-black uppercase rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative"
               style={{
                 background: hasActiveMatchup
                   ? 'linear-gradient(180deg,#3b82f6,#2563eb)'
@@ -1775,24 +1776,20 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 border: '3px solid #0a0a0a',
                 boxShadow: '0 5px 0 #0a0a0a',
                 color: '#ffffff',
-                WebkitTextStroke: '0.75px #0a0a0a',
                 textShadow: '0 2px 0 #0a0a0a',
                 fontStyle: hasActiveMatchup ? 'normal' : 'italic',
-                letterSpacing: '0.08em',
-                padding: '14px 14px',
-                fontSize: 'clamp(16px, 4.5vw, 22px)',
+                letterSpacing: '0.02em',
+                padding: '14px 12px',
+                fontSize: 'clamp(14px, 3.6vw, 17px)',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
               }}
             >
-              {!hasActiveMatchup && !sending && (
-                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#ffffff', flexShrink: 0 }}>«</span>
-              )}
               <span
                 className="relative z-10"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'baseline',
-                  gap: '0.35em',
+                  gap: '0.4em',
                   minWidth: 0,
                   maxWidth: '100%',
                   whiteSpace: 'nowrap',
@@ -1819,9 +1816,6 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   </>
                 )}
               </span>
-              {!hasActiveMatchup && !sending && (
-                <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1, color: '#ffffff', flexShrink: 0 }}>»</span>
-              )}
             </button>
           </div>
         )}
