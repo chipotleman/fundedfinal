@@ -149,7 +149,15 @@ export function MatchupProvider({ children }) {
         });
         return;
       }
-      if (data?.type === 'matchup:forfeit') {
+      if (data?.type === 'matchup:start') {
+        // A new matchup just became active for this user — either an
+        // invite they sent was accepted, or a queue search resolved.
+        // Re-fetch immediately so `hasActiveMatchup` flips and the
+        // sender's PlayFriendModal / QuickMatchModal waiting screens
+        // transition into the lobby without sitting on "Waiting…"
+        // until the next safety poll (or until SSE goes unhealthy).
+        fetchCurrentMatchup();
+      } else if (data?.type === 'matchup:forfeit') {
         // If this user is the winner, surface the "Won by Forfeit"
         // modal immediately from the push payload — don't wait on
         // the /api/matchups/current round-trip.

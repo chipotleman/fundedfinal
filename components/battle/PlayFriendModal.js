@@ -35,7 +35,7 @@ function UserAvatar({ user, size = 36 }) {
 export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null, initialBuyIn = null, initialSentInvite = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
-  const { hasActiveMatchup, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
+  const { hasActiveMatchup, matchup: activeMatchup, opponent: activeOpponent, refresh: refreshMatchup } = useMatchup();
   useModalScrollLock(isOpen);
   const [selectedFriend, setSelectedFriend] = useState(null);
   // Seed from the remembered buy-in (which is hydrated server-side and
@@ -371,10 +371,15 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         const status = data?.invite?.status;
         if (cancelledLocal) return;
         if (!status || status === 'pending') return;
-        // Stop polling for any terminal status — including 'accepted', where
-        // MatchupContext handles the redirect into the live battle.
+        // Stop polling for any terminal status. For 'accepted' we also
+        // kick MatchupContext to re-fetch /api/matchups/current right
+        // now — the SSE `matchup:start` handler usually beats us to it,
+        // but if SSE flaked or we polled first this guarantees the
+        // sender's waiting screen transitions instead of sitting on
+        // "Waiting…" until the fallback poll's next tick.
         stop();
-        if (status === 'declined') finishWaiting('declined');
+        if (status === 'accepted') { try { refreshMatchup && refreshMatchup(); } catch {} }
+        else if (status === 'declined') finishWaiting('declined');
         else if (status === 'cancelled') finishWaiting('cancelled');
         else if (status === 'expired') finishWaiting('expired');
       } catch {}
