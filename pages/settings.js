@@ -11,6 +11,7 @@ import {
   setPlayNowConfirmSkipped,
 } from '../lib/playNowConfirm';
 import { BANNER_LIBRARY } from '../lib/teamCatalog';
+import { uploadFailureMessage, reportUploadFailure } from '../utils/uploadErrors';
 
 const LEAD_CUE_LABELS = [
   ['haptics', 'Lead-change vibration', 'Short buzz on your phone when a close game flips its leader.', CUE_STORAGE_KEYS.LEAD_HAPTIC, true],
@@ -248,11 +249,8 @@ export default function Settings() {
       if (!urlRes.ok) {
         const data = await urlRes.json().catch(() => ({}));
         if (urlRes.status === 413) throw new Error('That image is too large.');
-        if (urlRes.status === 401) throw new Error('Please sign in again to upload images.');
-        if (data?.code === 'storage_not_configured') {
-          throw new Error('Image uploads are temporarily unavailable. Please try again later.');
-        }
-        throw new Error(data?.error || 'Could not start upload.');
+        await reportUploadFailure(kind, urlRes.status, data);
+        throw new Error(uploadFailureMessage(urlRes.status, data));
       }
       const { uploadURL, objectPath } = await urlRes.json();
       const up = await fetch(uploadURL, {

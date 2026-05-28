@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import UserAvatar from './UserAvatar';
 import { TEAM_CATALOG, FAVORITE_TEAMS_LIMIT, BANNER_LIBRARY } from '../lib/teamCatalog';
+import { uploadFailureMessage, reportUploadFailure } from '../utils/uploadErrors';
 
 const BIO_MAX = 200;
 
@@ -55,12 +56,11 @@ export default function ProfileEditPanel({
       });
       if (!urlRes.ok) {
         const data = await urlRes.json().catch(() => ({}));
-        if (data?.code === 'storage_not_configured') {
-          alert('Image uploads are temporarily unavailable. Please try again later.');
-        } else if (urlRes.status === 413) {
+        if (urlRes.status === 413) {
           alert('That image is too large.');
         } else {
-          alert(data?.error || 'Could not upload avatar. Please try again.');
+          await reportUploadFailure('avatar', urlRes.status, data);
+          alert(uploadFailureMessage(urlRes.status, data));
         }
         return;
       }
@@ -101,12 +101,11 @@ export default function ProfileEditPanel({
       });
       if (!urlRes.ok) {
         const data = await urlRes.json().catch(() => ({}));
-        if (data?.code === 'storage_not_configured') {
-          alert('Image uploads are temporarily unavailable. Please try again later.');
-        } else if (urlRes.status === 413) {
+        if (urlRes.status === 413) {
           alert('That image is too large.');
         } else {
-          alert(data?.error || 'Could not upload banner. Please try again.');
+          await reportUploadFailure('banner', urlRes.status, data);
+          alert(uploadFailureMessage(urlRes.status, data));
         }
         return;
       }
