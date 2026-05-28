@@ -688,11 +688,11 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   className="font-black uppercase"
                   style={{
                     fontSize: 'clamp(22px, 5.5vw, 30px)',
-                    lineHeight: 1.15,
+                    lineHeight: 1.2,
                     letterSpacing: '0.01em',
                     fontStyle: 'italic',
-                    WebkitTextStroke: '1.5px #0a0a0a',
-                    textShadow: '0 3px 0 #0a0a0a',
+                    WebkitTextStroke: '0.6px #0a0a0a',
+                    textShadow: '0 2px 0 #0a0a0a',
                     background: 'linear-gradient(180deg, #fef08a 0%, #facc15 45%, #fb923c 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
