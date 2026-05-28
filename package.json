@@ -25,6 +25,7 @@
     "@uppy/core": "^5.2.0",
     "@uppy/dashboard": "^5.1.0",
     "@uppy/react": "^5.1.1",
+    "@vercel/blob": "^2.4.0",
     "@vercel/og": "^0.11.1",
     "bcryptjs": "^3.0.3",
     "drizzle-kit": "^0.31.6",

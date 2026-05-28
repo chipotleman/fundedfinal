@@ -49,35 +49,13 @@ export default function ProfileEditPanel({
       return;
     }
     try {
-      const urlRes = await fetch('/api/uploads/request-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type, kind: 'avatar' }),
-      });
-      if (!urlRes.ok) {
-        const data = await urlRes.json().catch(() => ({}));
-        if (urlRes.status === 413) {
-          alert('That image is too large.');
-        } else {
-          await reportUploadFailure('avatar', urlRes.status, data);
-          alert(uploadFailureMessage(urlRes.status, data));
-        }
-        return;
-      }
-      const { uploadURL, objectPath } = await urlRes.json();
-      const up = await fetch(uploadURL, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-      if (!up.ok) {
-        alert('Upload failed. Please try a different image.');
-        return;
-      }
-      setFormData({ ...formData, avatar: objectPath });
+      const { uploadToBlob } = await import('../utils/blobUpload');
+      const { url } = await uploadToBlob(file, { kind: 'avatar' });
+      setFormData({ ...formData, avatar: url });
     } catch (err) {
       console.error('Avatar upload failed', err);
-      alert('Upload failed. Please try again.');
+      await reportUploadFailure('avatar', err?.status || 0, { error: err?.message });
+      alert(uploadFailureMessage(err?.status || 0, { error: err?.message }));
     }
   };
 
@@ -94,35 +72,13 @@ export default function ProfileEditPanel({
     }
     setBannerUploading(true);
     try {
-      const urlRes = await fetch('/api/uploads/request-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type, kind: 'banner' }),
-      });
-      if (!urlRes.ok) {
-        const data = await urlRes.json().catch(() => ({}));
-        if (urlRes.status === 413) {
-          alert('That image is too large.');
-        } else {
-          await reportUploadFailure('banner', urlRes.status, data);
-          alert(uploadFailureMessage(urlRes.status, data));
-        }
-        return;
-      }
-      const { uploadURL, objectPath } = await urlRes.json();
-      const up = await fetch(uploadURL, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-      if (!up.ok) {
-        alert('Upload failed. Please try a different image.');
-        return;
-      }
-      setFormData({ ...formData, bannerUrl: objectPath });
+      const { uploadToBlob } = await import('../utils/blobUpload');
+      const { url } = await uploadToBlob(file, { kind: 'banner' });
+      setFormData({ ...formData, bannerUrl: url });
     } catch (err) {
       console.error('Banner upload failed', err);
-      alert('Upload failed. Please try again.');
+      await reportUploadFailure('banner', err?.status || 0, { error: err?.message });
+      alert(uploadFailureMessage(err?.status || 0, { error: err?.message }));
     } finally {
       setBannerUploading(false);
     }
