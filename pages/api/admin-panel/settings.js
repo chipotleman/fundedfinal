@@ -14,7 +14,7 @@ const STATIC_DEFAULTS = {
   betaMode: true,
   maintenanceMode: false,
   demoEnabled: true,
-  promoRowEnabled: true,
+  promoRowEnabled: false,
   challengeTiers: {
     starter: { price: 149, funding: 5000, profitSplit: 90 },
     pro: { price: 249, funding: 10000, profitSplit: 90 },

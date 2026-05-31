@@ -215,8 +215,10 @@ export default function Dashboard() {
     DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })),
   );
   // Master switch for the whole promo row — when an admin turns it off the
-  // carousel is removed entirely and the page below shifts up.
-  const [promoRowEnabled, setPromoRowEnabled] = useState(true);
+  // carousel is removed entirely and the page below shifts up. Defaults to
+  // OFF so the row stays hidden until an admin explicitly enables it (and so
+  // it never flashes on before the /api/promo-slots fetch resolves).
+  const [promoRowEnabled, setPromoRowEnabled] = useState(false);
 
   const battleStartedRetryRef = useRef(null);
   // Guards the battleStarted effect so it initializes the walkthrough

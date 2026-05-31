@@ -27,7 +27,7 @@ export default function AdminSettings() {
       cashoutFee: 10,
       inactivityDays: 5,
     },
-    promoRowEnabled: true,
+    promoRowEnabled: false,
     promoSlots: DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })),
   });
   const [saving, setSaving] = useState(false);
