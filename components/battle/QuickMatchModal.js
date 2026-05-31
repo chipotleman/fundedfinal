@@ -10,6 +10,7 @@ import { CartoonChipStyles } from './CartoonChip';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import { useGames } from '../../contexts/GamesContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
+import RushFlow from './rush/RushFlow';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 // Rush in-popup flow constants. The modal carries the user all the way
@@ -967,6 +968,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const [tipFade, setTipFade] = useState(false);
   // Rush in-popup flow state
   const [rushState, setRushState] = useState(null);
+  // Full /state response (matchup w/ player profiles + rush view) used by
+  // the new best-of-3 RushFlow rendered in the single 'rush-active' step.
+  const [rushApi, setRushApi] = useState(null);
+  const [rushBusy, setRushBusy] = useState(false);
   const [serverLiveGames, setServerLiveGames] = useState([]);
   const [rushVoteError, setRushVoteError] = useState('');
   const [pendingVoteId, setPendingVoteId] = useState(null);
@@ -1124,8 +1129,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   // come from the same source of truth.
   // ========================================================================
 
-  // Auto-advance from "MATCH FOUND" to the live-game vote slide for Rush.
-  // Other modes (original / tournament) still show the Continue button.
+  // Auto-advance from "MATCH FOUND" into the single 'rush-active' step for
+  // Rush. RushFlow then renders the correct screen (accept → confirmed →
+  // picking → live → round_result → completed) off the polled state. Other
+  // modes (original / tournament) still show the "Continue to Battle" button.
   useEffect(() => {
     if (!isOpen) return;
     if (step !== 'found') return;
@@ -1133,24 +1140,18 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     if (!matchedMatchup?.id) return;
     const t = setTimeout(() => {
       if (cancelledRef.current) return;
-      setStep('rush-vote');
+      setStep('rush-active');
     }, RUSH_FOUND_TO_VOTE_DELAY_MS);
     return () => clearTimeout(t);
   }, [isOpen, step, gameMode, matchedMatchup?.id]);
 
-  // Poll + SSE the rush state for the matched matchup whenever we're in
-  // any rush sub-step. Polling at 750ms keeps the deadline countdown
-  // smooth; SSE delivers near-instant updates for the voting→playing
-  // flip and the opponent's vote landing.
+  // Poll + SSE the server-authoritative rush state for the whole match
+  // while we're in 'rush-active'. Polling at 750ms keeps countdowns smooth;
+  // SSE delivers near-instant phase flips. We store the full response so
+  // RushFlow gets the matchup (with player profiles) and the rush view.
   useEffect(() => {
     if (!isOpen) return;
-    const inRushFlow =
-      step === 'rush-vote' ||
-      step === 'rush-ready' ||
-      step === 'rush-countdown' ||
-      step === 'rush-playing' ||
-      step === 'rush-completed';
-    if (!inRushFlow) return;
+    if (step !== 'rush-active') return;
     const matchupId = matchedMatchup?.id;
     if (!matchupId) return;
 
@@ -1160,7 +1161,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
         const res = await fetch(`/api/battles/rush/${matchupId}/state`);
         if (cancelled || !res.ok) return;
         const j = await res.json();
-        if (!cancelled) setRushState(j.rush || null);
+        if (!cancelled) {
+          setRushApi(j || null);
+          setRushState(j?.rush || null);
+        }
       } catch {}
     };
     fetchRush();
@@ -1185,156 +1189,19 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     };
   }, [isOpen, step, matchedMatchup?.id]);
 
-  // Tick once a second on the vote slide so the deadline ring stays in
-  // sync without us having to lean on the polling response time.
+  // Stale-accept / cancellation escape: the server flips the rush phase to
+  // 'cancelled' when an opponent never accepts. RushFlow shows a "stake is
+  // safe" card and calls onExit; this also routes out if the user lingers.
   useEffect(() => {
-    if (step !== 'rush-vote') return;
-    const t = setInterval(() => setVoteDeadlineTick(n => n + 1), 1000);
-    return () => clearInterval(t);
-  }, [step]);
-
-  // Load the live-game list from the dedicated endpoint while voting.
-  // We merge this with the dashboard's GamesContext stream below so
-  // demo / simulated live games still show up here.
-  useEffect(() => {
-    if (step !== 'rush-vote') return;
-    let cancelled = false;
-    fetch('/api/goalserve/live')
-      .then(r => r.json())
-      .then(j => { if (!cancelled) setServerLiveGames(j?.games || []); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [step]);
-
-  // Detect server-side voting resolution → advance to ready slide.
-  // We hold on the vote slide for 3 full seconds once the phase flips
-  // so the user can actually see the opponent's checkmark on the game
-  // card they picked (and the "Locked!" / "Host wins" pill) before
-  // the modal jumps to the rules / ready slide. The vote slide also
-  // shows a "Continue" button during this window so users can skip
-  // the wait if they've already registered the opponent's pick.
-  useEffect(() => {
-    if (step !== 'rush-vote') return;
-    const phase = rushState?.phase;
-    if (phase !== 'ready_check' && phase !== 'playing' && phase !== 'completed') return;
-    const t = setTimeout(() => {
-      if (cancelledRef.current) return;
-      setStep('rush-ready');
-    }, 3000);
-    return () => clearTimeout(t);
-  }, [step, rushState?.phase]);
-
-  // Deadlock guard: if the vote deadline has passed and neither player
-  // ever voted, the server-side resolveVotingIfReady() leaves phase as
-  // 'voting' indefinitely (chosen vote is null, no question generation
-  // possible). Without this guard the modal would spin forever waiting
-  // for a phase flip that never comes. After a 4s grace past deadline
-  // we hand off to the routed rush page where the full forfeit /
-  // refund UX lives.
-  useEffect(() => {
-    if (step !== 'rush-vote') return;
-    if (!rushState || rushState.phase !== 'voting') return;
-    const deadline = rushState.voteDeadline ? new Date(rushState.voteDeadline).getTime() : null;
-    if (!deadline) return;
-    const matchupId = matchedMatchup?.id;
-    if (!matchupId) return;
-    const myVote = userId ? rushState.gameVotes?.[userId] : null;
-    const opponentId = matchedOpponent?.id;
-    const oppVote = opponentId ? rushState.gameVotes?.[opponentId] : null;
-    // Only kick in when nobody voted — single-vote expiry is handled
-    // server-side and will flip to 'playing' on the next state read.
-    if (myVote || oppVote) return;
-    const overdueBy = Date.now() - deadline;
-    if (overdueBy <= 4000) return;
-    onClose();
-    router.push(`/battle/rush/${matchupId}`);
-  }, [step, rushState, matchedMatchup?.id, matchedOpponent?.id, userId, voteDeadlineTick, onClose, router]);
-
-  // Ready slide → 3-2-1 countdown. Both players have to tap "Ready"
-  // (the bot is auto-readied server-side after 3s); the moment the
-  // server flips phase to 'playing' we kick the countdown.
-  useEffect(() => {
-    if (step !== 'rush-ready') return;
-    if (rushState?.phase === 'playing' || rushState?.phase === 'completed') {
-      setCountdownNum(3);
-      setStep('rush-countdown');
-    }
-  }, [step, rushState?.phase]);
-
-  // 3-2-1-GO countdown ticker. After the GO! flash we transition to
-  // the in-popup gameplay step (the routed /battle/rush/[id] page is
-  // still available as a fallback for refresh / deep-link).
-  useEffect(() => {
-    if (step !== 'rush-countdown') return;
-    if (countdownNum > 0) {
-      const t = setTimeout(() => {
-        if (cancelledRef.current) return;
-        setCountdownNum(n => n - 1);
-        haptic.tap?.();
-      }, RUSH_COUNTDOWN_TICK_MS);
-      return () => clearTimeout(t);
-    }
-    // countdownNum === 0 → show "GO!" briefly, then advance to the
-    // in-popup playing slide.
-    const t = setTimeout(() => {
-      if (cancelledRef.current) return;
-      const matchupId = matchedMatchup?.id;
-      if (!matchupId) return;
-      setStep('rush-playing');
-    }, RUSH_GO_DURATION_MS);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, countdownNum, matchedMatchup?.id]);
-
-  // Reset the locally-picked answer whenever the question rolls over so
-  // the "your pick" highlight doesn't bleed across questions.
-  useEffect(() => {
-    if (step !== 'rush-playing') return;
-    const currQ = rushState?.questions?.[rushState?.currentQuestionIndex];
-    if (currQ && currQ.id !== lastQuestionIdRef.current) {
-      lastQuestionIdRef.current = currQ.id;
-      setPickedAnswer(null);
-    }
-  }, [step, rushState?.questions, rushState?.currentQuestionIndex]);
-
-  // Detect server-side completion → flip to result slide. We pick this
-  // up from rushState.phase rather than waiting on the answer POST so
-  // a deadline expiry on the final question still triggers the result.
-  useEffect(() => {
-    if (step !== 'rush-playing') return;
-    if (rushState?.phase === 'completed') {
-      setStep('rush-completed');
-    }
-  }, [step, rushState?.phase]);
-
-  // Result slide auto-exits to /battle after a beat so the user lands
-  // back where the result-popup SSE plumbing can take over.
-  useEffect(() => {
-    if (step !== 'rush-completed') return;
+    if (step !== 'rush-active') return;
+    if (rushState?.phase !== 'cancelled') return;
+    if (cancelledRef.current) return;
     const t = setTimeout(() => {
       if (cancelledRef.current) return;
       onClose();
-      router.push('/battle');
-    }, RUSH_RESULT_AUTO_EXIT_MS);
+      router.push('/battle?rushCancelled=1');
+    }, 4200);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
-
-  // Stale ready-check escape: server flips rushState.phase to
-  // 'cancelled' after READY_STALE_CANCEL_MS when an opponent ghosts
-  // the ready check. Close the in-popup ritual and route back to
-  // /battle so the user isn't stranded — no penalty, no payout.
-  useEffect(() => {
-    const inRushSubStep =
-      step === 'rush-vote' ||
-      step === 'rush-ready' ||
-      step === 'rush-countdown' ||
-      step === 'rush-playing';
-    if (!inRushSubStep) return;
-    if (rushState?.phase !== 'cancelled') return;
-    if (cancelledRef.current) return;
-    onClose();
-    router.push('/battle?rushCancelled=1');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, rushState?.phase]);
 
@@ -1363,122 +1230,66 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     return out.slice(0, RUSH_VOTE_GAME_LIMIT);
   }, [serverLiveGames, apiGames]);
 
-  const submitRushVote = async (game) => {
+  // --- Rush actions (best-of-3). Each POSTs to the server-authoritative
+  // endpoint then refetches immediately so the UI doesn't wait on the poll.
+  const rushPost = async (action, body) => {
     const matchupId = matchedMatchup?.id;
-    if (!matchupId || pendingVoteId) return;
-    setPendingVoteId(String(game.id));
-    setRushVoteError('');
-    haptic.tap?.();
+    if (!matchupId) return;
+    setRushBusy(true);
     try {
-      // Normalize across API/Goalserve and simulated/demo shapes so the
-      // server-side question generator (lib/rush.js) always sees populated
-      // team / sport fields regardless of where the live game came from.
-      const snapshot = {
-        id: game.id,
-        sport_key: game.sport_key || game.sport || null,
-        sport_title: game.sport_title || game.sportName || game.sport || 'LIVE',
-        home_team: game.home_team || game.homeTeamFull || game.homeTeam || 'Home',
-        away_team: game.away_team || game.awayTeamFull || game.awayTeam || 'Away',
-        scores: game.scores,
-        status: game.status,
-        isLive: !!(game.isLive || game.status === 'IN_PROGRESS' || game.status === 'live'),
-      };
-      const res = await fetch(`/api/battles/rush/${matchupId}/vote`, {
+      const res = await fetch(`/api/battles/rush/${matchupId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameId: String(game.id), gameSnapshot: snapshot }),
+        body: body ? JSON.stringify(body) : '{}',
       });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        setRushVoteError(j.error || 'Failed to vote');
+      await res.json().catch(() => ({}));
+      try {
+        const j = await fetch(`/api/battles/rush/${matchupId}/state`).then(r => r.json());
+        setRushApi(j || null);
+        setRushState(j?.rush || null);
+      } catch {}
+    } catch {} finally {
+      setRushBusy(false);
+    }
+  };
+
+  const submitRushAccept = () => { haptic.tap?.(); return rushPost('accept'); };
+  const submitRushPick = (optionKey) => { haptic.tap?.(); return rushPost('pick', { optionKey }); };
+  const submitRushContinue = () => { haptic.tap?.(); return rushPost('continue'); };
+
+  // Rematch / new opponent: spin up a fresh rush matchup via matchmaking
+  // and re-enter the in-popup flow at 'found' (which auto-advances to
+  // 'rush-active'). Falls back to the routed page if no instant match.
+  const startRushRematch = async (stake) => {
+    setRushBusy(true);
+    try {
+      const res = await fetch('/api/battles/matchmaking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameMode: 'rush', buyIn: stake }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (j?.matched && j?.matchup?.id) {
+        setRushApi(null);
+        setRushState(null);
+        setMatchedOpponent(j.opponent || null);
+        setMatchedMatchup(j.matchup);
+        if (typeof stake === 'number') setBuyIn(stake);
+        setGameMode('rush');
+        setStep('found');
       } else {
-        // Refetch immediately so the local state shows our vote without
-        // waiting for the next 750ms poll tick.
-        try {
-          const j = await fetch(`/api/battles/rush/${matchupId}/state`).then(r => r.json());
-          setRushState(j.rush || null);
-        } catch {}
+        onClose();
+        router.push('/battle?quickmatch=rush');
       }
-    } catch (err) {
-      setRushVoteError(err?.message || 'Network error');
+    } catch {
+      onClose();
+      router.push('/battle');
     } finally {
-      setPendingVoteId(null);
+      setRushBusy(false);
     }
   };
 
-  const submitRushReady = async () => {
-    const matchupId = matchedMatchup?.id;
-    if (!matchupId || pendingReady) return;
-    setPendingReady(true);
-    setReadyError('');
-    haptic.tap?.();
-    try {
-      // Send an explicit empty body so Next.js' body parser doesn't
-      // hit "Unexpected end of JSON input" on Content-Type:
-      // application/json with no payload (some edge runtimes treat
-      // this as an error and reject the request before our handler
-      // ever runs, which surfaces to the user as "Failed to mark
-      // ready").
-      const res = await fetch(`/api/battles/rush/${matchupId}/ready`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: '{}',
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        // 409 = phase already past ready_check; harmless.
-        if (res.status !== 409) {
-          // Surface the real server error (e.g. 'Matchup already
-          // cancelled', 'Not in ready_check phase') instead of a
-          // generic message so we can actually diagnose what went
-          // wrong from the user's screen.
-          setReadyError(j.error || `Ready failed (HTTP ${res.status})`);
-        }
-      }
-      // Refetch immediately so the local state reflects our ready
-      // without waiting for the next 750ms poll tick.
-      try {
-        const j = await fetch(`/api/battles/rush/${matchupId}/state`).then(r => r.json());
-        setRushState(j.rush || null);
-      } catch {}
-    } catch (err) {
-      setReadyError(err?.message || 'Network error');
-    } finally {
-      setPendingReady(false);
-    }
-  };
-
-  const submitRushAnswer = async (questionId, answerKey) => {
-    const matchupId = matchedMatchup?.id;
-    if (!matchupId || submittingAnswer) return;
-    setSubmittingAnswer(true);
-    setPickedAnswer({ questionId, answerKey });
-    haptic.tap?.();
-    try {
-      const res = await fetch(`/api/battles/rush/${matchupId}/answer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, answerKey }),
-      });
-      if (!res.ok && res.status !== 409) {
-        // 409 just means the server already advanced — not an error.
-        // No-op; the next poll will resync.
-      }
-      try {
-        const j = await fetch(`/api/battles/rush/${matchupId}/state`).then(r => r.json());
-        setRushState(j.rush || null);
-      } catch {}
-    } finally {
-      setSubmittingAnswer(false);
-    }
-  };
-
-  const isInRushFlow =
-    step === 'rush-vote' ||
-    step === 'rush-ready' ||
-    step === 'rush-countdown' ||
-    step === 'rush-playing' ||
-    step === 'rush-completed';
+  const isInRushFlow = step === 'rush-active';
 
   // Closing the modal mid-rush would orphan the user in an active
   // matchup. Instead, hand them off to the routed gameplay page so
@@ -3018,66 +2829,29 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
             </div>
           )}
 
-          {step === 'rush-vote' && (
-            <RushVoteSlide
-              rushState={rushState}
-              userId={session?.user?.id}
-              opponent={matchedOpponent}
-              userName={userName}
-              userAvatar={userAvatar}
-              userProfileId={userProfile?.id}
-              matchupId={matchedMatchup?.id}
-              liveGames={liveGamesForVote}
-              pendingVoteId={pendingVoteId}
-              onVote={submitRushVote}
-              onAdvance={() => {
-                if (cancelledRef.current) return;
-                setStep('rush-ready');
-              }}
-              onClose={handleClose}
-              error={rushVoteError}
-            />
+          {step === 'rush-active' && rushApi?.rush && rushApi?.matchup && (
+            <div className="w-full px-3 py-4 flex justify-center">
+              <RushFlow
+                rush={rushApi.rush}
+                matchup={rushApi.matchup}
+                userId={session?.user?.id}
+                busy={rushBusy}
+                onAccept={submitRushAccept}
+                onDecline={handleClose}
+                onPick={submitRushPick}
+                onContinue={submitRushContinue}
+                onViewResults={() => {}}
+                onRematch={(stake) => startRushRematch(stake)}
+                onNewOpponent={() => startRushRematch(parseFloat(rushApi?.matchup?.startingBalance) || 10000)}
+                onHome={() => { onClose(); router.push('/battle'); }}
+                onExit={() => { onClose(); router.push('/battle'); }}
+                onBack={handleClose}
+              />
+            </div>
           )}
 
-          {step === 'rush-ready' && (
-            <RushReadySlide
-              rushState={rushState}
-              userId={session?.user?.id}
-              opponent={matchedOpponent}
-              pendingReady={pendingReady}
-              onReady={submitRushReady}
-              onClose={handleClose}
-              error={readyError}
-            />
-          )}
-
-          {step === 'rush-countdown' && (
-            <RushCountdownSlide num={countdownNum} />
-          )}
-
-          {step === 'rush-playing' && (
-            <RushPlayingSlide
-              rushState={rushState}
-              userId={session?.user?.id}
-              opponent={matchedOpponent}
-              pickedAnswer={pickedAnswer}
-              submittingAnswer={submittingAnswer}
-              onAnswer={submitRushAnswer}
-              onOpenFullView={handleClose}
-            />
-          )}
-
-          {step === 'rush-completed' && (
-            <RushCompletedSlide
-              rushState={rushState}
-              matchup={matchedMatchup}
-              userId={session?.user?.id}
-              opponent={matchedOpponent}
-              onExit={() => {
-                onClose();
-                router.push('/battle');
-              }}
-            />
+          {step === 'rush-active' && !(rushApi?.rush && rushApi?.matchup) && (
+            <div className="w-full px-6 py-16 text-center text-gray-500 text-sm">Loading match…</div>
           )}
         </div>
         </div>
@@ -3086,1144 +2860,4 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   );
 
   return ReactDOM.createPortal(modalContent, document.body);
-}
-
-// ===========================================================================
-// Rush in-popup sub-slides
-//
-// Three small presentational components that render the cartoon-themed
-// vote → rules → countdown ritual inside QuickMatchModal. They share the
-// same design language (2.5px black borders, 4px hard shadow, blue=YOU /
-// orange=OPP color split) so the whole flow reads as one continuous
-// trivia-crack-style sequence rather than four disconnected screens.
-// ===========================================================================
-
-const SELF_COLOR = '#3b82f6';
-const SELF_COLOR_DEEP = '#1d4ed8';
-const OPP_COLOR = '#fb923c';
-const OPP_COLOR_DEEP = '#c2410c';
-
-function RushVoteSlide({
-  rushState,
-  userId,
-  opponent,
-  liveGames,
-  pendingVoteId,
-  onVote,
-  onAdvance,
-  onClose,
-  error,
-}) {
-  const myVote = userId ? rushState?.gameVotes?.[userId] : null;
-  const opponentId = opponent?.id;
-  const oppVote = opponentId ? rushState?.gameVotes?.[opponentId] : null;
-  const bothVoted = !!myVote && !!oppVote;
-  const sameGame = bothVoted && String(myVote?.gameId) === String(oppVote?.gameId);
-
-  // Live deadline countdown — rushState.voteDeadline is ISO from the
-  // server; we render seconds-remaining based on Date.now() so it
-  // ticks even between polls.
-  const deadline = rushState?.voteDeadline ? new Date(rushState.voteDeadline).getTime() : null;
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 200);
-    return () => clearInterval(t);
-  }, []);
-  const remaining = deadline ? Math.max(0, deadline - now) : null;
-  const remainingSec = remaining != null ? Math.ceil(remaining / 1000) : null;
-  const urgent = remainingSec != null && remainingSec <= 5;
-
-  const noLive = liveGames.length === 0;
-
-  return (
-    <div className="relative">
-      <style>{`
-        @keyframes rvCardIn {
-          0% { opacity: 0; transform: translateY(8px) scale(0.97); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes rvBadgePop {
-          0% { transform: scale(0); }
-          60% { transform: scale(1.18); }
-          100% { transform: scale(1); }
-        }
-        @keyframes rvUrgentPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.08); }
-        }
-        @keyframes rvBoltSwing {
-          0%, 100% { transform: rotate(-8deg) scale(1); }
-          50% { transform: rotate(8deg) scale(1.1); }
-        }
-        .rv-card { animation: rvCardIn 220ms cubic-bezier(0.22,1,0.36,1) both; }
-        .rv-card:nth-child(1) { animation-delay: 30ms; }
-        .rv-card:nth-child(2) { animation-delay: 90ms; }
-        .rv-card:nth-child(3) { animation-delay: 150ms; }
-        .rv-badge { animation: rvBadgePop 280ms cubic-bezier(0.34,1.56,0.64,1) both; }
-        .rv-bolt { animation: rvBoltSwing 1.4s ease-in-out infinite; display: inline-block; transform-origin: center; }
-        .rv-urgent { animation: rvUrgentPulse 0.5s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .rv-card, .rv-badge, .rv-bolt, .rv-urgent { animation: none !important; }
-        }
-      `}</style>
-
-      {/* Header — mirrors the 'config' header so the popup keeps its
-          visual identity through the flow. Close button hands off to
-          /battle/rush/[id] (handled by parent's handleClose). */}
-      <div className="px-5 pt-5 pb-3">
-        <div className="flex items-center justify-between gap-3 mb-2">
-          <div className="min-w-0 flex items-center gap-2">
-            <span className="rv-bolt" aria-hidden="true" style={{ fontSize: 22 }}>⚡</span>
-            <div className="min-w-0">
-              <h2 className="font-black uppercase text-white" style={{ fontSize: 18, lineHeight: 1.05, letterSpacing: '0.06em', textShadow: '0 2px 0 #000' }}>
-                Pick a Game
-              </h2>
-              <p className="mt-0.5 font-extrabold uppercase" style={{ color: '#9ca3af', fontSize: 9, letterSpacing: '0.18em' }}>
-                Both vote — host wins ties
-              </p>
-            </div>
-          </div>
-          {remainingSec != null && (
-            <div
-              className={`text-base font-black tabular-nums px-3 py-1.5 rounded-full ${urgent ? 'rv-urgent' : ''}`}
-              style={{
-                background: urgent ? 'linear-gradient(180deg,#ef4444,#b91c1c)' : 'linear-gradient(180deg,#fbbf24,#d97706)',
-                color: '#0a0a0a',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 3px 0 #0a0a0a',
-              }}
-              aria-label={`${remainingSec} seconds to vote`}
-            >
-              {remainingSec}s
-            </div>
-          )}
-        </div>
-
-        {/* Player vote-status pills in their identity colors, so it's
-            unmistakable which check belongs to whom on a card below. */}
-        <div className="flex items-center gap-2 mt-2">
-          <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-            style={{
-              background: myVote ? `linear-gradient(180deg,${SELF_COLOR},${SELF_COLOR_DEEP})` : 'rgba(255,255,255,0.05)',
-              color: myVote ? '#fff' : '#9ca3af',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: myVote ? `0 2px 0 #0a0a0a, 0 0 12px ${SELF_COLOR}66` : '0 2px 0 #0a0a0a',
-            }}
-          >
-            <span style={{ fontSize: 11 }}>{myVote ? '✓' : '○'}</span>
-            <span>You</span>
-          </span>
-          <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-            style={{
-              background: oppVote ? `linear-gradient(180deg,${OPP_COLOR},${OPP_COLOR_DEEP})` : 'rgba(255,255,255,0.05)',
-              color: oppVote ? '#fff' : '#9ca3af',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: oppVote ? `0 2px 0 #0a0a0a, 0 0 12px ${OPP_COLOR}66` : '0 2px 0 #0a0a0a',
-            }}
-          >
-            <span style={{ fontSize: 11 }}>{oppVote ? '✓' : '○'}</span>
-            <span>Opp</span>
-          </span>
-          {bothVoted && (
-            <span
-              className="ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-              style={{
-                background: sameGame
-                  ? 'linear-gradient(180deg,#10b981,#047857)'
-                  : 'linear-gradient(180deg,#fb923c,#c2410c)',
-                color: '#fff',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 2px 0 #0a0a0a',
-              }}
-            >
-              {sameGame ? 'Locked!' : 'Host wins'}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Cards. We cap to 3 cartoon-themed live game cards — each shows
-          the away/home matchup, the live score in big type, and any
-          checkmark badges in the picker's identity color so the user
-          sees instantly whether the two of you agree. */}
-      <div className="px-5 pb-2 space-y-2.5">
-        {noLive && (
-          <div
-            className="rounded-2xl p-4 text-center"
-            style={{
-              background: 'linear-gradient(180deg,rgba(239,68,68,0.16),rgba(239,68,68,0.04))',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: '0 4px 0 #0a0a0a',
-            }}
-          >
-            <div className="text-2xl mb-1" aria-hidden="true">⚡</div>
-            <div className="text-white font-extrabold text-sm mb-1">No live games right now</div>
-            <div className="text-[11px] text-gray-400 leading-snug">
-              Rush props come from a live game. Hang tight for tip-off — voting auto-resolves at the timer.
-            </div>
-          </div>
-        )}
-
-        {liveGames.map((g) => {
-          const gid = String(g.id);
-          const iPicked = String(myVote?.gameId) === gid;
-          const oppPicked = String(oppVote?.gameId) === gid;
-          const isPending = pendingVoteId === gid;
-          const disabled = !!myVote || !!pendingVoteId;
-          return (
-            <RushVoteCard
-              key={`${g.sport_key}::${gid}`}
-              game={g}
-              iPicked={iPicked}
-              oppPicked={oppPicked}
-              disabled={disabled}
-              loading={isPending}
-              onPick={() => onVote(g)}
-            />
-          );
-        })}
-      </div>
-
-      {error && (
-        <div className="px-5 pb-2 text-[11px] text-red-300 text-center">{error}</div>
-      )}
-
-      {bothVoted && (
-        <div className="px-5 pb-2 space-y-2">
-          <div
-            className="rounded-2xl px-3 py-2.5 text-center"
-            style={{
-              background: 'linear-gradient(180deg,rgba(16,185,129,0.18),rgba(16,185,129,0.04))',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: '0 3px 0 #0a0a0a',
-            }}
-          >
-            <div className="text-[11px] uppercase tracking-wider font-extrabold text-emerald-300">
-              {sameGame ? 'Both locked the same game!' : 'Both locked in — host\u2019s pick wins'}
-            </div>
-            <div className="text-[10px] text-gray-400 mt-0.5">Generating 6 props…</div>
-          </div>
-          {/* Manual-advance escape hatch. Phase has flipped server-side
-              and the modal is on a 3s auto-advance timer; this button
-              lets users skip the wait once they've registered the
-              opponent's pick (visible above as the orange checkmark
-              badge on whichever card they chose). */}
-          {onAdvance && (
-            <button
-              type="button"
-              onClick={onAdvance}
-              className="w-full py-3 rounded-2xl font-black uppercase text-white transition-transform active:scale-95"
-              style={{
-                background: 'linear-gradient(180deg,#10b981,#047857)',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 4px 0 #0a0a0a',
-                letterSpacing: '0.14em',
-                fontSize: 14,
-              }}
-            >
-              Continue →
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="px-5 pb-5 pt-1 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-[10px] text-gray-500 hover:text-gray-300 underline underline-offset-2"
-        >
-          Open full match view
-        </button>
-        <div className="text-[10px] text-gray-600 font-mono">
-          {liveGames.length} live · max {RUSH_VOTE_GAME_LIMIT}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RushVoteCard({ game, iPicked, oppPicked, disabled, loading, onPick }) {
-  // Normalize across the two shapes that flow into the vote slide:
-  //   * API/Goalserve shape — `home_team`, `away_team`, `sport_title`,
-  //     `formatted_time`
-  //   * Simulated demo shape — `homeTeamFull`/`homeTeam`,
-  //     `awayTeamFull`/`awayTeam`, `sportName`, `time`/`elapsedTime`/`period`
-  // The cartoon score block uses the same `scores.home.total` /
-  // `scores.away.total` shape in both, so no extra mapping needed there.
-  const home = game.home_team || game.homeTeamFull || game.homeTeam || 'Home';
-  const away = game.away_team || game.awayTeamFull || game.awayTeam || 'Away';
-  const hs = game?.scores?.home?.total ?? game?.home_score ?? 0;
-  const as = game?.scores?.away?.total ?? game?.away_score ?? 0;
-  const sportLabel = game.sport_title || game.sportName || game.sport || 'LIVE';
-  // Live clock string — try the API field first, fall back to the
-  // demo-game fields. The simulated demo games already bake the period
-  // into `elapsedTime` (e.g. "Q3 10:41"), so we only prepend `period`
-  // when the elapsed-time string doesn't already start with it —
-  // otherwise the card would render "Q3 Q3 10:41".
-  const elapsed = game.elapsedTime || game.displayClock || '';
-  const period = game.period ? String(game.period) : '';
-  // Match period as a whole token (so "Q1" doesn't false-positive on
-  // "Q10 0:01") — period must be followed by end-of-string or non-word.
-  const elapsedHasPeriod = !!(period && elapsed
-    && new RegExp(`^${period.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\W|$)`).test(elapsed.trim()));
-  const composed = elapsed
-    ? (elapsedHasPeriod ? elapsed : (period ? `${period} ${elapsed}` : elapsed))
-    : period;
-  const liveClock = game.formatted_time
-    || composed
-    || game.time
-    || game.status
-    || 'In progress';
-  const isLive = !!(game.isLive || game.status === 'IN_PROGRESS' || game.status === 'live');
-  const someonePicked = iPicked || oppPicked;
-
-  // Selected card glow blends the picker colors when both picked it,
-  // otherwise uses just the picker's color so the difference between
-  // "we agree" and "we disagree" is impossible to miss.
-  let glow = 'none';
-  let borderInset = 'transparent';
-  if (iPicked && oppPicked) {
-    glow = `0 4px 0 #0a0a0a, 0 0 22px ${SELF_COLOR}99, 0 0 22px ${OPP_COLOR}99`;
-    borderInset = `linear-gradient(135deg, ${SELF_COLOR}, ${OPP_COLOR})`;
-  } else if (iPicked) {
-    glow = `0 4px 0 #0a0a0a, 0 0 22px ${SELF_COLOR}99`;
-    borderInset = SELF_COLOR;
-  } else if (oppPicked) {
-    glow = `0 4px 0 #0a0a0a, 0 0 22px ${OPP_COLOR}99`;
-    borderInset = OPP_COLOR;
-  } else {
-    glow = '0 4px 0 #0a0a0a';
-  }
-
-  return (
-    <button
-      type="button"
-      disabled={disabled || loading}
-      onClick={onPick}
-      className="rv-card w-full text-left rounded-2xl px-3.5 py-3 transition-transform active:scale-[0.98]"
-      style={{
-        background: someonePicked
-          ? 'linear-gradient(180deg,#1a1a1a,#0a0a0a)'
-          : 'linear-gradient(180deg,#141414,#0a0a0a)',
-        border: '2.5px solid #0a0a0a',
-        boxShadow: glow,
-        opacity: disabled && !someonePicked ? 0.55 : 1,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        position: 'relative',
-      }}
-    >
-      {/* Inner accent ring — gives selected cards a colored "second
-          border" without fighting the cartoon black outer border. */}
-      {someonePicked && (
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{
-            background: typeof borderInset === 'string' && borderInset.startsWith('linear')
-              ? borderInset
-              : undefined,
-            backgroundColor: typeof borderInset === 'string' && !borderInset.startsWith('linear') ? borderInset : undefined,
-            padding: 2,
-            WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
-            WebkitMaskComposite: 'xor',
-            maskComposite: 'exclude',
-          }}
-        />
-      )}
-
-      <div className="flex items-center justify-between gap-3 relative">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 mb-1">
-            <span
-              className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-md"
-              style={{
-                background: 'linear-gradient(180deg,#fbbf24,#d97706)',
-                color: '#1a0a00',
-                border: '2px solid #0a0a0a',
-                boxShadow: '0 2px 0 #0a0a0a',
-              }}
-            >
-              {sportLabel}
-            </span>
-            {isLive && (
-              <span
-                className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-md inline-flex items-center gap-1"
-                style={{
-                  background: 'linear-gradient(180deg,#ef4444,#b91c1c)',
-                  color: '#fff',
-                  border: '2px solid #0a0a0a',
-                  boxShadow: '0 2px 0 #0a0a0a',
-                }}
-              >
-                <span
-                  style={{
-                    width: 5, height: 5, borderRadius: '50%',
-                    background: '#fff', boxShadow: '0 0 6px #fff',
-                  }}
-                />
-                LIVE
-              </span>
-            )}
-          </div>
-          <div className="text-white font-extrabold text-[13px] truncate" style={{ letterSpacing: '0.01em' }}>
-            {away}
-          </div>
-          <div className="text-gray-500 text-[10px] my-0.5 font-bold uppercase tracking-wider">vs</div>
-          <div className="text-white font-extrabold text-[13px] truncate" style={{ letterSpacing: '0.01em' }}>
-            {home}
-          </div>
-          <div className="text-[10px] text-gray-400 mt-1.5 font-mono">
-            {liveClock}
-          </div>
-        </div>
-
-        {/* Big cartoon-style score block */}
-        <div
-          className="flex flex-col items-center justify-center px-3 py-2 rounded-xl shrink-0"
-          style={{
-            background: 'linear-gradient(180deg,#0c1a35,#050a15)',
-            border: '2.5px solid #0a0a0a',
-            boxShadow: '0 3px 0 #0a0a0a',
-            minWidth: 64,
-          }}
-        >
-          <div className="text-white font-black text-2xl tabular-nums leading-none">{as}</div>
-          <div className="text-gray-600 font-black text-[10px] my-0.5">—</div>
-          <div className="text-white font-black text-2xl tabular-nums leading-none">{hs}</div>
-        </div>
-      </div>
-
-      {/* Picker-colored checkmark badges — stacked when both players
-          chose the same game so the agree/disagree state is visible
-          at a glance. */}
-      {(iPicked || oppPicked) && (
-        <div className="flex items-center gap-1.5 mt-2.5">
-          {iPicked && (
-            <div
-              className="rv-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-              style={{
-                background: `linear-gradient(180deg,${SELF_COLOR},${SELF_COLOR_DEEP})`,
-                color: '#fff',
-                border: '2px solid #0a0a0a',
-                boxShadow: '0 2px 0 #0a0a0a',
-              }}
-            >
-              <span style={{ fontSize: 11 }}>✓</span>
-              <span>You</span>
-            </div>
-          )}
-          {oppPicked && (
-            <div
-              className="rv-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-              style={{
-                background: `linear-gradient(180deg,${OPP_COLOR},${OPP_COLOR_DEEP})`,
-                color: '#fff',
-                border: '2px solid #0a0a0a',
-                boxShadow: '0 2px 0 #0a0a0a',
-              }}
-            >
-              <span style={{ fontSize: 11 }}>✓</span>
-              <span>Opp</span>
-            </div>
-          )}
-          {loading && (
-            <div className="ml-auto text-[10px] text-gray-400 font-bold">Sending…</div>
-          )}
-        </div>
-      )}
-    </button>
-  );
-}
-
-function RushReadySlide({ rushState, userId, opponent, pendingReady, onReady, onClose, error }) {
-  const opponentId = opponent?.id;
-  const myReady = userId ? !!rushState?.readyVotes?.[userId] : false;
-  const oppReady = opponentId ? !!rushState?.readyVotes?.[opponentId] : false;
-
-  // Vote-disagreement banner: when both players picked DIFFERENT live
-  // games, the server resolved to the host's pick. Tell the viewer
-  // explicitly so they're not confused why the locked game isn't theirs.
-  const myVote = userId ? rushState?.gameVotes?.[userId] || null : null;
-  const oppVote = opponentId ? rushState?.gameVotes?.[opponentId] || null : null;
-  const selectedGame = rushState?.selectedGame || null;
-  const selectedGameId = selectedGame?.id != null ? String(selectedGame.id) : null;
-  const myVoteId = myVote?.gameId ? String(myVote.gameId) : null;
-  const oppVoteId = oppVote?.gameId ? String(oppVote.gameId) : null;
-  // Require selectedGameId so we never render "overruled" copy with a
-  // blank game label when the server hasn't yet locked a game.
-  const wasContested = !!(
-    myVote && oppVote && myVoteId && oppVoteId && selectedGameId && myVoteId !== oppVoteId
-  );
-  const myVoteOverruled = wasContested && myVoteId !== selectedGameId;
-  const selectedLabel = selectedGame
-    ? `${selectedGame.away_team || 'Away'} @ ${selectedGame.home_team || 'Home'}`
-    : '';
-
-  const rules = [
-    { icon: '🏀', label: '6 quick props', sub: 'sealed at the buzzer' },
-    { icon: '⏱️', label: '15s per question', sub: 'tap fast — clock runs hot' },
-    { icon: '🎯', label: 'Most correct wins', sub: 'tiebreak: fastest answers' },
-  ];
-
-  return (
-    <div className="relative">
-      <style>{`
-        @keyframes rrSlamIn {
-          0% { opacity: 0; transform: scale(0.7) translateY(20px); }
-          60% { opacity: 1; transform: scale(1.05) translateY(-2px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes rrRowIn {
-          0% { opacity: 0; transform: translateX(-12px); }
-          100% { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes rrBoltSwing {
-          0%, 100% { transform: rotate(-8deg) scale(1); }
-          50% { transform: rotate(8deg) scale(1.15); }
-        }
-        @keyframes rrReadyPulse {
-          0%, 100% { transform: scale(1); box-shadow: 0 4px 0 #0a0a0a, 0 0 22px rgba(16,185,129,0.45); }
-          50% { transform: scale(1.04); box-shadow: 0 4px 0 #0a0a0a, 0 0 32px rgba(16,185,129,0.7); }
-        }
-        @keyframes rrCheckPop {
-          0% { transform: scale(0); }
-          60% { transform: scale(1.25); }
-          100% { transform: scale(1); }
-        }
-        .rr-title { animation: rrSlamIn 360ms cubic-bezier(0.34,1.56,0.64,1) both; }
-        .rr-row { animation: rrRowIn 320ms cubic-bezier(0.22,1,0.36,1) both; }
-        .rr-row:nth-child(1) { animation-delay: 160ms; }
-        .rr-row:nth-child(2) { animation-delay: 240ms; }
-        .rr-row:nth-child(3) { animation-delay: 320ms; }
-        .rr-bolt { animation: rrBoltSwing 1.2s ease-in-out infinite; display: inline-block; }
-        .rr-ready-btn { animation: rrReadyPulse 1.4s ease-in-out infinite; }
-        .rr-check-pop { animation: rrCheckPop 320ms cubic-bezier(0.34,1.56,0.64,1) both; }
-        @media (prefers-reduced-motion: reduce) {
-          .rr-title, .rr-row, .rr-bolt, .rr-ready-btn, .rr-check-pop { animation: none !important; }
-        }
-      `}</style>
-
-      <div className="px-6 pt-6 pb-2 text-center">
-        <div className="rr-title inline-flex items-center gap-2 px-4 py-2 rounded-2xl"
-          style={{
-            background: `linear-gradient(180deg,#fbbf24,#d97706)`,
-            border: '2.5px solid #0a0a0a',
-            boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(251,191,36,0.45)',
-          }}
-        >
-          <span className="rr-bolt" aria-hidden="true" style={{ fontSize: 22 }}>⚡</span>
-          <h2 className="font-black uppercase" style={{ color: '#1a0a00', fontSize: 20, letterSpacing: '0.08em' }}>
-            How Rush Works
-          </h2>
-        </div>
-      </div>
-
-      {wasContested && (
-        <div className="px-5 pt-3 pb-0">
-          <div
-            className="w-full px-3 py-2.5 rounded-xl text-center"
-            style={{
-              background: myVoteOverruled
-                ? 'linear-gradient(180deg, rgba(251,146,60,0.18), rgba(251,146,60,0.06))'
-                : 'linear-gradient(180deg, rgba(59,130,246,0.18), rgba(59,130,246,0.06))',
-              border: `2.5px solid ${myVoteOverruled ? '#fb923c' : '#3b82f6'}`,
-              boxShadow: '0 4px 0 #0a0a0a',
-            }}
-          >
-            <div
-              className="text-[10px] font-black uppercase tracking-widest mb-0.5"
-              style={{ color: myVoteOverruled ? '#fb923c' : '#3b82f6' }}
-            >
-              {myVoteOverruled ? 'Your pick was overruled' : 'You won the tiebreak'}
-            </div>
-            <div className="text-[12px] font-bold text-white leading-snug">
-              {myVoteOverruled
-                ? <>You picked different games — host's pick wins. Going with <span className="text-orange-300">{selectedLabel}</span>.</>
-                : <>You picked different games — as host your pick wins. Going with <span className="text-blue-300">{selectedLabel}</span>.</>}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="px-5 pt-2 pb-3 space-y-2">
-        {rules.map((r, i) => (
-          <div
-            key={i}
-            className="rr-row flex items-center gap-3 p-2.5 rounded-2xl"
-            style={{
-              background: 'linear-gradient(180deg,#141414,#0a0a0a)',
-              border: '2.5px solid #0a0a0a',
-              boxShadow: '0 3px 0 #0a0a0a',
-            }}
-          >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{
-                background: 'linear-gradient(180deg,#0c1a35,#050a15)',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 2px 0 #0a0a0a',
-                fontSize: 20,
-              }}
-              aria-hidden="true"
-            >
-              {r.icon}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-white font-extrabold text-sm">{r.label}</div>
-              <div className="text-gray-500 text-[11px] mt-0.5">{r.sub}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Ready status + button */}
-      <div className="px-5 pb-5">
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          <ReadyBadge label="YOU" ready={myReady} color={SELF_COLOR} colorDeep={SELF_COLOR_DEEP} />
-          <ReadyBadge
-            label={(opponent?.username || 'OPP').toUpperCase()}
-            ready={oppReady}
-            color={OPP_COLOR}
-            colorDeep={OPP_COLOR_DEEP}
-          />
-        </div>
-
-        <button
-          type="button"
-          disabled={myReady || pendingReady}
-          onClick={onReady}
-          className={`w-full py-3.5 rounded-2xl font-black uppercase text-white transition-transform active:scale-95 ${
-            myReady || pendingReady ? '' : 'rr-ready-btn'
-          }`}
-          style={{
-            background: myReady
-              ? 'linear-gradient(180deg,#10b981,#047857)'
-              : 'linear-gradient(180deg,#10b981,#059669)',
-            border: '2.5px solid #0a0a0a',
-            boxShadow: '0 4px 0 #0a0a0a',
-            letterSpacing: '0.14em',
-            fontSize: 15,
-            opacity: pendingReady && !myReady ? 0.7 : 1,
-            cursor: myReady ? 'default' : pendingReady ? 'wait' : 'pointer',
-          }}
-        >
-          {myReady
-            ? oppReady
-              ? "Both ready — let's go!"
-              : 'Waiting for opponent…'
-            : pendingReady
-              ? 'Locking in…'
-              : "I'm Ready"}
-        </button>
-
-        {error && (
-          <div className="mt-2 text-[11px] text-red-300 text-center">{error}</div>
-        )}
-      </div>
-
-      <div className="px-5 pb-4 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-[10px] text-gray-500 hover:text-gray-300 underline underline-offset-2"
-        >
-          Open full match view
-        </button>
-        <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-amber-300 uppercase tracking-wider">
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }} />
-          Ready up to start
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ReadyBadge({ label, ready, color, colorDeep }) {
-  return (
-    <div
-      className="flex items-center gap-2 px-3 py-2 rounded-xl"
-      style={{
-        background: ready
-          ? `linear-gradient(180deg, ${color}33, ${colorDeep}33)`
-          : 'linear-gradient(180deg,#141414,#0a0a0a)',
-        border: ready ? `2.5px solid ${color}` : '2.5px solid #0a0a0a',
-        boxShadow: ready ? `0 3px 0 #0a0a0a, 0 0 14px ${color}55` : '0 3px 0 #0a0a0a',
-        transition: 'all 200ms ease',
-      }}
-    >
-      <div
-        className={ready ? 'rr-check-pop' : ''}
-        style={{
-          width: 22,
-          height: 22,
-          borderRadius: '50%',
-          background: ready ? color : 'rgba(255,255,255,0.06)',
-          border: ready ? '2px solid #0a0a0a' : '2px solid rgba(255,255,255,0.12)',
-          color: '#0a0a0a',
-          fontSize: 13,
-          fontWeight: 900,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-        aria-hidden="true"
-      >
-        {ready ? '✓' : ''}
-      </div>
-      <div className="min-w-0">
-        <div
-          className="font-black uppercase truncate"
-          style={{ color: ready ? color : 'rgba(229,231,235,0.7)', fontSize: 11, letterSpacing: '0.1em' }}
-        >
-          {label}
-        </div>
-        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: ready ? '#86efac' : 'rgba(156,163,175,0.7)' }}>
-          {ready ? 'Ready' : 'Waiting…'}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RushPlayingSlide({ rushState, userId, opponent, pickedAnswer, submittingAnswer, onAnswer, onOpenFullView }) {
-  const opponentId = opponent?.id;
-  const idx = rushState?.currentQuestionIndex ?? 0;
-  const total = rushState?.numQuestions || rushState?.questions?.length || 6;
-  const question = rushState?.questions?.[idx];
-  const questionDurationMs = rushState?.questionDurationMs || 15000;
-
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 100);
-    return () => clearInterval(t);
-  }, []);
-
-  const deadline = rushState?.questionDeadline ? new Date(rushState.questionDeadline).getTime() : null;
-  const remaining = deadline ? Math.max(0, deadline - now) : questionDurationMs;
-  const remainingPct = Math.max(0, Math.min(100, (remaining / questionDurationMs) * 100));
-  const remainingSec = Math.ceil(remaining / 1000);
-  const urgent = remaining < 5000;
-  const timeOut = remaining <= 0;
-
-  const myAnswers = rushState?.answers?.[userId] || {};
-  const oppAnswers = opponentId ? (rushState?.answers?.[opponentId] || {}) : {};
-  const myAnswerForCurrent = question ? myAnswers[question.id] : null;
-  const oppAnswerForCurrent = question ? oppAnswers[question.id] : null;
-
-  const myCorrectSoFar = useMemo(
-    () => Object.values(myAnswers).filter(a => a?.correct).length,
-    [myAnswers]
-  );
-  const oppCorrectSoFar = useMemo(
-    () => Object.values(oppAnswers).filter(a => a?.correct).length,
-    [oppAnswers]
-  );
-
-  const lockedKey = pickedAnswer?.questionId === question?.id
-    ? pickedAnswer.answerKey
-    : myAnswerForCurrent?.key;
-  const locked = !!myAnswerForCurrent || timeOut || submittingAnswer;
-
-  if (!question) {
-    return (
-      <div className="px-6 py-12 text-center text-gray-400 text-sm">Loading question…</div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <style>{`
-        @keyframes rpQuestionIn {
-          0% { opacity: 0; transform: translateY(8px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes rpOptionIn {
-          0% { opacity: 0; transform: translateX(-8px); }
-          100% { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes rpUrgentPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.06); }
-        }
-        .rp-question { animation: rpQuestionIn 280ms cubic-bezier(0.22,1,0.36,1) both; }
-        .rp-option { animation: rpOptionIn 240ms cubic-bezier(0.22,1,0.36,1) both; }
-        .rp-option:nth-child(1) { animation-delay: 60ms; }
-        .rp-option:nth-child(2) { animation-delay: 110ms; }
-        .rp-option:nth-child(3) { animation-delay: 160ms; }
-        .rp-option:nth-child(4) { animation-delay: 210ms; }
-        .rp-urgent { animation: rpUrgentPulse 0.6s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .rp-question, .rp-option, .rp-urgent { animation: none !important; }
-        }
-      `}</style>
-
-      {/* Header — progress dots + Q-of-N */}
-      <div className="px-5 pt-5 pb-3">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: total }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: 22,
-                  height: 6,
-                  borderRadius: 999,
-                  background: i < idx ? '#fb923c' : i === idx ? 'rgba(251,146,60,0.5)' : 'rgba(255,255,255,0.1)',
-                  border: i === idx ? '1px solid rgba(251,146,60,0.6)' : 'none',
-                  transition: 'background 150ms ease',
-                }}
-              />
-            ))}
-          </div>
-          <div className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
-            Q{idx + 1}/{total}
-          </div>
-        </div>
-
-        {/* Live score row */}
-        <div className="grid grid-cols-2 gap-2">
-          <ScoreChip label="YOU" correct={myCorrectSoFar} answered={!!myAnswerForCurrent} color={SELF_COLOR} />
-          <ScoreChip
-            label={(opponent?.username || 'OPP').toUpperCase()}
-            correct={oppCorrectSoFar}
-            answered={!!oppAnswerForCurrent}
-            color={OPP_COLOR}
-          />
-        </div>
-      </div>
-
-      {/* Question card */}
-      <div className="px-5 pb-3">
-        <div
-          key={question.id}
-          className="rp-question rounded-2xl p-4"
-          style={{
-            background: 'linear-gradient(180deg,#0c1a35,#050a15)',
-            border: '2.5px solid #0a0a0a',
-            boxShadow: '0 3px 0 #0a0a0a',
-          }}
-        >
-          {/* Timer row */}
-          <div className="flex items-center justify-between mb-3">
-            <div
-              className={`text-3xl font-black tabular-nums ${urgent ? 'rp-urgent' : ''}`}
-              style={{
-                color: urgent ? '#ef4444' : '#fb923c',
-                textShadow: urgent ? '0 0 12px rgba(239,68,68,0.6)' : '0 0 10px rgba(251,146,60,0.5)',
-              }}
-            >
-              {remainingSec}s
-            </div>
-            <div
-              className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-              style={{
-                background: 'rgba(251,191,36,0.15)',
-                color: '#fbbf24',
-                border: '1px solid rgba(251,191,36,0.35)',
-              }}
-            >
-              ⚡ Rush
-            </div>
-          </div>
-
-          {/* Timer bar */}
-          <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-            <div
-              style={{
-                width: `${remainingPct}%`,
-                height: '100%',
-                background: urgent
-                  ? 'linear-gradient(90deg,#ef4444,#f59e0b)'
-                  : 'linear-gradient(90deg,#fb923c,#facc15)',
-                transition: 'width 100ms linear',
-              }}
-            />
-          </div>
-
-          {/* Prompt */}
-          <div className="text-base md:text-lg font-extrabold text-white text-center mb-4 leading-snug">
-            {question.prompt}
-          </div>
-
-          {/* Options */}
-          <div className="space-y-2">
-            {question.options?.map((opt) => {
-              const isPicked = lockedKey === opt.key;
-              return (
-                <button
-                  key={opt.key}
-                  type="button"
-                  disabled={locked}
-                  onClick={() => onAnswer(question.id, opt.key)}
-                  className="rp-option w-full text-left px-4 py-3 rounded-xl font-extrabold transition-all"
-                  style={{
-                    background: isPicked
-                      ? `linear-gradient(180deg, ${SELF_COLOR}33, ${SELF_COLOR_DEEP}33)`
-                      : 'linear-gradient(180deg,#10203d,#0a1428)',
-                    border: isPicked ? `2.5px solid ${SELF_COLOR}` : '2.5px solid #0a0a0a',
-                    boxShadow: isPicked
-                      ? `0 3px 0 #0a0a0a, 0 0 14px ${SELF_COLOR}55`
-                      : '0 3px 0 #0a0a0a',
-                    color: isPicked ? '#dbeafe' : 'white',
-                    fontSize: 14,
-                    cursor: locked && !isPicked ? 'not-allowed' : locked ? 'default' : 'pointer',
-                    opacity: locked && !isPicked ? 0.55 : 1,
-                  }}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {!myAnswerForCurrent && timeOut && (
-            <div className="mt-3 text-center text-[11px] text-red-300 font-bold">
-              Time's up — moving on…
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="px-5 pb-4 text-center">
-        <button
-          type="button"
-          onClick={onOpenFullView}
-          className="text-[10px] text-gray-500 hover:text-gray-300 underline underline-offset-2"
-        >
-          Open full match view
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ScoreChip({ label, correct, answered, color }) {
-  return (
-    <div
-      className="flex items-center justify-between px-3 py-2 rounded-xl"
-      style={{
-        background: 'linear-gradient(180deg,#141414,#0a0a0a)',
-        border: '2.5px solid #0a0a0a',
-        boxShadow: '0 2px 0 #0a0a0a',
-      }}
-    >
-      <div className="min-w-0">
-        <div
-          className="font-black uppercase truncate"
-          style={{ color, fontSize: 10, letterSpacing: '0.1em' }}
-        >
-          {label}
-        </div>
-        <div className="text-[9px] font-bold uppercase tracking-wider text-gray-500">
-          {answered ? 'Locked in' : 'Picking…'}
-        </div>
-      </div>
-      <div className="text-xl font-black tabular-nums text-white">
-        {correct}
-      </div>
-    </div>
-  );
-}
-
-function RushCompletedSlide({ rushState, matchup, userId, opponent, onExit }) {
-  const opponentId = opponent?.id;
-  const myScore = rushState?.scores?.[userId] || { correct: 0, totalTimeMs: 0 };
-  const oppScore = (opponentId && rushState?.scores?.[opponentId]) || { correct: 0, totalTimeMs: 0 };
-  const winnerType = rushState?.winnerType;
-  const isWinner = rushState?.winnerUserId === userId;
-  const isTie = winnerType === 'tie';
-  const total = rushState?.numQuestions || rushState?.questions?.length || 6;
-  const winnerPayout = matchup?.winnerPayout ? parseFloat(matchup.winnerPayout) : 0;
-
-  const headline = isTie ? "It's a Tie" : isWinner ? 'You Won!' : 'You Lost';
-  const headlineColor = isTie ? '#06b6d4' : isWinner ? '#facc15' : '#ef4444';
-  const subline = isTie
-    ? 'Stake refunded to both players'
-    : isWinner
-      ? `+$${winnerPayout.toFixed(2)} to your bankroll`
-      : 'Better luck next round';
-
-  return (
-    <div className="relative">
-      <style>{`
-        @keyframes rcoSlam {
-          0% { opacity: 0; transform: scale(0.6) rotate(-6deg); }
-          60% { opacity: 1; transform: scale(1.1) rotate(2deg); }
-          100% { opacity: 1; transform: scale(1) rotate(0); }
-        }
-        @keyframes rcoCardIn {
-          0% { opacity: 0; transform: translateY(8px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .rco-headline { animation: rcoSlam 460ms cubic-bezier(0.34,1.56,0.64,1) both; }
-        .rco-card { animation: rcoCardIn 360ms cubic-bezier(0.22,1,0.36,1) both; }
-        .rco-card:nth-child(1) { animation-delay: 200ms; }
-        .rco-card:nth-child(2) { animation-delay: 280ms; }
-        @media (prefers-reduced-motion: reduce) {
-          .rco-headline, .rco-card { animation: none !important; }
-        }
-      `}</style>
-
-      <div className="px-6 pt-7 pb-3 text-center">
-        <div
-          className="rco-headline inline-block font-black"
-          style={{
-            color: headlineColor,
-            fontSize: 38,
-            letterSpacing: '0.02em',
-            textShadow: `0 4px 0 #0a0a0a, 0 0 28px ${headlineColor}88`,
-          }}
-        >
-          {headline}
-        </div>
-        <div className="mt-2 text-xs font-bold text-gray-300">{subline}</div>
-      </div>
-
-      <div className="px-5 pb-4 grid grid-cols-2 gap-2">
-        <div
-          className="rco-card rounded-2xl p-4 text-center"
-          style={{
-            background: `linear-gradient(180deg, ${SELF_COLOR}22, ${SELF_COLOR_DEEP}22)`,
-            border: `2.5px solid ${SELF_COLOR}`,
-            boxShadow: '0 3px 0 #0a0a0a',
-          }}
-        >
-          <div
-            className="text-[10px] font-black uppercase tracking-widest mb-1"
-            style={{ color: SELF_COLOR }}
-          >
-            You
-          </div>
-          <div className="text-3xl font-black text-white tabular-nums">
-            {myScore.correct}
-            <span className="text-sm text-gray-500">/{total}</span>
-          </div>
-          <div className="text-[10px] text-gray-500 mt-1">
-            {Math.round(myScore.totalTimeMs / 100) / 10}s total
-          </div>
-        </div>
-        <div
-          className="rco-card rounded-2xl p-4 text-center"
-          style={{
-            background: `linear-gradient(180deg, ${OPP_COLOR}22, ${OPP_COLOR_DEEP}22)`,
-            border: `2.5px solid ${OPP_COLOR}`,
-            boxShadow: '0 3px 0 #0a0a0a',
-          }}
-        >
-          <div
-            className="text-[10px] font-black uppercase tracking-widest mb-1 truncate"
-            style={{ color: OPP_COLOR }}
-          >
-            {opponent?.username || 'Opponent'}
-          </div>
-          <div className="text-3xl font-black text-white tabular-nums">
-            {oppScore.correct}
-            <span className="text-sm text-gray-500">/{total}</span>
-          </div>
-          <div className="text-[10px] text-gray-500 mt-1">
-            {Math.round(oppScore.totalTimeMs / 100) / 10}s total
-          </div>
-        </div>
-      </div>
-
-      <div className="px-5 pb-5">
-        <button
-          type="button"
-          onClick={onExit}
-          className="w-full py-3.5 rounded-2xl font-black uppercase text-white transition-transform active:scale-95"
-          style={{
-            background: 'linear-gradient(180deg,#fb923c,#c2410c)',
-            border: '2.5px solid #0a0a0a',
-            boxShadow: '0 4px 0 #0a0a0a, 0 0 22px rgba(251,146,60,0.4)',
-            letterSpacing: '0.14em',
-            fontSize: 14,
-          }}
-        >
-          Back to Battle
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function RushCountdownSlide({ num }) {
-  // num: 3, 2, 1, then 0 (rendered as "GO!"). Each tick is its own
-  // mount/unmount so the slam-in animation re-fires every second.
-  const isGo = num === 0;
-  const display = isGo ? 'GO!' : String(num);
-  const accent = isGo ? '#10b981' : num === 1 ? '#ef4444' : num === 2 ? '#fbbf24' : SELF_COLOR;
-
-  return (
-    <div className="relative">
-      <style>{`
-        @keyframes rcSlam {
-          0% { opacity: 0; transform: scale(0.2) rotate(-12deg); filter: blur(8px); }
-          50% { opacity: 1; transform: scale(1.25) rotate(6deg); filter: blur(0); }
-          80% { transform: scale(0.92) rotate(-3deg); }
-          100% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
-        }
-        @keyframes rcRing {
-          0% { opacity: 0.7; transform: scale(0.6); }
-          100% { opacity: 0; transform: scale(2.2); }
-        }
-        @keyframes rcGoFlash {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
-        .rc-num { animation: rcSlam 360ms cubic-bezier(0.34,1.56,0.64,1) both; }
-        .rc-ring { animation: rcRing 700ms ease-out both; }
-        .rc-go-glow { animation: rcGoFlash 0.5s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .rc-num, .rc-ring, .rc-go-glow { animation: none !important; }
-        }
-      `}</style>
-
-      <div className="py-12 px-6 flex flex-col items-center justify-center" style={{ minHeight: 320 }}>
-        <p className="text-[11px] text-gray-400 font-extrabold uppercase tracking-widest mb-6">
-          {isGo ? 'Lock in!' : 'Get ready'}
-        </p>
-        <div className="relative flex items-center justify-center" style={{ width: 220, height: 220 }}>
-          {/* Expanding ring on each tick */}
-          <div
-            key={`ring-${num}`}
-            className="rc-ring absolute inset-0 rounded-full"
-            style={{
-              border: `4px solid ${accent}`,
-              boxShadow: `0 0 32px ${accent}`,
-            }}
-            aria-hidden="true"
-          />
-          {/* Glow disc behind the digit */}
-          <div
-            className={isGo ? 'rc-go-glow absolute inset-6 rounded-full' : 'absolute inset-6 rounded-full'}
-            style={{
-              background: `radial-gradient(circle, ${accent}55 0%, transparent 70%)`,
-            }}
-            aria-hidden="true"
-          />
-          {/* Big slam digit */}
-          <div
-            key={`num-${num}`}
-            className="rc-num font-black tabular-nums select-none"
-            style={{
-              fontSize: isGo ? 84 : 132,
-              lineHeight: 1,
-              color: '#fff',
-              textShadow: `0 4px 0 #0a0a0a, 0 0 28px ${accent}, 0 0 60px ${accent}88`,
-              letterSpacing: isGo ? '0.04em' : 0,
-            }}
-          >
-            {display}
-          </div>
-        </div>
-        <p className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest mt-8">
-          {isGo ? 'Loading match…' : 'Rush · 6 props · 15s each'}
-        </p>
-      </div>
-    </div>
-  );
 }

@@ -1,1 +1,2 @@
 - [Gemini image generation](gemini-image-generation.md) — model is `gemini-2.5-flash-image` (not `-preview`); image output needs billing or returns 429.
+- [Rush state concurrency](rush-state-concurrency.md) — all `matchups.rushState` writes must go through `commitRushMutation` CAS (Neon HTTP has no txns); never bare-update the JSONB.
