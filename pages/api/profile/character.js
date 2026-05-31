@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { profiles } from '../../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, ne, or, sql } from 'drizzle-orm';
 import {
   hashAvatarSource,
   isGeneratableAvatar,
@@ -72,23 +72,36 @@ export default async function handler(req, res) {
     if (!canGenerate) return res.status(200).json({ status: 'none', url: null });
     if (isFresh) return res.status(200).json({ status: 'ready', url: profile.aiCharacterUrl });
 
-    // A generation already in flight for this same source — don't pile on.
-    const updatedAtMs = profile.updatedAt ? new Date(profile.updatedAt).getTime() : 0;
-    if (
-      profile.aiCharacterStatus === 'pending' &&
-      profile.aiCharacterSourceHash === currentHash &&
-      Date.now() - updatedAtMs < PENDING_GRACE_MS
-    ) {
-      return res.status(200).json({ status: 'pending', url: null });
-    }
-
+    // Atomically claim the generation lock. The conditional UPDATE only
+    // succeeds when there is NOT already a fresh in-flight generation for this
+    // same source hash, so two concurrent POSTs can never both call the model.
+    const graceCutoff = new Date(Date.now() - PENDING_GRACE_MS);
+    let claimed;
     try {
-      await db
+      claimed = await db
         .update(profiles)
         .set({ aiCharacterStatus: 'pending', aiCharacterSourceHash: currentHash, updatedAt: new Date() })
-        .where(eq(profiles.id, userId));
+        .where(
+          and(
+            eq(profiles.id, userId),
+            or(
+              ne(profiles.aiCharacterStatus, 'pending'),
+              isNull(profiles.aiCharacterStatus),
+              ne(profiles.aiCharacterSourceHash, currentHash),
+              isNull(profiles.aiCharacterSourceHash),
+              sql`${profiles.updatedAt} < ${graceCutoff}`,
+            ),
+          ),
+        )
+        .returning({ id: profiles.id });
     } catch (err) {
-      console.error('[profile/character] mark pending failed:', err);
+      console.error('[profile/character] claim lock failed:', err);
+      return res.status(200).json({ status: 'failed', url: null });
+    }
+
+    // Lost the race: another request is already generating for this same photo.
+    if (!claimed || claimed.length === 0) {
+      return res.status(200).json({ status: 'pending', url: null });
     }
 
     try {

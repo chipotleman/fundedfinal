@@ -1,0 +1,1 @@
+- [Gemini image generation](gemini-image-generation.md) — model is `gemini-2.5-flash-image` (not `-preview`); image output needs billing or returns 429.
