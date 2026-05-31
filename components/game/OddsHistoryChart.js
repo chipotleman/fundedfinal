@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getTeamColor, inkFor } from '../../utils/teamColors';
 
-// Kalshi-style live odds chart. Plots de-vigged implied win probability
-// for the home (blue) and away (orange) teams over time. Self-contained
+// Kalshi-style live odds chart. Plots de-vigged implied win probability for
+// the home and away teams over time. The away team draws in a theme-neutral
+// color (white on dark, near-black on light, via --team-neutral) and the home
+// team draws in its brand color, so only one team carries a hue. Self-contained
 // SVG — no chart-library dep. Cartoon shell (2.5px #0a0a0a border + 4px
 // hard shadow) matches the rest of the arcade theme.
 
@@ -13,8 +16,12 @@ const RANGES = [
   { key: 'ALL', label: 'ALL' },
 ];
 
-const AWAY_COLOR = '#fb923c';
-const HOME_COLOR = '#3b82f6';
+// Away team = neutral. The chart surface is always dark (#0d0d0d) regardless of
+// the page theme, so the away color is a fixed light value (not the themed
+// --team-neutral var, which would render dark-on-dark in light mode).
+const AWAY_COLOR = '#ffffff';
+// Ink for content placed on a neutral (white) chip/badge.
+const AWAY_INK = '#0a0a0a';
 const BORDER = '#0a0a0a';
 const SHADOW = '4px 4px 0 0 #0a0a0a';
 
@@ -48,7 +55,11 @@ function fmtTime(t, range) {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds, commenceTime, isLive, isFinal }) {
+export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, sport, liveOdds, commenceTime, isLive, isFinal }) {
+  // Home team draws in its brand color; fall back to the app blue when the
+  // team isn't in the color map. The away team is theme-neutral (AWAY_COLOR).
+  const HOME_COLOR = getTeamColor(homeTeam, sport) || '#3b82f6';
+  const HOME_INK = inkFor(HOME_COLOR);
   const [range, setRange] = useState('1H');
   const [data, setData] = useState({ points: [], openedAt: null, current: null });
   const [loading, setLoading] = useState(true);
@@ -361,7 +372,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   // horizontally. (Previously we used a fixed 800-wide viewBox with
   // preserveAspectRatio="none", which made labels and badges look
   // squished/elongated on wider screens.) Height is fixed.
-  const VB_H = 220;
+  const VB_H = 184;
   const VB_W = Math.max(320, Math.round(width));
   const PAD_L = 14;
   const PAD_R = 56;  // room for right-edge live labels
@@ -475,7 +486,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   );
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center text-center" style={{ height: 200 }}>
+    <div className="flex flex-col items-center justify-center text-center" style={{ height: 184 }}>
       <div className="text-3xl mb-1">📈</div>
       <div className="text-sm font-bold text-gray-300">Tracking odds…</div>
       <div className="text-xs text-gray-500 mt-1 max-w-[260px]">
@@ -497,7 +508,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
       {headerLabel}
 
       {loading && series.length === 0 ? (
-        <div className="flex items-center justify-center" style={{ height: 200 }}>
+        <div className="flex items-center justify-center" style={{ height: 184 }}>
           <div className="w-7 h-7 border-2 border-gray-700 border-t-emerald-400 rounded-full animate-spin" />
         </div>
       ) : series.length === 0 ? (
@@ -576,13 +587,13 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
             {last && last.awayImplied != null && (
               <g>
                 <rect x={PAD_L + plotW + 4} y={yOf(last.awayImplied) - 9} width="38" height="16" rx="4" fill={AWAY_COLOR} stroke="#0a0a0a" strokeWidth="1.5" />
-                <text x={PAD_L + plotW + 23} y={yOf(last.awayImplied) + 2} fontSize="10" fontWeight="800" fill="#0a0a0a" textAnchor="middle">{fmtPct(last.awayImplied)}</text>
+                <text x={PAD_L + plotW + 23} y={yOf(last.awayImplied) + 2} fontSize="10" fontWeight="800" fill={AWAY_INK} textAnchor="middle">{fmtPct(last.awayImplied)}</text>
               </g>
             )}
             {last && last.homeImplied != null && (
               <g>
                 <rect x={PAD_L + plotW + 4} y={yOf(last.homeImplied) - 9} width="38" height="16" rx="4" fill={HOME_COLOR} stroke="#0a0a0a" strokeWidth="1.5" />
-                <text x={PAD_L + plotW + 23} y={yOf(last.homeImplied) + 2} fontSize="10" fontWeight="800" fill="#0a0a0a" textAnchor="middle">{fmtPct(last.homeImplied)}</text>
+                <text x={PAD_L + plotW + 23} y={yOf(last.homeImplied) + 2} fontSize="10" fontWeight="800" fill={HOME_INK} textAnchor="middle">{fmtPct(last.homeImplied)}</text>
               </g>
             )}
 

@@ -1466,8 +1466,7 @@ export default function Dashboard() {
         renderCondensedSportPills={() => renderSportPills('condensed')}
       />
 
-      <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16 lg:flex lg:gap-8 lg:max-w-[1600px] lg:mx-auto">
-        <div className="lg:flex-1 lg:min-w-0">
+      <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16 lg:max-w-[1600px] lg:mx-auto">
         {/* Carousel→pills gap halved per user feedback: was
             `mb-2 sm:mb-4` + `py-2` (16px mobile / 24px sm+), now
             `mb-1 sm:mb-2` + `py-1` (8px mobile / 12px sm+).
@@ -1497,6 +1496,12 @@ export default function Dashboard() {
           {renderSportPills('inline')}
         </div>
 
+        {/* Two-column shell starts BELOW the full-width sport-pills band so the
+            pills span the entire content width (not just the main column) and
+            the Featured Battles / games column aligns top-level with the
+            right-rail cards instead of being pushed down by the pills. */}
+        <div className="lg:flex lg:gap-8">
+        <div className="lg:flex-1 lg:min-w-0">
         <LiveBattlesSection
           compact
           currentUserId={user?.id}
@@ -1964,6 +1969,7 @@ export default function Dashboard() {
         <aside className="hidden lg:block lg:w-[330px] lg:flex-shrink-0">
           <DesktopRightRail isLoggedIn={!!user} />
         </aside>
+        </div>
       </div>
 
       <Footer />

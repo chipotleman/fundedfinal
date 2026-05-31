@@ -7,6 +7,7 @@ import OddsHistoryChart from '../../components/game/OddsHistoryChart';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { leavePage } from '../../utils/leavePage';
 import TeamLogo from '../../components/TeamLogo';
+import { getTeamColor } from '../../utils/teamColors';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -328,7 +329,7 @@ export default function GameDetail() {
                     <TeamLogoBadge name={game.awayTeamFull || game.awayTeam} sport={game.sport} accent="orange" size={28} />
                     <span className="text-lg font-bold truncate text-white">{game.awayTeamFull || game.awayTeam}</span>
                   </div>
-                  <span className="text-2xl font-black tabular-nums" style={{ color: '#fb923c' }}>
+                  <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>
                     {isLive || isFinal ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0) : '—'}
                   </span>
                 </div>
@@ -337,7 +338,7 @@ export default function GameDetail() {
                     <TeamLogoBadge name={game.homeTeamFull || game.homeTeam} sport={game.sport} accent="blue" size={28} />
                     <span className="text-lg font-bold truncate text-white">{game.homeTeamFull || game.homeTeam}</span>
                   </div>
-                  <span className="text-2xl font-black tabular-nums" style={{ color: '#3b82f6' }}>
+                  <span className="text-2xl font-black tabular-nums" style={{ color: getTeamColor(game.homeTeamFull || game.homeTeam, game.sport) || '#3b82f6' }}>
                     {isLive || isFinal ? (possession?.homeScore ?? game.scores?.home?.total ?? game.homeScore ?? 0) : '—'}
                   </span>
                 </div>
@@ -380,6 +381,7 @@ export default function GameDetail() {
               gameId={game.id}
               homeTeam={game.homeTeam || game.homeTeamFull}
               awayTeam={game.awayTeam || game.awayTeamFull}
+              sport={game.sport}
               liveOdds={{ home: moneyline.home, away: moneyline.away }}
               commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
               isLive={isLive}
@@ -657,6 +659,8 @@ function DesktopGameDetail({
 }) {
   const awayName = game.awayTeamFull || game.awayTeam;
   const homeName = game.homeTeamFull || game.homeTeam;
+  // Home team carries its brand color; away team stays theme-neutral.
+  const homeColor = getTeamColor(homeName, game.sport) || '#3b82f6';
   const awayScore = isLive || isFinal
     ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0)
     : '—';
@@ -721,7 +725,7 @@ function DesktopGameDetail({
 
   return (
     <div className="hidden md:block">
-      <div className="max-w-[1400px] mx-auto px-6 xl:px-10 py-6">
+      <div className="max-w-[1400px] mx-auto px-6 xl:px-10 py-4">
         {/* Top breadcrumb / back */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -740,8 +744,8 @@ function DesktopGameDetail({
         </div>
 
         {/* Hero */}
-        <div className="bg-gradient-to-b from-[#0d0d0d] to-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 mb-6">
-          <div className="flex items-start justify-between mb-6">
+        <div className="bg-gradient-to-b from-[#0d0d0d] to-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-5 mb-4">
+          <div className="flex items-start justify-between mb-4">
             <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">
               {game.sportName || game.sport || 'Sports'}{game.season ? ` · ${game.season}` : ''}
             </div>
@@ -766,7 +770,7 @@ function DesktopGameDetail({
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
             {/* Away */}
             <div className="flex items-center gap-4">
-              <TeamLogoBadge name={awayName} sport={game.sport} accent="orange" size={64} />
+              <TeamLogoBadge name={awayName} sport={game.sport} accent="orange" size={52} />
               <div className="min-w-0">
                 <div className="text-xl font-black text-white truncate">{awayName}</div>
                 <div className="text-xs text-gray-500 font-semibold">{game.awayRecord || 'Away'}</div>
@@ -776,9 +780,9 @@ function DesktopGameDetail({
             {/* Center scoreboard */}
             <div className="text-center min-w-[260px]">
               <div className="flex items-center justify-center gap-5">
-                <div className="text-5xl xl:text-6xl font-black tabular-nums" style={{ color: '#fb923c' }}>{awayScore}</div>
+                <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>{awayScore}</div>
                 <div className="text-3xl font-bold text-gray-700">—</div>
-                <div className="text-5xl xl:text-6xl font-black tabular-nums" style={{ color: '#3b82f6' }}>{homeScore}</div>
+                <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: homeColor }}>{homeScore}</div>
               </div>
               <div className="mt-2 flex items-center justify-center gap-2">
                 {isFinal ? (
@@ -811,7 +815,7 @@ function DesktopGameDetail({
                 <div className="text-xl font-black text-white truncate">{homeName}</div>
                 <div className="text-xs text-gray-500 font-semibold">{game.homeRecord || 'Home'}</div>
               </div>
-              <TeamLogoBadge name={homeName} sport={game.sport} accent="blue" size={64} />
+              <TeamLogoBadge name={homeName} sport={game.sport} accent="blue" size={52} />
             </div>
           </div>
 
@@ -824,19 +828,19 @@ function DesktopGameDetail({
 
           {/* Quarter-by-quarter strip (only when data exists) */}
           {periodCount > 0 && (
-            <div className="mt-5 pt-4 border-t border-[#1a1a1a]">
+            <div className="mt-4 pt-3 border-t border-[#1a1a1a]">
               <div className="grid gap-2 text-xs" style={{ gridTemplateColumns: `120px repeat(${periodCount + 1}, minmax(0, 1fr))` }}>
                 <div />
                 {Array.from({ length: periodCount }).map((_, i) => (
                   <div key={i} className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-500">{periodLabel}{i + 1}</div>
                 ))}
                 <div className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-400">T</div>
-                <div className="text-sm font-bold truncate" style={{ color: '#fb923c' }}>{awayName}</div>
+                <div className="text-sm font-bold truncate" style={{ color: 'var(--team-neutral, #ffffff)' }}>{awayName}</div>
                 {Array.from({ length: periodCount }).map((_, i) => (
                   <div key={i} className="text-center text-sm font-bold text-gray-300 tabular-nums">{awayPeriods[i] ?? '—'}</div>
                 ))}
                 <div className="text-center text-sm font-black text-white tabular-nums">{awayScore}</div>
-                <div className="text-sm font-bold truncate" style={{ color: '#3b82f6' }}>{homeName}</div>
+                <div className="text-sm font-bold truncate" style={{ color: homeColor }}>{homeName}</div>
                 {Array.from({ length: periodCount }).map((_, i) => (
                   <div key={i} className="text-center text-sm font-bold text-gray-300 tabular-nums">{homePeriods[i] ?? '—'}</div>
                 ))}
@@ -848,14 +852,15 @@ function DesktopGameDetail({
 
         {/* Two-column shell — single column at md (sidebar collapses
             under the markets), two columns at lg+ with sticky sidebar. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
           {/* Main column */}
-          <div className="min-w-0 space-y-5">
+          <div className="min-w-0 space-y-4">
             {hasLines && (
               <OddsHistoryChart
                 gameId={game.id}
                 homeTeam={game.homeTeam || game.homeTeamFull}
                 awayTeam={game.awayTeam || game.awayTeamFull}
+                sport={game.sport}
                 liveOdds={{ home: moneyline.home, away: moneyline.away }}
                 commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
                 isLive={isLive}

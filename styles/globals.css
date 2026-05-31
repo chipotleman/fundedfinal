@@ -80,6 +80,12 @@ button:focus-within:not(.preserve-active-ring),
   --card-gradient: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-border: rgba(255, 255, 255, 0.12);
+  /* Neutral "away team" accent used on the game-detail page (scores + odds
+     chart). White on the default dark theme, near-black on light theme, so
+     only the home team carries a brand color. --team-neutral-ink is the
+     contrasting ink for content placed ON a neutral-colored chip/badge. */
+  --team-neutral: #ffffff;
+  --team-neutral-ink: #0a0a0a;
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -975,6 +981,10 @@ html.light {
 html.light body {
   background-color: #f5f1ea !important;
   color: #1f2937;
+}
+html.light {
+  --team-neutral: #0f172a;
+  --team-neutral-ink: #ffffff;
 }
 
 /* Override the fixed black canvas painted by `pages/_app.js` (the
