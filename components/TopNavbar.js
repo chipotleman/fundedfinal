@@ -15,6 +15,8 @@ import MessagesDropdown from './notifications/MessagesDropdown';
 import MessagePopup from './messages/MessagePopup';
 import { formatMoney } from '../utils/formatMoney';
 import haptic from '../utils/haptics';
+import DesktopGlobalSearch from './desktop/DesktopGlobalSearch';
+import DesktopNavDropdown from './desktop/DesktopNavDropdown';
 
 export default function TopNavbar({
   betSlipCount,
@@ -653,66 +655,17 @@ export default function TopNavbar({
               </a>
             </div>
 
-            {/* Desktop Navigation - Show different links based on auth status.
-                The route currently being viewed gets an active treatment: bright
-                white text, bold weight, and a thick blue (#3b82f6) underline
-                accent so it's obvious at a glance which page you're on. */}
-            <div className="hidden lg:flex items-center space-x-8">
-              {(() => {
-                const currentPath = router.pathname || '';
-                const isActive = (href) => {
-                  // The Battle link points at `/dashboard`, but that route is a
-                  // permanent redirect to `/` (home). Treat home as Battle's
-                  // landing page so the active treatment actually shows up
-                  // when the user lands there. Other links keep the plain
-                  // path-prefix check so they don't accidentally light up on
-                  // home too.
-                  if (href === '/dashboard') {
-                    return currentPath === '/dashboard' || currentPath === '/';
-                  }
-                  return currentPath === href || currentPath.startsWith(`${href}/`);
-                };
-                const renderNavLink = (href, label) => {
-                  const active = isActive(href);
-                  return (
-                    <Link
-                      href={href}
-                      aria-current={active ? 'page' : undefined}
-                      className={`relative font-${active ? 'bold' : 'light'} text-sm uppercase tracking-wider transition-all duration-300 lg:hover:scale-105 lg:hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] py-1`}
-                      style={{ color: active ? '#ffffff' : '#d1d5db' }}
-                    >
-                      {label}
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          bottom: -6,
-                          height: 3,
-                          borderRadius: 2,
-                          background: active ? '#3b82f6' : 'transparent',
-                          boxShadow: active ? '0 0 8px rgba(59,130,246,0.7)' : 'none',
-                          transition: 'background 200ms ease',
-                        }}
-                      />
-                    </Link>
-                  );
-                };
-                return isLoggedIn ? (
-                  <>
-                    {renderNavLink('/dashboard', 'Battle')}
-                    {renderNavLink('/my-picks', 'My Picks')}
-                    {renderNavLink('/battle', 'Social')}
-                    {renderNavLink('/leaderboard', 'Leaderboard')}
-                  </>
-                ) : (
-                  <>
-                    {renderNavLink('/battle', 'Social')}
-                    {renderNavLink('/leaderboard', 'Leaderboard')}
-                  </>
-                );
-              })()}
+            {/* Desktop top-bar tools (lg+ only) — Polymarket-style: a compact
+                "tucked away" navigation dropdown next to a prominent centered
+                global search. The primary nav links now live inside the
+                dropdown instead of being spread across the bar. This whole
+                cluster is `hidden lg:flex`, so the mobile/tablet hamburger
+                experience below is completely unaffected. */}
+            <div className="hidden lg:flex items-center gap-3 flex-1 min-w-0 mx-6">
+              <DesktopNavDropdown isLoggedIn={isLoggedIn} />
+              <div className="flex-1 min-w-0 flex justify-center">
+                <DesktopGlobalSearch />
+              </div>
             </div>
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
