@@ -202,6 +202,10 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
+  // Real-player avatars that orbit the user's avatar on the "Finding
+  // Opponent" screen — pulled from recent battles so the search field
+  // shows actual people in the pool, not anonymous dots.
+  const [orbiterPlayers, setOrbiterPlayers] = useState([]);
   // Beta mode: force every match to ORIGINAL with no real-money buy-in.
   // The visual chooser still renders, but RUSH / TOURNAMENT are faded
   // and uninteractive, the buy-in row is hidden, and a beta notice is
@@ -213,6 +217,28 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
       setBuyIn(0);
     }
   }, [isBeta]);
+  // Populate the orbiting-avatars pool the moment we enter the search.
+  useEffect(() => {
+    if (step !== 'searching') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/battles/recent?limit=10');
+        if (!res.ok) return;
+        const data = await res.json();
+        const map = new Map();
+        (data.battles || []).forEach((b) => {
+          [b.winner, b.loser].forEach((p) => {
+            if (p && p.id != null && !map.has(p.id)) {
+              map.set(p.id, { id: p.id, name: p.username, avatar: p.avatar || null });
+            }
+          });
+        });
+        if (!cancelled) setOrbiterPlayers(Array.from(map.values()).slice(0, 6));
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+  }, [step]);
   // Rush requires a live game — lock the chip when none are available.
   // We deliberately do NOT auto-downgrade rush → original here: doing so
   // silently turned a user's intended Rush match into a 24-hour Original
@@ -991,27 +1017,16 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
         <div
           className={`qm-frame w-full overflow-hidden relative max-w-md`}
           style={{
-            background: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
-            border: '2.5px solid #0a0a0a',
-            borderRadius: 22,
-            boxShadow:
-              '0 4px 0 #0a0a0a, 0 10px 60px rgba(0,0,0,0.7), 0 0 90px rgba(6,182,212,0.25), inset 0 0 0 1.5px rgba(6,182,212,0.55), inset 0 0 30px rgba(6,182,212,0.08)',
+            background:
+              'radial-gradient(ellipse 90% 55% at 50% 0%, rgba(59,130,246,0.12), transparent 60%),' +
+              'radial-gradient(ellipse 90% 55% at 50% 100%, rgba(251,146,60,0.07), transparent 60%),' +
+              'linear-gradient(180deg, #0b1020 0%, #070a14 100%)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 24,
+            boxShadow: '0 30px 90px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03)',
           }}
           onClick={e => e.stopPropagation()}
         >
-          {/* Cyan corner brackets — give the modal a "gaming HUD" frame. */}
-          {['tl','tr','bl','br'].map(pos => {
-            const base = { position: 'absolute', width: 22, height: 22, pointerEvents: 'none', zIndex: 3 };
-            const stroke = '2.5px solid #06b6d4';
-            const glow = { filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.8))' };
-            const map = {
-              tl: { top: 8, left: 8, borderTop: stroke, borderLeft: stroke, borderTopLeftRadius: 8 },
-              tr: { top: 8, right: 8, borderTop: stroke, borderRight: stroke, borderTopRightRadius: 8 },
-              bl: { bottom: 8, left: 8, borderBottom: stroke, borderLeft: stroke, borderBottomLeftRadius: 8 },
-              br: { bottom: 8, right: 8, borderBottom: stroke, borderRight: stroke, borderBottomRightRadius: 8 },
-            };
-            return <span key={pos} aria-hidden="true" style={{ ...base, ...map[pos], ...glow }} />;
-          })}
           {step === 'config' && (
             <>
               {/* Header — mirrors PlayFriendModal exactly so the two
@@ -1024,61 +1039,42 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 <button
                   aria-label="Close"
                   onClick={onClose}
-                  className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center absolute"
-                  style={{ top: 18, right: 18, backgroundColor: '#0a0f1c', border: '2px solid #06b6d4', boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(6,182,212,0.6)', zIndex: 5 }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center absolute transition-colors hover:bg-white/10"
+                  style={{ top: 16, right: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', zIndex: 5 }}
                 >
-                  <svg className="w-4 h-4" style={{ color: '#7dd3fc' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                  <svg className="w-4 h-4" style={{ color: '#cbd5e1' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
                 <button
                   aria-label="Back"
                   onClick={onBack || onClose}
-                  className="msg-cartoon-btn w-9 h-9 rounded-full flex items-center justify-center absolute"
-                  style={{ top: 18, left: 18, backgroundColor: '#0a0f1c', border: '2px solid #06b6d4', boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(6,182,212,0.6)', zIndex: 5 }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center absolute transition-colors hover:bg-white/10"
+                  style={{ top: 16, left: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', zIndex: 5 }}
                 >
-                  <svg className="w-4 h-4" style={{ color: '#7dd3fc' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+                  <svg className="w-4 h-4" style={{ color: '#cbd5e1' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
                 </button>
-                {/* Centered hero title — full-width "QUICK MATCH" with
-                    decorative lightning bolts flanking it on both sides.
-                    Padded horizontally so the title never slides under
-                    the back / close HUD buttons. */}
-                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 mt-1 px-12 sm:px-14">
-                  <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
+                {/* Centered premium title — clean italic wordmark with a
+                    muted brand-blue eyebrow, matching the Finding /
+                    Confirmed screens (no HUD strokes or hard shadows). */}
+                <div className="text-center px-12 sm:px-14 mt-1 mb-3">
                   <h2
                     id="qm-title"
-                    className="font-black uppercase text-center"
+                    className="font-black italic uppercase leading-[0.95]"
                     style={{
-                      fontSize: 'clamp(28px, 8vw, 44px)',
-                      lineHeight: 0.92,
+                      fontSize: 'clamp(28px, 8vw, 42px)',
                       letterSpacing: '0.01em',
-                      fontStyle: 'italic',
-                      WebkitTextStroke: '1.5px #0a0a0a',
-                      textShadow: '0 3px 0 #0a0a0a, 0 0 38px rgba(6,182,212,0.75), 0 0 18px rgba(255,255,255,0.45)',
-                      background: 'linear-gradient(180deg, #ffffff 0%, #94a3b8 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      whiteSpace: 'nowrap',
+                      color: '#fff',
+                      textShadow: '0 0 28px rgba(59,130,246,0.45)',
                       margin: 0,
                     }}
                   >
                     Quick Match
                   </h2>
-                  <span aria-hidden="true" style={{ fontSize: 24, lineHeight: 1, color: '#facc15', filter: 'drop-shadow(0 2px 0 #0a0a0a)' }}>⚡</span>
-                </div>
-                <div className="flex items-center gap-2 mb-4">
-                  <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
                   <p
-                    className="font-black uppercase whitespace-nowrap text-center"
-                    style={{
-                      color: '#7dd3fc',
-                      fontSize: '11px',
-                      letterSpacing: '0.22em',
-                      textShadow: '0 0 10px rgba(6,182,212,0.7)',
-                      margin: 0,
-                    }}
+                    className="mt-2 font-bold uppercase"
+                    style={{ color: '#93c5fd', fontSize: 11, letterSpacing: '0.22em', margin: 0 }}
                   >
                     Instant Matchmaking · Real Competition
                   </p>
-                  <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
                 </div>
               </div>
 
@@ -1088,8 +1084,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     className="rounded-2xl px-3 py-2.5 text-xs leading-snug"
                     style={{
                       background: 'linear-gradient(180deg, rgba(248,113,113,0.16), rgba(248,113,113,0.06))',
-                      border: '2.5px solid #0a0a0a',
-                      boxShadow: '0 4px 0 #0a0a0a',
+                      border: '1px solid rgba(248,113,113,0.4)',
                       color: '#fecaca',
                     }}
                   >
@@ -1114,9 +1109,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     <div
                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
                       style={{
-                        background: 'linear-gradient(180deg, rgba(16,185,129,0.22), rgba(16,185,129,0.08))',
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a, 0 0 18px rgba(16,185,129,0.35)',
+                        background: 'rgba(16,185,129,0.12)',
+                        border: '1px solid rgba(16,185,129,0.4)',
                       }}
                     >
                       <span className="text-sm leading-none" aria-hidden="true">🛡️</span>
@@ -1141,21 +1135,19 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                         <button
                           key={amount}
                           onClick={() => setBuyIn(amount)}
-                          className="msg-cartoon-btn py-2 rounded-xl text-sm font-extrabold"
+                          className="py-2 rounded-xl text-sm font-extrabold transition-transform active:scale-[0.98]"
                           style={
                             selected
                               ? {
-                                  background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                                  background: 'linear-gradient(180deg,#60a5fa,#2563eb)',
                                   color: '#fff',
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.45)',
-                                  textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                                  border: '1px solid rgba(0,0,0,0.15)',
+                                  boxShadow: '0 6px 18px rgba(59,130,246,0.4)',
                                 }
                               : {
-                                  backgroundColor: '#111',
+                                  background: 'rgba(255,255,255,0.05)',
                                   color: '#9ca3af',
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: '0 3px 0 #0a0a0a',
+                                  border: '1px solid rgba(255,255,255,0.10)',
                                 }
                           }
                         >
@@ -1183,7 +1175,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                         textShadow: '0 0 10px rgba(59,130,246,0.4)',
                       }}
                     >
-                      ◆ Choose Your Game Mode ◆
+                      Choose Your Game Mode
                     </span>
                     <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'linear-gradient(270deg, transparent, rgba(96,165,250,0.45))' }} />
                   </div>
@@ -1208,29 +1200,29 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           aria-disabled={locked || undefined}
                           aria-pressed={selected}
                           title={betaLocked ? 'Available after the public beta — Original is the only mode during beta.' : (locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined)}
-                          className={`msg-cartoon-btn flex flex-col items-center text-center px-1.5 pt-6 rounded-2xl relative overflow-hidden ${betaLocked ? 'pb-7' : 'pb-2.5'}`}
+                          className={`flex flex-col items-center text-center px-1.5 pt-6 rounded-2xl relative overflow-hidden transition-transform active:scale-[0.98] ${betaLocked ? 'pb-7' : 'pb-2.5'}`}
                           style={
                             betaLocked
                               ? {
                                   background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.06) 100%), #0a0a0a`,
-                                  border: `2.5px solid ${mode.color}`,
-                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 18px ${glow}`,
+                                  border: `1px solid ${mode.color}55`,
+                                  boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 16px ${glow}`,
                                   cursor: 'not-allowed',
                                   minHeight: 132,
                                 }
                               : selected
                               ? {
                                   background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.08) 100%), #0a0a0a`,
-                                  border: `2.5px solid ${mode.color}`,
-                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 26px ${glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
+                                  border: `1.5px solid ${mode.color}`,
+                                  boxShadow: `0 8px 24px ${glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
                                   opacity: locked ? 0.5 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
                                 }
                               : {
                                   background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), #0a0a0a`,
-                                  border: `2.5px solid ${mode.color}`,
-                                  boxShadow: `0 4px 0 #0a0a0a, 0 0 18px ${glow}`,
+                                  border: `1px solid ${mode.color}55`,
+                                  boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 16px ${glow}`,
                                   opacity: locked ? 0.5 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
@@ -1269,7 +1261,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                   letterSpacing: '0.18em',
                                   color: '#0a0a0a',
                                   background: 'linear-gradient(180deg,#fde047,#facc15)',
-                                  borderTop: '2px solid #0a0a0a',
+                                  borderTop: '1px solid rgba(0,0,0,0.25)',
                                   padding: '4px 4px 5px',
                                   lineHeight: 1,
                                   zIndex: 4,
@@ -1295,8 +1287,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               style={{
                                 top: 6,
                                 background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                                border: '2px solid #0a0a0a',
-                                boxShadow: '0 2px 0 #0a0a0a',
+                                border: '1px solid rgba(0,0,0,0.2)',
+                                boxShadow: '0 4px 12px rgba(59,130,246,0.4)',
                                 zIndex: 2,
                               }}
                             >
@@ -1309,8 +1301,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               style={{
                                 top: 6,
                                 background: 'linear-gradient(180deg,#f59e0b,#d97706)',
-                                border: '2px solid #0a0a0a',
-                                boxShadow: '0 2px 0 #0a0a0a',
+                                border: '1px solid rgba(0,0,0,0.2)',
+                                boxShadow: '0 4px 12px rgba(245,158,11,0.4)',
                                 zIndex: 2,
                               }}
                               aria-hidden="true"
@@ -1338,8 +1330,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               style={{
                                 top: 6,
                                 background: 'linear-gradient(180deg,#374151,#1f2937)',
-                                border: '2px solid #0a0a0a',
-                                boxShadow: '0 2px 0 #0a0a0a',
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
                                 zIndex: 2,
                               }}
                               aria-hidden="true"
@@ -1359,96 +1351,16 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                               opacity: betaLocked ? 0.55 : 0.9,
                             }}
                           />
-                          {/* Mode-specific themed backdrop. Each tile gets
-                              its own decorative pattern so RUSH feels like
-                              electric speed, ORIGINAL like a balanced
-                              trophy stage, and TOURNAMENT like a royal
-                              crown arena. */}
-                          {mode.id === 'rush' && (
-                            <span
-                              aria-hidden="true"
-                              className="absolute inset-0 pointer-events-none overflow-hidden"
-                              style={{ borderRadius: 'inherit', opacity: betaLocked ? 0.3 : 0.9 }}
-                            >
-                              <span
-                                className="absolute inset-0"
-                                style={{
-                                  background:
-                                    'repeating-linear-gradient(115deg, rgba(16,185,129,0.18) 0 6px, transparent 6px 16px)',
-                                }}
-                              />
-                              <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>⚡</span>
-                              <span style={{ position: 'absolute', bottom: 30, right: 6, fontSize: 14, opacity: 0.5, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)', transform: 'rotate(18deg)' }}>⚡</span>
-                            </span>
-                          )}
-                          {mode.id === 'original' && (
-                            <span
-                              aria-hidden="true"
-                              className="absolute inset-0 pointer-events-none overflow-hidden"
-                              style={{ borderRadius: 'inherit', opacity: betaLocked ? 0.3 : 0.85 }}
-                            >
-                              <span
-                                className="absolute inset-0"
-                                style={{
-                                  background:
-                                    'radial-gradient(ellipse at 50% 100%, rgba(250,204,21,0.22) 0%, transparent 55%)',
-                                }}
-                              />
-                              <span
-                                className="absolute"
-                                style={{
-                                  top: 14, left: '50%', transform: 'translateX(-50%)',
-                                  width: 56, height: 26, borderRadius: '50%',
-                                  background: 'radial-gradient(ellipse, rgba(250,204,21,0.45), transparent 70%)',
-                                  filter: 'blur(2px)',
-                                }}
-                              />
-                              <span style={{ position: 'absolute', top: 10, left: 8, fontSize: 9, color: '#facc15', opacity: 0.7 }}>★</span>
-                              <span style={{ position: 'absolute', top: 10, right: 8, fontSize: 9, color: '#facc15', opacity: 0.7 }}>★</span>
-                            </span>
-                          )}
-                          {mode.id === 'tournament' && (
-                            <span
-                              aria-hidden="true"
-                              className="absolute inset-0 pointer-events-none overflow-hidden"
-                              style={{ borderRadius: 'inherit', opacity: betaLocked ? 0.3 : 0.9 }}
-                            >
-                              <span
-                                className="absolute inset-0"
-                                style={{
-                                  background:
-                                    'repeating-linear-gradient(180deg, rgba(249,115,22,0.14) 0 3px, transparent 3px 9px)',
-                                }}
-                              />
-                              <span
-                                className="absolute"
-                                style={{
-                                  inset: 0,
-                                  background:
-                                    'radial-gradient(circle at 50% 28%, rgba(250,204,21,0.35) 0%, transparent 45%)',
-                                }}
-                              />
-                              <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
-                              <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
-                              <span style={{ position: 'absolute', bottom: 28, left: 8, fontSize: 9, color: '#fb923c', opacity: 0.7 }}>♛</span>
-                              <span style={{ position: 'absolute', bottom: 28, right: 8, fontSize: 9, color: '#fb923c', opacity: 0.7 }}>♛</span>
-                            </span>
-                          )}
                           <span
                             className="leading-none mb-2 relative"
                             style={{
                               fontSize: 38,
-                              filter: `drop-shadow(0 0 14px ${glow}) drop-shadow(0 2px 0 #000)`,
-                              animation: mode.id === 'rush'
-                                ? 'qm-bolt-flicker 1.4s ease-in-out infinite'
-                                : mode.id === 'tournament'
-                                ? 'qm-banner-bounce 0.9s cubic-bezier(0.34,1.56,0.64,1)'
-                                : undefined,
+                              filter: `drop-shadow(0 0 14px ${glow})`,
                             }}
                           >
                             {mode.icon}
                           </span>
-                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.label}</span>
+                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: '#fff' }}>{mode.label}</span>
                           {mode.tagline && (
                             <span
                               className="text-[8px] font-extrabold uppercase mt-1 leading-none relative"
@@ -1470,9 +1382,9 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                 bottom: -10,
                                 width: 22,
                                 height: 22,
-                                background: 'linear-gradient(180deg,#06b6d4,#0891b2)',
-                                border: '2.5px solid #0a0a0a',
-                                boxShadow: '0 2px 0 #0a0a0a, 0 0 14px rgba(6,182,212,0.9)',
+                                background: 'linear-gradient(180deg,#60a5fa,#2563eb)',
+                                border: '2px solid #0b1020',
+                                boxShadow: '0 4px 12px rgba(59,130,246,0.6)',
                                 zIndex: 3,
                               }}
                             >
@@ -1488,8 +1400,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                       className="mt-2 rounded-2xl px-3 py-2.5 text-[11px] leading-snug flex items-start gap-2"
                       style={{
                         background: 'linear-gradient(180deg, rgba(245,158,11,0.16), rgba(245,158,11,0.05))',
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a',
+                        border: '1px solid rgba(245,158,11,0.4)',
                         color: '#fde68a',
                       }}
                       aria-live="polite"
@@ -1523,66 +1434,25 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
 
                 <button
                   onClick={startSearch}
-                  className="msg-cartoon-btn w-full text-white font-black uppercase rounded-2xl flex flex-col items-stretch justify-center relative overflow-hidden p-0"
+                  className="w-full text-white font-extrabold uppercase rounded-2xl flex flex-col items-center justify-center relative overflow-hidden transition-transform active:scale-[0.98]"
                   style={{
-                    background: 'linear-gradient(180deg,#3b82f6 0%,#1d4ed8 100%)',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 5px 0 #0a0a0a, 0 0 32px rgba(6,182,212,0.55), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
-                    textShadow: '0 1px 0 rgba(0,0,0,0.4)',
+                    background: 'linear-gradient(180deg,#60a5fa,#2563eb)',
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    boxShadow: '0 10px 30px rgba(59,130,246,0.45)',
+                    padding: '14px 20px 11px',
                   }}
                 >
-                  <span className="flex items-center justify-between gap-2 px-3 pt-3 pb-2.5">
-                    <span
-                      aria-hidden="true"
-                      className="qm-cta-chev inline-flex items-center justify-center rounded-full flex-shrink-0"
-                      style={{
-                        width: 30,
-                        height: 30,
-                        background: 'linear-gradient(180deg,#0e1b3a,#050a18)',
-                        border: '2px solid #06b6d4',
-                        boxShadow: '0 0 12px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)',
-                        color: '#7dd3fc',
-                        fontSize: 15,
-                      }}
-                    >»</span>
-                    <span style={{ fontSize: 19, letterSpacing: '0.06em' }}>Find Opponent</span>
-                    <span
-                      aria-hidden="true"
-                      className="qm-cta-chev inline-flex items-center justify-center rounded-full flex-shrink-0"
-                      style={{
-                        width: 30,
-                        height: 30,
-                        background: 'linear-gradient(180deg,#0e1b3a,#050a18)',
-                        border: '2px solid #06b6d4',
-                        boxShadow: '0 0 12px rgba(6,182,212,0.7), inset 0 0 6px rgba(6,182,212,0.3)',
-                        color: '#7dd3fc',
-                        fontSize: 15,
-                      }}
-                    >«</span>
+                  <span className="inline-flex items-center gap-2" style={{ fontSize: 17, letterSpacing: '0.04em' }}>
+                    Find Opponent
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                   </span>
                   <span
-                    className="block text-center"
-                    style={{
-                      background: 'linear-gradient(180deg,#050a18,#020611)',
-                      borderTop: '1.5px solid rgba(6,182,212,0.35)',
-                      padding: '6px 0 7px',
-                      fontSize: 10,
-                      letterSpacing: '0.32em',
-                      color: '#7dd3fc',
-                      textShadow: '0 0 8px rgba(6,182,212,0.6)',
-                    }}
+                    className="mt-1 font-bold uppercase"
+                    style={{ fontSize: 9.5, letterSpacing: '0.32em', color: 'rgba(255,255,255,0.78)' }}
                   >
                     Play Now · Win Big
                   </span>
                 </button>
-                <style jsx>{`
-                  @keyframes qmCtaChev {
-                    0%, 100% { transform: translateX(0); opacity: 0.9; }
-                    50% { transform: translateX(3px); opacity: 1; }
-                  }
-                  .qm-cta-chev:first-child { animation: qmCtaChev 1.2s ease-in-out infinite; }
-                  .qm-cta-chev:last-child { animation: qmCtaChev 1.2s ease-in-out infinite reverse; }
-                `}</style>
               </div>
             </>
           )}
@@ -1590,6 +1460,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
           {step === 'searching' && (
             <FindingOpponent
               you={{ id: userProfile?.id, name: userName, avatar: userAvatar, battleWins: userProfile?.battleWins }}
+              others={orbiterPlayers}
               balance={isBeta ? (Number(buyIn) || 10000) : (Number(buyIn) || 0)}
               onCancel={cancelSearch}
             />

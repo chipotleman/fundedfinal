@@ -219,8 +219,16 @@ export function FlowButton({ children, onClick, color = 'gold', trailing, disabl
 /* ─────────────────────────── screens ─────────────────────────── */
 
 // 1 · FINDING OPPONENT
-export function FindingOpponent({ you, balance, balanceLabel, onCancel, subtitle = 'Scanning thousands of players…' }) {
-  const orbiters = [BLUE, GREEN, ORANGE, '#a3a3a3', GOLD];
+export function FindingOpponent({ you, others = [], balance, balanceLabel, onCancel, subtitle = 'Scanning thousands of players…' }) {
+  const ringColors = [BLUE, GREEN, ORANGE, GOLD, '#22d3ee', '#a3a3a3'];
+  // Build up to 6 orbiting challengers from the live player pool. If the
+  // pool is short, cycle through whoever we have so the orbit always reads
+  // as a busy field of real players. With no pool yet, fall back to empty
+  // colored rings so the animation still feels alive on first paint.
+  const SLOTS = 6;
+  const pool = Array.isArray(others) ? others.filter(Boolean) : [];
+  const hasPool = pool.length > 0;
+  const orbiters = Array.from({ length: SLOTS }).map((_, i) => (hasPool ? pool[i % pool.length] : null));
   return (
     <FlowCard balance={balance} balanceLabel={balanceLabel}>
       <div className="px-6 pt-6 pb-7 text-center">
@@ -231,40 +239,48 @@ export function FindingOpponent({ you, balance, balanceLabel, onCancel, subtitle
         </h2>
         <p className="mt-2 text-[12px]" style={{ color: '#94a3b8' }}>{subtitle}</p>
 
-        {/* Orbit field — central Piks mark with revolving challenger dots */}
-        <div className="relative mx-auto my-7" style={{ width: 200, height: 200 }}>
+        {/* Orbit field — YOUR avatar at the center, real players revolving
+            around it (their faces kept upright via counter-rotation). */}
+        <div className="relative mx-auto my-7" style={{ width: 224, height: 224 }}>
           <span aria-hidden="true" className="absolute inset-0 rounded-full" style={{ border: '1px solid rgba(255,255,255,0.08)' }} />
-          <span aria-hidden="true" className="absolute rounded-full" style={{ inset: 28, border: '1px solid rgba(255,255,255,0.06)' }} />
+          <span aria-hidden="true" className="absolute rounded-full" style={{ inset: 32, border: '1px solid rgba(255,255,255,0.06)' }} />
+          <span aria-hidden="true" className="absolute inset-0 rounded-full mf-spin" style={{ border: '2px solid transparent', borderTopColor: BLUE, opacity: 0.45 }} />
           <div className="absolute inset-0 mf-spin">
-            {orbiters.map((c, i) => {
-              const angle = (i / orbiters.length) * Math.PI * 2;
-              const r = i % 2 === 0 ? 96 : 70;
-              const x = 100 + Math.cos(angle) * r - 16;
-              const y = 100 + Math.sin(angle) * r - 16;
+            {orbiters.map((p, i) => {
+              const c = ringColors[i % ringColors.length];
+              const angle = (i / SLOTS) * Math.PI * 2;
+              const r = i % 2 === 0 ? 104 : 78;
+              const size = 42;
+              const x = 112 + Math.cos(angle) * r - size / 2;
+              const y = 112 + Math.sin(angle) * r - size / 2;
               return (
-                <span
+                <div
                   key={i}
-                  className="absolute rounded-full mf-spin-rev"
+                  className="absolute rounded-full overflow-hidden mf-spin-rev"
                   style={{
-                    left: x, top: y, width: 32, height: 32,
+                    left: x, top: y, width: size, height: size,
                     background: '#0b1020',
                     border: `2px solid ${c}`,
                     boxShadow: `0 0 10px ${c}99`,
                   }}
-                />
+                >
+                  {p && (
+                    <UserAvatar user={{ id: p.id, username: p.name || p.username, avatar: p.avatar }} size={size} />
+                  )}
+                </div>
               );
             })}
           </div>
           <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full flex items-center justify-center mf-pulse"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden mf-pulse"
             style={{
-              width: 64, height: 64,
-              background: 'linear-gradient(180deg,#1d4ed8,#1e3a8a)',
-              border: '2px solid rgba(255,255,255,0.15)',
-              boxShadow: `0 0 24px ${BLUE}88`,
+              width: 80, height: 80,
+              border: `3px solid ${BLUE}`,
+              boxShadow: `0 0 30px ${BLUE}aa`,
+              background: '#0b1020',
             }}
           >
-            <span className="font-black text-white" style={{ fontSize: 28 }}>P</span>
+            <UserAvatar user={{ id: you?.id, username: you?.name || you?.username, avatar: you?.avatar }} size={80} />
           </div>
         </div>
 
@@ -365,25 +381,25 @@ export function MatchConfirmed({
           <StakeRow stake={stake} />
         </div>
 
-        <p className="mt-6 text-center text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: '#64748b' }}>
-          {label}
-        </p>
-
         {typeof count === 'number' && (
-          <div className="mt-4 flex justify-center">
+          <div className="mt-7 flex justify-center">
             <div
-              className="flex items-center justify-center rounded-full mf-pulse"
+              className="flex items-center justify-center rounded-full mf-pulse-scale"
               style={{
-                width: 72, height: 72,
+                width: 84, height: 84,
                 border: `3px solid ${BLUE}`,
-                boxShadow: `0 0 22px ${BLUE}66`,
+                boxShadow: `0 0 26px ${BLUE}77`,
                 background: '#0b1020',
               }}
             >
-              <span className="font-black" style={{ fontSize: 34, color: '#fff' }}>{count}</span>
+              <span className="font-black leading-none" style={{ fontSize: 40, color: '#fff' }}>{count}</span>
             </div>
           </div>
         )}
+
+        <p className="mt-5 text-center text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: '#64748b' }}>
+          {label}
+        </p>
       </div>
     </FlowCard>
   );
@@ -539,6 +555,11 @@ export function MatchFlowStyles() {
         50% { transform: translate(-50%, -50%) scale(1.06); }
       }
       .mf-pulse { animation: mf-pulse 1.8s ease-in-out infinite; }
+      @keyframes mf-pulse-scale {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.06); }
+      }
+      .mf-pulse-scale { animation: mf-pulse-scale 1.8s ease-in-out infinite; }
       @keyframes mf-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
       .mf-blink { animation: mf-blink 0.9s ease-in-out infinite; }
       @keyframes mf-confetti {
