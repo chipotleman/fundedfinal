@@ -23,6 +23,7 @@ import { DEFAULT_PROMO_SLOTS, normalizePromoSlots } from '../lib/promoSlots';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import DesktopRightRail from '../components/desktop/DesktopRightRail';
+import DesktopScrollRow from '../components/desktop/DesktopScrollRow';
 import Footer from '../components/Footer';
 import { readLastBuyIn, fetchLastBuyIn } from '../utils/lastBattleBuyIn';
 import { inferLeague } from '../lib/leagueInference';
@@ -1465,7 +1466,7 @@ export default function Dashboard() {
         renderCondensedSportPills={() => renderSportPills('condensed')}
       />
 
-      <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16 lg:flex lg:gap-6 lg:max-w-[1600px] lg:mx-auto">
+      <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16 lg:flex lg:gap-8 lg:max-w-[1600px] lg:mx-auto">
         <div className="lg:flex-1 lg:min-w-0">
         {/* Carousel→pills gap halved per user feedback: was
             `mb-2 sm:mb-4` + `py-2` (16px mobile / 24px sm+), now
@@ -1575,7 +1576,7 @@ export default function Dashboard() {
           // edges; inner left padding keeps the first card aligned
           // with the "Close Games" header above. Right side bleeds
           // so the trailing card peeks off-screen.
-          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
+          <DesktopScrollRow innerClassName="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
             {closeGames.map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               const isTightened = !!tightenedGames[game.id];
@@ -1701,7 +1702,7 @@ export default function Dashboard() {
                 </div>
               );
             })}
-          </div>
+          </DesktopScrollRow>
           )}
         </div>
         )}

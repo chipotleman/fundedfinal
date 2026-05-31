@@ -1,61 +1,160 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 // =============================================================================
-// HowItWorksModal — desktop "How it works" popup launched from the top bar.
-// Explains the core Piks loop (pick a battle, choose a mode, win the pot) plus
-// the multiplayer Pik Pools and capper marketplace. On-brand: dark glass card,
-// blue/emerald/cyan/orange accents, NO purple. Tagged
+// HowItWorksModal — desktop "How it works" walkthrough, Polymarket-style: one
+// step per slide with a visual panel up top, a numbered title + description,
+// dot progress indicators, and Back / Next (Get Started on the last step).
+// On-brand dark glass, blue/emerald/cyan/orange accents, NO purple. Tagged
 // data-allow-fixed-overlay so the click-trap watchdog never removes it.
 // =============================================================================
-const accent = {
+const C = {
   blue: '#3b82f6',
+  blueLight: '#60a5fa',
   emerald: '#10b981',
   cyan: '#22d3ee',
   orange: '#fb923c',
   gold: '#fbbf24',
 };
 
-function Step({ index, color, title, children }) {
-  return (
+// ---- Per-step visual scenes -------------------------------------------------
+function VisualBattle() {
+  const tile = (label, color, emoji) => (
     <div
-      className="rounded-2xl p-4"
-      style={{ backgroundColor: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)' }}
+      className="flex flex-col items-center justify-center rounded-2xl w-24 h-24"
+      style={{ backgroundColor: '#101010', border: `2px solid ${color}`, boxShadow: `0 0 22px ${color}40` }}
     >
-      <div className="flex items-center gap-3 mb-2">
-        <span
-          className="flex items-center justify-center w-7 h-7 rounded-full text-[13px] font-black flex-shrink-0"
-          style={{ backgroundColor: `${color}1f`, color }}
-        >
-          {index}
-        </span>
-        <h3 className="text-[15px] font-bold" style={{ color: '#f5f5f5' }}>{title}</h3>
-      </div>
-      <div className="text-[13px] leading-relaxed pl-10" style={{ color: '#9ca3af' }}>
-        {children}
-      </div>
+      <span className="text-3xl leading-none mb-1">{emoji}</span>
+      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color }}>{label}</span>
+    </div>
+  );
+  return (
+    <div className="flex items-center justify-center gap-4">
+      {tile('You', C.blue, '🫵')}
+      <span className="text-xl font-black italic" style={{ color: '#6b7280' }}>VS</span>
+      {tile('Opp', C.orange, '🎯')}
     </div>
   );
 }
 
-function ModeRow({ color, name, coins, desc }) {
-  return (
-    <div className="flex items-start gap-2.5">
-      <span className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-      <span>
-        <span className="font-bold" style={{ color: '#e5e7eb' }}>{name}</span>
-        <span className="font-semibold" style={{ color: accent.gold }}> · {coins}</span>
-        <span> — {desc}</span>
+function VisualModes() {
+  const row = (name, coins, color) => (
+    <div
+      className="flex items-center justify-between w-full rounded-xl px-3 py-2"
+      style={{ backgroundColor: '#101010', border: '1px solid rgba(255,255,255,0.08)' }}
+    >
+      <span className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+        <span className="text-[13px] font-bold" style={{ color: '#e5e7eb' }}>{name}</span>
       </span>
+      <span className="text-[12px] font-bold" style={{ color: C.gold }}>{coins}</span>
+    </div>
+  );
+  return (
+    <div className="w-full max-w-[260px] mx-auto space-y-2">
+      {row('Rush', '10K', C.blue)}
+      {row('Original', '10K', C.emerald)}
+      {row('Tournament', '100K', C.orange)}
     </div>
   );
 }
+
+function VisualWin() {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div
+        className="flex items-center justify-center w-24 h-24 rounded-full"
+        style={{ background: `radial-gradient(circle at 50% 35%, ${C.emerald}33, #101010 70%)`, border: `2px solid ${C.emerald}` }}
+      >
+        <span className="text-4xl">🏆</span>
+      </div>
+      <span className="mt-3 text-[12px] font-bold" style={{ color: C.gold }}>Winner takes the pot · −5% rake</span>
+    </div>
+  );
+}
+
+function VisualBeyond() {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div className="flex items-center -space-x-3">
+        {['#3b82f6', '#22d3ee', '#10b981', '#fb923c'].map((c, i) => (
+          <span
+            key={c}
+            className="flex items-center justify-center w-12 h-12 rounded-full text-lg"
+            style={{ backgroundColor: '#101010', border: `2px solid ${c}`, zIndex: 10 - i }}
+          >
+            {['🔥', '⚡', '💎', '🎟️'][i]}
+          </span>
+        ))}
+      </div>
+      <span className="mt-3 text-[12px] font-bold" style={{ color: C.cyan }}>Pik Pools · Capper marketplace</span>
+    </div>
+  );
+}
+
+const STEPS = [
+  {
+    accent: C.blue,
+    eyebrow: 'Welcome to Piks',
+    title: 'Pick your battle',
+    body: (
+      <>
+        Go head-to-head in real-time sports betting battles. Jump into a{' '}
+        <strong style={{ color: '#e5e7eb' }}>Quick Match</strong> against a random opponent,{' '}
+        <strong style={{ color: '#e5e7eb' }}>Play a Friend</strong>, or set up a{' '}
+        <strong style={{ color: '#e5e7eb' }}>Private Match</strong> with your own invite.
+      </>
+    ),
+    Visual: VisualBattle,
+  },
+  {
+    accent: C.cyan,
+    eyebrow: 'Step 2',
+    title: 'Choose a mode',
+    body: (
+      <>
+        <strong style={{ color: '#e5e7eb' }}>Rush</strong> — 6 fast live-game props, race the clock.{' '}
+        <strong style={{ color: '#e5e7eb' }}>Original</strong> — full slate of the day, highest balance wins.{' '}
+        <strong style={{ color: '#e5e7eb' }}>Tournament</strong> — a 3-day battle for the big pot.
+      </>
+    ),
+    Visual: VisualModes,
+  },
+  {
+    accent: C.emerald,
+    eyebrow: 'Step 3',
+    title: 'Win the pot',
+    body: (
+      <>
+        The winner takes the combined pot, minus a small{' '}
+        <strong style={{ color: '#e5e7eb' }}>5% rake</strong>. Climb the leaderboard and build your record
+        battle by battle.
+      </>
+    ),
+    Visual: VisualWin,
+  },
+  {
+    accent: C.orange,
+    eyebrow: 'Step 4',
+    title: 'Go beyond 1v1',
+    body: (
+      <>
+        Join multiplayer <strong style={{ color: '#e5e7eb' }}>Pik Pools</strong> to compete against the whole
+        league, or visit the <strong style={{ color: '#e5e7eb' }}>marketplace</strong> to follow verified
+        cappers and their picks.
+      </>
+    ),
+    Visual: VisualBeyond,
+  },
+];
 
 export default function HowItWorksModal({ open, onClose }) {
   const router = useRouter();
+  const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (!open) return undefined;
+    setStep(0);
     const onKey = (e) => {
       if (e.key === 'Escape') onClose();
     };
@@ -70,10 +169,19 @@ export default function HowItWorksModal({ open, onClose }) {
 
   if (!open) return null;
 
-  const goStartBattle = () => {
-    onClose();
-    router.push('/dashboard');
+  const isLast = step === STEPS.length - 1;
+  const current = STEPS[step];
+  const { Visual } = current;
+
+  const next = () => {
+    if (isLast) {
+      onClose();
+      router.push('/dashboard');
+    } else {
+      setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    }
   };
+  const back = () => setStep((s) => Math.max(s - 1, 0));
 
   return (
     <div
@@ -86,20 +194,17 @@ export default function HowItWorksModal({ open, onClose }) {
       aria-label="How Piks works"
     >
       <div
-        className="w-full max-w-[560px] max-h-[88vh] overflow-y-auto rounded-3xl"
-        style={{
-          backgroundColor: '#0a0a0a',
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 24px 70px rgba(0,0,0,0.7)',
-        }}
+        className="w-full max-w-[460px] overflow-hidden rounded-3xl"
+        style={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 70px rgba(0,0,0,0.7)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Visual panel */}
         <div
-          className="relative px-6 pt-6 pb-5"
+          className="relative flex items-center justify-center px-6"
           style={{
-            background: `linear-gradient(135deg, ${accent.blue}1a 0%, ${accent.cyan}12 50%, ${accent.emerald}12 100%)`,
-            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            height: 188,
+            background: `linear-gradient(160deg, ${current.accent}24 0%, ${current.accent}0d 55%, rgba(0,0,0,0) 100%)`,
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <button
@@ -113,53 +218,61 @@ export default function HowItWorksModal({ open, onClose }) {
               <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
             </svg>
           </button>
-          <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: accent.blue }}>
-            Welcome to Piks
+          <Visual />
+        </div>
+
+        {/* Copy */}
+        <div className="px-6 pt-5 pb-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: current.accent }}>
+            {current.eyebrow}
           </p>
-          <h2 className="text-2xl font-black" style={{ color: '#ffffff' }}>How it works</h2>
-          <p className="text-[13px] mt-1.5" style={{ color: '#9ca3af' }}>
-            Go head-to-head in real-time sports betting battles. Outpick your opponent, take the pot.
+          <h2 className="text-xl font-black mb-2" style={{ color: '#ffffff' }}>
+            {step + 1}. {current.title}
+          </h2>
+          <p className="text-[13.5px] leading-relaxed min-h-[66px]" style={{ color: '#9ca3af' }}>
+            {current.body}
           </p>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-5 space-y-3">
-          <Step index="1" color={accent.blue} title="Pick your battle">
-            Jump into a <strong style={{ color: '#e5e7eb' }}>Quick Match</strong> against a random opponent,
-            <strong style={{ color: '#e5e7eb' }}> Play a Friend</strong>, or set up a
-            <strong style={{ color: '#e5e7eb' }}> Private Match</strong> with your own invite.
-          </Step>
+        {/* Footer: dots + nav */}
+        <div className="px-6 pb-6 pt-2">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            {STEPS.map((s, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setStep(i)}
+                aria-label={`Go to step ${i + 1}`}
+                className="rounded-full transition-all"
+                style={{
+                  width: i === step ? 22 : 7,
+                  height: 7,
+                  backgroundColor: i === step ? current.accent : 'rgba(255,255,255,0.18)',
+                }}
+              />
+            ))}
+          </div>
 
-          <Step index="2" color={accent.cyan} title="Choose a mode">
-            <div className="space-y-1.5">
-              <ModeRow color={accent.blue} name="Rush" coins="10,000 coins" desc="6 fast live-game props, race the clock — most correct wins." />
-              <ModeRow color={accent.emerald} name="Original" coins="10,000 coins" desc="full slate of the day's games, highest balance wins." />
-              <ModeRow color={accent.orange} name="Tournament" coins="100,000 coins" desc="a 3-day battle for the big pot." />
-            </div>
-          </Step>
-
-          <Step index="3" color={accent.emerald} title="Win the pot">
-            The winner takes the combined pot, minus a small 5% rake. Climb the leaderboard and
-            build your record battle by battle.
-          </Step>
-
-          <Step index="4" color={accent.orange} title="Go beyond 1v1">
-            Join multiplayer <strong style={{ color: '#e5e7eb' }}>Pik Pools</strong> to compete against the
-            whole league, or visit the <strong style={{ color: '#e5e7eb' }}>marketplace</strong> to follow
-            verified cappers and their picks.
-          </Step>
-        </div>
-
-        {/* Footer CTA */}
-        <div className="px-6 pb-6 pt-1">
-          <button
-            type="button"
-            onClick={goStartBattle}
-            className="w-full py-3 rounded-xl font-bold text-[15px] transition-transform lg:hover:scale-[1.02]"
-            style={{ background: `linear-gradient(135deg, ${accent.blue}, #2563eb)`, color: '#ffffff' }}
-          >
-            Start a battle
-          </button>
+          <div className="flex items-center gap-3">
+            {step > 0 && (
+              <button
+                type="button"
+                onClick={back}
+                className="px-4 py-3 rounded-xl font-bold text-[14px] transition-colors lg:hover:bg-white/5"
+                style={{ color: '#9ca3af', border: '1px solid rgba(255,255,255,0.12)' }}
+              >
+                Back
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={next}
+              className="flex-1 py-3 rounded-xl font-bold text-[15px] transition-transform lg:hover:scale-[1.02]"
+              style={{ background: `linear-gradient(135deg, ${C.blue}, #2563eb)`, color: '#ffffff' }}
+            >
+              {isLast ? 'Start a battle' : 'Next'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
