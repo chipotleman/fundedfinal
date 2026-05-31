@@ -445,76 +445,76 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
     }
   };
 
+  const handle = `@${(author.username || 'player').replace(/\s+/g, '').toLowerCase()}`;
+
   return (
-    <div className="rounded-2xl mb-4 overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
-      <div className="flex items-center gap-3 px-4 pt-3">
-        <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="flex-shrink-0">
-          <FramedAvatar avatar={author.avatar} username={author.username || 'P'} frameId={author.equippedFrame} size={36} bgColor="#1a1a1a" />
+    <div className="rounded-2xl mb-3 overflow-hidden transition-colors hover:bg-white/[0.015]" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
+      <div className="flex gap-3 px-4 py-3.5">
+        <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="flex-shrink-0 self-start">
+          <FramedAvatar avatar={author.avatar} username={author.username || 'P'} frameId={author.equippedFrame} size={40} bgColor="#1a1a1a" />
         </button>
         <div className="min-w-0 flex-1">
-          <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="text-[13px] font-semibold hover:underline" style={{ color: textPrimary }}>
-            {author.username || 'Player'}
-          </button>
-          <div className="text-[10px]" style={{ color: textMuted }}>{timeAgo(post.createdAt)}</div>
+          <div className="flex items-center gap-1.5 leading-tight min-w-0">
+            <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="text-[14px] font-bold hover:underline truncate flex-shrink-0 max-w-[55%]" style={{ color: textPrimary }}>
+              {author.username || 'Player'}
+            </button>
+            <span className="text-[13px] truncate" style={{ color: textMuted }}>{handle}</span>
+            <span className="text-[13px] flex-shrink-0" style={{ color: textMuted }}>·</span>
+            <span className="text-[13px] flex-shrink-0" style={{ color: textMuted }}>{timeAgo(post.createdAt)}</span>
+          </div>
+          <div className="mt-1 text-[15px] leading-snug whitespace-pre-wrap break-words" style={{ color: textPrimary }}>
+            {post.body}
+          </div>
+          <div className="flex items-center gap-1 mt-2.5 -ml-2 max-w-[340px]">
+            <button
+              type="button"
+              onClick={handleToggleComments}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[12px] font-medium transition-colors hover:bg-blue-500/10"
+              style={{ color: commentsOpen ? '#60a5fa' : textSecondary }}
+              aria-label="Reply"
+            >
+              <Icon.Chat size={16} />
+              {commentCount > 0 && <span>{commentCount}</span>}
+            </button>
+            <button
+              type="button"
+              onClick={handleLike}
+              disabled={isGuest || likePending}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[12px] font-medium transition-colors hover:bg-red-500/10"
+              style={{ color: liked ? '#f87171' : textSecondary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
+              aria-label="Like"
+            >
+              <svg viewBox="0 0 24 24" width={16} height={16} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              {likeCount > 0 && <span>{likeCount}</span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (isGuest) return;
+                onShare?.({
+                  type: 'post',
+                  id: post.id,
+                  snapshot: {
+                    body: post.body,
+                    author: { username: author.username, avatar: author.avatar },
+                  },
+                });
+              }}
+              disabled={isGuest}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[12px] font-medium transition-colors hover:bg-blue-500/10"
+              style={{ color: textSecondary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
+              aria-label="Share"
+            >
+              <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="px-4 py-3">
-        <div className="text-[14px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>
-          {post.body}
-        </div>
-      </div>
-      {(likeCount > 0 || commentCount > 0) && (
-        <div className="px-4 pb-2 flex items-center gap-3 text-[11px]" style={{ color: textMuted }}>
-          {likeCount > 0 && <span>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>}
-          {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
-        </div>
-      )}
-      <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
-        <button
-          type="button"
-          onClick={handleLike}
-          disabled={isGuest || likePending}
-          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
-          style={{ color: liked ? '#f87171' : textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
-        >
-          <svg viewBox="0 0 24 24" width={14} height={14} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-          {liked ? 'Liked' : 'Like'}
-        </button>
-        <button
-          type="button"
-          onClick={handleToggleComments}
-          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
-          style={{ color: textPrimary }}
-        >
-          <Icon.Chat size={14} />
-          Comment
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (isGuest) return;
-            onShare?.({
-              type: 'post',
-              id: post.id,
-              snapshot: {
-                body: post.body,
-                author: { username: author.username, avatar: author.avatar },
-              },
-            });
-          }}
-          disabled={isGuest}
-          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
-          style={{ color: textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
-        >
-          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
-          Share
-        </button>
       </div>
       {commentsOpen && (
         <div style={{ borderTop: `1px solid ${border}` }}>
@@ -556,7 +556,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
                         handleSubmitComment();
                       }
                     }}
-                    placeholder="Write a comment…"
+                    placeholder="Post your reply…"
                     maxLength={300}
                     className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
                     style={{ backgroundColor: '#111', border: `1px solid ${border}`, color: textPrimary }}
@@ -1981,6 +1981,194 @@ function ShareSheet({ target, friends, currentUser, onClose }) {
 }
 
 // =============================================================================
+// RightSidebar — Twitter-style right rail (desktop only): a Start-a-Battle
+// card, a live "What's happening" list, and a "Who to play" people list.
+// =============================================================================
+function SidebarCard({ title, children, footer }) {
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
+      {title && (
+        <div className="px-4 pt-3.5 pb-2">
+          <h2 className="text-[17px] font-extrabold" style={{ color: textPrimary }}>{title}</h2>
+        </div>
+      )}
+      {children}
+      {footer}
+    </div>
+  );
+}
+
+function RightSidebar({
+  liveBattles,
+  friends,
+  isGuest,
+  onSpectate,
+  onOpenProfile,
+  onChallengeFriend,
+  onPickQuickMatch,
+  onPickPlayFriend,
+  onPickPrivateMatch,
+}) {
+  const isBeta = useBetaMode();
+  const [challenged, setChallenged] = useState({});
+
+  const happening = (liveBattles || []).slice(0, 4);
+  const people = (friends || [])
+    .slice()
+    .sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0))
+    .slice(0, 4);
+
+  const handleChallenge = async (friend) => {
+    if (challenged[friend.id]) return;
+    setChallenged((p) => ({ ...p, [friend.id]: true }));
+    try {
+      await onChallengeFriend?.(friend);
+    } catch {
+      // Roll back the "Sent" state so the user can retry if the invite failed.
+      setChallenged((p) => {
+        const next = { ...p };
+        delete next[friend.id];
+        return next;
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {!isGuest && (
+        <SidebarCard title="Start a battle">
+          <div className="px-4 pb-4 pt-1 space-y-2">
+            <button
+              type="button"
+              onClick={onPickQuickMatch}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-white/[0.04]"
+              style={{ border: `1px solid ${border}` }}
+            >
+              <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0" style={{ background: 'rgba(250,204,21,0.12)' }}>
+                <Icon.Bolt size={16} className="text-yellow-400" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-bold" style={{ color: textPrimary }}>Quick Match</span>
+                <span className="block text-[11px]" style={{ color: textMuted }}>Get matched instantly</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={onPickPlayFriend}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-white/[0.04]"
+              style={{ border: `1px solid ${border}` }}
+            >
+              <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0" style={{ background: 'rgba(16,185,129,0.12)' }}>
+                <Icon.Users size={16} className="text-emerald-400" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-bold" style={{ color: textPrimary }}>Play a Friend</span>
+                <span className="block text-[11px]" style={{ color: textMuted }}>Challenge someone you know</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={onPickPrivateMatch}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-white/[0.04]"
+              style={{ border: `1px solid ${border}` }}
+            >
+              <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0" style={{ background: 'rgba(251,146,60,0.12)' }}>
+                <Icon.Trophy size={16} className="text-orange-400" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-bold" style={{ color: textPrimary }}>Private Match</span>
+                <span className="block text-[11px]" style={{ color: textMuted }}>Invite with a code</span>
+              </span>
+            </button>
+          </div>
+        </SidebarCard>
+      )}
+
+      <SidebarCard title="What's happening">
+        {happening.length === 0 ? (
+          <div className="px-4 pb-4 pt-1 text-[12px]" style={{ color: textMuted }}>
+            No live battles right now. Start one to light up the feed.
+          </div>
+        ) : (
+          <div>
+            {happening.map((b) => {
+              const u1 = b.user1 || {};
+              const u2 = b.user2 || {};
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => onSpectate?.(b)}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
+                >
+                  <span className="relative flex-shrink-0 flex -space-x-2">
+                    <FramedAvatar avatar={u1.avatar} username={u1.username || 'P'} frameId={u1.equippedFrame} size={26} bgColor="#1e40af" />
+                    <FramedAvatar avatar={u2.avatar} username={u2.username || 'P'} frameId={u2.equippedFrame} size={26} bgColor="#7c2d12" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#f87171' }}>Live</span>
+                    </span>
+                    <span className="block text-[12px] font-semibold truncate" style={{ color: textPrimary }}>
+                      {(u1.username || 'P1')} vs {(u2.username || 'P2')}
+                    </span>
+                  </span>
+                  <Icon.Eye size={15} className="flex-shrink-0" style={{ color: textMuted }} />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </SidebarCard>
+
+      {people.length > 0 && (
+        <SidebarCard title="Who to play">
+          <div>
+            {people.map((f) => {
+              const done = !!challenged[f.id];
+              return (
+                <div key={f.id} className="flex items-center gap-2.5 px-4 py-2.5">
+                  <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="flex-shrink-0">
+                    <FramedAvatar avatar={f.avatar} username={f.username || 'P'} frameId={f.equippedFrame} size={36} bgColor="#1a1a1a" isOnline={f.isOnline} onlineDotBorderColor={surface} />
+                  </button>
+                  <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="min-w-0 flex-1 text-left">
+                    <span className="block text-[13px] font-bold truncate hover:underline" style={{ color: textPrimary }}>{f.username || 'Player'}</span>
+                    <span className="block text-[11px] truncate" style={{ color: f.isOnline ? '#34d399' : textMuted }}>
+                      {f.isOnline ? 'Online now' : (f.lastSeenAt != null ? formatLastSeen(f.lastSeenAt) : 'Offline')}
+                    </span>
+                  </button>
+                  {!isGuest && (
+                    <button
+                      type="button"
+                      onClick={() => handleChallenge(f)}
+                      disabled={done}
+                      className="flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-colors"
+                      style={{
+                        background: done ? 'transparent' : textPrimary,
+                        color: done ? textMuted : '#000',
+                        border: done ? `1px solid ${border}` : 'none',
+                        cursor: done ? 'default' : 'pointer',
+                      }}
+                    >
+                      {done ? 'Sent' : 'Challenge'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </SidebarCard>
+      )}
+
+      <div className="px-4 text-[11px] leading-relaxed" style={{ color: textMuted }}>
+        Piks · Bet smarter, battle harder. {isBeta ? 'Beta' : ''}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // Main page — composes everything into a feed-style layout.
 // =============================================================================
 export default function SocialFeedPage({ data }) {
@@ -2182,12 +2370,13 @@ export default function SocialFeedPage({ data }) {
   }, [deepLinkPostId, posts]);
 
   return (
-    <div className="pb-8 w-full px-3 sm:px-4 lg:px-6">
-      {/* Single full-width feed column on desktop — the right
-          "Start a Battle" sidebar was removed at the user's request so
-          the social feed spans the entire page. Mobile keeps the
-          centered readable column. */}
-      <div className="min-w-0 max-w-[680px] mx-auto lg:max-w-none w-full">
+    <div className="pb-8 w-full">
+      {/* Twitter-style centered layout: a constrained feed column (≤600px)
+          plus a sticky right rail on desktop. The feed no longer spans the
+          whole page — it reads like a focused timeline with breathing room.
+          On phones/tablets the rail is hidden and the feed centers. */}
+      <div className="flex justify-center gap-6 lg:gap-7">
+      <div className="w-full max-w-[600px] min-w-0">
         <SharedByPill />
         <StoriesRail
           battles={liveBattles}
@@ -2277,6 +2466,24 @@ export default function SocialFeedPage({ data }) {
             return null;
           })
         )}
+      </div>
+
+        {/* Right rail — desktop only */}
+        <aside className="hidden lg:block w-[330px] flex-shrink-0">
+          <div className="sticky top-[78px]">
+            <RightSidebar
+              liveBattles={liveBattles}
+              friends={friends}
+              isGuest={isGuest}
+              onSpectate={handleSpectate}
+              onOpenProfile={onOpenProfile}
+              onChallengeFriend={onChallengeFriend}
+              onPickQuickMatch={onPickQuickMatch}
+              onPickPlayFriend={onPickPlayFriend}
+              onPickPrivateMatch={onPickPrivateMatch}
+            />
+          </div>
+        </aside>
       </div>
 
       {shareTarget && (
