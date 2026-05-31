@@ -1466,7 +1466,7 @@ export default function Dashboard() {
         renderCondensedSportPills={() => renderSportPills('condensed')}
       />
 
-      <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16 lg:max-w-[1600px] lg:mx-auto">
+      <div className="pt-3 sm:pt-2 lg:pt-2 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16 lg:max-w-[1600px] lg:mx-auto">
         {/* Carousel→pills gap halved per user feedback: was
             `mb-2 sm:mb-4` + `py-2` (16px mobile / 24px sm+), now
             `mb-1 sm:mb-2` + `py-1` (8px mobile / 12px sm+).

@@ -614,7 +614,7 @@ export default function TopNavbar({
         className={`${pinned ? 'sticky top-0' : 'relative lg:sticky lg:top-0'} left-0 right-0 z-50`}
         style={{ backgroundColor: '#000000' }}
       >
-        <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
+        <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-20 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
             {/* Logo - absolutely positioned on mobile to not affect bar height */}
             <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 sm:relative sm:left-0 sm:top-auto sm:translate-y-0 sm:-mt-[5.75px]">
