@@ -15,9 +15,13 @@ const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it be
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
-  { id: 'rush', label: 'RUSH', tagline: 'FAST · INTENSE', icon: '⚡', description: 'Pick 6 props from a live game', coins: 10000, color: '#10b981' },
+  // Canonical social-battle-flow mode identity (see --sbf-* tokens in
+  // styles/globals.css): RUSH amber, ORIGINAL blue, TOURNAMENT violet —
+  // matched to IncomingInviteModal so the two 1v1 surfaces agree. Rush was
+  // green and Tournament orange here, which disagreed with the invite popup.
+  { id: 'rush', label: 'RUSH', tagline: 'FAST · INTENSE', icon: '⚡', description: 'Pick 6 props from a live game', coins: 10000, color: '#fb923c' },
   { id: 'original', label: 'ORIGINAL', tagline: 'BALANCED · COMPETITIVE', icon: '🏆', description: 'Highest balance after all games end', coins: 10000, recommended: true, color: '#3b82f6' },
-  { id: 'tournament', label: 'TOURNAMENT', tagline: 'BIG STAKES · BIGGER WINS', icon: '👑', description: '3-day battle, massive bankroll', coins: 100000, color: '#f97316' },
+  { id: 'tournament', label: 'TOURNAMENT', tagline: 'BIG STAKES · BIGGER WINS', icon: '👑', description: '3-day battle, massive bankroll', coins: 100000, color: '#8b5cf6' },
 ];
 
 const INVITE_EXPIRY_HOURS = 24;
@@ -932,19 +936,14 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                  progress track so it matches the rest of the slip. */
               <div className="mt-4">
                 <div
-                  className="w-full rounded-full h-2.5 mb-2 overflow-hidden"
-                  style={{
-                    backgroundColor: '#0a0a0a',
-                    border: '2px solid #0a0a0a',
-                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
-                  }}
+                  className="w-full rounded-full h-1.5 mb-2 overflow-hidden"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
                 >
                   <div
                     className="pfm-wait-shimmer h-full rounded-full"
                     style={{
                       width: `${(inviteCountdown / (INVITE_EXPIRY_HOURS * 3600)) * 100}%`,
-                      background: 'linear-gradient(90deg,#3b82f6,#22d3ee)',
-                      boxShadow: '0 0 12px rgba(59,130,246,0.55)',
+                      background: 'linear-gradient(90deg,#3b82f6,#6366f1)',
                     }}
                   ></div>
                 </div>
@@ -981,12 +980,11 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
 
             {error && (
               <div
-                className="mt-3 rounded-2xl p-3 text-xs pfm-fade-in"
+                className="mt-3 rounded-xl px-3 py-2.5 text-xs font-semibold text-center pfm-fade-in"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(239,68,68,0.18), rgba(239,68,68,0.06))',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 4px 0 #0a0a0a',
-                  color: '#fecaca',
+                  background: 'rgba(239,68,68,0.10)',
+                  border: '1px solid rgba(239,68,68,0.35)',
+                  color: '#fca5a5',
                 }}
               >
                 {error}
@@ -1029,12 +1027,11 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 so failures read consistently across both branches. */}
             {error && (
               <div
-                className="rounded-2xl p-3 text-sm mb-4 pfm-fade-in"
+                className="rounded-xl px-3 py-2.5 text-sm font-semibold mb-4 pfm-fade-in"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(239,68,68,0.18), rgba(239,68,68,0.06))',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 4px 0 #0a0a0a',
-                  color: '#fecaca',
+                  background: 'rgba(239,68,68,0.10)',
+                  border: '1px solid rgba(239,68,68,0.35)',
+                  color: '#fca5a5',
                 }}
               >
                 {error}
@@ -1617,7 +1614,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                                 className="absolute inset-0"
                                 style={{
                                   background:
-                                    'repeating-linear-gradient(115deg, rgba(16,185,129,0.18) 0 6px, transparent 6px 16px)',
+                                    'repeating-linear-gradient(115deg, rgba(251,146,60,0.18) 0 6px, transparent 6px 16px)',
                                 }}
                               />
                               <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>⚡</span>
@@ -1660,7 +1657,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                                 className="absolute inset-0"
                                 style={{
                                   background:
-                                    'repeating-linear-gradient(180deg, rgba(249,115,22,0.14) 0 3px, transparent 3px 9px)',
+                                    'repeating-linear-gradient(180deg, rgba(139,92,246,0.16) 0 3px, transparent 3px 9px)',
                                 }}
                               />
                               <span
@@ -1673,8 +1670,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               />
                               <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
                               <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
-                              <span style={{ position: 'absolute', bottom: 28, left: 8, fontSize: 9, color: '#fb923c', opacity: 0.7 }}>♛</span>
-                              <span style={{ position: 'absolute', bottom: 28, right: 8, fontSize: 9, color: '#fb923c', opacity: 0.7 }}>♛</span>
+                              <span style={{ position: 'absolute', bottom: 28, left: 8, fontSize: 9, color: '#c4b5fd', opacity: 0.75 }}>♛</span>
+                              <span style={{ position: 'absolute', bottom: 28, right: 8, fontSize: 9, color: '#c4b5fd', opacity: 0.75 }}>♛</span>
                             </span>
                           )}
                           <span
@@ -1799,17 +1796,18 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               onClick={sendInvite}
               disabled={sending || hasActiveMatchup}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
-              className="pfm-cartoon-btn w-full font-black uppercase rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative"
+              className="pfm-hero w-full font-black uppercase rounded-2xl disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative overflow-hidden"
               style={{
                 background: hasActiveMatchup
-                  ? 'linear-gradient(180deg,#3b82f6,#2563eb)'
-                  : 'linear-gradient(180deg,#fb923c 0%, #f97316 55%, #ea580c 100%)',
-                border: '3px solid #0a0a0a',
-                boxShadow: '0 5px 0 #0a0a0a',
+                  ? 'linear-gradient(180deg,#27272a,#18181b)'
+                  : 'linear-gradient(180deg,#3b82f6 0%, #4f46e5 100%)',
+                border: '1px solid rgba(0,0,0,0.4)',
+                boxShadow: hasActiveMatchup
+                  ? '0 2px 0 rgba(0,0,0,0.5)'
+                  : '0 4px 0 #1e3a8a, 0 10px 24px rgba(59,130,246,0.30)',
                 color: '#ffffff',
-                textShadow: '0 2px 0 #0a0a0a',
-                fontStyle: hasActiveMatchup ? 'normal' : 'italic',
-                letterSpacing: '0.02em',
+                textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                letterSpacing: '0.04em',
                 padding: '14px 12px',
                 fontSize: 'clamp(14px, 3.6vw, 17px)',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -1887,9 +1885,23 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
           transform: translateY(2px);
           box-shadow: 0 1px 0 #0a0a0a !important;
         }
+        @keyframes pfmSheen {
+          0% { transform: translateX(-130%) skewX(-18deg); }
+          100% { transform: translateX(230%) skewX(-18deg); }
+        }
+        .pfm-hero { transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease; }
+        .pfm-hero:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #1e3a8a, 0 6px 16px rgba(59,130,246,0.30); }
+        .pfm-hero:not(:disabled)::after {
+          content: '';
+          position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+          animation: pfmSheen 2.8s ease-in-out infinite;
+          pointer-events: none;
+        }
         @media (prefers-reduced-motion: reduce) {
           .pfm-slide-in, .pfm-fade-in, .pfm-list-item, .pfm-bounce-in { animation: none !important; }
-          .pfm-cartoon-btn { transition: none !important; }
+          .pfm-cartoon-btn, .pfm-hero { transition: none !important; }
+          .pfm-hero:not(:disabled)::after { animation: none !important; opacity: 0; }
         }
       `}</style>
     </div>
