@@ -145,7 +145,7 @@ export default function DesktopGlobalSearch() {
   const showDropdown = open && query.trim().length >= 2;
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-[520px]">
+    <div ref={containerRef} className="relative w-full max-w-[680px]">
       <div
         className="flex items-center gap-2 rounded-full px-4 h-10 transition-colors"
         style={{
