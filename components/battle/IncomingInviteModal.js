@@ -14,6 +14,9 @@ const INVITE_EXPIRY_HOURS = 24;
 // mode carries a label, a cartoon icon, a color, a short tagline that
 // makes the mode feel like a *thing*, and a duration label so the
 // receiver instantly knows what they're being challenged to.
+// Colors are the canonical social-battle-flow identity (see the
+// --sbf-* tokens in styles/globals.css): RUSH amber, ORIGINAL blue,
+// TOURNAMENT violet — applied consistently across every invite surface.
 const MODE_META = {
   rush: {
     label: 'RUSH',
@@ -32,7 +35,7 @@ const MODE_META = {
   tournament: {
     label: 'TOURNAMENT',
     icon: '👑',
-    color: '#10b981',
+    color: '#8b5cf6',
     tagline: '3-day grind for a massive bankroll',
     durationLabel: '3-day battle',
   },
@@ -40,6 +43,15 @@ const MODE_META = {
 
 function modeMetaFor(n) {
   return MODE_META[n] || MODE_META.original;
+}
+
+// Parse a hex color to {r,g,b} so we can build mode-tinted rings, glows,
+// and fills inline without a second source of truth for the palette.
+function hexToRgb(hex) {
+  const h = String(hex || '').replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const int = parseInt(full || '3b82f6', 16);
+  return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
 }
 
 function compactCoins(n) {
@@ -162,336 +174,260 @@ export default function IncomingInviteModal() {
     }
   };
 
+  // Mode-tinted helpers — one accent (the mode color) used for the ring,
+  // hairline glows, and the progress meter. Everything else stays calm.
+  const rgb = hexToRgb(mode.color);
+  const tint = (a) => `rgba(${rgb.r},${rgb.g},${rgb.b},${a})`;
+
   return (
     <div
       data-allow-fixed-overlay="true"
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-[90] flex items-center justify-center p-4 overflow-y-auto bg-black/80 backdrop-blur-sm"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="iim-title"
-        className="rounded-2xl max-w-md w-full max-h-[92vh] overflow-y-auto iim-slide-in my-auto"
+        className="iim-card relative w-full max-w-[400px] max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-[22px] my-auto"
         style={{
-          backgroundColor: '#0d0d0d',
-          border: '2.5px solid #0a0a0a',
-          boxShadow: '0 8px 0 #0a0a0a, 0 25px 50px rgba(0,0,0,0.5)',
+          backgroundColor: 'var(--sbf-surface, #0d0d0d)',
+          border: '1px solid var(--sbf-hairline, rgba(255,255,255,0.08))',
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px ${tint(0.14)}, 0 28px 64px rgba(0,0,0,0.62)`,
         }}
-        onClick={(e) => e.stopPropagation()}
       >
         <style jsx>{`
-          @keyframes iimSlideIn {
-            from { transform: translateY(20px) scale(0.96); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
+          @keyframes iimCardIn {
+            0% { opacity: 0; transform: translateY(14px) scale(0.97); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
           }
-          @keyframes iimBounceIn {
-            0% { transform: scale(0.85); opacity: 0; }
-            60% { transform: scale(1.04); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
+          @keyframes iimRise {
+            0% { opacity: 0; transform: translateY(8px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
-          @keyframes iimSlamLeft {
-            0% { transform: translateX(-40px) scale(0.9); opacity: 0; }
-            100% { transform: translateX(0) scale(1); opacity: 1; }
-          }
-          @keyframes iimSlamRight {
-            0% { transform: translateX(40px) scale(0.9); opacity: 0; }
-            100% { transform: translateX(0) scale(1); opacity: 1; }
-          }
-          @keyframes iimAcceptPulse {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-2px); }
+          @keyframes iimSheen {
+            0% { transform: translateX(-130%) skewX(-18deg); }
+            100% { transform: translateX(230%) skewX(-18deg); }
           }
           @keyframes iimDots {
-            0%, 20% { opacity: 0.2; }
+            0%, 20% { opacity: 0.25; }
             50% { opacity: 1; }
-            80%, 100% { opacity: 0.2; }
+            80%, 100% { opacity: 0.25; }
           }
-          .iim-slide-in { animation: iimSlideIn 0.25s ease-out; }
-          .iim-bounce-in { animation: iimBounceIn 0.4s ease-out; }
-          .iim-slam-left { animation: iimSlamLeft 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
-          .iim-slam-right { animation: iimSlamRight 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.1s both; }
-          .iim-accept-pulse { animation: iimAcceptPulse 1.4s ease-in-out infinite; }
+          .iim-card { animation: iimCardIn 0.26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+          .iim-rise { animation: iimRise 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+          .iim-accept { position: relative; overflow: hidden; transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease; }
+          .iim-accept:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #064e3b, 0 6px 16px rgba(16,185,129,0.32); }
+          .iim-accept::after {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.32), transparent);
+            animation: iimSheen 2.6s ease-in-out infinite;
+            pointer-events: none;
+          }
+          .iim-press { transition: transform 0.12s ease, filter 0.12s ease, background-color 0.15s ease; }
+          .iim-press:active:not(:disabled) { transform: translateY(1px); }
           .iim-dot { display: inline-block; animation: iimDots 1.4s infinite; }
           .iim-dot:nth-child(2) { animation-delay: 0.2s; }
           .iim-dot:nth-child(3) { animation-delay: 0.4s; }
+          @media (prefers-reduced-motion: reduce) {
+            .iim-card, .iim-rise { animation: none; }
+            .iim-accept::after { animation: none; opacity: 0; }
+            .iim-dot { animation: none; opacity: 0.8; }
+          }
         `}</style>
 
-        {/* Header bar — compact title + close. The mode badge sits in
-            its own band below so the title isn't fighting the badge for
-            attention. */}
-        <div className="px-5 pt-5 pb-3 flex items-center justify-between">
-          <div>
-            <h2 id="iim-title" className="text-lg font-black text-white" style={{ letterSpacing: '0.02em' }}>
-              Battle Challenge!
+        {/* Mode-colored top accent — premium identity line, not a glow. */}
+        <div
+          aria-hidden="true"
+          style={{ height: 3, background: `linear-gradient(90deg, transparent, ${mode.color}, transparent)` }}
+        />
+
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
+          <div className="min-w-0">
+            <div
+              className="text-[10px] font-extrabold uppercase"
+              style={{ color: mode.color, letterSpacing: '0.22em' }}
+            >
+              Incoming Challenge
+            </div>
+            <h2 id="iim-title" className="mt-1 text-[17px] font-extrabold leading-tight text-white truncate">
+              {sender.username || 'A friend'}
+              <span className="font-semibold" style={{ color: 'var(--sbf-text-mute, #6b7280)' }}> wants to battle</span>
             </h2>
-            <p className="text-xs mt-0.5 text-gray-400">
-              <span className="font-bold text-white">{sender.username || 'A friend'}</span> just challenged you
-            </p>
           </div>
           <button
             aria-label="Close"
             onClick={close}
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: '#1a1a1a', border: '2px solid #0a0a0a' }}
+            className="iim-press shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: 'var(--sbf-surface-2, #141414)', border: '1px solid var(--sbf-hairline, rgba(255,255,255,0.08))' }}
           >
-            <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" style={{ color: 'var(--sbf-text-dim, #a1a1aa)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Mode banner — the headline answer to "what kind of game?".
-            Uses the mode's signature color as a solid border + tinted
-            background so it reads like a sticker, not a glow. */}
-        <div className="px-5 pb-3">
+        {/* Mode + duration — one clean market chip, the headline answer to
+            "what kind of game?". Replaces the old loud tri-band. */}
+        <div className="px-5">
           <div
-            className="rounded-2xl px-3 py-2.5 flex items-center gap-3"
-            style={{
-              background: '#0f1424',
-              border: `2.5px solid ${mode.color}`,
-            }}
+            className="iim-rise flex items-center gap-3 rounded-2xl px-3 py-2.5"
+            style={{ background: 'var(--sbf-surface-2, #141414)', border: `1px solid ${tint(0.5)}` }}
           >
             <div
-              className="flex items-center justify-center rounded-xl flex-shrink-0"
-              style={{
-                width: 44,
-                height: 44,
-                background: mode.color,
-                border: '2px solid #0a0a0a',
-                fontSize: 24,
-              }}
+              className="flex items-center justify-center rounded-xl shrink-0"
+              style={{ width: 38, height: 38, background: tint(0.16), border: `1px solid ${tint(0.55)}`, fontSize: 20 }}
               aria-hidden="true"
             >
               {mode.icon}
             </div>
             <div className="min-w-0 flex-1">
-              <div
-                className="text-[10px] font-extrabold uppercase"
-                style={{ color: mode.color, letterSpacing: '0.18em' }}
-              >
-                {mode.label} MODE
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] font-black uppercase tracking-wider" style={{ color: mode.color }}>{mode.label}</span>
+                <span
+                  className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md whitespace-nowrap"
+                  style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--sbf-text-dim, #a1a1aa)', border: '1px solid var(--sbf-hairline, rgba(255,255,255,0.08))' }}
+                >
+                  {durationLabel}
+                </span>
               </div>
-              <div className="text-white text-xs font-semibold mt-0.5 leading-snug">
+              <div className="text-[11px] mt-0.5 leading-snug truncate" style={{ color: 'var(--sbf-text-dim, #a1a1aa)' }}>
                 {mode.tagline}
               </div>
-            </div>
-            <div
-              className="flex-shrink-0 px-2 py-1 rounded-md text-[10px] font-extrabold uppercase whitespace-nowrap"
-              style={{
-                background: '#1a1a1a',
-                color: '#fff',
-                border: '2px solid #0a0a0a',
-                letterSpacing: '0.08em',
-              }}
-            >
-              {durationLabel}
             </div>
           </div>
         </div>
 
-        {/* Avatars + VS */}
-        <div className="flex items-center justify-center gap-3 md:gap-5 px-5 pb-2 iim-bounce-in">
-          {/* Sender (challenger) */}
-          <div className="flex flex-col items-center iim-slam-left" style={{ width: 100 }}>
+        {/* VS hero — clean avatars, mode-ringed challenger vs accent-ringed you. */}
+        <div className="iim-rise flex items-center justify-center gap-4 px-5 pt-4 pb-1">
+          <div className="flex flex-col items-center" style={{ width: 96 }}>
             <div
               className="rounded-full flex items-center justify-center overflow-hidden"
-              style={{
-                width: 80, height: 80,
-                border: '3px solid #fb923c',
-                background: '#1a0d05',
-              }}
+              style={{ width: 76, height: 76, border: `2.5px solid ${mode.color}`, boxShadow: `0 0 0 4px ${tint(0.14)}` }}
             >
               <UserAvatar
                 user={{ id: sender.id, username: sender.username, avatar: sender.avatar, frameId: sender.equippedFrame }}
-                size={72}
+                size={70}
               />
             </div>
-            <div className="mt-2 text-xs font-extrabold text-white truncate max-w-[96px]">
-              {sender.username || 'A friend'}
-            </div>
-            <div
-              className="mt-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md"
-              style={{
-                background: '#10b981',
-                color: '#fff',
-                border: '2px solid #047857',
-                letterSpacing: '0.12em',
-              }}
-            >
-              Ready
-            </div>
+            <div className="mt-2 text-[12px] font-bold text-white truncate max-w-[92px]">{sender.username || 'A friend'}</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: 'var(--sbf-win, #22c55e)' }}>Ready</div>
           </div>
 
-          {/* VS */}
           <div className="flex flex-col items-center px-1">
-            <div
-              className="text-3xl md:text-4xl font-black italic"
-              style={{ color: '#facc15', fontFamily: 'system-ui, -apple-system, sans-serif' }}
-            >
-              VS
-            </div>
+            <div className="text-2xl font-black italic" style={{ color: 'var(--sbf-text-mute, #6b7280)' }}>VS</div>
           </div>
 
-          {/* You */}
-          <div className="flex flex-col items-center iim-slam-right" style={{ width: 100 }}>
+          <div className="flex flex-col items-center" style={{ width: 96 }}>
             <div
               className="rounded-full flex items-center justify-center overflow-hidden"
-              style={{
-                width: 80, height: 80,
-                border: '3px solid #3b82f6',
-                background: '#0a1124',
-              }}
+              style={{ width: 76, height: 76, border: '2.5px solid var(--sbf-accent, #3b82f6)', boxShadow: '0 0 0 4px rgba(59,130,246,0.14)' }}
             >
-              <UserAvatar user={currentUser} size={72} />
+              <UserAvatar user={currentUser} size={70} />
             </div>
-            <div className="mt-2 text-xs font-extrabold text-white truncate max-w-[96px]">
-              {currentUser?.username || 'You'}
-            </div>
-            <div
-              className="mt-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md"
-              style={{
-                background: '#facc15',
-                color: '#0a0a0a',
-                border: '2px solid #ca8a04',
-                letterSpacing: '0.12em',
-              }}
-            >
+            <div className="mt-2 text-[12px] font-bold text-white truncate max-w-[92px]">{currentUser?.username || 'You'}</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: 'var(--sbf-accent, #3b82f6)' }}>
               Your move<span className="iim-dot">.</span><span className="iim-dot">.</span><span className="iim-dot">.</span>
             </div>
           </div>
         </div>
 
-        {/* Stakes pill — coins + pot in the cartoon style. The most
-            important answer to "what am I playing for?" */}
-        <div className="px-5 py-3">
+        {/* Stakes — sportsbook-clean tabular readout (buy-in · pot). */}
+        <div className="px-5 pt-3">
           <div
-            className="mx-auto rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 whitespace-nowrap"
-            style={{
-              background: '#0f1424',
-              border: '2px solid #3b82f6',
-              maxWidth: 380,
-            }}
+            className="flex items-stretch rounded-2xl overflow-hidden"
+            style={{ background: 'var(--sbf-surface-2, #141414)', border: '1px solid var(--sbf-hairline, rgba(255,255,255,0.08))' }}
           >
-            <span style={{ fontSize: 22 }} aria-hidden="true">🏆</span>
-            <span className="text-white font-extrabold text-sm md:text-base" style={{ letterSpacing: '0.02em' }}>
-              <span style={{ color: '#facc15' }}>{buyInLabel}</span>
-              <span className="text-gray-400 mx-1.5">·</span>
-              <span style={{ color: '#facc15' }}>{potLabel}</span>
-            </span>
-            <span style={{ fontSize: 22 }} aria-hidden="true">🪙</span>
-          </div>
-        </div>
-
-        {/* Incentive strip — three short reasons to tap Accept. Replaces
-            the old "Accept to drop straight into the match" rules block
-            with a more energetic, reward-flavored read. */}
-        <div className="px-5 pb-3">
-          <div className="grid grid-cols-3 gap-2">
-            <div
-              className="rounded-xl px-2 py-2 flex flex-col items-center text-center"
-              style={{ background: '#1a0b0b', border: '2px solid #ef4444' }}
-            >
-              <span style={{ fontSize: 18 }} aria-hidden="true">⚔️</span>
-              <div className="text-[8.5px] font-extrabold uppercase text-red-300 mt-1 leading-tight" style={{ letterSpacing: '0.08em' }}>
-                Instant Battle
+            <div className="flex-1 px-3 py-2.5 text-center">
+              <div className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--sbf-text-mute, #6b7280)' }}>
+                {isBeta ? 'Entry' : 'Buy-In'}
               </div>
+              <div className="text-[15px] font-black tabular-nums mt-0.5" style={{ color: 'var(--sbf-text, #fafafa)' }}>{buyInLabel}</div>
             </div>
-            <div
-              className="rounded-xl px-2 py-2 flex flex-col items-center text-center"
-              style={{ background: '#1a1505', border: '2px solid #facc15' }}
-            >
-              <span style={{ fontSize: 18 }} aria-hidden="true">⭐</span>
-              <div className="text-[8.5px] font-extrabold uppercase text-yellow-300 mt-1 leading-tight" style={{ letterSpacing: '0.08em' }}>
-                +50 XP Bonus
-              </div>
-            </div>
-            <div
-              className="rounded-xl px-2 py-2 flex flex-col items-center text-center"
-              style={{ background: '#052016', border: '2px solid #10b981' }}
-            >
-              <span style={{ fontSize: 18 }} aria-hidden="true">🎯</span>
-              <div className="text-[8.5px] font-extrabold uppercase text-emerald-300 mt-1 leading-tight" style={{ letterSpacing: '0.08em' }}>
-                Counts to Streak
-              </div>
+            <div style={{ width: 1, background: 'var(--sbf-hairline, rgba(255,255,255,0.08))' }} aria-hidden="true" />
+            <div className="flex-1 px-3 py-2.5 text-center">
+              <div className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--sbf-text-mute, #6b7280)' }}>Payout</div>
+              <div className="text-[15px] font-black tabular-nums mt-0.5" style={{ color: 'var(--sbf-money, #facc15)' }}>{potLabel}</div>
             </div>
           </div>
         </div>
 
-        {/* Expiry meter */}
-        <div className="px-5 pb-3">
+        {/* Incentive strip — calm, single muted row (content preserved). */}
+        <div className="px-5 pt-3">
+          <div className="flex items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--sbf-text-dim, #a1a1aa)' }}>
+            <span className="inline-flex items-center gap-1"><span aria-hidden="true">⚔️</span> Instant battle</span>
+            <span aria-hidden="true" style={{ color: 'var(--sbf-text-mute, #6b7280)' }}>·</span>
+            <span className="inline-flex items-center gap-1"><span aria-hidden="true">⭐</span> +50 XP</span>
+            <span aria-hidden="true" style={{ color: 'var(--sbf-text-mute, #6b7280)' }}>·</span>
+            <span className="inline-flex items-center gap-1"><span aria-hidden="true">🎯</span> Streak</span>
+          </div>
+        </div>
+
+        {/* Expiry meter — slim, mode-colored. */}
+        <div className="px-5 pt-3">
           {!expired ? (
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase text-gray-400 whitespace-nowrap" style={{ letterSpacing: '0.12em' }}>
+            <div className="flex items-center gap-2.5">
+              <span className="text-[9px] font-bold uppercase tracking-[0.16em] whitespace-nowrap" style={{ color: 'var(--sbf-text-mute, #6b7280)' }}>
                 Expires in
               </span>
-              <div className="flex-1 rounded-full h-2 overflow-hidden" style={{ background: '#1a1a1a', border: '1.5px solid #0a0a0a' }}>
-                <div className="h-full" style={{ width: `${progressPct}%`, background: '#10b981' }}></div>
+              <div className="flex-1 rounded-full h-1.5 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div className="h-full rounded-full" style={{ width: `${progressPct}%`, background: mode.color, transition: 'width 0.9s linear' }} />
               </div>
-              <span className="text-[11px] font-extrabold text-white whitespace-nowrap">
-                {formatCountdown(remainingSec)}
-              </span>
+              <span className="text-[11px] font-extrabold tabular-nums whitespace-nowrap text-white">{formatCountdown(remainingSec)}</span>
             </div>
           ) : (
-            <p className="text-yellow-400 text-sm text-center font-bold">This invite has expired.</p>
+            <p className="text-center text-sm font-bold" style={{ color: 'var(--sbf-money, #facc15)' }}>This invite has expired.</p>
           )}
         </div>
 
         {error && (
-          <div className="mx-5 mb-3 bg-red-500/10 border-2 border-red-500/40 rounded-xl p-2.5 text-red-400 text-xs font-bold text-center">
+          <div
+            className="mx-5 mt-3 rounded-xl px-3 py-2.5 text-xs font-semibold text-center"
+            style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
+          >
             {error}
           </div>
         )}
 
         {/* CTAs */}
-        <div className="px-5 pb-5">
+        <div className="px-5 pt-4 pb-5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
           {!expired ? (
             <>
               <button
                 onClick={handleAccept}
                 disabled={!!busy}
-                className="iim-accept-pulse no-hover-effect w-full py-4 rounded-2xl font-black text-lg uppercase flex items-center justify-center gap-2 disabled:opacity-60"
+                className="iim-accept w-full py-3.5 rounded-2xl font-black text-[15px] uppercase flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{
-                  background: '#10b981',
-                  border: '2.5px solid #047857',
+                  background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
+                  border: '1px solid rgba(0,0,0,0.4)',
                   color: '#fff',
-                  letterSpacing: '0.08em',
-                  boxShadow: '0 4px 0 #064e3b',
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  letterSpacing: '0.06em',
+                  boxShadow: '0 4px 0 #064e3b, 0 10px 24px rgba(16,185,129,0.30)',
                 }}
               >
                 {busy === 'accept' ? (
-                  <>Loading…</>
+                  <span className="relative z-10">Joining…</span>
                 ) : (
-                  <>
-                    <span aria-hidden="true">⚔️</span>
-                    Accept &amp; Battle
-                  </>
+                  <span className="relative z-10 inline-flex items-center gap-2">
+                    <span aria-hidden="true">⚔️</span> Accept &amp; Battle
+                  </span>
                 )}
               </button>
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="grid grid-cols-2 gap-2 mt-2.5">
                 <button
                   onClick={handleDecline}
                   disabled={!!busy}
-                  className="no-hover-effect py-3 rounded-xl font-extrabold text-sm uppercase disabled:opacity-60"
-                  style={{
-                    background: '#1a1a1a',
-                    border: '2px solid #0a0a0a',
-                    color: '#9ca3af',
-                    letterSpacing: '0.08em',
-                  }}
+                  className="iim-press py-2.5 rounded-xl font-bold text-[13px] uppercase tracking-wide disabled:opacity-60"
+                  style={{ background: 'var(--sbf-surface-2, #141414)', border: '1px solid var(--sbf-hairline, rgba(255,255,255,0.08))', color: 'var(--sbf-text-dim, #a1a1aa)' }}
                 >
-                  {busy === 'decline' ? '...' : 'Decline'}
+                  {busy === 'decline' ? '…' : 'Decline'}
                 </button>
                 <button
                   onClick={close}
                   disabled={!!busy}
-                  className="no-hover-effect py-3 rounded-xl font-extrabold text-sm uppercase disabled:opacity-60"
-                  style={{
-                    background: 'transparent',
-                    border: '2px solid #1a1a1a',
-                    color: '#6b7280',
-                    letterSpacing: '0.08em',
-                  }}
+                  className="iim-press py-2.5 rounded-xl font-bold text-[13px] uppercase tracking-wide disabled:opacity-60"
+                  style={{ background: 'transparent', border: '1px solid var(--sbf-hairline, rgba(255,255,255,0.08))', color: 'var(--sbf-text-mute, #6b7280)' }}
                 >
                   Decide later
                 </button>
@@ -500,13 +436,8 @@ export default function IncomingInviteModal() {
           ) : (
             <button
               onClick={close}
-              className="no-hover-effect w-full py-3 rounded-xl font-extrabold text-sm uppercase"
-              style={{
-                background: '#1a1a1a',
-                border: '2px solid #0a0a0a',
-                color: '#fff',
-                letterSpacing: '0.08em',
-              }}
+              className="iim-press w-full py-3 rounded-xl font-bold text-[13px] uppercase tracking-wide"
+              style={{ background: 'var(--sbf-surface-2, #141414)', border: '1px solid var(--sbf-hairline, rgba(255,255,255,0.08))', color: 'var(--sbf-text, #fafafa)' }}
             >
               Close
             </button>

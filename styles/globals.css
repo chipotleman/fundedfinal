@@ -1337,3 +1337,28 @@ html.light .piks-game-card [style*="border: 1px solid #141414" i] {
 html.light .piks-game-card svg[stroke="#4b5563"] {
   stroke: #94a3b8 !important;
 }
+
+/* ===== Social battle flow — shared design tokens ============================
+   Canonical mode identity + accents for the premium social-battle redesign,
+   consumed by the incoming-invite popup, Play-a-Friend modal, and the invite
+   surfaces in the notifications dropdown / page so every surface speaks one
+   visual language. Additive only — no existing rule above is modified, so the
+   light-theme cascade is unaffected. Canonical modes (approved):
+   RUSH amber · ORIGINAL blue · TOURNAMENT violet. */
+:root {
+  --sbf-rush: #fb923c;
+  --sbf-original: #3b82f6;
+  --sbf-tournament: #8b5cf6;
+  --sbf-accent: #3b82f6;
+  --sbf-go: #10b981;        /* accept / "go" peak */
+  --sbf-win: #22c55e;
+  --sbf-loss: #ef4444;
+  --sbf-money: #facc15;     /* coins / stakes */
+  --sbf-bg: #0a0a0a;
+  --sbf-surface: #0d0d0d;
+  --sbf-surface-2: #141414;
+  --sbf-hairline: rgba(255, 255, 255, 0.08);
+  --sbf-text: #fafafa;
+  --sbf-text-dim: #a1a1aa;
+  --sbf-text-mute: #6b7280;
+}
