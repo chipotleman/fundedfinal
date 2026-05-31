@@ -91,18 +91,6 @@ export default function IncomingInviteModal() {
     };
   }, [isOpen, invite?.id]);
 
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        ctx.dismissIncomingInvite?.(invite.id);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, invite?.id, ctx]);
-
   if (!isOpen) return null;
 
   const sender = invite.sender || {};
@@ -178,8 +166,6 @@ export default function IncomingInviteModal() {
     <div
       data-allow-fixed-overlay="true"
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90] flex items-center justify-center p-4 overflow-y-auto"
-      onClick={close}
-      onKeyDown={(e) => { if (e.key === 'Escape') close(); }}
     >
       <div
         role="dialog"
