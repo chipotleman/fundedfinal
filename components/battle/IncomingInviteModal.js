@@ -106,7 +106,11 @@ export default function IncomingInviteModal() {
   if (!isOpen) return null;
 
   const sender = invite.sender || {};
-  const mode = modeMetaFor(invite.n);
+  // The invite payload carries the mode as `gameMode` (SSE push in
+  // pages/api/battles/invite.js and the battle_invites column). The legacy
+  // `n` key never existed on this object, so reading it made every popup
+  // fall back to ORIGINAL. Prefer gameMode; keep `n` as a defensive fallback.
+  const mode = modeMetaFor(invite.gameMode || invite.n);
   const buyIn = parseFloat(invite.buyIn) || 0;
   const pot = buyIn * 2;
   // Beta uses coins (compact), live mode uses dollars.
@@ -140,9 +144,14 @@ export default function IncomingInviteModal() {
     setError('');
     try {
       const data = await ctx.acceptInvite(invite.id);
-      ctx.dismissIncomingInvite?.(invite.id);
-      if (data) {
+      if (data?.ok && data.matchup) {
+        ctx.dismissIncomingInvite?.(invite.id);
         navigateToBattleStart(router, data.matchup);
+      } else {
+        // Accept failed (expired / opponent already in a battle / already
+        // handled). Keep the popup open and show why instead of dismissing
+        // into a dead end.
+        setError(data?.error || 'Could not accept. Please try again.');
       }
     } catch {
       setError('Network error. Please try again.');
