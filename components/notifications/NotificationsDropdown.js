@@ -34,6 +34,19 @@ function timeAgo(iso) {
   return `${d}d`;
 }
 
+// Canonical social-battle-flow mode identity (matches the invite popup,
+// Play-a-Friend modal, and the --sbf-* tokens in styles/globals.css):
+// RUSH amber, ORIGINAL blue, TOURNAMENT violet. Used for the small mode
+// chip on each battle-invite row so the dropdown speaks the same language.
+const MODE_DISPLAY = {
+  rush: { label: 'Rush', color: '#fb923c' },
+  original: { label: 'Original', color: '#3b82f6' },
+  tournament: { label: 'Tournament', color: '#8b5cf6' },
+};
+function modeDisplay(m) {
+  return MODE_DISPLAY[m] || MODE_DISPLAY.original;
+}
+
 // Notifications dropdown — alerts only (battle invites, friend requests, and
 // any future game-result alerts). Messages have moved to MessagesDropdown.
 export default function NotificationsDropdown({ open, onClose, anchorRef }) {
@@ -137,12 +150,21 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
           <Section type="invite" title="Battle Invites">
             {battleInvites.map((inv) => {
               const buyIn = parseFloat(inv.buyIn) || 0;
+              const md = modeDisplay(inv.gameMode);
               return (
                 <Row key={inv.id} type="invite" sender={inv.sender} time={inv.createdAt}>
-                  <div className="text-white text-sm font-semibold truncate">
-                    {inv.sender?.username || 'Someone'} challenged you
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="text-white text-sm font-semibold truncate">
+                      {inv.sender?.username || 'Someone'} challenged you
+                    </div>
+                    <span
+                      className="shrink-0 text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
+                      style={{ color: md.color, background: `${md.color}1f`, border: `1px solid ${md.color}59` }}
+                    >
+                      {md.label}
+                    </span>
                   </div>
-                  <div className="text-gray-400 text-xs">
+                  <div className="text-gray-400 text-xs mt-0.5">
                     {isBeta
                       ? `${formatMoney(buyIn, 0)} coin buy-in · ${formatMoney(buyIn * 2, 0)} coin pot`
                       : `$${buyIn} buy-in · $${buyIn * 2} pot`}{inv.duration ? ` · ${inv.duration}h` : ''}
@@ -155,13 +177,14 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                         onClose?.();
                         if (data?.ok && data.matchup) navigateToBattleStart(router, data.matchup);
                       })}
-                      className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                      style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
+                      className="flex-1 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ background: 'linear-gradient(180deg,#3b82f6,#4f46e5)', boxShadow: '0 2px 10px rgba(59,130,246,0.28)' }}
                     >Accept</button>
                     <button
                       disabled={busyId === inv.id}
                       onClick={() => wrap(inv.id, async () => { await ctx.declineInvite(inv.id); })}
-                      className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
+                      className="flex-1 text-gray-300 text-xs font-semibold py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.08)' }}
                     >Decline</button>
                   </div>
                 </Row>

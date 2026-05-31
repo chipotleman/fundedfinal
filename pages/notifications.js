@@ -28,6 +28,18 @@ function Avatar(props) {
   return <UserAvatar {...props} link />;
 }
 
+// Canonical social-battle-flow mode identity (matches the invite popup,
+// Play-a-Friend modal, notifications dropdown, and the --sbf-* tokens):
+// RUSH amber, ORIGINAL blue, TOURNAMENT violet.
+const MODE_DISPLAY = {
+  rush: { label: 'Rush', color: '#fb923c' },
+  original: { label: 'Original', color: '#3b82f6' },
+  tournament: { label: 'Tournament', color: '#8b5cf6' },
+};
+function modeDisplay(m) {
+  return MODE_DISPLAY[m] || MODE_DISPLAY.original;
+}
+
 const cardBg = '#0a0a0a';
 const cardBorder = 'rgba(59,130,246,0.22)';
 const textPrimary = '#ffffff';
@@ -354,6 +366,7 @@ function NotificationsFeed({ ctx, router, filter }) {
           <SectionHeader type="invite" title="Battle Invites" />
           {battleInvites.map((inv) => {
             const buyIn = parseFloat(inv.buyIn) || 0;
+            const md = modeDisplay(inv.gameMode);
             return (
               <TypedRow
                 key={inv.id}
@@ -369,6 +382,12 @@ function NotificationsFeed({ ctx, router, filter }) {
               >
                 <div className="flex items-center gap-2 mb-1">
                   <TypeChip type="invite" />
+                  <span
+                    className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
+                    style={{ color: md.color, background: `${md.color}1f`, border: `1px solid ${md.color}59` }}
+                  >
+                    {md.label}
+                  </span>
                 </div>
                 <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
                   <UserNameLink user={inv.sender} fallback="Someone" /> challenged you
@@ -385,13 +404,14 @@ function NotificationsFeed({ ctx, router, filter }) {
                       const data = await ctx.acceptInvite(inv.id);
                       if (data?.ok && data.matchup) navigateToBattleStart(router, data.matchup);
                     })}
-                    className="bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-shadow"
-                    style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
+                    className="text-white text-xs font-bold px-4 py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ background: 'linear-gradient(180deg,#3b82f6,#4f46e5)', boxShadow: '0 2px 10px rgba(59,130,246,0.28)' }}
                   >Accept</button>
                   <button
                     disabled={busyId === inv.id}
                     onClick={() => wrap(inv.id, () => ctx.declineInvite(inv.id))}
-                    className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+                    className="text-xs font-semibold px-4 py-1.5 rounded-lg disabled:opacity-50 text-gray-300"
+                    style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.08)' }}
                   >Decline</button>
                 </div>
               </TypedRow>
