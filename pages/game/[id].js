@@ -223,7 +223,7 @@ export default function GameDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="game-detail-page min-h-screen bg-black flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -231,7 +231,7 @@ export default function GameDetail() {
 
   if (!game) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+      <div className="game-detail-page min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <p className="text-xl mb-4">Game not found</p>
         <button 
           onClick={handleBack}
@@ -265,7 +265,7 @@ export default function GameDetail() {
         <title>{game.awayTeamFull} vs {game.homeTeamFull} | Piks</title>
       </Head>
 
-      <div className="min-h-screen bg-black text-white pb-32">
+      <div className="game-detail-page min-h-screen bg-black text-white pb-32">
         <DesktopGameDetail
           game={game}
           possession={possession}

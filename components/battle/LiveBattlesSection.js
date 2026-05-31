@@ -374,7 +374,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
     return (
       <div
         ref={cardRef}
-        className={`w-full h-full rounded-xl cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
+        className={`bc-surface w-full h-full rounded-xl cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
         onClick={() => setExpanded(!expanded)}
         style={{
           backgroundColor: '#0d0d0d',

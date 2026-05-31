@@ -1,1 +1,1 @@
-- [MatchFlow pulse keyframe](matchflow-pulse-keyframe.md) — `.mf-pulse` bakes translate(-50%,-50%); only for absolutely-centered els. Use `.mf-pulse-scale` for normal-flow pulses.
+- [Light theme architecture](light-theme-architecture.md) — theme is all `html.light` CSS overrides in globals.css; cartoon/featured surfaces now flip to light (earlier "keep dark" decision overridden); keep accent chips.

@@ -1338,6 +1338,133 @@ html.light .piks-game-card svg[stroke="#4b5563"] {
   stroke: #94a3b8 !important;
 }
 
+/* ===== Light theme — desktop shell, featured cards & game-detail page =======
+   The desktop right rail and horizontal scroll rows paint dark surfaces via
+   CSS variables (dark defaults below; light overrides flip them). The featured
+   battle cards (`.bc-surface`, `.youvs-card`) and the game-detail page were
+   previously left dark by design, but the product now wants them light in the
+   light theme. Every rule here is scoped to a component class so the dark
+   cartoon modals / hero flows elsewhere stay untouched. Colored accent chips
+   (mode badges, win/loss, coins) are intentionally NOT overridden. */
+
+/* --- Desktop right rail: CSS-variable palette (dark default + light) --- */
+.desktop-right-rail {
+  --rail-surface: #0d0d0d;
+  --rail-border: rgba(255, 255, 255, 0.06);
+  --rail-text: #f5f5f5;
+  --rail-text-2: #9ca3af;
+  --rail-text-3: #6b7280;
+}
+html.light .desktop-right-rail {
+  --rail-surface: #ffffff;
+  --rail-border: rgba(15, 23, 42, 0.08);
+  --rail-text: #0f172a;
+  --rail-text-2: #475569;
+  --rail-text-3: #64748b;
+}
+/* Avatar separator rings + neutral hover tints flip on light. */
+html.light .desktop-right-rail [class*="ring-[#0d0d0d]"] { --tw-ring-color: #ffffff !important; }
+html.light .desktop-right-rail [class*="hover:bg-white/5"]:hover { background-color: rgba(15, 23, 42, 0.05) !important; }
+
+/* --- Horizontal scroll rows: fade colour + arrow-button palette --- */
+.desktop-scroll-row {
+  --scroll-fade: #000000;
+  --scroll-btn-bg: #141414;
+  --scroll-btn-border: rgba(255, 255, 255, 0.14);
+  --scroll-btn-color: #e5e7eb;
+}
+html.light .desktop-scroll-row {
+  --scroll-fade: #f5f1ea;
+  --scroll-btn-bg: #ffffff;
+  --scroll-btn-border: rgba(15, 23, 42, 0.14);
+  --scroll-btn-color: #0f172a;
+}
+html.light .desktop-scroll-row [class*="hover:bg-[#1f1f1f]"]:hover { background-color: #eef2f7 !important; }
+
+/* --- Featured battle cards (BattleCard `.bc-surface`) --- */
+html.light .bc-surface {
+  background-color: #ffffff !important;
+}
+/* Inline white text. Cover BOTH React serializations: SSR emits the literal
+   `color:#fff`, while client-rendered nodes are normalized by the CSSOM to
+   `color: rgb(255, 255, 255)`. Matching only one form silently misses the
+   other, so we list all three. */
+html.light .bc-surface [style*="color:#fff" i],
+html.light .bc-surface [style*="color: #fff" i],
+html.light .bc-surface [style*="color: rgb(255, 255, 255)" i],
+html.light .bc-surface .text-white {
+  color: #0f172a !important;
+}
+html.light .bc-surface .text-gray-400 { color: #475569 !important; }
+html.light .bc-surface .text-gray-500,
+html.light .bc-surface .text-gray-600,
+html.light .bc-surface .text-gray-700 { color: #64748b !important; }
+/* Inner locked / awaiting strips (inline `background:#111`, `border #1a1a1a`);
+   again cover SSR literal + CSSOM-normalized `rgb(17, 17, 17)`. */
+html.light .bc-surface [style*="background: #111" i],
+html.light .bc-surface [style*="background:#111" i],
+html.light .bc-surface [style*="background: rgb(17, 17, 17)" i] {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+}
+
+/* --- VS / PLAY NOW hero card (`.youvs-card`) --- */
+html.light .youvs-card {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.10) 0%, rgba(6, 182, 212, 0.06) 45%, #ffffff 100%), #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+}
+/* Surface white text → dark, but EXCLUDE the cartoon "PLAY NOW" sticker, which
+   is intentionally white with a black text-stroke outline in both themes. The
+   `:not([style*="text-stroke"])` guard skips it (the inline style carries
+   `-webkit-text-stroke` in both SSR and CSSOM-normalized forms). Cover SSR +
+   client `rgb(255, 255, 255)` serializations. */
+html.light .youvs-card [style*="color:#fff" i]:not([style*="text-stroke" i]),
+html.light .youvs-card [style*="color: #fff" i]:not([style*="text-stroke" i]),
+html.light .youvs-card [style*="color: rgb(255, 255, 255)" i]:not([style*="text-stroke" i]),
+html.light .youvs-card .text-white {
+  color: #0f172a !important;
+}
+html.light .youvs-card .text-gray-400 { color: #475569 !important; }
+html.light .youvs-card .text-gray-500,
+html.light .youvs-card .text-gray-600 { color: #64748b !important; }
+/* Inner dark strips inside the hero. */
+html.light .youvs-card [style*="background: #111" i],
+html.light .youvs-card [style*="background:#111" i],
+html.light .youvs-card [style*="background: rgb(17, 17, 17)" i] {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+}
+
+/* --- Game-detail page (`.game-detail-page`, incl. inline DesktopGameDetail) --- */
+html.light .game-detail-page {
+  background-color: #f5f1ea !important;
+  color: #0f172a !important;
+}
+html.light .game-detail-page .bg-black { background-color: #f5f1ea !important; }
+html.light .game-detail-page [class*="bg-[#0a0a0a]"],
+html.light .game-detail-page [class*="bg-[#0d0d0d]"],
+html.light .game-detail-page [class*="bg-[#0f0f0f]"],
+html.light .game-detail-page [class*="bg-[#111]"],
+html.light .game-detail-page [class*="bg-[#111111]"] { background-color: #ffffff !important; }
+html.light .game-detail-page [class*="bg-[#141414]"],
+html.light .game-detail-page [class*="bg-[#161616]"],
+html.light .game-detail-page [class*="bg-[#1a1a1a]"] { background-color: #f1f5f9 !important; }
+/* Dark header gradient → flat white surface. */
+html.light .game-detail-page [class*="from-[#0d0d0d]"] {
+  background-image: none !important;
+  background-color: #ffffff !important;
+}
+html.light .game-detail-page [class*="border-[#1a1a1a]"],
+html.light .game-detail-page [class*="border-[#1f1f1f]"] { border-color: rgba(15, 23, 42, 0.10) !important; }
+html.light .game-detail-page .text-white,
+html.light .game-detail-page .text-gray-200 { color: #0f172a !important; }
+html.light .game-detail-page .text-gray-300 { color: #334155 !important; }
+html.light .game-detail-page .text-gray-400 { color: #475569 !important; }
+html.light .game-detail-page .text-gray-500,
+html.light .game-detail-page .text-gray-600,
+html.light .game-detail-page .text-gray-700 { color: #64748b !important; }
+html.light .game-detail-page [class*="hover:bg-[#111]"]:hover { background-color: #f1f5f9 !important; }
+
 /* ===== Social battle flow — shared design tokens ============================
    Canonical mode identity + accents for the premium social-battle redesign,
    consumed by the incoming-invite popup, Play-a-Friend modal, and the invite

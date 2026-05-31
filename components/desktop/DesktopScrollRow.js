@@ -45,7 +45,7 @@ export default function DesktopScrollRow({ children, className = '', innerClassN
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`desktop-scroll-row relative ${className}`}>
       <div ref={ref} className={innerClassName}>
         {children}
       </div>
@@ -57,7 +57,7 @@ export default function DesktopScrollRow({ children, className = '', innerClassN
         <>
           <div
             className="hidden lg:block pointer-events-none absolute top-0 left-0 bottom-2 w-10 z-10"
-            style={{ background: 'linear-gradient(to left, rgba(0,0,0,0), #000)' }}
+            style={{ background: 'linear-gradient(to left, rgba(0,0,0,0), var(--scroll-fade))' }}
             aria-hidden="true"
           />
           <button
@@ -65,7 +65,7 @@ export default function DesktopScrollRow({ children, className = '', innerClassN
             onClick={() => scrollByDir(-1)}
             aria-label="Scroll left"
             className="hidden lg:flex items-center justify-center absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 z-20 w-7 h-7 rounded-full transition-colors lg:hover:bg-[#1f1f1f]"
-            style={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.14)', color: '#e5e7eb' }}
+            style={{ backgroundColor: 'var(--scroll-btn-bg)', border: '1px solid var(--scroll-btn-border)', color: 'var(--scroll-btn-color)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -82,7 +82,7 @@ export default function DesktopScrollRow({ children, className = '', innerClassN
         <>
           <div
             className="hidden lg:block pointer-events-none absolute top-0 right-0 bottom-2 w-10 z-10"
-            style={{ background: 'linear-gradient(to right, rgba(0,0,0,0), #000)' }}
+            style={{ background: 'linear-gradient(to right, rgba(0,0,0,0), var(--scroll-fade))' }}
             aria-hidden="true"
           />
           <button
@@ -90,7 +90,7 @@ export default function DesktopScrollRow({ children, className = '', innerClassN
             onClick={() => scrollByDir(1)}
             aria-label="Scroll right"
             className="hidden lg:flex items-center justify-center absolute right-0 top-1/2 translate-x-full -translate-y-1/2 z-20 w-7 h-7 rounded-full transition-colors lg:hover:bg-[#1f1f1f]"
-            style={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.14)', color: '#e5e7eb' }}
+            style={{ backgroundColor: 'var(--scroll-btn-bg)', border: '1px solid var(--scroll-btn-border)', color: 'var(--scroll-btn-color)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

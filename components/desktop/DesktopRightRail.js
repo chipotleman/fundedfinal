@@ -11,11 +11,16 @@ import { formatLastSeen } from '../../utils/relativeTime';
 // (`/api/leaderboard`). All data comes from existing endpoints. Rendered
 // `hidden lg:block` by the parent so it never affects mobile/tablet.
 // =============================================================================
-const surface = '#0d0d0d';
-const border = 'rgba(255,255,255,0.06)';
-const textPrimary = '#f5f5f5';
-const textSecondary = '#9ca3af';
-const textMuted = '#6b7280';
+// Theme-aware palette via CSS variables. Defaults (dark) and the
+// `html.light` overrides are defined in styles/globals.css under the
+// `.desktop-right-rail` scope, so the rail flips with the rest of the
+// app's light/dark theme without a hydration flash (the root `light`
+// class is applied pre-paint by the _document.js inline script).
+const surface = 'var(--rail-surface)';
+const border = 'var(--rail-border)';
+const textPrimary = 'var(--rail-text)';
+const textSecondary = 'var(--rail-text-2)';
+const textMuted = 'var(--rail-text-3)';
 
 function Card({ title, action, onAction, children }) {
   return (
@@ -92,7 +97,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
   const sortedFriends = [...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0)).slice(0, 6);
 
   return (
-    <div className="lg:sticky lg:top-20">
+    <div className="desktop-right-rail lg:sticky lg:top-20">
       {/* Live now */}
       <Card title={`Live now${battles.length ? ` · ${battles.length}` : ''}`} action="View all" onAction={() => router.push('/battle')}>
         {battles.length === 0 ? (
@@ -157,7 +162,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
                     className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
                     style={{
                       backgroundColor: f.isOnline ? '#22c55e' : '#4b5563',
-                      borderColor: '#0d0d0d',
+                      borderColor: surface,
                     }}
                   />
                 </span>
