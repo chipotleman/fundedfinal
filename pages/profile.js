@@ -77,33 +77,9 @@ export default function Profile() {
 
     setUploading(true);
     try {
-      const urlRes = await fetch('/api/uploads/request-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: file.name,
-          size: file.size,
-          contentType: file.type,
-        }),
-      });
-
-      if (!urlRes.ok) {
-        throw new Error('Failed to get upload URL');
-      }
-
-      const { uploadURL, objectPath } = await urlRes.json();
-
-      const uploadRes = await fetch(uploadURL, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error('Failed to upload file');
-      }
-
-      setFormData({ ...formData, avatar: objectPath });
+      const { uploadToBlob } = await import('../utils/blobUpload');
+      const { url } = await uploadToBlob(file, { kind: 'avatar' });
+      setFormData({ ...formData, avatar: url });
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload image. You can paste an image URL instead.');

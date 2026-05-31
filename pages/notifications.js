@@ -383,7 +383,7 @@ function NotificationsFeed({ ctx, router, filter }) {
                     disabled={busyId === inv.id}
                     onClick={() => wrap(inv.id, async () => {
                       const data = await ctx.acceptInvite(inv.id);
-                      if (data) navigateToBattleStart(router, data.matchup);
+                      if (data?.ok && data.matchup) navigateToBattleStart(router, data.matchup);
                     })}
                     className="bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-shadow"
                     style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}

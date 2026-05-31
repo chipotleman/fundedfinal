@@ -92,8 +92,13 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Voice message requires attachmentUrl' });
       }
       // Only accept first-party object-storage paths so attachers can't smuggle
-      // off-platform tracking/beacon URLs into a chat.
-      if (!attachmentUrl.startsWith('/objects/')) {
+      // off-platform tracking/beacon URLs into a chat. Accept the legacy
+      // Replit-sidecar `/objects/...` path AND new Vercel Blob public URLs
+      // (`https://<store>.public.blob.vercel-storage.com/...`).
+      const isOk =
+        attachmentUrl.startsWith('/objects/') ||
+        /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//i.test(attachmentUrl);
+      if (!isOk) {
         return res.status(400).json({ error: 'Invalid attachment URL' });
       }
     } else if (!content?.trim()) {

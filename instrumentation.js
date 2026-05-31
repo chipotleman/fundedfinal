@@ -1,7 +1,18 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Surface the in-process SSE bus's single-instance requirement at boot.
+    // The whole real-time flow (invites, live PnL, forfeits) depends on this
+    // server running as ONE always-on instance; this logs that constraint and
+    // warns on the multi-worker red flag we can detect.
+    try {
+      const { assertSingleInstanceBus } = await import('./lib/battle-events');
+      assertSingleInstanceBus();
+    } catch (e) {
+      console.error('[Instrumentation] bus guard failed:', e?.message || e);
+    }
+
     const { warmupGoalserve } = await import('./lib/goalserve-autostart');
-    
+
     console.log('[Instrumentation] Server starting - warming up Goalserve connection...');
     await warmupGoalserve();
     console.log('[Instrumentation] Warmup complete - server ready');

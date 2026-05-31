@@ -10,6 +10,17 @@ import {
   FAVORITE_TEAMS_LIMIT,
 } from '../../../lib/teamCatalog';
 
+// Vercel Blob public-URL pattern. The pathname (after the hostname)
+// can be anything; the host is fixed-shape:
+// `<storeId>.public.blob.vercel-storage.com`. This is intentionally
+// narrow so we can't be tricked into accepting an attacker-controlled
+// `*.example.com/...` URL just because it's https.
+const VERCEL_BLOB_HOST_RE =
+  /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//i;
+function isVercelBlobUrl(value) {
+  return typeof value === 'string' && VERCEL_BLOB_HOST_RE.test(value);
+}
+
 const BANNER_MAX_WIDTH = 2400;
 const BANNER_MAX_HEIGHT = 1200;
 const BANNER_MIN_WIDTH = 600;
@@ -107,7 +118,12 @@ export default async function handler(req, res) {
 
   try {
     if (avatar && typeof avatar === 'string') {
-      const isUploadedPath = avatar.startsWith('/objects/');
+      // Accept legacy Replit-sidecar `/objects/...` paths (still in the DB
+      // from before the Vercel Blob migration) AND new Vercel Blob public
+      // URLs (`https://<store>.public.blob.vercel-storage.com/...`). Data
+      // URLs are the in-browser cropper fallback.
+      const isUploadedPath =
+        avatar.startsWith('/objects/') || isVercelBlobUrl(avatar);
       if (!isUploadedPath) {
         if (!avatar.startsWith('data:image/')) {
           return res.status(400).json({ error: 'Invalid avatar format. Must be a valid image.' });
@@ -137,7 +153,8 @@ export default async function handler(req, res) {
         isLibraryBanner(bannerUrl) ||
         bannerUrl.startsWith('/objects/') ||
         bannerUrl.startsWith('/banners/') ||
-        bannerUrl.startsWith('data:image/');
+        bannerUrl.startsWith('data:image/') ||
+        isVercelBlobUrl(bannerUrl);
       if (!ok) {
         return res.status(400).json({ error: 'Banner must be from the library or an upload.' });
       }

@@ -8,11 +8,7 @@
 
 const CODE_HINTS = {
   storage_not_configured:
-    'Object storage env vars are missing on the server (PRIVATE_OBJECT_DIR / DEFAULT_OBJECT_STORAGE_BUCKET_ID).',
-  storage_sidecar_unreachable:
-    'Server cannot reach the Replit Object Storage sidecar (127.0.0.1:1106).',
-  storage_sign_failed:
-    'Sidecar rejected the signing request — credentials or bucket may be wrong.',
+    'Vercel Blob is not configured on the server (BLOB_READ_WRITE_TOKEN is missing). Create a Blob store in the Vercel dashboard and add the token to the deployment env.',
 };
 
 // User-facing copy. We still show "temporarily unavailable" as the

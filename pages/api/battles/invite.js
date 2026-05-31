@@ -7,6 +7,14 @@ import { readSiteFlags } from '../site-config';
 const { publishBattleEvent } = require('../../../lib/battle-events');
 const { sendPushToUsers } = require('../../../lib/web-push');
 
+// Per-sender in-flight guard for invite creation. The app runs as a single
+// always-on instance (see assertSingleInstanceBus in lib/battle-events.js),
+// so a module-level Set is a reliable lock: it serializes concurrent POSTs
+// from the same user and closes the double-click / rapid-fire window where
+// two simultaneous requests both pass the "no pending invite" read before
+// either insert commits. Always released in a finally below.
+const invitesInFlight = new Set();
+
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.id) {
@@ -192,6 +200,13 @@ export default async function handler(req, res) {
     const mode = GAME_MODES[validGameMode];
     const parsedDuration = Math.round(mode.durationMinutes / 60);
 
+    // Rule 7: reject a second concurrent create from the same sender before it
+    // can race past the pending-invite check below.
+    if (invitesInFlight.has(userId)) {
+      return res.status(429).json({ error: 'Hang on — your invite is already being sent.' });
+    }
+    invitesInFlight.add(userId);
+
     try {
       const areFriends = await db
         .select()
@@ -246,6 +261,25 @@ export default async function handler(req, res) {
           error: senderInBattle
             ? "You're already in a battle — finish it before inviting someone else."
             : "They're already in a battle. Wait until it ends to challenge them.",
+        });
+      }
+
+      // One live battle intent per user (Rules 1 & 2). Block a new invite if
+      // this sender already has ANY pending outgoing invite — to anyone, not
+      // just this receiver. Previously only the sender↔receiver pair was
+      // checked, which let a user stack multiple unresolved outgoing invites
+      // (A→B pending, then A→C) and race when more than one was accepted.
+      // Blocking (not auto-cancelling) keeps the user's existing intent intact
+      // and makes them choose explicitly.
+      const myPendingOutgoing = await db
+        .select({ id: battleInvites.id })
+        .from(battleInvites)
+        .where(and(eq(battleInvites.senderId, userId), eq(battleInvites.status, 'pending')))
+        .limit(1);
+
+      if (myPendingOutgoing.length > 0) {
+        return res.status(409).json({
+          error: 'You already have a pending invite. Cancel it before sending a new one.',
         });
       }
 
@@ -342,6 +376,8 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error('Error sending battle invite:', error);
       return res.status(500).json({ error: 'Failed to send battle invite' });
+    } finally {
+      invitesInFlight.delete(userId);
     }
   }
 

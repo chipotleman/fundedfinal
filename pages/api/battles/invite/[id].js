@@ -26,6 +26,12 @@ export default async function handler(req, res) {
           status: battleInvites.status,
           expiresAt: battleInvites.expiresAt,
           respondedAt: battleInvites.respondedAt,
+          // matchupId + gameMode let the sender's waiting-screen poll
+          // transition straight into the started battle the instant it
+          // detects an accept — without waiting on the SSE matchup:start
+          // push or a second /api/matchups/current round-trip.
+          matchupId: battleInvites.matchupId,
+          gameMode: battleInvites.gameMode,
         })
         .from(battleInvites)
         .where(eq(battleInvites.id, id))
@@ -157,6 +163,24 @@ export default async function handler(req, res) {
             );
           } catch (_e) {}
           return res.status(400).json({ error: 'This invite has expired' });
+        }
+
+        // One live battle intent per user (Rule 3). If the acceptor still has
+        // their OWN outgoing invite pending, block the accept and make them
+        // resolve it first — otherwise accepting here while their invite is
+        // also live elsewhere is exactly the two-intents race we're closing.
+        // Blocking (not auto-cancelling) keeps the decision explicit; the
+        // post-accept cleanup below remains as defense-in-depth.
+        const acceptorPendingOutgoing = await db
+          .select({ id: battleInvites.id })
+          .from(battleInvites)
+          .where(and(eq(battleInvites.senderId, userId), eq(battleInvites.status, 'pending')))
+          .limit(1);
+
+        if (acceptorPendingOutgoing.length > 0) {
+          return res.status(409).json({
+            error: 'Cancel your own pending invite before accepting a new battle.',
+          });
         }
 
         // Active-matchup conflict guard. Without this, a recipient who

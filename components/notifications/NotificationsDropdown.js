@@ -153,7 +153,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                       onClick={() => wrap(inv.id, async () => {
                         const data = await ctx.acceptInvite(inv.id);
                         onClose?.();
-                        if (data) navigateToBattleStart(router, data.matchup);
+                        if (data?.ok && data.matchup) navigateToBattleStart(router, data.matchup);
                       })}
                       className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
                       style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}

@@ -599,24 +599,9 @@ export default function PublicProfile() {
     if (file.size > 5 * 1024 * 1024) {
       throw new Error('Image must be smaller than 5MB');
     }
-    const urlRes = await fetch('/api/uploads/request-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
-    });
-    if (!urlRes.ok) {
-      const data = await urlRes.json().catch(() => ({}));
-      throw new Error(data.error || 'Could not start upload');
-    }
-    const { uploadURL, objectPath } = await urlRes.json();
-    const putRes = await fetch(uploadURL, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
-    if (!putRes.ok) throw new Error('Upload failed');
-    return objectPath;
+    const { uploadToBlob } = await import('../../utils/blobUpload');
+    const { url } = await uploadToBlob(file, { kind: 'avatar' });
+    return url;
   };
 
   const persistProfile = async (payload) => {
@@ -950,6 +935,12 @@ export default function PublicProfile() {
                   role={isOwnProfile ? 'button' : undefined}
                   aria-label={isOwnProfile ? 'Change profile picture' : undefined}
                 >
+                  {/* No `isOnline` dot here on purpose — the camera
+                      badge sits in the bottom-right corner and was
+                      overlapping the dot, AND the <ActiveStatus />
+                      line right below the username already conveys
+                      online state textually. Showing both is just
+                      visual noise per user feedback. */}
                   <UserAvatar
                     avatar={profile.avatar}
                     username={profile.username}
@@ -957,8 +948,6 @@ export default function PublicProfile() {
                     size={96}
                     bgColor={'#1a1a1a'}
                     textColor={'#fff'}
-                    isOnline={!profile.isFakeOpponent && !!profile.isOnline}
-                    onlineDotBorderColor={'#0d0d0d'}
                   />
                   {isOwnProfile && (
                     <>

@@ -1861,59 +1861,26 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     // the parameter-laden value in object-storage metadata isn't worth the
     // playback risk for receivers on Safari.
     const baseMime = (blob.type || 'audio/webm').split(';')[0].trim() || 'audio/webm';
-    let reqRes;
+    // Re-wrap the blob as a File so the Vercel Blob client `upload()`
+    // sees a filename + a normalized content type. The recorder hands us
+    // a MediaRecorder Blob (no name, sometimes `audio/webm;codecs=opus`),
+    // which the server-side `allowedContentTypes` check would reject.
+    const fileForUpload =
+      typeof File !== 'undefined'
+        ? new File([blob], filename, { type: baseMime })
+        : blob;
     try {
-      reqRes = await fetch('/api/uploads/request-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          name: filename,
-          size: blob.size,
-          contentType: baseMime,
-          kind: 'voice-note',
-        }),
-      });
-    } catch (netErr) {
-      const wrapped = new Error('voice-request-url-network');
-      wrapped.stage = 'request-url';
-      wrapped.network = true;
-      wrapped.cause = netErr;
+      const { uploadToBlob } = await import('../../utils/blobUpload');
+      const { url } = await uploadToBlob(fileForUpload, { kind: 'voice-note' });
+      return { attachmentUrl: url, attachmentDurationMs: durationMs };
+    } catch (err) {
+      const wrapped = new Error('voice-upload-failed');
+      wrapped.stage = 'upload';
+      wrapped.status = err?.status || 0;
+      wrapped.serverMessage = err?.message;
+      wrapped.cause = err;
       throw wrapped;
     }
-    if (!reqRes.ok) {
-      const wrapped = new Error('voice-request-url-failed');
-      wrapped.stage = 'request-url';
-      wrapped.status = reqRes.status;
-      try {
-        const body = await reqRes.clone().json();
-        if (body?.error) wrapped.serverMessage = body.error;
-        if (body?.code) wrapped.code = body.code;
-      } catch (_e) {}
-      throw wrapped;
-    }
-    const { uploadURL, objectPath } = await reqRes.json();
-    let putRes;
-    try {
-      putRes = await fetch(uploadURL, {
-        method: 'PUT',
-        headers: { 'Content-Type': baseMime },
-        body: blob,
-      });
-    } catch (netErr) {
-      const wrapped = new Error('voice-put-network');
-      wrapped.stage = 'put';
-      wrapped.network = true;
-      wrapped.cause = netErr;
-      throw wrapped;
-    }
-    if (!putRes.ok) {
-      const wrapped = new Error('voice-put-failed');
-      wrapped.stage = 'put';
-      wrapped.status = putRes.status;
-      throw wrapped;
-    }
-    return { attachmentUrl: objectPath, attachmentDurationMs: durationMs };
   };
 
   const handleStartRecording = async ({ continuingSegment = false } = {}) => {
