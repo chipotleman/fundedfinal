@@ -135,11 +135,18 @@ export default function DesktopGlobalSearch() {
     if (id) router.push(`/game/${id}`);
   };
 
-  const teamLabel = (g) => {
-    const home = g.homeTeam || g.home_team || g.home || 'Home';
-    const away = g.awayTeam || g.away_team || g.away || 'Away';
-    return `${away} @ ${home}`;
+  const awayName = (g) => g.awayTeamFull || g.awayTeam || g.away_team || g.away || 'Away';
+  const homeName = (g) => g.homeTeamFull || g.homeTeam || g.home_team || g.home || 'Home';
+  const toNum = (v) => {
+    const n = typeof v === 'number' ? v : v != null && v !== '' ? Number.parseInt(v, 10) : NaN;
+    return Number.isFinite(n) ? n : null;
   };
+  const gameScore = (g) => ({
+    home: toNum(g.scores?.home?.total ?? g.homeScore ?? g.home_score),
+    away: toNum(g.scores?.away?.total ?? g.awayScore ?? g.away_score),
+  });
+  const gameIsLive = (g) => !!(g.isLive || g.status === 'IN_PROGRESS');
+  const gameIsFinal = (g) => !!(g.isCompleted || g.status === 'FINAL');
 
   const hasResults = players.length > 0 || games.length > 0;
   const showDropdown = open && query.trim().length >= 2;
@@ -247,27 +254,81 @@ export default function DesktopGlobalSearch() {
               <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: '#6b7280' }}>
                 Games
               </div>
-              {games.map((g, i) => (
-                <button
-                  key={`g-${g.id || i}`}
-                  type="button"
-                  onClick={() => goToGame(g)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left lg:hover:bg-white/5 transition-colors"
-                >
-                  <span className="flex items-center -space-x-1 flex-shrink-0">
-                    <TeamLogo name={g.awayTeam || g.away_team || g.away} sport={g.sport} size={20} />
-                    <TeamLogo name={g.homeTeam || g.home_team || g.home} sport={g.sport} size={20} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold truncate" style={{ color: '#f5f5f5' }}>
-                      {teamLabel(g)}
+              {games.map((g, i) => {
+                const { home: hs, away: as } = gameScore(g);
+                const live = gameIsLive(g);
+                const final = gameIsFinal(g);
+                const showScore = (live || final) && (Number.isFinite(hs) || Number.isFinite(as));
+                const awayWins = final && Number.isFinite(hs) && Number.isFinite(as) && as > hs;
+                const homeWins = final && Number.isFinite(hs) && Number.isFinite(as) && hs > as;
+                return (
+                  <button
+                    key={`g-${g.id || i}`}
+                    type="button"
+                    onClick={() => goToGame(g)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-left lg:hover:bg-white/5 transition-colors"
+                  >
+                    <span className="min-w-0 flex-1 flex flex-col gap-1.5">
+                      {/* Away */}
+                      <span className="flex items-center gap-2">
+                        <TeamLogo name={g.awayTeam || g.away_team || g.away} sport={g.sport} size={22} />
+                        <span
+                          className="min-w-0 flex-1 text-[13px] truncate"
+                          style={{ color: '#f5f5f5', fontWeight: awayWins ? 800 : 600, opacity: final && !awayWins ? 0.6 : 1 }}
+                        >
+                          {awayName(g)}
+                        </span>
+                        {showScore && (
+                          <span
+                            className="text-[13px] tabular-nums"
+                            style={{ color: '#f5f5f5', fontWeight: awayWins ? 800 : 700, opacity: final && !awayWins ? 0.6 : 1 }}
+                          >
+                            {Number.isFinite(as) ? as : '–'}
+                          </span>
+                        )}
+                      </span>
+                      {/* Home */}
+                      <span className="flex items-center gap-2">
+                        <TeamLogo name={g.homeTeam || g.home_team || g.home} sport={g.sport} size={22} />
+                        <span
+                          className="min-w-0 flex-1 text-[13px] truncate"
+                          style={{ color: '#f5f5f5', fontWeight: homeWins ? 800 : 600, opacity: final && !homeWins ? 0.6 : 1 }}
+                        >
+                          {homeName(g)}
+                        </span>
+                        {showScore && (
+                          <span
+                            className="text-[13px] tabular-nums"
+                            style={{ color: '#f5f5f5', fontWeight: homeWins ? 800 : 700, opacity: final && !homeWins ? 0.6 : 1 }}
+                          >
+                            {Number.isFinite(hs) ? hs : '–'}
+                          </span>
+                        )}
+                      </span>
                     </span>
-                    <span className="block text-[11px] truncate" style={{ color: '#6b7280' }}>
-                      {g.sportName || g.league || g.sport || 'Game'}
+                    {/* Status column */}
+                    <span className="flex-shrink-0 flex flex-col items-end gap-1 pl-2 text-right" style={{ minWidth: 52 }}>
+                      {live ? (
+                        <>
+                          <span className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                            <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: '#ef4444' }}>Live</span>
+                          </span>
+                          {g.period && (
+                            <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: '#9ca3af' }}>{g.period}</span>
+                          )}
+                        </>
+                      ) : final ? (
+                        <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: '#6b7280' }}>Final</span>
+                      ) : (
+                        <span className="text-[10px] font-semibold uppercase tracking-wide truncate" style={{ color: '#6b7280' }}>
+                          {g.sportName || g.league || g.sport || ''}
+                        </span>
+                      )}
                     </span>
-                  </span>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
