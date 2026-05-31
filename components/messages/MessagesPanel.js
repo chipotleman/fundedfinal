@@ -2791,9 +2791,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
               disabled={hasActiveMatchup}
               className="msg-cartoon-btn sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-2xl text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.5)',
+                background: 'linear-gradient(180deg,#3b82f6,#4f46e5)',
+                border: '1px solid rgba(0,0,0,0.4)',
+                boxShadow: '0 3px 0 #1e3a8a, 0 6px 16px rgba(59,130,246,0.28)',
                 textShadow: '0 1px 0 rgba(0,0,0,0.35)',
               }}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : 'Start Battle'}
@@ -2816,9 +2816,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
               disabled={hasActiveMatchup}
               className="msg-cartoon-btn hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-extrabold uppercase tracking-wider text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.5)',
+                background: 'linear-gradient(180deg,#3b82f6,#4f46e5)',
+                border: '1px solid rgba(0,0,0,0.4)',
+                boxShadow: '0 3px 0 #1e3a8a, 0 6px 16px rgba(59,130,246,0.28)',
                 textShadow: '0 1px 0 rgba(0,0,0,0.35)',
               }}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
