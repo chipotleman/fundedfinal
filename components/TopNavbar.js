@@ -16,7 +16,7 @@ import MessagePopup from './messages/MessagePopup';
 import { formatMoney } from '../utils/formatMoney';
 import haptic from '../utils/haptics';
 import DesktopGlobalSearch from './desktop/DesktopGlobalSearch';
-import DesktopNavDropdown from './desktop/DesktopNavDropdown';
+import HowItWorksModal from './desktop/HowItWorksModal';
 
 export default function TopNavbar({
   betSlipCount,
@@ -40,6 +40,7 @@ export default function TopNavbar({
   // scroll-up-then-down pass.
   const showCondensedBar = hasCondensedBar && sportsRowPassed;
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const userMenuRef = useRef(null);
   const userMenuBtnRef = useRef(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -655,17 +656,28 @@ export default function TopNavbar({
               </a>
             </div>
 
-            {/* Desktop top-bar tools (lg+ only) — Polymarket-style: a compact
-                "tucked away" navigation dropdown next to a prominent centered
-                global search. The primary nav links now live inside the
-                dropdown instead of being spread across the bar. This whole
-                cluster is `hidden lg:flex`, so the mobile/tablet hamburger
-                experience below is completely unaffected. */}
-            <div className="hidden lg:flex items-center gap-3 flex-1 min-w-0 mx-6">
-              <DesktopNavDropdown isLoggedIn={isLoggedIn} />
+            {/* Desktop top-bar tools (lg+ only) — Polymarket-style: a prominent
+                centered global search with a "How it works" trigger to its
+                right. Primary nav links live inside the avatar/profile menu
+                (logged in) — logged-out users get Sign In / Sign Up on the
+                right instead. This whole cluster is `hidden lg:flex`, so the
+                mobile/tablet hamburger experience below is unaffected. */}
+            <div className="hidden lg:flex items-center gap-4 flex-1 min-w-0 mx-6">
               <div className="flex-1 min-w-0 flex justify-center">
                 <DesktopGlobalSearch />
               </div>
+              <button
+                type="button"
+                onClick={() => setShowHowItWorks(true)}
+                className="flex items-center gap-1.5 flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-colors lg:hover:text-white"
+                style={{ color: '#d1d5db' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
+                </svg>
+                How it works
+              </button>
             </div>
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
@@ -979,6 +991,44 @@ export default function TopNavbar({
                           <div className="px-4 py-3 border-b border-[#1a1a1a]/50 bg-[#111111]">
                             <p className="text-sm text-gray-500">Signed in as</p>
                             <p className="text-sm font-semibold text-white truncate">{currentUser?.email}</p>
+                          </div>
+
+                          {/* Primary navigation — tucked into the profile menu
+                              (Polymarket-style) instead of spread across the
+                              top bar. The /dashboard route lands on home (`/`),
+                              so Battle is treated active there too. */}
+                          <div className="py-1 border-b border-[#1a1a1a]/50">
+                            {(() => {
+                              const currentPath = router.pathname || '';
+                              const navIsActive = (href) =>
+                                href === '/dashboard'
+                                  ? currentPath === '/dashboard' || currentPath === '/'
+                                  : currentPath === href || currentPath.startsWith(`${href}/`);
+                              const navLinks = [
+                                ['/dashboard', 'Battle'],
+                                ['/my-picks', 'My Picks'],
+                                ['/battle', 'Social'],
+                                ['/leaderboard', 'Leaderboard'],
+                              ];
+                              return navLinks.map(([href, label]) => {
+                                const active = navIsActive(href);
+                                return (
+                                  <Link
+                                    key={href}
+                                    href={href}
+                                    onClick={() => setShowUserMenu(false)}
+                                    aria-current={active ? 'page' : undefined}
+                                    className={`flex items-center px-4 py-2.5 lg:hover:bg-[#1a1a1a] lg:hover:text-blue-400 transition-colors border-l-[3px] ${
+                                      active
+                                        ? 'bg-[#0f1d3a] text-white border-l-[#3b82f6]'
+                                        : 'text-gray-300 border-l-transparent'
+                                    }`}
+                                  >
+                                    <span className="font-medium text-sm">{label}</span>
+                                  </Link>
+                                );
+                              });
+                            })()}
                           </div>
 
                           {/* Menu Items */}
@@ -1470,6 +1520,8 @@ export default function TopNavbar({
         myId={session?.user?.id}
         onClose={() => setMessageFriend(null)}
       />
+
+      <HowItWorksModal open={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
     </>
   );
 } 

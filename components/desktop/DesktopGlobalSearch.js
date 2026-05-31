@@ -94,10 +94,18 @@ export default function DesktopGlobalSearch() {
         const lower = term.toLowerCase();
         const matchedGames = (gameList || [])
           .filter((g) => {
-            const home = (g.homeTeam || g.home_team || g.home || '').toString().toLowerCase();
-            const away = (g.awayTeam || g.away_team || g.away || '').toString().toLowerCase();
-            const league = (g.sportName || g.league || g.sport || '').toString().toLowerCase();
-            return home.includes(lower) || away.includes(lower) || league.includes(lower);
+            // Match both abbreviated (`homeTeam`) and full team names
+            // (`homeTeamFull`) so a search like "49ers" finds the
+            // "San Francisco 49ers" game even when the card shows "SF".
+            const haystack = [
+              g.homeTeam, g.home_team, g.home,
+              g.awayTeam, g.away_team, g.away,
+              g.homeTeamFull, g.awayTeamFull,
+              g.sportName, g.league, g.sport,
+            ]
+              .filter(Boolean)
+              .map((v) => v.toString().toLowerCase());
+            return haystack.some((v) => v.includes(lower));
           })
           .slice(0, 5);
         setGames(matchedGames);
