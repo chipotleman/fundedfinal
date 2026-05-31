@@ -763,7 +763,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         aria-modal="true"
         aria-labelledby="pfm-title"
         className="rounded-3xl max-w-md w-full max-h-[88vh] overflow-hidden flex flex-col pfm-slide-in my-auto"
-        style={{ backgroundColor: cardBg, border: `2.5px solid #0a0a0a`, boxShadow: '0 8px 0 #0a0a0a, 0 22px 44px rgba(0,0,0,0.55)' }}
+        style={{ backgroundColor: cardBg, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 60px rgba(0,0,0,0.6)' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="px-5 pt-5 pb-0 flex-shrink-0">
@@ -774,57 +774,33 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   smaller all-caps eyebrow for the subtitle. Keeps
                   PlayFriendModal in the same visual family as the rest
                   of the battle UI. */}
-              {/* Arcade-neon hero title — same italic gradient + lightning
-                  bolts as QuickMatchModal so both 1v1 entry flows share
-                  the same theme. */}
-              <div className="flex items-center gap-2" style={{ paddingTop: 6 }}>
-                <span
-                  aria-hidden="true"
-                  style={{
-                    fontSize: 22,
-                    lineHeight: 1,
-                    color: '#facc15',
-                    filter: 'drop-shadow(0 2px 0 #0a0a0a)',
-                  }}
-                >
-                  ⚡
-                </span>
+              {/* Premium hero title — clean italic wordmark with a muted
+                  brand-blue eyebrow, matching QuickMatchModal so both 1v1
+                  entry flows share the same design system. */}
+              <div className="flex items-center" style={{ paddingTop: 6 }}>
                 <h2
                   id="pfm-title"
-                  className="font-black uppercase"
+                  className="font-black italic uppercase"
                   style={{
                     fontSize: 'clamp(22px, 5.5vw, 30px)',
                     lineHeight: 1.2,
                     letterSpacing: '0.01em',
-                    fontStyle: 'italic',
-                    color: '#fbbf24',
+                    color: '#fff',
+                    textShadow: '0 0 22px rgba(59,130,246,0.45)',
                     whiteSpace: 'nowrap',
                     margin: 0,
                     padding: '2px 0',
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
                   }}
                 >
                   Play a Friend
                 </h2>
-                <span
-                  aria-hidden="true"
-                  style={{
-                    fontSize: 22,
-                    lineHeight: 1,
-                    color: '#facc15',
-                    filter: 'drop-shadow(0 2px 0 #0a0a0a)',
-                  }}
-                >
-                  ⚡
-                </span>
               </div>
               <p
-                className="mt-1 font-extrabold uppercase"
+                className="mt-1 font-bold uppercase"
                 style={{
-                  color: '#7dd3fc',
+                  color: '#93c5fd',
                   fontSize: '10px',
                   letterSpacing: '0.22em',
-                  textShadow: '0 0 8px rgba(6,182,212,0.55)',
                 }}
               >
                 Challenge someone to a 1v1 battle
@@ -834,16 +810,16 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               aria-label="Close"
               onClick={onClose}
               className="pfm-close-btn w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: elevatedBg, border: '2.5px solid #0a0a0a', boxShadow: '0 3px 0 #0a0a0a' }}
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
             >
-              <svg className="w-4 h-4" style={{ color: textPrimary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+              <svg className="w-4 h-4" style={{ color: textPrimary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
 
           {!sent && !lockedFriend && (
             <div
               className="flex gap-1.5 p-1.5 rounded-2xl mb-4"
-              style={{ backgroundColor: '#0a0a0a', border: '2.5px solid #0a0a0a', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
               {TABS.map(tab => {
                 const active = activeTab === tab.id;
@@ -853,18 +829,17 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     onClick={() => setActiveTab(tab.id)}
                     className="pfm-tab-btn flex-1 py-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wider relative"
                     style={{
-                      background: active ? 'linear-gradient(180deg,#3b82f6,#2563eb)' : 'transparent',
+                      background: active ? 'linear-gradient(180deg,#60a5fa,#2563eb)' : 'transparent',
                       color: active ? '#fff' : textMuted,
-                      border: active ? '2px solid #0a0a0a' : '2px solid transparent',
-                      boxShadow: active ? '0 3px 0 #0a0a0a, 0 0 16px rgba(59,130,246,0.45)' : 'none',
-                      textShadow: active ? '0 1px 0 rgba(0,0,0,0.35)' : 'none',
+                      border: active ? '1px solid rgba(0,0,0,0.15)' : '1px solid transparent',
+                      boxShadow: active ? '0 6px 18px rgba(59,130,246,0.4)' : 'none',
                     }}
                   >
                     {tab.label}
                     {tab.id === 'requests' && requestCount > 0 && (
                       <span
                         className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-extrabold text-white flex items-center justify-center"
-                        style={{ background: 'linear-gradient(180deg,#ef4444,#dc2626)', border: '2px solid #0a0a0a', boxShadow: '0 2px 0 #0a0a0a' }}
+                        style={{ background: 'linear-gradient(180deg,#ef4444,#dc2626)', border: '1px solid rgba(0,0,0,0.2)', boxShadow: '0 4px 12px rgba(239,68,68,0.4)' }}
                       >
                         {requestCount}
                       </span>
@@ -876,217 +851,6 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
           )}
         </div>
 
-        {sent ? (
-          <div className="p-6 text-center pfm-fade-in">
-            <style jsx>{`
-              @keyframes pfmWaitPulse {
-                0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); transform: scale(1); }
-                50% { box-shadow: 0 0 0 10px rgba(59,130,246,0.0), 0 0 32px rgba(59,130,246,0.45); transform: scale(1.04); }
-              }
-              @keyframes pfmShimmer {
-                0% { background-position: -200% 0; }
-                100% { background-position: 200% 0; }
-              }
-              @keyframes pfmDots {
-                0%, 20% { opacity: 0.2; }
-                50% { opacity: 1; }
-                80%, 100% { opacity: 0.2; }
-              }
-              .pfm-wait-avatar {
-                animation: pfmWaitPulse 1.8s ease-in-out infinite;
-                border-radius: 9999px;
-              }
-              .pfm-wait-shimmer {
-                background: linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(59,130,246,0.45) 50%, rgba(59,130,246,0) 100%);
-                background-size: 200% 100%;
-                animation: pfmShimmer 1.6s linear infinite;
-              }
-              .pfm-dot { display: inline-block; animation: pfmDots 1.4s infinite; }
-              .pfm-dot:nth-child(2) { animation-delay: 0.2s; }
-              .pfm-dot:nth-child(3) { animation-delay: 0.4s; }
-            `}</style>
-
-            <div className="text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style={{ color: textMuted }}>
-              Challenge Sent
-            </div>
-
-            <div className="flex items-center justify-center gap-2 mb-4 pfm-bounce-in">
-              <div className="flex flex-col items-center" style={{ width: 96 }}>
-                <div
-                  className="rounded-full p-[3px]"
-                  style={{
-                    background: 'linear-gradient(135deg,#22c55e,#10b981)',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(34,197,94,0.45)',
-                  }}
-                >
-                  <div className="rounded-full" style={{ background: cardBg, padding: 2 }}>
-                    <UserAvatar
-                      user={currentUser ? { id: currentUser.id, username: currentUser.username, avatar: currentUser.avatar, frameId: currentUser.frameId } : { username: 'You' }}
-                      size={72}
-                    />
-                  </div>
-                </div>
-                <div className="mt-2 text-xs font-bold truncate max-w-[88px]" style={{ color: textPrimary }}>
-                  {currentUser?.username || 'You'}
-                </div>
-                <div className="text-[9px] uppercase tracking-wider" style={{ color: '#22c55e' }}>Ready</div>
-              </div>
-
-              <div className="flex flex-col items-center px-1">
-                <div className="text-2xl font-black italic" style={{ color: textPrimary, textShadow: '0 0 12px rgba(255,255,255,0.25)' }}>VS</div>
-              </div>
-
-              <div className="flex flex-col items-center" style={{ width: 96 }}>
-                <div
-                  className="pfm-wait-avatar rounded-full p-[3px]"
-                  style={{
-                    background: 'linear-gradient(135deg,#3b82f6,#22d3ee)',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.45)',
-                  }}
-                >
-                  <div className="rounded-full" style={{ background: cardBg, padding: 2 }}>
-                    <UserAvatar
-                      user={{ id: selectedFriend?.id, username: selectedFriend?.username, avatar: selectedFriend?.avatar, frameId: selectedFriend?.equippedFrame }}
-                      size={72}
-                    />
-                  </div>
-                </div>
-                <div className="mt-2 text-xs font-bold truncate max-w-[88px]" style={{ color: textPrimary }}>
-                  {selectedFriend?.username}
-                </div>
-                <div className="text-[9px] uppercase tracking-wider" style={{ color: '#60a5fa' }}>
-                  Waiting<span className="pfm-dot">.</span><span className="pfm-dot">.</span><span className="pfm-dot">.</span>
-                </div>
-              </div>
-            </div>
-
-            <h3 className="font-bold text-base" style={{ color: textPrimary }}>
-              Waiting for {selectedFriend?.username || 'your opponent'}
-            </h3>
-
-            {/* Cartoon-themed waiting tips card — chunky black border +
-                offset shadow so the supporting copy still reads as part
-                of the same playful design language as the VS card. */}
-            <div
-              className="mt-4 rounded-2xl p-3 text-left space-y-2"
-              style={{
-                backgroundColor: elevatedBg,
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 4px 0 #0a0a0a',
-              }}
-            >
-              <div className="flex items-start gap-2">
-                <span className="text-sm leading-none mt-0.5">✅</span>
-                <p className="text-xs leading-snug" style={{ color: textSecondary }}>
-                  It's safe to close this — you can wait in the background.
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-sm leading-none mt-0.5">⚔️</span>
-                <p className="text-xs leading-snug" style={{ color: textSecondary }}>
-                  When they accept, you'll be dropped straight into the match.
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-sm leading-none mt-0.5">🔔</span>
-                <p className="text-xs leading-snug" style={{ color: textSecondary }}>
-                  If they decline, we'll let you know.
-                </p>
-              </div>
-            </div>
-
-            {inviteCountdown > 0 ? (
-              /* Cartoon countdown — chunky black border around the
-                 progress track so it matches the rest of the slip. */
-              <div className="mt-4">
-                <div
-                  className="w-full rounded-full h-1.5 mb-2 overflow-hidden"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}
-                >
-                  <div
-                    className="pfm-wait-shimmer h-full rounded-full"
-                    style={{
-                      width: `${(inviteCountdown / (INVITE_EXPIRY_HOURS * 3600)) * 100}%`,
-                      background: 'linear-gradient(90deg,#3b82f6,#6366f1)',
-                    }}
-                  ></div>
-                </div>
-                <p
-                  className="text-[10px] font-extrabold uppercase tracking-[0.18em]"
-                  style={{ color: textMuted }}
-                >
-                  Invite expires in {formatCountdown(inviteCountdown)}
-                </p>
-              </div>
-            ) : (
-              <div className="mt-4">
-                <p
-                  className="font-extrabold uppercase"
-                  style={{ color: '#fcd34d', fontSize: '12px', letterSpacing: '0.12em' }}
-                >
-                  Invite expired
-                </p>
-                <button
-                  onClick={() => { setSent(false); setError(''); }}
-                  className="pfm-cartoon-btn mt-3 px-4 py-2.5 rounded-2xl text-xs font-extrabold uppercase tracking-wider"
-                  style={{
-                    background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                    color: '#fff',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.4)',
-                    textShadow: '0 1px 0 rgba(0,0,0,0.35)',
-                  }}
-                >
-                  Try Again
-                </button>
-              </div>
-            )}
-
-            {error && (
-              <div
-                className="mt-3 rounded-xl px-3 py-2.5 text-xs font-semibold text-center pfm-fade-in"
-                style={{
-                  background: 'rgba(239,68,68,0.10)',
-                  border: '1px solid rgba(239,68,68,0.35)',
-                  color: '#fca5a5',
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            <button
-              onClick={onClose}
-              className="pfm-cartoon-btn mt-4 w-full font-extrabold text-sm py-3 rounded-2xl uppercase tracking-wider"
-              style={{
-                backgroundColor: elevatedBg,
-                color: textPrimary,
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 4px 0 #0a0a0a',
-              }}
-            >
-              I&apos;ll wait in the background
-            </button>
-
-            {sentInviteId && inviteCountdown > 0 && (
-              <button
-                onClick={cancelInvite}
-                disabled={cancelling}
-                className="pfm-cartoon-btn mt-3 w-full font-extrabold text-xs py-2.5 rounded-2xl uppercase tracking-wider disabled:opacity-60"
-                style={{
-                  background: 'linear-gradient(180deg,#1a0a0a,#120808)',
-                  color: '#fca5a5',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(248,113,113,0.25)',
-                }}
-              >
-                {cancelling ? 'Cancelling…' : 'Cancel Invite'}
-              </button>
-            )}
-          </div>
-        ) : (
           <div className="flex-1 overflow-y-auto px-5 pb-5">
             {/* Cartoon-themed non-sent error box — same red gradient +
                 chunky black border + offset shadow as the sent state,
@@ -1198,22 +962,20 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                             <button
                               type="button"
                               onClick={togglePlay}
-                              className="pfm-cartoon-btn inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider rounded-xl"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider rounded-xl transition-transform active:scale-[0.97]"
                               style={
                                 isSelected
                                   ? {
-                                      background: 'linear-gradient(180deg,#22c55e,#10b981)',
+                                      background: 'linear-gradient(180deg,#34d399,#10b981)',
                                       color: '#fff',
-                                      border: '2px solid #0a0a0a',
-                                      boxShadow: '0 3px 0 #0a0a0a, 0 0 12px rgba(34,197,94,0.45)',
-                                      textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                                      border: '1px solid rgba(0,0,0,0.15)',
+                                      boxShadow: '0 6px 16px rgba(16,185,129,0.4)',
                                     }
                                   : {
-                                      background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                                      background: 'linear-gradient(180deg,#60a5fa,#2563eb)',
                                       color: '#fff',
-                                      border: '2px solid #0a0a0a',
-                                      boxShadow: '0 3px 0 #0a0a0a, 0 0 12px rgba(59,130,246,0.4)',
-                                      textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                                      border: '1px solid rgba(0,0,0,0.15)',
+                                      boxShadow: '0 6px 16px rgba(59,130,246,0.4)',
                                     }
                               }
                             >
@@ -1434,8 +1196,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   className="flex items-center gap-3 p-3 rounded-2xl"
                   style={{
                     background: 'linear-gradient(180deg,rgba(59,130,246,0.12),rgba(59,130,246,0.04))',
-                    border: '2.5px solid #0a0a0a',
-                    boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.18)',
+                    border: '1px solid rgba(59,130,246,0.3)',
+                    boxShadow: '0 0 14px rgba(59,130,246,0.18)',
                   }}
                 >
                   <UserAvatar user={selectedFriend} size={36} />
@@ -1448,12 +1210,11 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       type="button"
                       onClick={() => setSelectedFriend(null)}
                       aria-label="Pick a different friend"
-                      className="pfm-cartoon-btn text-[10px] font-extrabold uppercase tracking-wider px-3 py-1.5 rounded-xl"
+                      className="text-[10px] font-extrabold uppercase tracking-wider px-3 py-1.5 rounded-xl transition-transform active:scale-[0.97]"
                       style={{
                         backgroundColor: elevatedBg,
                         color: textPrimary,
-                        border: '2px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a',
+                        border: '1px solid rgba(255,255,255,0.12)',
                       }}
                     >
                       Change
@@ -1471,21 +1232,19 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         <button
                           key={amount}
                           onClick={() => setBuyIn(amount)}
-                          className="pfm-cartoon-btn py-2 rounded-xl text-sm font-extrabold"
+                          className="py-2 rounded-xl text-sm font-extrabold transition-transform active:scale-[0.97]"
                           style={
                             selected
                               ? {
-                                  background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
+                                  background: 'linear-gradient(180deg,#60a5fa,#2563eb)',
                                   color: '#fff',
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.45)',
-                                  textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                                  border: '1px solid rgba(0,0,0,0.15)',
+                                  boxShadow: '0 6px 16px rgba(59,130,246,0.4)',
                                 }
                               : {
                                   backgroundColor: elevatedBg,
                                   color: textSecondary,
-                                  border: '2.5px solid #0a0a0a',
-                                  boxShadow: '0 3px 0 #0a0a0a',
+                                  border: '1px solid rgba(255,255,255,0.1)',
                                 }
                           }
                         >
@@ -1511,11 +1270,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         aria-expanded={showGameModeInfo}
                         className="pfm-cartoon-btn w-5 h-5 inline-flex items-center justify-center rounded-full text-[10px] font-extrabold leading-none"
                         style={{
-                          background: showGameModeInfo ? 'linear-gradient(180deg,#3b82f6,#2563eb)' : 'linear-gradient(180deg,#1f2937,#111827)',
+                          background: showGameModeInfo ? 'linear-gradient(180deg,#60a5fa,#2563eb)' : 'rgba(255,255,255,0.08)',
                           color: '#ffffff',
-                          border: '2px solid #0a0a0a',
-                          boxShadow: '0 2px 0 #0a0a0a',
-                          textShadow: '0 1px 0 rgba(0,0,0,0.35)',
+                          border: '1px solid rgba(255,255,255,0.12)',
                         }}
                       >
                         ?
@@ -1527,8 +1284,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           style={{
                             backgroundColor: cardBg,
                             color: textSecondary,
-                            border: '2.5px solid #0a0a0a',
-                            boxShadow: '0 5px 0 #0a0a0a, 0 12px 24px rgba(0,0,0,0.6)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            boxShadow: '0 12px 28px rgba(0,0,0,0.6)',
                           }}
                         >
                           {isBeta ? (
@@ -1586,22 +1343,22 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                             }
                           }}
                           title={betaLocked ? 'Available after the public beta — Original is the only mode during beta.' : (locked ? 'Rush needs a live game in progress — try again when one tips off.' : undefined)}
-                          className="pfm-cartoon-btn flex flex-col items-center text-center px-1.5 pt-6 pb-2.5 rounded-2xl relative overflow-hidden"
+                          className="flex flex-col items-center text-center px-1.5 pt-6 pb-2.5 rounded-2xl relative overflow-hidden transition-transform active:scale-[0.98]"
                           style={
                             selected
                               ? {
                                   background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.08) 100%), #0a0a0a`,
-                                  border: `2.5px solid ${mode.color}`,
-                                  boxShadow: `0 4px 0 #0a0a0a, inset 0 0 0 1px rgba(255,255,255,0.06)`,
-                                  opacity: locked ? 0.45 : 1,
+                                  border: `1.5px solid ${mode.color}`,
+                                  boxShadow: `0 8px 24px ${glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
+                                  opacity: locked ? 0.5 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
                                 }
                               : {
                                   background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), #0a0a0a`,
-                                  border: `2.5px solid ${mode.color}`,
-                                  boxShadow: `0 4px 0 #0a0a0a`,
-                                  opacity: locked ? 0.45 : 1,
+                                  border: `1px solid ${mode.color}55`,
+                                  boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 16px ${glow}`,
+                                  opacity: locked ? 0.5 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
                                 }
@@ -1609,11 +1366,13 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         >
                           {mode.recommended && (
                             <span
-                              className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              className="absolute left-1/2 -translate-x-1/2 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
                               style={{
+                                top: 6,
                                 background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                                border: '2px solid #0a0a0a',
-                                boxShadow: '0 2px 0 #0a0a0a',
+                                border: '1px solid rgba(0,0,0,0.2)',
+                                boxShadow: '0 4px 12px rgba(59,130,246,0.4)',
+                                zIndex: 2,
                               }}
                             >
                               Popular
@@ -1627,11 +1386,13 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               the orange Rush palette. */}
                           {rushLive && (
                             <span
-                              className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
                               style={{
+                                top: 6,
                                 background: 'linear-gradient(180deg,#f59e0b,#d97706)',
-                                border: '2px solid #0a0a0a',
-                                boxShadow: '0 2px 0 #0a0a0a',
+                                border: '1px solid rgba(0,0,0,0.2)',
+                                boxShadow: '0 4px 12px rgba(245,158,11,0.4)',
+                                zIndex: 2,
                               }}
                               aria-hidden="true"
                             >
@@ -1655,11 +1416,13 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               opacity dim. */}
                           {locked && (
                             <span
-                              className="absolute -top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
+                              className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[8px] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider leading-none"
                               style={{
+                                top: 6,
                                 background: 'linear-gradient(180deg,#374151,#1f2937)',
-                                border: '2px solid #0a0a0a',
-                                boxShadow: '0 2px 0 #0a0a0a',
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                                zIndex: 2,
                               }}
                               aria-hidden="true"
                             >
@@ -1667,89 +1430,27 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                               Locked
                             </span>
                           )}
-                          {/* Internal radial color glow + mode-specific
-                              themed backdrop — mirrors QuickMatchModal so
-                              the two 1v1 entry flows look identical. */}
-                          {mode.id === 'rush' && (
-                            <span
-                              aria-hidden="true"
-                              className="absolute inset-0 pointer-events-none overflow-hidden"
-                              style={{ borderRadius: 'inherit', opacity: 0.9 }}
-                            >
-                              <span
-                                className="absolute inset-0"
-                                style={{
-                                  background:
-                                    'repeating-linear-gradient(115deg, rgba(251,146,60,0.18) 0 6px, transparent 6px 16px)',
-                                }}
-                              />
-                              <span style={{ position: 'absolute', top: 8, left: 6, fontSize: 16, opacity: 0.55, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>⚡</span>
-                              <span style={{ position: 'absolute', bottom: 30, right: 6, fontSize: 14, opacity: 0.5, color: '#fde047', filter: 'drop-shadow(0 1px 0 #0a0a0a)', transform: 'rotate(18deg)' }}>⚡</span>
-                            </span>
-                          )}
-                          {mode.id === 'original' && (
-                            <span
-                              aria-hidden="true"
-                              className="absolute inset-0 pointer-events-none overflow-hidden"
-                              style={{ borderRadius: 'inherit', opacity: 0.85 }}
-                            >
-                              <span
-                                className="absolute inset-0"
-                                style={{
-                                  background:
-                                    'radial-gradient(ellipse at 50% 100%, rgba(250,204,21,0.22) 0%, transparent 55%)',
-                                }}
-                              />
-                              <span
-                                className="absolute"
-                                style={{
-                                  top: 14, left: '50%', transform: 'translateX(-50%)',
-                                  width: 56, height: 26, borderRadius: '50%',
-                                  background: 'radial-gradient(ellipse, rgba(250,204,21,0.45), transparent 70%)',
-                                  filter: 'blur(2px)',
-                                }}
-                              />
-                              <span style={{ position: 'absolute', top: 10, left: 8, fontSize: 9, color: '#facc15', opacity: 0.7 }}>★</span>
-                              <span style={{ position: 'absolute', top: 10, right: 8, fontSize: 9, color: '#facc15', opacity: 0.7 }}>★</span>
-                            </span>
-                          )}
-                          {mode.id === 'tournament' && (
-                            <span
-                              aria-hidden="true"
-                              className="absolute inset-0 pointer-events-none overflow-hidden"
-                              style={{ borderRadius: 'inherit', opacity: 0.9 }}
-                            >
-                              <span
-                                className="absolute inset-0"
-                                style={{
-                                  background:
-                                    'repeating-linear-gradient(180deg, rgba(139,92,246,0.16) 0 3px, transparent 3px 9px)',
-                                }}
-                              />
-                              <span
-                                className="absolute"
-                                style={{
-                                  inset: 0,
-                                  background:
-                                    'radial-gradient(circle at 50% 28%, rgba(250,204,21,0.35) 0%, transparent 45%)',
-                                }}
-                              />
-                              <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
-                              <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, color: '#fde047', opacity: 0.8 }}>♦</span>
-                              <span style={{ position: 'absolute', bottom: 28, left: 8, fontSize: 9, color: '#c4b5fd', opacity: 0.75 }}>♛</span>
-                              <span style={{ position: 'absolute', bottom: 28, right: 8, fontSize: 9, color: '#c4b5fd', opacity: 0.75 }}>♛</span>
-                            </span>
-                          )}
+                          {/* Internal radial color glow — gives each tile
+                              the "trading card" look, matching QuickMatchModal. */}
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: `radial-gradient(ellipse at 50% 38%, ${glow} 0%, transparent 60%)`,
+                              borderRadius: 'inherit',
+                              opacity: 0.9,
+                            }}
+                          />
                           <span
                             className="leading-none mb-2 relative"
                             style={{
                               fontSize: 38,
-                              filter: `drop-shadow(0 2px 0 #000)`,
+                              filter: `drop-shadow(0 0 14px ${glow})`,
                             }}
                           >
                             {mode.icon}
                           </span>
-                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.label}</span>
+                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: '#fff' }}>{mode.label}</span>
                           {mode.tagline && (
                             <span
                               className="text-[8px] font-extrabold uppercase mt-1 leading-none relative"
@@ -1760,7 +1461,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           )}
                           <span className="inline-flex items-center gap-1.5 mt-2 relative">
                             <span className="font-black text-[15px] leading-none" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
-                            <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1 }}>🪙</span>
+                            <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, filter: 'drop-shadow(0 0 6px #fbbf24)' }}>🪙</span>
                           </span>
                           <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>coins</span>
                         </button>
@@ -1777,8 +1478,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       className="mt-2 rounded-2xl px-3 py-2.5 text-[11px] leading-snug flex items-start gap-2"
                       style={{
                         background: 'linear-gradient(180deg, rgba(245,158,11,0.16), rgba(245,158,11,0.05))',
-                        border: '2.5px solid #0a0a0a',
-                        boxShadow: '0 3px 0 #0a0a0a',
+                        border: '1px solid rgba(245,158,11,0.4)',
                         color: '#fde68a',
                       }}
                       aria-live="polite"
@@ -1808,8 +1508,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         className="mt-2 flex items-start gap-2 rounded-2xl px-3 py-2.5"
                         style={{
                           background: `linear-gradient(180deg, ${selectedMode.color}1f, ${selectedMode.color}0a)`,
-                          border: '2.5px solid #0a0a0a',
-                          boxShadow: `0 4px 0 #0a0a0a`,
+                          border: '1px solid rgba(255,255,255,0.08)',
                         }}
                       >
                         <span className="text-sm leading-none mt-0.5" aria-hidden="true">{selectedMode.icon}</span>
@@ -1825,7 +1524,6 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               </div>
             )}
           </div>
-        )}
 
         {!sent && selectedFriend && activeTab === 'friends' && (
           <div
@@ -1844,8 +1542,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 className="rounded-2xl px-3 py-2.5 text-xs leading-snug"
                 style={{
                   background: 'linear-gradient(180deg, rgba(248,113,113,0.16), rgba(248,113,113,0.06))',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 4px 0 #0a0a0a, 0 0 14px rgba(248,113,113,0.25)',
+                  border: '1px solid rgba(248,113,113,0.4)',
+                  boxShadow: '0 0 14px rgba(248,113,113,0.25)',
                   color: '#fecaca',
                 }}
               >
@@ -1866,11 +1564,11 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               style={{
                 background: hasActiveMatchup
                   ? 'linear-gradient(180deg,#27272a,#18181b)'
-                  : 'linear-gradient(180deg,#3b82f6 0%, #4f46e5 100%)',
-                border: '1px solid rgba(0,0,0,0.4)',
+                  : 'linear-gradient(180deg,#60a5fa,#2563eb)',
+                border: '1px solid rgba(0,0,0,0.15)',
                 boxShadow: hasActiveMatchup
-                  ? '0 2px 0 rgba(0,0,0,0.5)'
-                  : '0 4px 0 #1e3a8a, 0 10px 24px rgba(59,130,246,0.30)',
+                  ? '0 2px 8px rgba(0,0,0,0.5)'
+                  : '0 10px 30px rgba(59,130,246,0.45)',
                 color: '#ffffff',
                 textShadow: '0 1px 0 rgba(0,0,0,0.35)',
                 letterSpacing: '0.04em',
@@ -1948,15 +1646,14 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
           }
         }
         .pfm-cartoon-btn:active:not(:disabled) {
-          transform: translateY(2px);
-          box-shadow: 0 1px 0 #0a0a0a !important;
+          transform: scale(0.97);
         }
         @keyframes pfmSheen {
           0% { transform: translateX(-130%) skewX(-18deg); }
           100% { transform: translateX(230%) skewX(-18deg); }
         }
         .pfm-hero { transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease; }
-        .pfm-hero:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #1e3a8a, 0 6px 16px rgba(59,130,246,0.30); }
+        .pfm-hero:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 6px 16px rgba(59,130,246,0.30); }
         .pfm-hero:not(:disabled)::after {
           content: '';
           position: absolute; top: 0; left: 0; width: 40%; height: 100%;
