@@ -3662,8 +3662,8 @@ export default function LiveBattlesSection({
             viewport edges. On lg+ the row is clipped to the main column
             (lg:mx-0 / lg:pl-0) and wrapped in DesktopScrollRow so it never
             bleeds under the right sidebar — and gets a gutter scroll arrow. */}
-        <DesktopScrollRow innerClassName="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
-          <div className="flex-shrink-0 w-[380px] flex">
+        <DesktopScrollRow innerClassName="flex gap-3 items-stretch overflow-x-auto lg:overflow-x-visible pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
+          <div className="flex-shrink-0 w-[380px] flex lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[420px]">
             <YouVsCard
               youVsState={youVsState}
               onClick={onYouVsClick}
@@ -3680,8 +3680,8 @@ export default function LiveBattlesSection({
               onPrivateMatchJoined={onPrivateMatchJoined}
             />
           </div>
-          {compactBattles.map(battle => (
-            <div key={battle.id} className="flex-shrink-0 w-[380px] flex">
+          {compactBattles.slice(0, 2).map(battle => (
+            <div key={battle.id} className="flex-shrink-0 w-[380px] flex lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[420px]">
               <BattleCard
                 battle={battle}
                 compact

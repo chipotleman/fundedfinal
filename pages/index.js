@@ -1581,8 +1581,8 @@ export default function Dashboard() {
           // edges; inner left padding keeps the first card aligned
           // with the "Close Games" header above. Right side bleeds
           // so the trailing card peeks off-screen.
-          <DesktopScrollRow innerClassName="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
-            {closeGames.map((game) => {
+          <DesktopScrollRow innerClassName="flex gap-2.5 overflow-x-auto lg:overflow-x-visible pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
+            {closeGames.slice(0, 4).map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               const isTightened = !!tightenedGames[game.id];
               const isLeadChange = !!leadChangedGames[game.id];
@@ -1599,7 +1599,7 @@ export default function Dashboard() {
               return (
                 <div 
                   key={game.id} 
-                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden flex flex-col piks-game-card ${pulseClass}`}
+                  className={`flex-shrink-0 w-[260px] lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[320px] rounded-xl overflow-hidden flex flex-col piks-game-card ${pulseClass}`}
                   style={{
                     backgroundColor: '#0d0d0d',
                     border: `1px solid ${accentBorder}`,
