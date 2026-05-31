@@ -5,6 +5,7 @@ import UserAvatar from '../UserAvatar';
 import PiksBetCard from '../PiksBetCard';
 import { TicketCarousel } from '../BattleOverviewPopup';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { MatchWin, PlayAgain } from './matchflow/MatchFlowScreens';
 
 function useCountUp(target, duration = 1000, shouldStart = false) {
   const [value, setValue] = useState(0);
@@ -554,6 +555,18 @@ export default function MatchResult({
   else if (oppDeclined) rematchLabel = 'Opponent declined';
   else if (isFakeOpponent) rematchLabel = 'Find new match';
 
+  // Player objects + outcome mapping for the premium match-flow screens.
+  const outcome = isWinner ? 'win' : isTie ? 'tie' : 'lose';
+  const youPlayer = { id: currentUserId, name: myName, username: myName, avatar: myAvatar };
+  const oppPlayer = { id: opponentId, name: opponentName, username: opponentName, avatar: opponentAvatar };
+  // Preserve the per-side rematch intent (previously shown as ✓/✕ badges) as
+  // a status line under the rematch panel.
+  let rematchStatusText = '';
+  if (!isFakeOpponent) {
+    if (oppRematchStatus === 'accepted') rematchStatusText = `${opponentName} wants a rematch`;
+    else if (oppRematchStatus === 'declined') rematchStatusText = `${opponentName} declined the rematch`;
+  }
+
   return (
     <>
       <style>{`
@@ -688,89 +701,18 @@ export default function MatchResult({
           onClick={(e) => e.stopPropagation()}
         >
 
-          {showTitle && (
-            <div className="mb-4">
-              {isTie ? (
-                <>
-                  <div className="mr-title-tie"><span className="text-5xl block mb-2">⚖️</span></div>
-                  <h2 className="text-3xl font-black text-cyan-400 mr-title-tie">DRAW!</h2>
-                </>
-              ) : isWinner ? (
-                <>
-                  <div className="mr-trophy"><span className="text-6xl block mb-2">🏆</span></div>
-                  <h2 className="text-4xl font-black text-yellow-400 mr-title-win tracking-wider">VICTORY!</h2>
-                </>
-              ) : (
-                <>
-                  <span className="text-5xl block mb-2 mr-title-lose">😤</span>
-                  <h2 className="text-4xl font-black text-red-500 mr-title-lose tracking-wider">DEFEAT</h2>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Dual-avatar layout with pot transfer cue */}
-          {showStats && (
-            <div className="mr-stats-card mb-5">
-              <div className="flex items-end justify-between gap-3 px-2">
-                <PlayerBlock
-                  side="left"
-                  username={myName}
-                  avatar={myAvatar}
-                  frameId={myFrameId}
-                  userId={currentUserId}
-                  score={animatedFinal}
-                  isWinner={isWinner}
-                  isLoser={isLoser}
-                  isTie={isTie}
-                  rematchStatus={isFakeOpponent ? null : myRematchStatus}
-                  reactions={myReactions}
-                />
-
-                <div className="flex-1 flex flex-col items-center pb-3 min-w-0">
-                  <div
-                    className="text-[10px] uppercase tracking-wider text-gray-500 leading-none"
-                  >
-                    {isTie ? 'Pot split' : 'Pot'}
-                  </div>
-                  <div
-                    className="text-xl font-black leading-tight"
-                    style={{
-                      color: isTie ? '#06b6d4' : '#facc15',
-                      textShadow: isTie
-                        ? '0 0 12px rgba(6,182,212,0.45)'
-                        : '0 0 14px rgba(250,204,21,0.55)',
-                    }}
-                  >
-                    ${formatMoney(potSize, 0)}
-                  </div>
-                  <div className="mt-1 text-[10px] leading-tight text-gray-400 flex items-center justify-center gap-1">
-                    {isTie ? (
-                      <span>↔︎ refunded ↔︎</span>
-                    ) : isWinner ? (
-                      <span className="text-emerald-300 font-bold">← won by you</span>
-                    ) : (
-                      <span className="text-red-300 font-bold">won by {opponentName} →</span>
-                    )}
-                  </div>
-                </div>
-
-                <PlayerBlock
-                  side="right"
-                  username={opponentName}
-                  avatar={opponentAvatar}
-                  frameId={opponentFrameId}
-                  userId={opponentId}
-                  score={animatedOpp}
-                  isWinner={!isWinner && !isTie}
-                  isLoser={isWinner}
-                  isTie={isTie}
-                  rematchStatus={isFakeOpponent ? null : oppRematchStatus}
-                  reactions={oppReactions}
-                />
-              </div>
-            </div>
-          )}
+          {/* Win / lose / draw outcome splash — premium match-flow screen */}
+          <div className="mb-5 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+            <MatchWin
+              outcome={outcome}
+              you={youPlayer}
+              opp={oppPlayer}
+              balance={myFinalBalance}
+              prize={prizeWon}
+              onPrimary={isWinner ? handleShare : handleClose}
+              primaryLabel={isWinner ? (copied ? 'Copied!' : 'Share Win') : 'Back to Battle'}
+            />
+          </div>
 
           {showStats && (
             <div
@@ -1010,55 +952,22 @@ export default function MatchResult({
           )}
 
           {showStats && (
-            <div className="flex gap-3 mr-stats-card">
-              <button
-                onClick={() => {
+            <div className="mr-stats-card rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+              <PlayAgain
+                you={youPlayer}
+                opp={oppPlayer}
+                balance={myFinalBalance}
+                stake={cashBuyIn}
+                onRematch={() => {
                   if (rematchDisabled || rematchAcceptedByMe) return;
                   declineFiredRef.current = true; // accepting suppresses implicit decline
                   onRematchAccept?.();
                 }}
-                disabled={rematchDisabled || rematchAcceptedByMe}
-                className={`flex-1 font-semibold py-3 rounded-lg transition-colors ${
-                  rematchDisabled
-                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                    : rematchAcceptedByMe
-                    ? 'bg-emerald-600 text-white cursor-default'
-                    : 'bg-white text-black hover:bg-gray-100'
-                } ${highlightRematch && !rematchDisabled && !rematchAcceptedByMe ? 'mr-rematch-pulse' : ''}`}
-                style={
-                  highlightRematch && !rematchDisabled && !rematchAcceptedByMe
-                    ? { boxShadow: '0 0 0 2px rgba(16,185,129,0.85), 0 0 24px rgba(16,185,129,0.55)' }
-                    : undefined
-                }
-              >
-                {rematchLabel}
-              </button>
-              <style jsx>{`
-                @keyframes mrRematchPulse {
-                  0%, 100% { transform: scale(1); }
-                  50% { transform: scale(1.03); }
-                }
-                .mr-rematch-pulse {
-                  animation: mrRematchPulse 1.4s ease-in-out infinite;
-                }
-              `}</style>
-              {isWinner ? (
-                <button
-                  onClick={handleShare}
-                  className="flex-1 text-emerald-400 font-semibold py-3 rounded-lg transition-colors"
-                  style={{ background: '#1a1a1a', border: '1px solid #333' }}
-                >
-                  {copied ? 'Copied!' : 'Share Win'}
-                </button>
-              ) : (
-                <button
-                  onClick={handleClose}
-                  className="flex-1 font-medium py-3 rounded-lg transition-colors text-gray-300"
-                  style={{ background: '#1a1a1a', border: '1px solid #333' }}
-                >
-                  Back to Battle
-                </button>
-              )}
+                onHome={handleClose}
+                rematchLabel={rematchLabel}
+                rematchDisabled={rematchDisabled || rematchAcceptedByMe}
+                statusText={rematchStatusText}
+              />
             </div>
           )}
         </div>

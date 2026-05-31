@@ -319,16 +319,25 @@ export default function Dashboard() {
       return;
     }
 
-    // Open the overlay IMMEDIATELY so the dashboard underneath never
-    // flashes. The walkthrough renders a loading skeleton internally
-    // until the matchup payload finishes hydrating.
+    // Came straight from the QuickMatchModal found → confirmed ritual:
+    // the celebration (Opponent Found + Match Confirmed countdown) already
+    // played out in one continuous flow INSIDE the modal. Do NOT pop the
+    // educational "How It Works" walkthrough on top of the now-visible
+    // dashboard — that was the jarring "oh I can play… oh, a popup" gap.
+    // Land the user directly on the playable dashboard and just clean up
+    // the query string.
+    if (cameFromSplash) {
+      router.replace('/', undefined, { shallow: true });
+      return;
+    }
+
+    // Otherwise (rare non-modal battleStarted navigation) open the
+    // walkthrough IMMEDIATELY so the dashboard underneath never flashes.
+    // The walkthrough renders a loading skeleton internally until the
+    // matchup payload finishes hydrating.
     window.scrollTo({ top: 0, behavior: 'auto' });
-    // If the user came straight from the QuickMatchModal "MATCH READY"
-    // splash, the matched celebration was already shown — open the
-    // walkthrough on step 1 ("How it works") instead of repeating
-    // step 0's "You're Matched!".
-    setWalkthroughSkipIntro(cameFromSplash);
-    setWalkthroughStep(cameFromSplash ? 1 : 0);
+    setWalkthroughSkipIntro(false);
+    setWalkthroughStep(0);
     setShowBattleWalkthrough(true);
 
     if (hasActiveMatchup) {

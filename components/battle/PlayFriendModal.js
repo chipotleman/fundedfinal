@@ -10,6 +10,7 @@ import { useMatchup } from '../../contexts/MatchupContext';
 import { saveLastBuyIn } from '../../utils/lastBattleBuyIn';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { FindingOpponent, FlowCard, FlowButton } from './matchflow/MatchFlowScreens';
 
 const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
@@ -689,6 +690,71 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   };
 
   const requestCount = friendRequests.length;
+
+  // ── Premium "challenge sent / waiting" moment (shared look with Quick
+  // Match). This restyles ONLY the sender's waiting screen. All invite
+  // logic — the countdown ref, expiry effect, accept/decline polling and
+  // navigateToBattleStart — lives in the effects/handlers above and is
+  // untouched here; cancelInvite / setSent / onClose are reused as-is.
+  if (sent) {
+    const friendName = selectedFriend?.username || 'your opponent';
+    const flowStake = isBeta ? (Number(buyIn) || 10000) : (Number(buyIn) || 0);
+    const waitingPremium = (
+      <div
+        data-allow-fixed-overlay="true"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+        onClick={onClose}
+        onKeyDown={e => { if (e.key === 'Escape') onClose(); }}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="max-w-md w-full my-auto rounded-[22px] overflow-hidden"
+          style={{
+            backgroundColor: '#070a14',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 28px 64px rgba(0,0,0,0.62)',
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          {inviteCountdown > 0 ? (
+            <FindingOpponent
+              balance={flowStake}
+              onCancel={sentInviteId ? cancelInvite : onClose}
+              subtitle={`Waiting for ${friendName} to accept · expires in ${formatCountdown(inviteCountdown)}`}
+            />
+          ) : (
+            <FlowCard balance={flowStake}>
+              <div className="px-6 pt-7 pb-8 text-center">
+                <span aria-hidden="true" style={{ fontSize: 26 }}>⌛</span>
+                <h2 className="mt-1 font-black italic uppercase leading-[0.95]" style={{ fontSize: 'clamp(26px,7vw,38px)', color: '#facc15' }}>
+                  Invite Expired
+                </h2>
+                <p className="mt-2 text-[12px]" style={{ color: '#94a3b8' }}>
+                  {friendName} didn’t respond in time.
+                </p>
+                <div className="mt-6 max-w-[300px] mx-auto space-y-3">
+                  <FlowButton color="blue" onClick={() => { setSent(false); setError(''); }}>Try Again</FlowButton>
+                  <FlowButton color="dark" onClick={onClose}>Close</FlowButton>
+                </div>
+              </div>
+            </FlowCard>
+          )}
+          {error && (
+            <div className="px-6 pb-5">
+              <div
+                className="rounded-xl px-3 py-2.5 text-xs font-semibold text-center"
+                style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
+              >
+                {error}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+    return ReactDOM.createPortal(waitingPremium, document.body);
+  }
 
   const content = (
     <div data-allow-fixed-overlay="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
