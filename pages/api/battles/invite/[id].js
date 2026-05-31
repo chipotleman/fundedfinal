@@ -26,6 +26,12 @@ export default async function handler(req, res) {
           status: battleInvites.status,
           expiresAt: battleInvites.expiresAt,
           respondedAt: battleInvites.respondedAt,
+          // matchupId + gameMode let the sender's waiting-screen poll
+          // transition straight into the started battle the instant it
+          // detects an accept — without waiting on the SSE matchup:start
+          // push or a second /api/matchups/current round-trip.
+          matchupId: battleInvites.matchupId,
+          gameMode: battleInvites.gameMode,
         })
         .from(battleInvites)
         .where(eq(battleInvites.id, id))

@@ -83,6 +83,10 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const countdownRef = useRef(null);
   const searchTimeoutRef = useRef(null);
   const gameModeInfoRef = useRef(null);
+  // One-shot guard so the sender navigates into the started battle exactly
+  // once, no matter which signal wins the race (SSE matchup:start vs the
+  // waiting-screen accept poll). Reset whenever the waiting state resets.
+  const navigatedToBattleRef = useRef(false);
 
   const cardBg = '#0d0d0d';
   const cardBorder = '#1a1a1a';
@@ -105,6 +109,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setInviteCountdown(0);
       setActiveTab('friends');
       setShowGameModeInfo(false);
+      navigatedToBattleRef.current = false;
       if (countdownRef.current) clearInterval(countdownRef.current);
     } else {
       // Re-apply the remembered buy-in every time the modal opens. This
@@ -160,6 +165,21 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     };
   }, []);
 
+  // Deterministic, single-fire transition into the started battle. Both the
+  // SSE `matchup:start` path (below) and the waiting-screen accept poll
+  // (further down) call this; the ref guard ensures only the first one wins,
+  // so a slow SSE push and a fast poll (or vice-versa) can't double-navigate.
+  // `matchupLike` only needs { id, durationType } for navigateToBattleStart
+  // to route rush vs original correctly.
+  const goToStartedBattle = (matchupLike) => {
+    if (navigatedToBattleRef.current) return;
+    if (!matchupLike?.id) return;
+    navigatedToBattleRef.current = true;
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    onClose();
+    navigateToBattleStart(router, matchupLike);
+  };
+
   // Auto-route into the battle when the recipient accepts our pending
   // invite. Without this, the moment `matchup:start` fires the modal's
   // render-phase `hasActiveMatchup` guard would flip the waiting screen
@@ -172,10 +192,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     if (!sent) return;
     if (!hasActiveMatchup) return;
     if (!activeMatchup?.id) return;
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    onClose();
-    navigateToBattleStart(router, activeMatchup);
-  }, [isOpen, sent, hasActiveMatchup, activeMatchup?.id, onClose, router]);
+    goToStartedBattle(activeMatchup);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, sent, hasActiveMatchup, activeMatchup?.id]);
 
   useEffect(() => {
     if (isOpen) {
@@ -279,6 +298,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       }
       setSent(true);
       setSentInviteId(data?.invite?.id || null);
+      navigatedToBattleRef.current = false;
       // Remember the buy-in + mode so the friend row can offer a one-tap
       // "send last buy-in" shortcut next time. Mirrors to the user's
       // profile so the value follows them across devices.
@@ -318,6 +338,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     setSent(false);
     setSentInviteId(null);
     setInviteCountdown(0);
+    navigatedToBattleRef.current = false;
     if (lockedFriend) {
       onClose();
     } else {
@@ -378,13 +399,28 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         // sender's waiting screen transitions instead of sitting on
         // "Waiting…" until the fallback poll's next tick.
         stop();
-        if (status === 'accepted') { try { refreshMatchup && refreshMatchup(); } catch {} }
+        if (status === 'accepted') {
+          // Kick MatchupContext to re-sync so the destination battle page
+          // has fresh state, then transition immediately using the matchup
+          // identity the GET now returns — no dependency on the SSE push or
+          // a second hasActiveMatchup flip. goToStartedBattle is guarded, so
+          // if SSE already navigated this is a harmless no-op.
+          try { refreshMatchup && refreshMatchup(); } catch {}
+          const inv = data.invite || {};
+          if (inv.matchupId) {
+            goToStartedBattle({ id: inv.matchupId, durationType: inv.gameMode });
+          }
+        }
         else if (status === 'declined') finishWaiting('declined');
         else if (status === 'cancelled') finishWaiting('cancelled');
         else if (status === 'expired') finishWaiting('expired');
       } catch {}
     };
-    interval = setInterval(checkStatus, 5000);
+    // Poll cadence is the sender's deterministic floor for the transition
+    // when SSE is degraded. Kept tight (2s) so a healthy-but-pushless window
+    // still feels near-instant; it only runs while a single waiting screen
+    // is mounted, so the load is bounded.
+    interval = setInterval(checkStatus, 2000);
     checkStatus();
     return () => { cancelledLocal = true; stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
