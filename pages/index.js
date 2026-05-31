@@ -214,6 +214,9 @@ export default function Dashboard() {
   const [promoSlots, setPromoSlots] = useState(() =>
     DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })),
   );
+  // Master switch for the whole promo row — when an admin turns it off the
+  // carousel is removed entirely and the page below shifts up.
+  const [promoRowEnabled, setPromoRowEnabled] = useState(true);
 
   const battleStartedRetryRef = useRef(null);
   // Guards the battleStarted effect so it initializes the walkthrough
@@ -228,8 +231,9 @@ export default function Dashboard() {
     fetch('/api/promo-slots')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (cancelled || !data?.slots) return;
-        setPromoSlots(normalizePromoSlots(data.slots));
+        if (cancelled || !data) return;
+        if (data.slots) setPromoSlots(normalizePromoSlots(data.slots));
+        if (typeof data.rowEnabled === 'boolean') setPromoRowEnabled(data.rowEnabled);
       })
       .catch(() => {});
     return () => {
@@ -1466,9 +1470,11 @@ export default function Dashboard() {
             outer page padding so it runs edge-to-edge across the
             viewport — partial-card peeks should bleed off the screen,
             not stop short with a visible side gutter. */}
-        <div className="mb-1 sm:mb-2 -mx-4 sm:-mx-6 lg:-mx-8">
-          <PromoCarousel slides={promoSlides} />
-        </div>
+        {promoRowEnabled && (
+          <div className="mb-1 sm:mb-2 -mx-4 sm:-mx-6 lg:-mx-8">
+            <PromoCarousel slides={promoSlides} />
+          </div>
+        )}
 
         {/* Sentinel: placed immediately above the inline sport-choice row.
             When this scrolls above the top of the viewport the condensed
