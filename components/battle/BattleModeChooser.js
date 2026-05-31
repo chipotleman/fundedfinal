@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import haptic from '../../utils/haptics';
@@ -8,13 +7,14 @@ import haptic from '../../utils/haptics';
 // Match) over a dark arena backdrop, a "WIN. CLIMB. REPEAT." reward banner,
 // and a "FAIR PLAY GUARANTEED" footer.
 //
-// Each card features a CHARACTER. The signed-in user's character is generated
-// from their profile photo (see /api/profile/character + lib/aiCharacter) and
-// cached; while it's still generating — or when the user has no real photo —
-// the generic default character is shown so the screen is always complete.
-// Purple is intentionally avoided per the project's palette preference, and
-// every hover lift is gated under @media (hover: hover) so touch devices never
-// get sticky hover states.
+// The card art is intentionally GENERIC for everyone — the same static default
+// characters are shown regardless of who's signed in. (We used to generate the
+// user's AI character from their profile photo here, but that meant the screen
+// loaded choppily while the image resolved; matching against a specific
+// opponent only matters once we're actually searching for one.) Purple is
+// intentionally avoided per the project's palette preference, and every hover
+// lift is gated under @media (hover: hover) so touch devices never get sticky
+// hover states.
 
 const DEFAULT_SELF = '/characters/default-self.png';
 const DEFAULT_OPPONENT = '/characters/default-opponent.png';
@@ -38,48 +38,16 @@ export default function BattleModeChooser({
   onPickQuickMatch,
   onPickChallengeFriend,
   onPickPrivateMatch,
+  // currentUser is accepted for API compatibility but intentionally unused —
+  // the card art is the same generic default for everyone (no per-user fetch).
   currentUser = null,
 }) {
   useModalScrollLock(isOpen);
-  const [selfChar, setSelfChar] = useState(null);
-  const requestedForRef = useRef(null);
-
-  // When the modal opens, resolve the user's AI character. Use the cached one
-  // if it's ready; otherwise kick off generation in the background and swap it
-  // in when it lands. The generic default shows in the meantime.
-  useEffect(() => {
-    if (!isOpen || !currentUser?.id) return;
-    if (requestedForRef.current === currentUser.id) return;
-    requestedForRef.current = currentUser.id;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const getRes = await fetch('/api/profile/character');
-        const got = await getRes.json().catch(() => ({}));
-        if (cancelled) return;
-        if (got?.status === 'ready' && got.url) {
-          setSelfChar(got.url);
-          return;
-        }
-        if (got?.status === 'none') return; // no real photo -> keep default
-        // Not ready yet: trigger (or await an in-flight) generation.
-        const postRes = await fetch('/api/profile/character', { method: 'POST' });
-        const made = await postRes.json().catch(() => ({}));
-        if (cancelled) return;
-        if (made?.status === 'ready' && made.url) setSelfChar(made.url);
-      } catch {
-        /* fall back to default character silently */
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [isOpen, currentUser?.id]);
 
   if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
 
-  const selfImg = selfChar || DEFAULT_SELF;
+  const selfImg = DEFAULT_SELF;
   const oppImg = DEFAULT_OPPONENT;
 
   const pick = (fn) => {
