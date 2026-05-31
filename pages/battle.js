@@ -2053,6 +2053,7 @@ export default function BattlePage() {
         onPickQuickMatch={() => handleBattleOptionClick(setShowQuickMatch)}
         onPickChallengeFriend={() => handleBattleOptionClick(setShowPlayFriend)}
         onPickPrivateMatch={() => handleBattleOptionClick(setShowPrivateMatch)}
+        currentUser={{ id: userId, username: profile?.username, avatar: profile?.avatar }}
       />
 
       <QuickMatchModal

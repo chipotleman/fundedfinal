@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "2LDgJDXwkfVfgoY8rjEyi"
+uri = "file://public/characters/default-self.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "FreKYO17QL5wZw6VLH_Cv"
+uri = "file://public/characters/default-opponent.png"
+type = "image"
+title = "generated_image"

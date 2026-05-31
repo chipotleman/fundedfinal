@@ -69,6 +69,14 @@ export const profiles = pgTable("profiles", {
   lastBattleBuyIn: jsonb("last_battle_buy_in").$type<{ buyIn: number; gameMode: string }>(),
   oneTapPrefs: jsonb("one_tap_prefs").$type<{ buyIn: number; gameMode: string }>(),
   lastSeenAt: timestamp("last_seen_at"),
+  // AI-generated "battle character" derived from the user's profile photo.
+  // aiCharacterUrl: Vercel Blob URL of the generated character PNG.
+  // aiCharacterStatus: 'pending' | 'ready' | 'failed' (null = never attempted).
+  // aiCharacterSourceHash: hash of the source avatar URL the character was
+  //   generated from, so we regenerate only when the avatar actually changes.
+  aiCharacterUrl: text("ai_character_url"),
+  aiCharacterStatus: varchar("ai_character_status", { length: 20 }),
+  aiCharacterSourceHash: varchar("ai_character_source_hash", { length: 64 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

@@ -3218,6 +3218,7 @@ function YouVsCard({
       onPickQuickMatch={handleChooserQuickMatch}
       onPickChallengeFriend={handleChooserChallengeFriend}
       onPickPrivateMatch={handleChooserPrivateMatch}
+      currentUser={myProfile ? { id: myProfile.id, username: myProfile.username, avatar: myProfile.avatar } : null}
     />
     {/* Quick Match modal — same component the /battle page mounts when
         the Start a Battle chooser picks Quick Match. Surfaces the full
