@@ -469,11 +469,12 @@ function RushResultScreen({ rush, matchup, me, opp, userId, onViewResults }) {
 
 // --- screen 8: Rematch / Play Again ----------------------------------
 
-function RushRematchScreen({ matchup, me, opp, onRematch, onNewOpponent, onHome, busy }) {
+function RushRematchScreen({ matchup, me, opp, onRematch, onNewOpponent, onHome, busy, rematchWaiting }) {
   const base = parseFloat(matchup?.startingBalance) || 10000;
   const [stake, setStake] = useState(base);
   const step = base >= 10000 ? 5000 : 1000;
   const balance = (parseFloat(matchup?.startingBalance) || 0) * 2;
+  const locked = busy || rematchWaiting;
   return (
     <div className="rf-card rf-rematch">
       <BrandRow amount={balance} />
@@ -482,13 +483,17 @@ function RushRematchScreen({ matchup, me, opp, onRematch, onNewOpponent, onHome,
       <div className="rf-stake-adjust">
         <span className="rf-stake-label">STAKE</span>
         <div className="rf-stepper">
-          <button className="rf-step" onClick={() => setStake((s) => Math.max(step, s - step))} disabled={busy}>−</button>
+          <button className="rf-step" onClick={() => setStake((s) => Math.max(step, s - step))} disabled={locked}>−</button>
           <span className="rf-step-val">{formatMoney(stake, 0)} <span className="rf-coin-icon">🪙</span></span>
-          <button className="rf-step" onClick={() => setStake((s) => s + step)} disabled={busy}>+</button>
+          <button className="rf-step" onClick={() => setStake((s) => s + step)} disabled={locked}>+</button>
         </div>
       </div>
-      <button className="rf-btn rf-btn-green" onClick={() => onRematch(stake)} disabled={busy}>⚡ REMATCH</button>
-      <button className="rf-btn rf-btn-dark" onClick={onNewOpponent} disabled={busy}>NEW OPPONENT</button>
+      {rematchWaiting ? (
+        <div className="rf-rematch-waiting">⏳ Waiting for opponent to accept…</div>
+      ) : (
+        <button className="rf-btn rf-btn-green" onClick={() => onRematch(stake)} disabled={locked}>⚡ REMATCH</button>
+      )}
+      <button className="rf-btn rf-btn-dark" onClick={onNewOpponent} disabled={locked}>NEW OPPONENT</button>
       <button className="rf-link" onClick={onHome} disabled={busy}>BACK TO HOME</button>
     </div>
   );
@@ -528,6 +533,7 @@ export default function RushFlow({
   onHome,
   onExit,
   onBack,
+  rematchWaiting = false,
 }) {
   const [resultView, setResultView] = useState('result'); // result | rematch
 
@@ -554,7 +560,7 @@ export default function RushFlow({
     body = <RushRoundResultScreen rush={rush} me={me} opp={opp} userId={userId} onContinue={onContinue} busy={busy} />;
   } else if (rush.phase === 'completed') {
     body = resultView === 'rematch'
-      ? <RushRematchScreen matchup={matchup} me={me} opp={opp} onRematch={onRematch} onNewOpponent={onNewOpponent} onHome={onHome} busy={busy} />
+      ? <RushRematchScreen matchup={matchup} me={me} opp={opp} onRematch={onRematch} onNewOpponent={onNewOpponent} onHome={onHome} busy={busy} rematchWaiting={rematchWaiting} />
       : <RushResultScreen rush={rush} matchup={matchup} me={me} opp={opp} userId={userId} onViewResults={() => { setResultView('rematch'); if (onViewResults) onViewResults(); }} />;
   }
 
@@ -691,6 +697,7 @@ function RushFlowStyles() {
       .rf-stepper { display: flex; align-items: center; gap: 12px; }
       .rf-step { width: 38px; height: 38px; border-radius: 11px; background: #161616; border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 20px; font-weight: 900; cursor: pointer; }
       .rf-step-val { font-size: 18px; font-weight: 900; color: #fff; min-width: 120px; text-align: center; }
+      .rf-rematch-waiting { padding: 13px; border-radius: 12px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: #10b981; font-weight: 800; font-size: 13px; letter-spacing: 0.04em; text-align: center; }
 
       .rf-cancelled { align-items: center; }
       .rf-cancel-emoji { font-size: 34px; }

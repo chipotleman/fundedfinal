@@ -97,6 +97,17 @@ export default function RushMatchPage() {
 
   const goHome = useCallback(() => router.push('/battle'), [router]);
 
+  const [rematchWaiting, setRematchWaiting] = useState(false);
+
+  // This dynamic page is reused across /battle/rush/[old] -> /[new] (e.g.
+  // after a rematch handshake navigates), so React state can persist. Clear
+  // the "waiting for rematch" flag whenever the matchup id changes, otherwise
+  // the new match's result screen would show a stuck waiting state.
+  useEffect(() => {
+    setRematchWaiting(false);
+  }, [id]);
+
+  // "New Opponent" — queue matchmaking for a fresh (possibly different) rival.
   const startNewMatch = useCallback(async (stake) => {
     setBusy(true);
     try {
@@ -117,6 +128,50 @@ export default function RushMatchPage() {
       setBusy(false);
     }
   }, [router]);
+
+  const matchupRef = data?.matchup;
+
+  // "Rematch" — same opponent. Real opponents use the two-sided accept
+  // handshake (a new matchup spawns only once BOTH accept); bots have no
+  // second party, so fall back to spinning up a fresh match immediately.
+  const startRematch = useCallback(async (stake) => {
+    if (matchupRef?.isFakeOpponent) {
+      return startNewMatch(stake);
+    }
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/matchups/${id}/rematch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'accept' }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (j?.rematchMatchupId) {
+        router.replace(`/battle/rush/${j.rematchMatchupId}`);
+      } else {
+        // Opponent hasn't accepted yet — wait for the matchup:rematch SSE.
+        setRematchWaiting(true);
+      }
+    } catch (_e) {
+      /* leave the rematch screen up so the user can retry */
+    } finally {
+      setBusy(false);
+    }
+  }, [id, matchupRef, router, startNewMatch]);
+
+  // Navigate both players into the new match once the handshake completes.
+  useEffect(() => {
+    if (!id) return undefined;
+    const client = getBattleStreamClient();
+    const unsub = client.subscribe((evt) => {
+      if (!evt || String(evt.matchupId) !== String(id)) return;
+      if (evt.type === 'matchup:rematch' && evt.rematchMatchupId) {
+        router.replace(`/battle/rush/${evt.rematchMatchupId}`);
+      }
+    });
+    return unsub;
+  }, [id, router]);
 
   const rush = data?.rush;
   const matchup = data?.matchup;
@@ -147,7 +202,8 @@ export default function RushMatchPage() {
               onPick={(optionKey) => post('pick', { optionKey })}
               onContinue={() => post('continue')}
               onViewResults={() => {}}
-              onRematch={(stake) => startNewMatch(stake)}
+              rematchWaiting={rematchWaiting}
+              onRematch={(stake) => startRematch(stake)}
               onNewOpponent={() => startNewMatch(parseFloat(matchup?.startingBalance) || 10000)}
               onHome={goHome}
               onExit={goHome}

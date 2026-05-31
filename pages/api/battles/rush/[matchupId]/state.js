@@ -79,11 +79,16 @@ export default async function handler(req, res) {
     const ctx = { matchupId, user1Id: matchup.user1Id, user2Id: matchup.user2Id };
     let state = result.state || matchup.rushState;
 
-    if (result.changed && didCancel) {
-      matchup.status = 'cancelled';
+    if (result.changed) {
+      if (didCancel) matchup.status = 'cancelled';
       try {
         const recipients = [matchup.user1Id, matchup.user2Id].filter(Boolean);
-        publishBattleEvent(recipients, { type: 'matchup:rush:update', matchupId, phase: 'cancelled' });
+        publishBattleEvent(recipients, {
+          type: 'matchup:rush:update',
+          matchupId,
+          phase: didCancel ? 'cancelled' : state.phase,
+          roundIndex: state.roundIndex,
+        });
       } catch (_e) {}
     }
 

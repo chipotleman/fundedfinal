@@ -1,2 +1,4 @@
 - [Gemini image generation](gemini-image-generation.md) — model is `gemini-2.5-flash-image` (not `-preview`); image output needs billing or returns 429.
 - [Rush state concurrency](rush-state-concurrency.md) — all `matchups.rushState` writes must go through `commitRushMutation` CAS (Neon HTTP has no txns); never bare-update the JSONB.
+- [Rush rematch handshake](rush-rematch-handshake.md) — rematch uses two-sided /api/matchups/[id]/rematch accept + matchup:rematch SSE; bots can't handshake, fall back to matchmaking.
+- [Shared simulated team data](simulated-team-data.md) — canonical team pools live in lib/sportsTeams.js (CJS); both simulated-games (ESM) and rushSim (CJS) consume it.

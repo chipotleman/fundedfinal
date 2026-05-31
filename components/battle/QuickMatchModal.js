@@ -972,6 +972,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   // the new best-of-3 RushFlow rendered in the single 'rush-active' step.
   const [rushApi, setRushApi] = useState(null);
   const [rushBusy, setRushBusy] = useState(false);
+  const [rushRematchWaiting, setRushRematchWaiting] = useState(false);
   const [serverLiveGames, setServerLiveGames] = useState([]);
   const [rushVoteError, setRushVoteError] = useState('');
   const [pendingVoteId, setPendingVoteId] = useState(null);
@@ -1177,6 +1178,9 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
         unsub = client.subscribe((ev) => {
           if (!ev) return;
           if (ev.type === 'matchup:rush:update' && ev.matchupId === matchupId) fetchRush();
+          else if (ev.type === 'matchup:rematch' && ev.matchupId === matchupId && ev.rematchMatchupId) {
+            enterRushRematch(ev.rematchMatchupId);
+          }
           else if (ev.type === 'piks:reconnected') fetchRush();
         });
       }
@@ -1257,10 +1261,23 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const submitRushPick = (optionKey) => { haptic.tap?.(); return rushPost('pick', { optionKey }); };
   const submitRushContinue = () => { haptic.tap?.(); return rushPost('continue'); };
 
-  // Rematch / new opponent: spin up a fresh rush matchup via matchmaking
-  // and re-enter the in-popup flow at 'found' (which auto-advances to
+  // Re-enter the in-popup rush flow on a freshly-created matchup id (used
+  // after a rematch handshake resolves). The /state poll keyed on
+  // matchedMatchup.id picks up the new match and drives RushFlow.
+  const enterRushRematch = (newMatchupId) => {
+    if (!newMatchupId) return;
+    setRushRematchWaiting(false);
+    setRushApi(null);
+    setRushState(null);
+    setMatchedMatchup({ id: newMatchupId, durationType: 'rush' });
+    setGameMode('rush');
+    setStep('rush-active');
+  };
+
+  // "New Opponent": spin up a fresh rush matchup via matchmaking and
+  // re-enter the in-popup flow at 'found' (which auto-advances to
   // 'rush-active'). Falls back to the routed page if no instant match.
-  const startRushRematch = async (stake) => {
+  const startRushNewOpponent = async (stake) => {
     setRushBusy(true);
     try {
       const res = await fetch('/api/battles/matchmaking', {
@@ -1284,6 +1301,34 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     } catch {
       onClose();
       router.push('/battle');
+    } finally {
+      setRushBusy(false);
+    }
+  };
+
+  // "Rematch": same opponent. Real opponents use the two-sided accept
+  // handshake — a new matchup is created only once BOTH players accept.
+  // Bots have no second party, so fall back to a fresh match immediately.
+  const startRushRematch = async (stake) => {
+    const m = rushApi?.matchup;
+    if (!m || m.isFakeOpponent) return startRushNewOpponent(stake);
+    setRushBusy(true);
+    try {
+      const res = await fetch(`/api/matchups/${m.id}/rematch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'accept' }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (j?.rematchMatchupId) {
+        enterRushRematch(j.rematchMatchupId);
+      } else {
+        // Opponent hasn't accepted yet — wait for the matchup:rematch SSE.
+        setRushRematchWaiting(true);
+      }
+    } catch {
+      /* keep the rematch screen up so the user can retry */
     } finally {
       setRushBusy(false);
     }
@@ -2841,8 +2886,9 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 onPick={submitRushPick}
                 onContinue={submitRushContinue}
                 onViewResults={() => {}}
+                rematchWaiting={rushRematchWaiting}
                 onRematch={(stake) => startRushRematch(stake)}
-                onNewOpponent={() => startRushRematch(parseFloat(rushApi?.matchup?.startingBalance) || 10000)}
+                onNewOpponent={() => startRushNewOpponent(parseFloat(rushApi?.matchup?.startingBalance) || 10000)}
                 onHome={() => { onClose(); router.push('/battle'); }}
                 onExit={() => { onClose(); router.push('/battle'); }}
                 onBack={handleClose}
