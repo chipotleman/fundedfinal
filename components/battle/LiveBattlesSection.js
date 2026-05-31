@@ -20,6 +20,7 @@ import {
 } from '../../lib/playNowConfirm';
 import { readLocalOneTapPrefs, writeLocalOneTapPrefs, fetchOneTapPrefs, saveOneTapPrefs } from '../../utils/oneTapPrefs';
 import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
+import DesktopScrollRow from '../desktop/DesktopScrollRow';
 import PreMatchPopup from './PreMatchPopup';
 import haptic from '../../utils/haptics';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
@@ -3656,11 +3657,12 @@ export default function LiveBattlesSection({
             row feel broken. Letting cards grow naturally keeps the visual
             simple: collapsed cards stay short, expanded cards extend down,
             and the carousel stays horizontally scrollable either way. */}
-        {/* Edge-to-edge: negative margin cancels the dashboard's
-            px-4/sm:px-6/lg:px-8 wrapper so this row runs to the
-            viewport edges; inner left padding keeps the first card
-            aligned with the "Featured Battles" header above. */}
-        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:-mx-8 pl-4 sm:pl-6 lg:pl-8 pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* Edge-to-edge on mobile/tablet: negative margin cancels the
+            dashboard's px-4/sm:px-6 wrapper so this row runs to the
+            viewport edges. On lg+ the row is clipped to the main column
+            (lg:mx-0 / lg:pl-0) and wrapped in DesktopScrollRow so it never
+            bleeds under the right sidebar — and gets a gutter scroll arrow. */}
+        <DesktopScrollRow innerClassName="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
               youVsState={youVsState}
@@ -3688,7 +3690,7 @@ export default function LiveBattlesSection({
               />
             </div>
           ))}
-        </div>
+        </DesktopScrollRow>
         <QuickMatchModal
           isOpen={!!matchFoundData}
           onClose={() => setMatchFoundData(null)}

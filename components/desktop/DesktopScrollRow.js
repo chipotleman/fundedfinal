@@ -50,11 +50,13 @@ export default function DesktopScrollRow({ children, className = '', innerClassN
         {children}
       </div>
 
-      {/* Left affordance (only after scrolling) */}
+      {/* Left affordance (only after scrolling). The chevron sits in the
+          left page gutter (pushed half its width outside the column via
+          -translate-x-1/2) so it never overlaps the first card. */}
       {!atStart && (
         <>
           <div
-            className="hidden lg:block pointer-events-none absolute top-0 left-0 bottom-2 w-14 z-10"
+            className="hidden lg:block pointer-events-none absolute top-0 left-0 bottom-2 w-10 z-10"
             style={{ background: 'linear-gradient(to left, rgba(0,0,0,0), #000)' }}
             aria-hidden="true"
           />
@@ -62,21 +64,24 @@ export default function DesktopScrollRow({ children, className = '', innerClassN
             type="button"
             onClick={() => scrollByDir(-1)}
             aria-label="Scroll left"
-            className="hidden lg:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full transition-colors lg:hover:bg-[#1f1f1f]"
-            style={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.12)', color: '#e5e7eb' }}
+            className="hidden lg:flex items-center justify-center absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 z-20 w-7 h-7 rounded-full transition-colors lg:hover:bg-[#1f1f1f]"
+            style={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.14)', color: '#e5e7eb' }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
         </>
       )}
 
-      {/* Right affordance (while more content remains) */}
+      {/* Right affordance (while more content remains). The chevron is pushed
+          half its width into the gutter between the content column and the
+          right sidebar (translate-x-1/2) so it sits *between* them rather
+          than on top of the last card. */}
       {!atEnd && (
         <>
           <div
-            className="hidden lg:block pointer-events-none absolute top-0 right-0 bottom-2 w-16 z-10"
+            className="hidden lg:block pointer-events-none absolute top-0 right-0 bottom-2 w-10 z-10"
             style={{ background: 'linear-gradient(to right, rgba(0,0,0,0), #000)' }}
             aria-hidden="true"
           />
@@ -84,10 +89,10 @@ export default function DesktopScrollRow({ children, className = '', innerClassN
             type="button"
             onClick={() => scrollByDir(1)}
             aria-label="Scroll right"
-            className="hidden lg:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full transition-colors lg:hover:bg-[#1f1f1f]"
-            style={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.12)', color: '#e5e7eb' }}
+            className="hidden lg:flex items-center justify-center absolute right-0 top-1/2 translate-x-full -translate-y-1/2 z-20 w-7 h-7 rounded-full transition-colors lg:hover:bg-[#1f1f1f]"
+            style={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.14)', color: '#e5e7eb' }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
