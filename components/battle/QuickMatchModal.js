@@ -1506,6 +1506,15 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   };
 
   const handleContinue = () => {
+    // The MATCH READY splash already served as the "you're matched"
+    // celebration, so flag the dashboard walkthrough to skip its
+    // redundant first "You're Matched!" step and open straight on the
+    // "How it works" step. One-shot — consumed by the dashboard effect.
+    // RUSH routes to /battle/rush/[id] and never hits the walkthrough,
+    // so only set it for the original/tournament (dashboard) path.
+    if (typeof window !== 'undefined' && matchedMatchup?.durationType !== 'rush') {
+      try { window.sessionStorage.setItem('piks_battle_intro_seen', '1'); } catch (_) {}
+    }
     onClose();
     if (onMatchFound && matchedMatchup) onMatchFound(matchedMatchup, matchedOpponent);
     else navigateToBattleStart(router, matchedMatchup);

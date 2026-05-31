@@ -196,6 +196,11 @@ export default function Dashboard() {
   const [walkthroughStep, setWalkthroughStep] = useState(0);
   const [walkthroughDismissed, setWalkthroughDismissed] = useState(false);
   const [walkthroughDontShowAgain, setWalkthroughDontShowAgain] = useState(false);
+  // True when the user arrived here straight from the QuickMatchModal
+  // "MATCH READY" splash — that splash already showed the matched
+  // celebration, so the walkthrough opens on step 1 ("How it works")
+  // and the Back button can't return to the redundant step 0.
+  const [walkthroughSkipIntro, setWalkthroughSkipIntro] = useState(false);
   const closeWalkthrough = () => {
     if (walkthroughDontShowAgain && typeof window !== 'undefined') {
       try { window.localStorage.setItem('piks_battle_walkthrough_dismissed', '1'); } catch (_) {}
@@ -203,6 +208,7 @@ export default function Dashboard() {
     setShowBattleWalkthrough(false);
     setWalkthroughDismissed(true);
     setWalkthroughStep(0);
+    setWalkthroughSkipIntro(false);
   };
   const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
   const [promoSlots, setPromoSlots] = useState(() =>
@@ -210,6 +216,12 @@ export default function Dashboard() {
   );
 
   const battleStartedRetryRef = useRef(null);
+  // Guards the battleStarted effect so it initializes the walkthrough
+  // (step + skip-intro flag consumption) exactly once per query cycle —
+  // the effect also re-runs when `hasActiveMatchup` flips, and without
+  // this guard that re-run would reset the step back to 0 and re-show
+  // the intro the splash already covered.
+  const battleStartedHandledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -266,7 +278,39 @@ export default function Dashboard() {
   useModalScrollLock(showBattleWalkthrough, { restoreScroll: true });
 
   useEffect(() => {
-    if (router.query.battleStarted !== 'true') return;
+    if (router.query.battleStarted !== 'true') {
+      // Query cleared — reset the guard so the next battleStarted cycle
+      // re-initializes the walkthrough from scratch.
+      battleStartedHandledRef.current = false;
+      return;
+    }
+
+    // This effect also re-runs when `hasActiveMatchup` flips. On those
+    // re-runs only finish the URL cleanup once the matchup has hydrated —
+    // never re-initialize the walkthrough step (that would undo the
+    // skip-intro and flash step 0 back in).
+    if (battleStartedHandledRef.current) {
+      if (hasActiveMatchup) {
+        router.replace('/', undefined, { shallow: true });
+        if (battleStartedRetryRef.current) {
+          clearInterval(battleStartedRetryRef.current);
+          battleStartedRetryRef.current = null;
+        }
+      }
+      return;
+    }
+    battleStartedHandledRef.current = true;
+
+    // Always consume the one-shot "came from MATCH READY splash" flag
+    // FIRST — even if we bail on don't-show-again below — so it can never
+    // leak into a later, unrelated battleStarted cycle.
+    let cameFromSplash = false;
+    if (typeof window !== 'undefined') {
+      try {
+        cameFromSplash = window.sessionStorage.getItem('piks_battle_intro_seen') === '1';
+        if (cameFromSplash) window.sessionStorage.removeItem('piks_battle_intro_seen');
+      } catch (_) {}
+    }
 
     // Respect the user's "Don't show this again" preference — clear the
     // query string and bail before the walkthrough overlay ever renders.
@@ -279,6 +323,12 @@ export default function Dashboard() {
     // flashes. The walkthrough renders a loading skeleton internally
     // until the matchup payload finishes hydrating.
     window.scrollTo({ top: 0, behavior: 'auto' });
+    // If the user came straight from the QuickMatchModal "MATCH READY"
+    // splash, the matched celebration was already shown — open the
+    // walkthrough on step 1 ("How it works") instead of repeating
+    // step 0's "You're Matched!".
+    setWalkthroughSkipIntro(cameFromSplash);
+    setWalkthroughStep(cameFromSplash ? 1 : 0);
     setShowBattleWalkthrough(true);
 
     if (hasActiveMatchup) {
@@ -2336,7 +2386,7 @@ export default function Dashboard() {
 
             {/* CTA — big yellow cartoon button + Back */}
             <div className="px-5 pb-5 pt-2 flex-shrink-0 flex gap-2 items-stretch">
-              {walkthroughStep > 0 && (
+              {walkthroughStep > (walkthroughSkipIntro ? 1 : 0) && (
                 <button
                   onClick={() => setWalkthroughStep(walkthroughStep - 1)}
                   className="wt-back-btn py-3 px-4 rounded-2xl text-xs font-extrabold uppercase tracking-wider"
