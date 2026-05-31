@@ -98,6 +98,72 @@ function rankFromWins(wins) {
   return { label: 'ROOKIE', color: '#3b82f6', icon: '🎯' };
 }
 
+// Desktop-only fighter medallion — large glowing avatar with crown,
+// name plate and rank badge. Used twice in the wide arcade layout so
+// the YOU / OPP sides stay perfectly symmetric. Defined at module
+// scope so its component identity stays stable across MatchFoundContent
+// re-renders (the 10s auto-confirm ticks every second) — otherwise the
+// avatars would remount each tick and replay the slam-in animation.
+function DesktopFighter({ name, avatarUrl, profileId, rank, ring, crown, slamFrom }) {
+  return (
+    <div
+      className="flex flex-col items-center relative"
+      style={{ animation: `qm-slam-from-${slamFrom} 0.55s cubic-bezier(0.34,1.56,0.64,1) both` }}
+    >
+      {crown && (
+        <span
+          aria-hidden="true"
+          className="absolute"
+          style={{
+            top: -36,
+            fontSize: 34,
+            filter: 'drop-shadow(0 3px 0 #0a0a0a)',
+            animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.3s both',
+            zIndex: 20,
+          }}
+        >
+          👑
+        </span>
+      )}
+      <div
+        className="rounded-full overflow-hidden relative"
+        style={{
+          width: 132,
+          height: 132,
+          border: `5px solid ${ring}`,
+          boxShadow: `0 0 0 3px #0a0a0a, 0 0 48px ${ring}cc, inset 0 0 22px rgba(0,0,0,0.55)`,
+          background: '#0a0a0a',
+        }}
+      >
+        <UserAvatar user={{ id: profileId, username: name, avatar: avatarUrl }} size={132} />
+      </div>
+      <p
+        className="mt-4 text-white text-sm font-black uppercase truncate max-w-[190px] text-center px-4 py-1.5 rounded-lg"
+        style={{
+          background: '#141414',
+          border: '2px solid #000',
+          boxShadow: '0 3px 0 #000',
+          letterSpacing: '0.06em',
+        }}
+      >
+        {name}
+      </p>
+      <span
+        className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-black uppercase"
+        style={{
+          background: '#0f1424',
+          border: `2px solid ${rank.color}`,
+          color: rank.color,
+          letterSpacing: '0.12em',
+        }}
+      >
+        <span aria-hidden="true">{rank.icon}</span>
+        Rank: {rank.label}
+      </span>
+    </div>
+  );
+}
+
 function MatchFoundContent({
   isBeta,
   buyIn,
@@ -182,9 +248,14 @@ function MatchFoundContent({
   // for non-original modes.
   const modeLabel = (gameMode || 'original').toUpperCase();
   const timeChipLabel = gameMode === 'rush' ? 'LIVE NOW' : '24H';
+  const oppName = matchedOpponent?.username || 'Opponent';
 
   return (
     <div className="relative z-10">
+      {/* ════════════════ MOBILE / COMPACT LAYOUT ════════════════
+          The original vertical popup. Shown on phones + small tablets;
+          desktop (md+) gets the wide arcade "MATCH READY" splash below. */}
+      <div className="md:hidden relative">
       {/* Subtle cyan accent backdrop — kept very light so the card
           doesn't get a heavy yellow/pink wash. Lives behind everything
           (z-0) with pointer-events:none. */}
@@ -604,6 +675,255 @@ function MatchFoundContent({
             </button>
           </>
         )}
+      </div>
+      </div>
+      {/* ════════════════ end mobile / compact layout ════════════════ */}
+
+      {/* ════════════════ DESKTOP ARCADE LAYOUT ════════════════
+          Wide cinematic "MATCH READY" splash matching the 1v1 arcade
+          reference: chrome title, electric center burst, two glowing
+          avatar medallions facing off across a lightning VS, and a
+          chunky LET'S GO! button. Only rendered at md+ where the modal
+          frame widens to max-w-4xl. */}
+      <div
+        className="hidden md:block relative overflow-hidden"
+        style={{ background: '#050507' }}
+      >
+        {/* Electric energy field — central white→gold burst plus a blue
+            glow on the YOU side and an orange glow on the OPP side. */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 40% 62% at 50% 52%, rgba(255,247,214,0.32), rgba(251,146,60,0.12) 38%, transparent 64%),' +
+              'radial-gradient(circle at 18% 50%, rgba(59,130,246,0.24), transparent 46%),' +
+              'radial-gradient(circle at 82% 50%, rgba(251,146,60,0.24), transparent 46%)',
+          }}
+        />
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(115deg, rgba(59,130,246,0.16) 0%, transparent 46%)' }}
+        />
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(245deg, rgba(251,146,60,0.16) 0%, transparent 46%)' }}
+        />
+        {/* Spark particles — blue on the left half, orange on the right. */}
+        {Array.from({ length: 18 }).map((_, i) => {
+          const left = 6 + ((i * 37) % 88);
+          const top = 12 + ((i * 53) % 72);
+          const c = left < 50 ? '#60a5fa' : '#fb923c';
+          const delay = (i % 6) * 0.18;
+          const rot = (i * 47) % 360;
+          return (
+            <span
+              key={i}
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                left: `${left}%`,
+                top: `${top}%`,
+                width: 2.5,
+                height: 12 + (i % 3) * 7,
+                background: `linear-gradient(180deg, ${c}, transparent)`,
+                transform: `rotate(${rot}deg)`,
+                boxShadow: `0 0 8px ${c}`,
+                opacity: 0.75,
+                zIndex: 1,
+                animation: `qm-bolt-flicker ${1 + (i % 4) * 0.25}s ease-in-out ${delay}s infinite`,
+              }}
+            />
+          );
+        })}
+
+        <div className="relative z-10 px-10 pt-9 pb-9">
+          {/* SKIP — top-right corner */}
+          {gameMode !== 'rush' && (
+            <button
+              onClick={() => { firedRef.current = true; onCancel?.(); }}
+              className="absolute top-1 right-2 inline-flex items-center gap-1 text-[12px] font-black uppercase hover:text-white transition-colors"
+              style={{ color: '#94a3b8', letterSpacing: '0.2em' }}
+            >
+              Skip <span aria-hidden="true" style={{ fontSize: '1.3em', lineHeight: 1 }}>»</span>
+            </button>
+          )}
+
+          {/* Title + meta */}
+          <div className="text-center">
+            <h3
+              className="font-black uppercase italic"
+              style={{
+                fontSize: 'clamp(40px, 5.2vw, 66px)',
+                lineHeight: 0.92,
+                letterSpacing: '0.02em',
+                margin: 0,
+                fontFamily: 'Impact, "Arial Black", system-ui, sans-serif',
+                background:
+                  'linear-gradient(180deg, #ffffff 0%, #e2e8f0 30%, #93a3b8 52%, #cbd5e1 62%, #f8fafc 100%)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                color: 'transparent',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 3px 0 #0a0a0a) drop-shadow(0 5px 12px rgba(0,0,0,0.6))',
+                animation: 'qm-banner-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.05s both',
+              }}
+            >
+              Match Ready
+            </h3>
+            <div
+              className="mt-3 flex items-center justify-center gap-3 text-[13px] font-extrabold uppercase"
+              style={{ letterSpacing: '0.16em' }}
+            >
+              <span style={{ color: '#e2e8f0' }}>{modeLabel}</span>
+              <span aria-hidden="true" style={{ color: '#475569' }}>•</span>
+              <span style={{ color: '#fb923c' }}>{potLabel}</span>
+              <span aria-hidden="true" style={{ color: '#475569' }}>•</span>
+              <span style={{ color: '#e2e8f0' }}>{timeChipLabel}</span>
+            </div>
+          </div>
+
+          {/* Arena — YOU vs OPP */}
+          <div className="mt-9 flex items-center justify-center gap-8 lg:gap-12">
+            <DesktopFighter
+              name={userName}
+              avatarUrl={userAvatar}
+              profileId={userProfile?.id}
+              rank={userRank}
+              ring="#3b82f6"
+              crown
+              slamFrom="left"
+            />
+
+            {/* VS lightning burst */}
+            <div
+              className="relative flex items-center justify-center flex-shrink-0"
+              style={{ width: 150, height: 150 }}
+            >
+              <span
+                aria-hidden="true"
+                className="absolute"
+                style={{
+                  width: 150,
+                  height: 150,
+                  borderRadius: '50%',
+                  background:
+                    'radial-gradient(circle, rgba(255,255,255,0.92), rgba(253,224,71,0.6) 30%, rgba(251,146,60,0.32) 55%, transparent 70%)',
+                  filter: 'blur(2px)',
+                  animation: 'qm-impact-burst 0.8s ease-out 0.35s both',
+                }}
+              />
+              <svg
+                width="150"
+                height="150"
+                viewBox="0 0 100 100"
+                className="absolute"
+                aria-hidden="true"
+                style={{ filter: 'drop-shadow(0 0 12px rgba(251,191,36,0.9))', opacity: 0.92 }}
+              >
+                <defs>
+                  <linearGradient id="qm-bolt-grad-dt" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#fef9c3" />
+                    <stop offset="50%" stopColor="#facc15" />
+                    <stop offset="100%" stopColor="#f97316" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M60 6 L28 50 L47 50 L38 94 L74 44 L53 44 Z"
+                  fill="url(#qm-bolt-grad-dt)"
+                  stroke="#0a0a0a"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <div
+                className="relative z-10 font-black italic"
+                style={{
+                  fontSize: 62,
+                  fontFamily: 'Impact, "Arial Black", system-ui, sans-serif',
+                  color: '#facc15',
+                  WebkitTextStroke: '2.5px #0a0a0a',
+                  textShadow: '0 4px 0 #0a0a0a, 0 0 26px rgba(250,204,21,0.75)',
+                  animation: 'qm-vs-explode 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.4s both',
+                }}
+              >
+                VS
+              </div>
+            </div>
+
+            <DesktopFighter
+              name={oppName}
+              avatarUrl={matchedAvatar}
+              profileId={matchedOpponent?.id}
+              rank={oppRank}
+              ring="#fb923c"
+              slamFrom="right"
+            />
+          </div>
+
+          {/* Both players ready */}
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <span
+              aria-hidden="true"
+              className="inline-flex items-center justify-center rounded-full"
+              style={{ width: 18, height: 18, background: '#22c55e', color: '#04210f', fontSize: 12, fontWeight: 900 }}
+            >
+              ✓
+            </span>
+            <span
+              className="text-[13px] font-black uppercase"
+              style={{ color: '#22c55e', letterSpacing: '0.18em' }}
+            >
+              Both Players Ready
+            </span>
+          </div>
+
+          {/* CTA */}
+          <div className="mt-7 flex justify-center">
+            {gameMode === 'rush' ? (
+              <div
+                className="inline-flex items-center justify-center gap-2.5 rounded-2xl"
+                style={{
+                  padding: '16px 48px',
+                  background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                  border: '2.5px solid #0a0a0a',
+                  boxShadow: '0 5px 0 #0a0a0a',
+                }}
+              >
+                <span
+                  className="inline-block w-2.5 h-2.5 rounded-full"
+                  style={{ background: '#fbbf24', animation: 'qm-bolt-flicker 0.9s ease-in-out infinite' }}
+                />
+                <span
+                  className="font-black uppercase"
+                  style={{ color: '#fbbf24', letterSpacing: '0.14em', fontSize: 16 }}
+                >
+                  Loading live games…
+                </span>
+              </div>
+            ) : (
+              <button
+                onClick={() => { firedRef.current = true; onContinue(); }}
+                className="msg-cartoon-btn rounded-2xl font-black uppercase italic inline-flex items-center justify-center"
+                style={{
+                  minWidth: 360,
+                  padding: '18px 56px',
+                  background: 'linear-gradient(180deg,#fde047 0%, #f97316 60%, #ea580c 100%)',
+                  border: '3px solid #0a0a0a',
+                  boxShadow: '0 6px 0 #0a0a0a, 0 0 44px rgba(249,115,22,0.5)',
+                  color: '#0a0a0a',
+                  fontFamily: 'Impact, "Arial Black", system-ui, sans-serif',
+                  fontSize: 34,
+                  letterSpacing: '0.06em',
+                }}
+              >
+                <span style={{ textShadow: '0 2px 0 rgba(255,255,255,0.4)' }}>Let's Go!</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1537,7 +1857,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
             the header unreachable on small viewports. */}
         <div className="min-h-full flex items-center justify-center p-4">
         <div
-          className="qm-frame max-w-md w-full overflow-hidden relative"
+          className={`qm-frame w-full overflow-hidden relative ${step === 'found' ? 'max-w-md md:max-w-4xl' : 'max-w-md'}`}
           style={{
             background: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
             border: '2.5px solid #0a0a0a',

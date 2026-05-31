@@ -23,7 +23,8 @@
       "Bash(gh pr *)",
       "Read(//tmp/**)",
       "Bash(echo \"EXIT: $?\")",
-      "Bash(gh api *)"
+      "Bash(gh api *)",
+      "Bash(git fetch *)"
     ]
   }
 }
