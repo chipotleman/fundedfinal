@@ -60,16 +60,19 @@ export default function DesktopRightRail({ isLoggedIn }) {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      if (isLoggedIn) {
-        try {
-          const res = await fetch('/api/friends');
-          if (res.ok && !cancelled) {
-            const json = await res.json();
-            setFriends(Array.isArray(json?.friends) ? json.friends : []);
-          }
-        } catch {}
-      }
+
+    const loadFriends = async () => {
+      if (!isLoggedIn) return;
+      try {
+        const res = await fetch('/api/friends');
+        if (res.ok && !cancelled) {
+          const json = await res.json();
+          setFriends(Array.isArray(json?.friends) ? json.friends : []);
+        }
+      } catch {}
+    };
+
+    const loadBattles = async () => {
       try {
         const res = await fetch('/api/battles/live');
         if (res.ok && !cancelled) {
@@ -80,6 +83,9 @@ export default function DesktopRightRail({ isLoggedIn }) {
           }
         }
       } catch {}
+    };
+
+    const loadLeaders = async () => {
       try {
         const res = await fetch('/api/leaderboard?sortBy=profit&limit=5');
         if (res.ok && !cancelled) {
@@ -87,7 +93,18 @@ export default function DesktopRightRail({ isLoggedIn }) {
           setLeaders(Array.isArray(json?.leaders) ? json.leaders.slice(0, 5) : []);
         }
       } catch {}
-    })();
+    };
+
+    // Fire all three independently so a slow `/api/battles/live` (which can
+    // stall on flaky upstream sports data) never blocks the leaderboard or
+    // friends from populating. These used to be awaited sequentially, which
+    // left the Top Cappers card stuck on "Leaderboard loading…" until the
+    // battles fetch resolved — even though the leaderboard endpoint itself
+    // is fast.
+    loadFriends();
+    loadBattles();
+    loadLeaders();
+
     return () => {
       cancelled = true;
     };
