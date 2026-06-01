@@ -7,17 +7,12 @@ import haptic from '../../utils/haptics';
 // Match) over a dark arena backdrop, a "WIN. CLIMB. REPEAT." reward banner,
 // and a "FAIR PLAY GUARANTEED" footer.
 //
-// The card art is intentionally GENERIC for everyone — the same static default
-// characters are shown regardless of who's signed in. (We used to generate the
-// user's AI character from their profile photo here, but that meant the screen
-// loaded choppily while the image resolved; matching against a specific
-// opponent only matters once we're actually searching for one.) Purple is
+// The card art uses clean themed icon badges (lightning / crossed swords /
+// vault lock) rather than character portraits. The AI-generated people read as
+// generic stock art and didn't fit the high-end aesthetic. Purple is
 // intentionally avoided per the project's palette preference, and every hover
 // lift is gated under @media (hover: hover) so touch devices never get sticky
 // hover states.
-
-const DEFAULT_SELF = '/characters/default-self.png';
-const DEFAULT_OPPONENT = '/characters/default-opponent.png';
 
 const LightningIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 26, height: 26 }} aria-hidden="true">
@@ -46,9 +41,6 @@ export default function BattleModeChooser({
 
   if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
-
-  const selfImg = DEFAULT_SELF;
-  const oppImg = DEFAULT_OPPONENT;
 
   const pick = (fn) => {
     haptic.tap();
@@ -88,8 +80,13 @@ export default function BattleModeChooser({
         <div className="bmc-cards">
           {/* QUICK MATCH */}
           <button type="button" className="bmc-card bmc-card-blue no-hover-effect" onClick={() => pick(onPickQuickMatch)}>
-            <div className="bmc-art">
-              <img src={selfImg} alt="Your character" className="bmc-char bmc-char-single" draggable={false} />
+            <div className="bmc-art bmc-art-icon">
+              <span className="bmc-icon-glow" />
+              <span className="bmc-icon-badge">
+                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 42, height: 42 }} aria-hidden="true">
+                  <path d="M13 2L3 14h7l-1 8 11-13h-8l1-7z" />
+                </svg>
+              </span>
               <span className="bmc-art-fade" />
             </div>
             <div className="bmc-body">
@@ -102,10 +99,20 @@ export default function BattleModeChooser({
 
           {/* CHALLENGE FRIEND */}
           <button type="button" className="bmc-card bmc-card-red no-hover-effect" onClick={() => pick(onPickChallengeFriend)}>
-            <div className="bmc-art bmc-art-vs">
-              <img src={selfImg} alt="Your character" className="bmc-char bmc-char-left" draggable={false} />
-              <img src={oppImg} alt="Opponent character" className="bmc-char bmc-char-right" draggable={false} />
-              <span className="bmc-vs">VS</span>
+            <div className="bmc-art bmc-art-icon">
+              <span className="bmc-icon-glow" />
+              <span className="bmc-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round" style={{ width: 40, height: 40 }} aria-hidden="true">
+                  <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+                  <path d="m13 19 6-6" />
+                  <path d="m16 16 4 4" />
+                  <path d="m19 21 2-2" />
+                  <path d="M14.5 6.5 18 3h3v3l-3.5 3.5" />
+                  <path d="m5 14 6 6" />
+                  <path d="m8 17-4 4" />
+                  <path d="m5 19-2-2" />
+                </svg>
+              </span>
               <span className="bmc-art-fade" />
             </div>
             <div className="bmc-body">
@@ -118,10 +125,10 @@ export default function BattleModeChooser({
 
           {/* PRIVATE MATCH */}
           <button type="button" className="bmc-card bmc-card-green no-hover-effect" onClick={() => pick(onPickPrivateMatch)}>
-            <div className="bmc-art bmc-art-vault">
-              <span className="bmc-vault-glow" />
-              <span className="bmc-vault-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 40, height: 40 }}>
+            <div className="bmc-art bmc-art-icon">
+              <span className="bmc-icon-glow" />
+              <span className="bmc-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 40, height: 40 }} aria-hidden="true">
                   <rect x="4" y="11" width="16" height="10" rx="2.5" />
                   <path d="M8 11V8a4 4 0 0 1 8 0v3" />
                   <circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none" />
@@ -249,9 +256,9 @@ export default function BattleModeChooser({
             box-shadow: 0 26px 52px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 40px var(--halo);
           }
         }
-        .bmc-card-blue { --edge: rgba(59, 130, 246, 0.55); --tint: rgba(30, 64, 175, 0.32); --halo: rgba(37, 99, 235, 0.28); }
-        .bmc-card-red { --edge: rgba(239, 68, 68, 0.55); --tint: rgba(153, 27, 27, 0.32); --halo: rgba(220, 38, 38, 0.3); }
-        .bmc-card-green { --edge: rgba(16, 185, 129, 0.55); --tint: rgba(6, 95, 70, 0.34); --halo: rgba(5, 150, 105, 0.3); }
+        .bmc-card-blue { --edge: rgba(59, 130, 246, 0.55); --tint: rgba(30, 64, 175, 0.32); --halo: rgba(37, 99, 235, 0.3); --badge-fg: #bfdbfe; --badge-bg-1: rgba(59, 130, 246, 0.35); --badge-bg-2: rgba(30, 58, 138, 0.6); }
+        .bmc-card-red { --edge: rgba(239, 68, 68, 0.55); --tint: rgba(153, 27, 27, 0.32); --halo: rgba(220, 38, 38, 0.32); --badge-fg: #fecaca; --badge-bg-1: rgba(239, 68, 68, 0.35); --badge-bg-2: rgba(127, 29, 29, 0.6); }
+        .bmc-card-green { --edge: rgba(16, 185, 129, 0.55); --tint: rgba(6, 95, 70, 0.34); --halo: rgba(5, 150, 105, 0.32); --badge-fg: #d1fae5; --badge-bg-1: rgba(16, 185, 129, 0.35); --badge-bg-2: rgba(6, 78, 59, 0.6); }
 
         .bmc-art {
           position: relative;
@@ -261,62 +268,40 @@ export default function BattleModeChooser({
           align-items: flex-end;
           justify-content: center;
         }
-        .bmc-char {
-          height: 100%;
-          width: 100%;
-          object-fit: cover;
-          object-position: 50% 18%;
-          user-select: none;
-        }
-        .bmc-char-single { width: 100%; }
-        .bmc-art-vs .bmc-char { width: 56%; }
-        .bmc-char-left { object-position: 60% 18%; -webkit-mask-image: linear-gradient(90deg, #000 78%, transparent); mask-image: linear-gradient(90deg, #000 78%, transparent); }
-        .bmc-char-right { object-position: 40% 18%; -webkit-mask-image: linear-gradient(270deg, #000 78%, transparent); mask-image: linear-gradient(270deg, #000 78%, transparent); }
-        .bmc-art-vs { gap: 0; }
-        .bmc-vs {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          font-weight: 900;
-          font-style: italic;
-          font-size: 30px;
-          color: #fff;
-          text-shadow: 0 0 14px rgba(239, 68, 68, 0.9), 0 2px 0 #7f1d1d;
-          z-index: 2;
-        }
         .bmc-art-fade {
           position: absolute;
           inset: 0;
           pointer-events: none;
           background: linear-gradient(180deg, transparent 45%, rgba(7, 11, 22, 0.65) 82%, rgba(7, 11, 22, 0.98) 100%);
         }
-        .bmc-art-vault { background: radial-gradient(80% 70% at 50% 30%, rgba(16, 185, 129, 0.22), transparent 70%); }
-        .bmc-vault-glow {
+        .bmc-art-icon {
+          align-items: center;
+          background: radial-gradient(80% 70% at 50% 30%, var(--halo), transparent 70%);
+        }
+        .bmc-icon-glow {
           position: absolute;
           top: -10%;
           left: 50%;
           transform: translateX(-50%);
           width: 70%;
           height: 130%;
-          background: radial-gradient(50% 40% at 50% 25%, rgba(52, 211, 153, 0.5), transparent 70%);
+          background: radial-gradient(50% 40% at 50% 25%, var(--halo), transparent 70%);
           filter: blur(6px);
           pointer-events: none;
         }
-        .bmc-vault-badge {
+        .bmc-icon-badge {
           position: relative;
           z-index: 2;
-          margin-bottom: 14px;
-          width: 84px;
-          height: 84px;
+          width: 86px;
+          height: 86px;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: 22px;
-          color: #d1fae5;
-          background: linear-gradient(160deg, rgba(16, 185, 129, 0.35), rgba(6, 78, 59, 0.6));
-          border: 2px solid rgba(52, 211, 153, 0.8);
-          box-shadow: 0 0 30px rgba(16, 185, 129, 0.55), 0 8px 18px rgba(0, 0, 0, 0.45);
+          color: var(--badge-fg);
+          background: linear-gradient(160deg, var(--badge-bg-1), var(--badge-bg-2));
+          border: 2px solid var(--edge);
+          box-shadow: 0 0 30px var(--halo), 0 8px 18px rgba(0, 0, 0, 0.45);
         }
 
         .bmc-body {
@@ -422,9 +407,8 @@ export default function BattleModeChooser({
           .bmc-body { align-items: flex-start; text-align: left; padding: 14px 14px 14px 6px; margin-top: 0; gap: 7px; }
           .bmc-desc { min-height: 0; }
           .bmc-action { width: auto; align-self: stretch; }
-          .bmc-vs { font-size: 22px; }
-          .bmc-vault-badge { width: 60px; height: 60px; }
-          .bmc-vault-badge svg { width: 30px; height: 30px; }
+          .bmc-icon-badge { width: 60px; height: 60px; border-radius: 18px; }
+          .bmc-icon-badge svg { width: 30px; height: 30px; }
         }
 
         @keyframes bmcFade { from { opacity: 0; } to { opacity: 1; } }
