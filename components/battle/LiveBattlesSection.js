@@ -3449,6 +3449,14 @@ export default function LiveBattlesSection({
     // a healthy stream never flickers the hint on or off.
     const load = async ({ isInitial = false, isRetry = false } = {}) => {
       if (cancelled) return;
+      // Only the initial mount fetch and an explicit tap-to-retry are
+      // "foreground" loads allowed to surface the failure hint. Background
+      // loads (SSE-triggered reloads, fallback polls, reconnect catch-up)
+      // must NOT flip to 'failed' on a transient blip — we always have
+      // simulated battles on screen, so popping "Couldn't load this" on
+      // every 30s background poll that times out (e.g. while upstream data
+      // is flaky) is noise. A successful load of any kind still clears it.
+      const foreground = isInitial || isRetry;
       if (isRetry) setLoadStatus('retrying');
       else if (isInitial) setLoadStatus('loading');
       const controller = new AbortController();
@@ -3456,7 +3464,7 @@ export default function LiveBattlesSection({
       try {
         const res = await fetch('/api/battles/live', { signal: controller.signal });
         if (!res.ok) {
-          if (!cancelled) setLoadStatus('failed');
+          if (!cancelled && foreground) setLoadStatus('failed');
           return;
         }
         const data = await res.json();
@@ -3479,7 +3487,7 @@ export default function LiveBattlesSection({
         if (err.name !== 'AbortError') {
           console.error('Error fetching live battles:', err);
         }
-        if (!cancelled) setLoadStatus('failed');
+        if (!cancelled && foreground) setLoadStatus('failed');
       } finally {
         clearTimeout(timeout);
       }
