@@ -152,9 +152,17 @@ export default function HowItWorksModal({ open, onClose }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
 
+  // Reset to the first slide only when the modal transitions open. This must
+  // depend on `open` alone — callers pass an inline `onClose` arrow whose
+  // identity changes on every parent re-render (the dashboard/top-nav re-render
+  // constantly from polling + SSE), so including it here would re-fire this
+  // effect mid-walkthrough and yank the user back to slide 1.
+  useEffect(() => {
+    if (open) setStep(0);
+  }, [open]);
+
   useEffect(() => {
     if (!open) return undefined;
-    setStep(0);
     const onKey = (e) => {
       if (e.key === 'Escape') onClose();
     };
