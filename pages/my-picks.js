@@ -145,26 +145,9 @@ export default function MyPicksPage() {
     loading,
   } = useMatchup();
 
-  // Active battle card shows YOUR balance by default. The opponent's
-  // balance is only shown when the user explicitly clicks the
-  // opponent's avatar (or the balance row itself, which then flips
-  // back to "me" on a second tap). Earlier this auto-flipped every
-  // 3.5s, which read as "random balances changing on their own" per
-  // user feedback — gone.
-  const [balanceView, setBalanceView] = useState('me');
-  const opponentId = opponent?.id || null;
-  // Reset view back to "me" whenever the opponent changes so we
-  // never carry the prior battle's flip state into a new one.
-  useEffect(() => {
-    setBalanceView('me');
-  }, [opponentId]);
-  const showMyBalance = useCallback(() => setBalanceView('me'), []);
-  const showOppBalance = useCallback(() => setBalanceView('opp'), []);
-  // Balance-row tap toggles between the two — gives the user a
-  // second affordance besides the avatars without auto-changing.
-  const flipBalanceView = useCallback(() => {
-    setBalanceView((v) => (v === 'me' ? 'opp' : 'me'));
-  }, []);
+  // Both players' live balances are now shown side-by-side in the
+  // balance duel (renderBalanceDuel), so the old tap-to-flip single
+  // balance view (and its hidden state) was removed.
   const { betSlip, setShowBetSlip } = useBetSlip();
   const { theme } = useTheme();
   const isLight = theme === 'light';
@@ -219,85 +202,11 @@ export default function MyPicksPage() {
     return { open, won, lost, cashedOut, totalStake, potentialPayout };
   }, [sortedBets]);
 
-  const openBetSlip = () => {
-    try { setShowBetSlip(true); } catch (_e) {}
-  };
-
-  // -------- Sub-renderers --------
-
-  // Header intentionally omitted: the top-nav already shows the
-  // active "My Picks" tab underline, so repeating the page title +
-  // subtitle here was just redundant chrome. The renderer is kept
-  // as a no-op so call sites elsewhere in the file don't need to
-  // change.
-  const renderHeader = () => null;
-
-  // VS row — used both inline (mobile) and stacked (desktop sidebar).
-  // "You" matches the casing convention of the opponent's display name
-  // (we don't uppercase the opponent's handle, so we shouldn't shout
-  // YOU at the user either). Tapping either avatar switches the
-  // balance row below to show that player's balance — and the active
-  // side gets a colored ring so it's obvious whose balance you're
-  // looking at. Profile navigation moved off this card (the opponent's
-  // profile is still reachable from elsewhere).
-  const renderVsRow = ({ stacked = false } = {}) => {
-    if (!matchup || !hasActiveMatchup) return null;
-    const oppName = opponent?.username || 'Opponent';
-    const hasOpponent = !!opponent;
-    return (
-      <div className={`flex items-center ${stacked ? 'justify-center' : 'justify-start'} gap-3`}>
-        <button
-          type="button"
-          onClick={showMyBalance}
-          className={`flex flex-col items-center gap-1 rounded-lg px-1 py-0.5 -mx-1 cursor-pointer active:scale-95 transition ${balanceView === 'me' ? 'ring-2 ring-blue-400/60' : ''}`}
-          title="Show your balance"
-        >
-          <UserAvatar
-            avatar={myProfile?.avatar}
-            username={myProfile?.username || 'You'}
-            size={stacked ? 48 : 40}
-          />
-          <div className="text-xs font-black" style={{ color: '#3b82f6' }}>You</div>
-        </button>
-        <div className="text-xl font-black px-1" style={{ color: p.vsText }}>VS</div>
-        <button
-          type="button"
-          onClick={hasOpponent ? showOppBalance : undefined}
-          disabled={!hasOpponent}
-          className={`flex flex-col items-center gap-1 rounded-lg px-1 py-0.5 -mx-1 ${hasOpponent ? `cursor-pointer active:scale-95 transition ${balanceView === 'opp' ? 'ring-2 ring-orange-400/60' : ''}` : 'cursor-default'}`}
-          title={hasOpponent ? `Show ${oppName}'s balance` : oppName}
-        >
-          <UserAvatar
-            avatar={opponent?.avatar}
-            username={oppName}
-            size={stacked ? 48 : 40}
-          />
-          <div
-            className="text-xs font-black truncate max-w-[88px] text-center"
-            style={{ color: '#fb923c' }}
-          >
-            {oppName}
-          </div>
-        </button>
-      </div>
-    );
-  };
-
-  // Balance + Time Left pair (compact, fits both mobile inline and
-  // desktop sidebar). The Balance cell alternates between YOUR and
-  // your OPPONENT's live balance (auto every ~3.5s, or tap to flip).
-  // We keep the cell itself clickable so the toggle target is large
-  // and obvious without extra chrome.
-  const renderBalanceTimeRow = ({ vertical = false } = {}) => {
-    if (!matchup || !hasActiveMatchup) return null;
-    const startingBalance = parseFloat(matchup.startingBalance || 0) || 0;
-
-    // IMPORTANT: must match the field the TopNavbar coin pill reads
-    // (`myBalance` from useMatchup()), otherwise the top-nav number
-    // and the active-battle-card number diverge by the unrealized
-    // P&L on open picks and the two reads look "random / wrong" to
-    // the user. We deliberately use the SETTLED balance here, not
-    // `myLiveBalance`, so the two values are always identical.
+  // Both players' live balances, resolved through the same fallback
+  // chain the top-nav coin pill uses so the figures never diverge. We
+  // use the SETTLED balances (myBalance / opponentBalance) first.
+  const battleBalances = useMemo(() => {
+    const startingBalance = parseFloat(matchup?.startingBalance || 0) || 0;
     const myLive =
       myBalance != null ? parseFloat(myBalance)
         : myLiveBalance != null ? parseFloat(myLiveBalance)
@@ -306,86 +215,179 @@ export default function MyPicksPage() {
       opponentBalance != null ? parseFloat(opponentBalance)
         : opponentLiveBalance != null ? parseFloat(opponentLiveBalance)
         : startingBalance;
+    return { startingBalance, myLive, oppLive };
+  }, [matchup, myBalance, myLiveBalance, opponentBalance, opponentLiveBalance]);
 
-    const showingOpp = balanceView === 'opp' && !!opponent;
-    const live = showingOpp ? oppLive : myLive;
-    const liveDelta = live - startingBalance;
-    const isUp = liveDelta > 0;
-    const isDown = liveDelta < 0;
-    const cellBase = vertical ? 'text-center w-full' : 'text-right';
-    const labelColor = showingOpp ? '#fb923c' : '#3b82f6';
-    const labelText = showingOpp
-      ? `${(opponent?.username || 'Opponent').slice(0, 14)} Balance`
-      : 'Your Balance';
+  const openBetSlip = () => {
+    try { setShowBetSlip(true); } catch (_e) {}
+  };
 
-    return (
-      <div className={vertical ? 'flex flex-col gap-3' : 'flex items-center gap-5'}>
-        <button
-          type="button"
-          onClick={opponent ? flipBalanceView : undefined}
-          disabled={!opponent}
-          className={`${cellBase} ${opponent ? 'cursor-pointer active:scale-95 transition' : 'cursor-default'}`}
-          title={opponent ? 'Tap to see the other balance' : 'Balance'}
+  // -------- Sub-renderers --------
+
+  // Header intentionally omitted: the top-nav already shows the
+  // active "My Piks" tab underline, so repeating the page title +
+  // subtitle here was just redundant chrome. The renderer is kept
+  // as a no-op so call sites elsewhere in the file don't need to
+  // change.
+  const renderHeader = () => null;
+
+  // VS hero — both fighters facing off with gradient avatar rings and
+  // colored name chips (blue = you, orange = opponent). Used stacked in
+  // the desktop battle-HQ rail and inside the mobile banner.
+  const renderVsRow = () => {
+    if (!matchup || !hasActiveMatchup) return null;
+    const oppName = opponent?.username || 'Opponent';
+    const hasOpponent = !!opponent;
+    const fighter = (avatar, name, color, gradient, ringRgba, isMe) => (
+      <div className="flex flex-col items-center gap-2 min-w-0">
+        <div className="rounded-full p-[3px]" style={{ background: gradient, boxShadow: `0 0 0 3px ${ringRgba}` }}>
+          <UserAvatar avatar={avatar} username={name} size={60} />
+        </div>
+        <div
+          className="text-[11px] font-black px-2.5 py-0.5 rounded-full truncate max-w-[104px] text-center"
+          style={{ color: '#fff', background: `${color}29`, border: `1px solid ${color}80` }}
         >
-          <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: labelColor }}>
-            {labelText}
-          </div>
-          <div className="text-lg font-black inline-flex items-center gap-1">
-            <span style={{ color: '#fb923c' }}>⚔</span>
-            <span style={{ color: p.bodyText }}>{formatMoney(live, 0)}</span>
-          </div>
-          {(isUp || isDown) && (
-            <div className="text-[11px] font-bold" style={{ color: isUp ? '#34d399' : '#f87171' }}>
-              {isUp ? '+' : ''}{formatMoney(liveDelta, 0)}
+          {isMe ? 'You' : name}
+        </div>
+      </div>
+    );
+    return (
+      <div className="flex items-center justify-center gap-3">
+        {fighter(myProfile?.avatar, myProfile?.username || 'You', '#3b82f6', 'linear-gradient(135deg,#3b82f6,#1d4ed8)', 'rgba(59,130,246,0.25)', true)}
+        <div
+          className="text-sm font-black px-2.5 py-1 rounded-lg flex-shrink-0"
+          style={{
+            color: '#fff',
+            background: 'linear-gradient(135deg, rgba(59,130,246,0.3), rgba(251,146,60,0.3))',
+            border: `1.5px solid ${p.softBorder}`,
+            boxShadow: '0 2px 0 rgba(0,0,0,0.35)',
+          }}
+        >
+          VS
+        </div>
+        {fighter(opponent?.avatar, oppName, '#fb923c', hasOpponent ? 'linear-gradient(135deg,#fb923c,#ea580c)' : 'rgba(148,163,184,0.4)', 'rgba(251,146,60,0.25)', false)}
+      </div>
+    );
+  };
+
+  // Head-to-head live balance duel — both balances shown at once over a
+  // single proportional bar (blue = you, orange = opponent) so it reads
+  // as "who's winning" at a glance.
+  const renderBalanceDuel = () => {
+    if (!matchup || !hasActiveMatchup) return null;
+    const { startingBalance, myLive, oppLive } = battleBalances;
+    const oppName = opponent?.username || 'Opponent';
+    const total = Math.max(1, myLive + oppLive);
+    const myPct = Math.max(8, Math.min(92, (myLive / total) * 100));
+    const delta = (d) => {
+      if (!d) return <span className="text-[11px] font-bold" style={{ color: p.mutedText }}>even</span>;
+      const up = d > 0;
+      return (
+        <span className="text-[11px] font-black" style={{ color: up ? '#34d399' : '#f87171' }}>
+          {up ? '+' : ''}{formatMoney(d, 0)}
+        </span>
+      );
+    };
+    return (
+      <div>
+        <div className="flex items-end justify-between gap-2 mb-2">
+          <div className="text-left min-w-0">
+            <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#3b82f6' }}>You</div>
+            <div className="text-xl font-black inline-flex items-center gap-1" style={{ color: p.bodyText }}>
+              <span style={{ color: '#3b82f6' }}>⚔</span>{formatMoney(myLive, 0)}
             </div>
-          )}
-        </button>
-        <div className={cellBase}>
-          <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>Time Left</div>
-          <div className="text-lg font-black" style={{ color: p.bodyText }}>{formatTimeRemaining(timeRemaining)}</div>
+            <div>{delta(myLive - startingBalance)}</div>
+          </div>
+          <div className="text-right min-w-0">
+            <div className="text-[10px] uppercase tracking-wider font-bold truncate max-w-[120px] ml-auto" style={{ color: '#fb923c' }}>{oppName}</div>
+            <div className="text-xl font-black inline-flex items-center gap-1" style={{ color: p.bodyText }}>
+              <span style={{ color: '#fb923c' }}>⚔</span>{formatMoney(oppLive, 0)}
+            </div>
+            <div className="text-right">{delta(oppLive - startingBalance)}</div>
+          </div>
+        </div>
+        <div
+          className="relative h-3 rounded-full overflow-hidden"
+          style={{ background: 'rgba(251,146,60,0.3)', border: `1px solid ${p.softBorder}` }}
+        >
+          <div
+            className="absolute inset-y-0 left-0 transition-all duration-500"
+            style={{ width: `${myPct}%`, background: 'linear-gradient(90deg,#2563eb,#60a5fa)' }}
+          />
         </div>
       </div>
     );
   };
 
-  // Mobile / tablet inline banner (single row).
+  // Time-left pill.
+  const renderTimePill = () => {
+    if (!matchup || !hasActiveMatchup) return null;
+    return (
+      <div
+        className="flex items-center justify-center gap-2 rounded-xl py-2.5"
+        style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}` }}
+      >
+        <span className="text-base" aria-hidden="true">⏱️</span>
+        <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: p.mutedText }}>Time Left</span>
+        <span className="text-lg font-black" style={{ color: p.bodyText }}>{formatTimeRemaining(timeRemaining)}</span>
+      </div>
+    );
+  };
+
+  // Battle stat tiles — colored Open/Won/Lost/Cashed chips + At Risk /
+  // To Win money footer. Shared by the desktop rail and the mobile card.
+  const renderStatTiles = () => {
+    if (sortedBets.length === 0) return null;
+    const tile = (label, value, color) => (
+      <div className="rounded-xl px-2 py-2.5 text-center" style={{ background: `${color}1f`, border: `1px solid ${color}59` }}>
+        <div className="text-lg font-black leading-none" style={{ color }}>{value}</div>
+        <div className="text-[9px] uppercase tracking-wider font-bold mt-1" style={{ color: p.mutedText }}>{label}</div>
+      </div>
+    );
+    const money = (label, value, color) => (
+      <div className="rounded-xl px-3 py-2.5" style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}` }}>
+        <div className="text-[9px] uppercase tracking-wider font-bold" style={{ color: p.mutedText }}>{label}</div>
+        <div className="text-base font-black" style={{ color }}>${formatMoney(value, 0)}</div>
+      </div>
+    );
+    return (
+      <div>
+        <div className="grid grid-cols-4 gap-2">
+          {tile('Open', counts.open, '#3b82f6')}
+          {tile('Won', counts.won, '#34d399')}
+          {tile('Lost', counts.lost, '#f87171')}
+          {tile('Cashed', counts.cashedOut, '#fb923c')}
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {money('At Risk', counts.totalStake, '#fbbf24')}
+          {money('To Win', Math.max(0, counts.potentialPayout - counts.totalStake), '#34d399')}
+        </div>
+      </div>
+    );
+  };
+
+  // Mobile / tablet inline banner — VS hero + balance duel in a framed
+  // card with a gradient header carrying the time left.
   const renderInlineBanner = () => {
     if (!matchup || !hasActiveMatchup) return null;
     return (
       <div
-        className="lg:hidden rounded-2xl p-4 mb-5"
-        style={{
-          background: p.cardSurface,
-          border: `2.5px solid ${p.cartoonBorder}`,
-          boxShadow: p.hardShadow,
-        }}
+        className="lg:hidden rounded-2xl overflow-hidden mb-5"
+        style={{ background: p.cardSurface, border: `2.5px solid ${p.cartoonBorder}`, boxShadow: p.hardShadow }}
       >
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          {renderVsRow()}
-          <div className="ml-auto">{renderBalanceTimeRow()}</div>
+        <div
+          className="flex items-center justify-between px-4 py-2.5"
+          style={{ background: 'linear-gradient(90deg, rgba(59,130,246,0.18), rgba(251,146,60,0.12))', borderBottom: `1px solid ${p.softBorder}` }}
+        >
+          <span className="text-[11px] uppercase tracking-wider font-black" style={{ color: p.bodyText }}>Active Battle</span>
+          <span className="inline-flex items-center gap-1.5 text-lg font-black" style={{ color: p.bodyText }}>
+            <span className="text-sm" aria-hidden="true">⏱️</span>{formatTimeRemaining(timeRemaining)}
+          </span>
         </div>
-      </div>
-    );
-  };
-
-  const renderSummaryStrip = ({ compact = false } = {}) => {
-    if (sortedBets.length === 0) return null;
-    const cell = (label, value, color) => (
-      <div className={`${compact ? 'flex-1' : 'flex-1'} text-center px-2 py-2`}>
-        <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>{label}</div>
-        <div className={`${compact ? 'text-base' : 'text-lg'} font-black mt-0.5`} style={{ color }}>{value}</div>
-      </div>
-    );
-    return (
-      <div
-        className={`rounded-xl mb-5 grid ${compact ? 'grid-cols-3 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-5'} ${isLight ? 'divide-x divide-slate-900/5' : 'divide-x divide-white/5'}`}
-        style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}` }}
-      >
-        {cell('Open', counts.open, '#3b82f6')}
-        {cell('Won', counts.won, '#34d399')}
-        {cell('Lost', counts.lost, '#f87171')}
-        {cell('At Risk', `${formatMoney(counts.totalStake, 0)}`, '#fed7aa')}
-        {cell('To Win', `${formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}`, '#34d399')}
+        <div className="p-4 flex flex-col gap-4">
+          {renderVsRow()}
+          <div className="pt-3" style={{ borderTop: `1px solid ${p.softBorder}` }}>{renderBalanceDuel()}</div>
+        </div>
       </div>
     );
   };
@@ -488,7 +490,7 @@ export default function MyPicksPage() {
     >
       <div className="text-xl font-black mb-2" style={{ color: p.bodyText }}>Sign in to see your picks</div>
       <p className="text-sm mb-5" style={{ color: p.mutedText }}>
-        My Picks pulls from your active battle. Log in to start placing picks.
+        My Piks pulls from your active battle. Log in to start placing picks.
       </p>
       <Link
         href="/"
@@ -571,7 +573,7 @@ export default function MyPicksPage() {
                 Tracking
               </div>
             )}
-            <PiksBetCard bet={bet} compactHeader isBattleEnded={false} />
+            <PiksBetCard bet={bet} compactHeader prominentHeader isBattleEnded={false} />
           </div>
         );
       })}
@@ -580,71 +582,39 @@ export default function MyPicksPage() {
 
   // -------- Desktop side panels --------
 
-  // Left rail — VS card + balance/time + summary.
+  // Left rail — one cohesive "Battle HQ" card: gradient header + LIVE
+  // pill, VS hero, balance duel, time pill, and the battle stat tiles.
   const renderLeftRail = () => {
     if (!matchup || !hasActiveMatchup) return null;
     return (
       <aside className="hidden lg:block lg:col-span-3">
-        {/* Drop `sticky` so the rail stretches to the grid row height
-            (default `items-stretch` on the parent grid). The bottom
-            stats card flex-grows so the column matches the picks
-            column and the right analytics rail. */}
-        <div className="flex flex-col gap-4 h-full">
+        <div
+          className="rounded-2xl overflow-hidden h-full flex flex-col"
+          style={{ background: p.cardSurface, border: `2.5px solid ${p.cartoonBorder}`, boxShadow: p.hardShadow }}
+        >
           <div
-            className="rounded-2xl p-5"
-            style={{
-              background: p.cardSurface,
-              border: `2.5px solid ${p.cartoonBorder}`,
-              boxShadow: p.hardShadow,
-            }}
+            className="flex items-center justify-between px-4 py-2.5"
+            style={{ background: 'linear-gradient(90deg, rgba(59,130,246,0.18), rgba(251,146,60,0.12))', borderBottom: `1px solid ${p.softBorder}` }}
           >
-            <div className="text-[10px] uppercase tracking-wider mb-3 text-center" style={{ color: p.mutedText }}>
-              Active Battle
-            </div>
-            {renderVsRow({ stacked: true })}
-            <div className={`mt-4 pt-4 border-t ${p.divider}`}>
-              {renderBalanceTimeRow({ vertical: true })}
-            </div>
-          </div>
-
-          {sortedBets.length > 0 && (
-            <div
-              className="rounded-2xl p-3 flex-1 flex flex-col justify-center"
-              style={{
-                background: p.innerSurface,
-                border: `1px solid ${p.softBorder}`,
-              }}
+            <span className="text-[11px] uppercase tracking-wider font-black" style={{ color: p.bodyText }}>Active Battle</span>
+            <span
+              className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.45)' }}
             >
-              <div className="text-[10px] uppercase tracking-wider mb-2 text-center" style={{ color: p.mutedText }}>
-                This Battle
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#f87171' }} />Live
+            </span>
+          </div>
+          <div className="p-4 flex flex-col gap-4 flex-1">
+            {renderVsRow()}
+            <div className="pt-4" style={{ borderTop: `1px solid ${p.softBorder}` }}>{renderBalanceDuel()}</div>
+            {renderTimePill()}
+            {sortedBets.length > 0 && (
+              <div className="pt-4 mt-auto" style={{ borderTop: `1px solid ${p.softBorder}` }}>
+                <div className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: p.mutedText }}>This Battle</div>
+                {renderStatTiles()}
               </div>
-              <div className="grid grid-cols-2 gap-y-3">
-                {[
-                  ['Open', counts.open, '#3b82f6'],
-                  ['Won', counts.won, '#34d399'],
-                  ['Lost', counts.lost, '#f87171'],
-                  ['Cashed', counts.cashedOut, '#fb923c'],
-                ].map(([label, value, color]) => (
-                  <div key={label} className="text-center">
-                    <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>{label}</div>
-                    <div className="text-lg font-black" style={{ color }}>{value}</div>
-                  </div>
-                ))}
-              </div>
-              <div className={`mt-3 pt-3 border-t ${p.divider} grid grid-cols-2 gap-y-2`}>
-                <div className="text-center">
-                  <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>At Risk</div>
-                  <div className="text-sm font-black" style={{ color: '#fed7aa' }}>${formatMoney(counts.totalStake, 0)}</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>To Win</div>
-                  <div className="text-sm font-black" style={{ color: '#34d399' }}>
-                    ${formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </aside>
     );
@@ -711,12 +681,16 @@ export default function MyPicksPage() {
       })();
 
       panelBody = (
-        <div className="space-y-3">
-          <div>
-            <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: p.mutedText }}>
-              Tracking your pick
+        <div className="space-y-4">
+          <div
+            className="rounded-xl px-3 py-2.5"
+            style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.3)' }}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22d3ee' }} />
+              <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#22d3ee' }}>Tracking your pick</span>
             </div>
-            <div className="text-sm font-black truncate" style={{ color: p.bodyText }}>
+            <div className="text-base font-black truncate" style={{ color: p.bodyText }}>
               {selectedBet.selection || '—'}
             </div>
             <div className="text-[11px] truncate" style={{ color: p.mutedText }}>
@@ -738,11 +712,12 @@ export default function MyPicksPage() {
             <Link
               href={`/game/${encodeURIComponent(gameId)}`}
               prefetch
-              className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider"
+              className="block w-full text-center px-3 py-3 rounded-xl text-sm font-black uppercase tracking-wider"
               style={{
-                background: p.openGameBg,
-                color: p.openGameText,
-                border: p.openGameBorder,
+                background: 'linear-gradient(135deg,#2563eb,#3b82f6)',
+                color: '#ffffff',
+                border: `2.5px solid ${p.cartoonBorder}`,
+                boxShadow: p.hardShadow,
               }}
             >
               Open Game →
@@ -770,32 +745,32 @@ export default function MyPicksPage() {
 
     return (
       <aside className="hidden lg:block lg:col-span-4">
-        {/* Stretch to match the picks column + left rail height. */}
         <div className="flex flex-col h-full">
           <div
-            className="rounded-2xl p-4 flex-1 flex flex-col"
+            className="rounded-2xl overflow-hidden flex-1 flex flex-col"
             style={{
               background: p.cardSurface,
               border: `2.5px solid ${p.cartoonBorder}`,
               boxShadow: p.hardShadow,
             }}
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] uppercase tracking-wider" style={{ color: p.mutedText }}>
-                Analytics
-              </div>
-              <div
-                className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full"
-                style={{
-                  background: 'rgba(34,211,238,0.15)',
-                  color: '#22d3ee',
-                  border: '1px solid rgba(34,211,238,0.45)',
-                }}
+            <div
+              className="flex items-center justify-between px-4 py-2.5"
+              style={{ background: 'linear-gradient(90deg, rgba(34,211,238,0.16), rgba(59,130,246,0.10))', borderBottom: `1px solid ${p.softBorder}` }}
+            >
+              <span className="text-[11px] uppercase tracking-wider font-black" style={{ color: p.bodyText }}>
+                Live Odds Tracker
+              </span>
+              <span
+                className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(34,211,238,0.15)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.45)' }}
               >
-                Live
-              </div>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22d3ee' }} />Live
+              </span>
             </div>
-            {panelBody}
+            <div className="p-4 flex-1 flex flex-col">
+              {panelBody}
+            </div>
           </div>
         </div>
       </aside>
@@ -832,7 +807,7 @@ export default function MyPicksPage() {
   return (
     <>
       <Head>
-        <title>My Picks · Piks</title>
+        <title>My Piks · Piks</title>
         <meta name="description" content="See every pick you've placed in your current battle." />
       </Head>
       <div className="min-h-screen" style={{ backgroundColor: p.pageBg }}>
@@ -843,7 +818,15 @@ export default function MyPicksPage() {
           {/* Mobile / tablet inline banner (sits above picks). */}
           {renderInlineBanner()}
           <div className="lg:hidden">
-            {sortedBets.length > 0 && renderSummaryStrip()}
+            {sortedBets.length > 0 && (
+              <div
+                className="rounded-2xl p-4 mb-5"
+                style={{ background: p.cardSurface, border: `2.5px solid ${p.cartoonBorder}`, boxShadow: p.hardShadow }}
+              >
+                <div className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: p.mutedText }}>This Battle</div>
+                {renderStatTiles()}
+              </div>
+            )}
           </div>
 
           <div className="lg:grid lg:grid-cols-12 lg:gap-6">

@@ -5,7 +5,7 @@ import { formatMoney } from '../utils/formatMoney';
 import { calculatePayout } from '../utils/odds';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
-export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false, isBattleEnded = false }) {
+export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false, prominentHeader = false, isBattleEnded = false }) {
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const buttonRef = useRef(null);
@@ -426,7 +426,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
           <img
             src="/pikslogotransparent.png"
             alt="Piks"
-            className={`object-contain ${compactHeader ? 'h-12 -ml-[12px]' : 'h-24 -ml-[24px]'}`}
+            className={`object-contain ${compactHeader ? (prominentHeader ? 'h-[68px] -ml-[16px]' : 'h-12 -ml-[12px]') : 'h-24 -ml-[24px]'}`}
             style={{ filter: 'none' }}
           />
 
@@ -443,7 +443,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
               <img
                 src="/trophy-winner.png"
                 alt="Winner"
-                className={compactHeader ? 'h-[48px] w-auto' : 'h-[72px] w-auto'}
+                className={compactHeader ? (prominentHeader ? 'h-[64px] w-auto' : 'h-[48px] w-auto') : 'h-[72px] w-auto'}
               />
             </div>
           )}

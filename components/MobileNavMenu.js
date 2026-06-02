@@ -368,7 +368,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     : 'text-gray-300 font-light border-l-transparent'
                 }`}
               >
-                My Picks
+                My Piks
               </Link>
               <Link
                 href="/bet-history"

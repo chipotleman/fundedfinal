@@ -1024,7 +1024,7 @@ export default function TopNavbar({
                                   : currentPath === href || currentPath.startsWith(`${href}/`);
                               const navLinks = [
                                 ['/dashboard', 'Battle'],
-                                ['/my-picks', 'My Picks'],
+                                ['/my-picks', 'My Piks'],
                                 ['/battle', 'Social'],
                                 ['/leaderboard', 'Leaderboard'],
                               ];
