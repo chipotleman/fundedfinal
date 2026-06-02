@@ -1319,7 +1319,9 @@ export default function Dashboard() {
           const isBundle = pill.sports.length > 1;
           const handleTap = () => {
             if (!isBundle) {
-              handleSportClick(pill.sports[0]);
+              // Toggle: re-tapping the already-active pill clears the filter
+              // back to the default "Live" view instead of staying stuck on.
+              handleSportClick(isActive ? 'Live' : pill.sports[0]);
               return;
             }
             // Bundled (condensed) pill: cycle through the leagues so
