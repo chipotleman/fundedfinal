@@ -463,57 +463,91 @@ export default function MyPicksPage() {
     const myChange = myLive - startingBalance;
     const oppChange = oppLive - startingBalance;
     const sideChange = (d) => (
-      <div className="text-xs font-black" style={{ color: d < 0 ? '#f87171' : d > 0 ? '#34d399' : '#9ca3af' }}>
-        {d > 0 ? '+' : ''}{formatMoney(d, 0)} <span className="text-[9px] font-bold tracking-wider" style={{ color: '#64748b' }}>CHANGE</span>
+      <div className="text-xs font-black" style={{ color: d < 0 ? (isLight ? '#dc2626' : '#f87171') : d > 0 ? (isLight ? '#059669' : '#34d399') : (isLight ? '#64748b' : '#9ca3af') }}>
+        {d > 0 ? '+' : ''}{formatMoney(d, 0)} <span className="text-[9px] font-bold tracking-wider" style={{ color: isLight ? '#94a3b8' : '#64748b' }}>CHANGE</span>
       </div>
     );
+    // Theme-aware hero tokens. The backdrop is deliberately restrained — a
+    // single base gradient plus one soft top glow and two faint side tints
+    // (echoing the blue "you" / amber "opponent" sides) instead of a stack of
+    // saturated color blobs — so it reads as a considered, production design.
+    const hero = isLight
+      ? {
+          base: 'linear-gradient(180deg,#ffffff 0%,#eef1f7 100%)',
+          topGlow: 'radial-gradient(120% 90% at 50% 0%, rgba(37,99,235,0.07), transparent 62%)',
+          leftTint: 'linear-gradient(90deg, rgba(37,99,235,0.06), transparent 70%)',
+          rightTint: 'linear-gradient(270deg, rgba(234,88,12,0.06), transparent 70%)',
+          text: '#0f172a',
+          faint: '#64748b',
+          avatarInner: '#ffffff',
+          vsShadow: 'none',
+          border: 'rgba(15,23,42,0.10)',
+          statBg: 'rgba(15,23,42,0.025)',
+          statBorder: 'rgba(15,23,42,0.08)',
+          youCoin: '#2563eb',
+          oppCoin: '#0f172a',
+        }
+      : {
+          base: 'linear-gradient(180deg,#10141d 0%,#0a0d13 100%)',
+          topGlow: 'radial-gradient(120% 90% at 50% 0%, rgba(59,130,246,0.12), transparent 60%)',
+          leftTint: 'linear-gradient(90deg, rgba(37,99,235,0.10), transparent 70%)',
+          rightTint: 'linear-gradient(270deg, rgba(234,88,12,0.10), transparent 70%)',
+          text: '#ffffff',
+          faint: '#64748b',
+          avatarInner: '#0a0f1c',
+          vsShadow: '0 4px 20px rgba(0,0,0,0.6)',
+          border: '#1a1a1a',
+          statBg: 'rgba(0,0,0,0.35)',
+          statBorder: 'rgba(255,255,255,0.06)',
+          youCoin: '#60a5fa',
+          oppCoin: '#ffffff',
+        };
     return (
       <div className="relative rounded-3xl overflow-hidden mb-4"
-        style={{ border: '1px solid #1a1a1a', boxShadow: 'none' }}>
-        {/* Cinematic stadium backdrop */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,#0b1730 0%,#0a0f1c 48%,#1c1108 100%)' }} />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 50% -10%, rgba(96,165,250,0.22), transparent 60%)' }} />
-        <div className="absolute inset-0 opacity-50" style={{ background: 'radial-gradient(circle at 12% 0%, rgba(59,130,246,0.25), transparent 35%), radial-gradient(circle at 88% 0%, rgba(251,146,60,0.22), transparent 35%)' }} />
-        <div className="absolute left-0 inset-y-0 w-1/2" style={{ background: 'linear-gradient(90deg, rgba(37,99,235,0.16), transparent)' }} />
-        <div className="absolute right-0 inset-y-0 w-1/2" style={{ background: 'linear-gradient(270deg, rgba(234,88,12,0.16), transparent)' }} />
+        style={{ border: `1px solid ${hero.border}`, boxShadow: p.hardShadow }}>
+        {/* Restrained battle backdrop */}
+        <div className="absolute inset-0" style={{ background: hero.base }} />
+        <div className="absolute inset-0" style={{ background: hero.topGlow }} />
+        <div className="absolute left-0 inset-y-0 w-1/2" style={{ background: hero.leftTint }} />
+        <div className="absolute right-0 inset-y-0 w-1/2" style={{ background: hero.rightTint }} />
 
         <div className="relative flex items-center justify-between gap-3 px-6 py-7 sm:px-10 sm:py-9">
           {/* YOU */}
           <div className="flex items-center gap-4 min-w-0">
-            <div className="rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', boxShadow: '0 0 0 4px rgba(59,130,246,0.18), 0 8px 24px rgba(59,130,246,0.35)' }}>
-              <div className="rounded-full overflow-hidden" style={{ background: '#0a0f1c' }}>
+            <div className="rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', boxShadow: '0 0 0 4px rgba(59,130,246,0.18)' }}>
+              <div className="rounded-full overflow-hidden" style={{ background: hero.avatarInner }}>
                 <UserAvatar avatar={myProfile?.avatar} username={myProfile?.username || 'You'} size={76} />
               </div>
             </div>
             <div className="min-w-0">
-              <div className="text-2xl font-black truncate" style={{ color: '#fff' }}>YOU</div>
-              <div className="text-3xl font-black inline-flex items-center gap-1.5" style={{ color: '#fff' }}><Coin color="#60a5fa" />{formatMoney(myLive, 0)}</div>
+              <div className="text-2xl font-black truncate" style={{ color: hero.text }}>YOU</div>
+              <div className="text-3xl font-black inline-flex items-center gap-1.5" style={{ color: hero.text }}><Coin color={hero.youCoin} />{formatMoney(myLive, 0)}</div>
               <div className="mt-0.5">{sideChange(myChange)}</div>
-              <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black" style={{ background: 'rgba(59,130,246,0.2)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.5)' }}>YOU</div>
+              <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black" style={{ background: 'rgba(59,130,246,0.16)', color: isLight ? '#2563eb' : '#93c5fd', border: '1px solid rgba(59,130,246,0.45)' }}>YOU</div>
             </div>
           </div>
 
           {/* CENTER */}
           <div className="flex flex-col items-center gap-1.5 flex-shrink-0 px-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-black" style={{ background: 'rgba(248,113,113,0.15)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.45)' }}>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#f87171' }} />Live Battle
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-black" style={{ background: 'rgba(239,68,68,0.14)', color: isLight ? '#dc2626' : '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#ef4444' }} />Live Battle
             </div>
-            <div className="text-5xl font-black tracking-tight" style={{ color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.6)' }}>VS</div>
+            <div className="text-5xl font-black tracking-tight" style={{ color: hero.text, textShadow: hero.vsShadow }}>VS</div>
             <div className="text-center">
-              <div className="text-[9px] uppercase tracking-widest font-bold" style={{ color: '#64748b' }}>Time Left</div>
-              <div className="text-xl font-black" style={{ color: '#fff' }}>{formatTimeRemaining(timeRemaining)}</div>
+              <div className="text-[9px] uppercase tracking-widest font-bold" style={{ color: hero.faint }}>Time Left</div>
+              <div className="text-xl font-black" style={{ color: hero.text }}>{formatTimeRemaining(timeRemaining)}</div>
             </div>
           </div>
 
           {/* OPPONENT */}
           <div className="flex items-center gap-4 min-w-0 justify-end text-right">
             <div className="min-w-0">
-              <div className="text-2xl font-black truncate" style={{ color: '#fff' }}>{oppName}</div>
-              <div className="text-3xl font-black inline-flex items-center gap-1.5 justify-end" style={{ color: '#fff' }}><Coin color="#ffffff" />{formatMoney(oppLive, 0)}</div>
+              <div className="text-2xl font-black truncate" style={{ color: hero.text }}>{oppName}</div>
+              <div className="text-3xl font-black inline-flex items-center gap-1.5 justify-end" style={{ color: hero.text }}><Coin color={hero.oppCoin} />{formatMoney(oppLive, 0)}</div>
               <div className="mt-0.5 flex justify-end">{sideChange(oppChange)}</div>
             </div>
-            <div className="rounded-full p-[3px]" style={{ background: hasOpponent ? 'linear-gradient(135deg,#fbbf24,#ea580c)' : 'rgba(148,163,184,0.4)', boxShadow: '0 0 0 4px rgba(251,146,60,0.16), 0 8px 24px rgba(234,88,12,0.3)' }}>
-              <div className="rounded-full overflow-hidden" style={{ background: '#0a0f1c' }}>
+            <div className="rounded-full p-[3px]" style={{ background: hasOpponent ? 'linear-gradient(135deg,#fbbf24,#ea580c)' : 'rgba(148,163,184,0.4)', boxShadow: '0 0 0 4px rgba(251,146,60,0.16)' }}>
+              <div className="rounded-full overflow-hidden" style={{ background: hero.avatarInner }}>
                 <UserAvatar avatar={opponent?.avatar} username={oppName} size={76} />
               </div>
             </div>
@@ -521,18 +555,18 @@ export default function MyPicksPage() {
         </div>
 
         {/* Stat row */}
-        <div className="relative grid grid-cols-6 px-2" style={{ background: 'rgba(0,0,0,0.35)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="relative grid grid-cols-6 px-2" style={{ background: hero.statBg, borderTop: `1px solid ${hero.statBorder}` }}>
           {[
-            { label: 'Open', node: <span style={{ color: '#60a5fa' }}>{counts.open}</span> },
-            { label: 'Won', node: <span style={{ color: '#34d399' }}>{counts.won}</span> },
-            { label: 'Lost', node: <span style={{ color: '#f87171' }}>{counts.lost}</span> },
-            { label: 'At Risk', node: <span className="inline-flex items-center gap-1" style={{ color: '#ffffff' }}><Coin color="#ffffff" />{formatMoney(counts.totalStake, 0)}</span> },
-            { label: 'To Win', node: <span className="inline-flex items-center gap-1" style={{ color: '#34d399' }}><Coin color="#34d399" />{formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}</span> },
-            { label: 'Streak', node: <span style={{ color: '#9ca3af' }}>—</span> },
+            { label: 'Open', node: <span style={{ color: isLight ? '#2563eb' : '#60a5fa' }}>{counts.open}</span> },
+            { label: 'Won', node: <span style={{ color: isLight ? '#059669' : '#34d399' }}>{counts.won}</span> },
+            { label: 'Lost', node: <span style={{ color: isLight ? '#dc2626' : '#f87171' }}>{counts.lost}</span> },
+            { label: 'At Risk', node: <span className="inline-flex items-center gap-1" style={{ color: hero.text }}><Coin color={hero.oppCoin} />{formatMoney(counts.totalStake, 0)}</span> },
+            { label: 'To Win', node: <span className="inline-flex items-center gap-1" style={{ color: isLight ? '#059669' : '#34d399' }}><Coin color={isLight ? '#059669' : '#34d399'} />{formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}</span> },
+            { label: 'Streak', node: <span style={{ color: hero.faint }}>—</span> },
           ].map((s, i) => (
-            <div key={s.label} className="text-center py-3.5" style={i > 0 ? { borderLeft: '1px solid rgba(255,255,255,0.06)' } : undefined}>
+            <div key={s.label} className="text-center py-3.5" style={i > 0 ? { borderLeft: `1px solid ${hero.statBorder}` } : undefined}>
               <div className="text-lg font-black leading-none">{s.node}</div>
-              <div className="text-[9px] uppercase tracking-widest font-bold mt-1.5" style={{ color: '#64748b' }}>{s.label}</div>
+              <div className="text-[9px] uppercase tracking-widest font-bold mt-1.5" style={{ color: hero.faint }}>{s.label}</div>
             </div>
           ))}
         </div>
