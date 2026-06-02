@@ -74,6 +74,39 @@ function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 's
   );
 }
 
+// The navbar re-mounts on every client-side route change (each page imports
+// its own <TopNavbar/>), and its session/profile are fetched asynchronously.
+// Reading the last-known user + profile straight from localStorage lets the
+// nav paint the correct signed-in state and the right avatar on the very first
+// frame of every mount — no signed-out flash, no avatar swap. The async
+// fetchUser/profile effect still runs afterward to refresh from the server.
+function readCachedUser() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const parsed = JSON.parse(localStorage.getItem('current_user') || 'null');
+    return parsed && parsed.id ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function readCachedProfile() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const parsed = JSON.parse(localStorage.getItem('user_profile') || 'null');
+    if (!parsed || !parsed.id) return null;
+    // Only trust the cached profile if it belongs to the cached current user.
+    // current_user + user_profile are always written as a pair, so a mismatch
+    // means the cache is stale (e.g. account switch) — ignore it so we never
+    // paint the previous user's avatar.
+    const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+    if (user && user.id && String(user.id) !== String(parsed.id)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export default function TopNavbar({
   betSlipCount,
   onBetSlipClick,
@@ -103,11 +136,11 @@ export default function TopNavbar({
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [explainerType, setExplainerType] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(readCachedUser);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [themeColor, setThemeColor] = useState('green');
-  const [userProfile, setUserProfile] = useState(null);
+  const [userProfile, setUserProfile] = useState(readCachedProfile);
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const navRef = useRef(null);
   const router = useRouter();
@@ -372,7 +405,12 @@ export default function TopNavbar({
   useEffect(() => {
     const handleBankrollUpdate = (event) => {
       if (event.detail?.bankroll !== undefined) {
-        setUserProfile(prev => prev ? { ...prev, bankroll: event.detail.bankroll } : prev);
+        setUserProfile(prev => {
+          if (!prev) return prev;
+          const next = { ...prev, bankroll: event.detail.bankroll };
+          try { localStorage.setItem('user_profile', JSON.stringify(next)); } catch {}
+          return next;
+        });
       }
     };
     
@@ -386,6 +424,10 @@ export default function TopNavbar({
       if (session?.user) {
         setCurrentUser(session.user);
         localStorage.setItem('current_user', JSON.stringify(session.user));
+        // Account switch: if a profile from a different user is still in state
+        // (lazy-loaded from a stale cache), drop it so we never paint the
+        // previous user's avatar while the new profile loads.
+        setUserProfile(prev => (prev && String(prev.id) !== String(session.user.id) ? null : prev));
         
         // Fetch user profile to check for active challenge
         try {
@@ -393,6 +435,9 @@ export default function TopNavbar({
           if (response.ok) {
             const profile = await response.json();
             setUserProfile(profile);
+            // Cache the profile so the next mount paints the right avatar /
+            // balance instantly instead of flashing a placeholder.
+            try { localStorage.setItem('user_profile', JSON.stringify(profile)); } catch {}
             // User has active challenge if status is not 'inactive' and they have a bankroll > 0
             const isActive = profile.status !== 'inactive' && parseFloat(profile.bankroll) > 0;
             setHasActiveChallenge(isActive);
@@ -421,6 +466,7 @@ export default function TopNavbar({
       setCurrentUser(null);
       setUserProfile(null);
       setHasActiveChallenge(false);
+      try { localStorage.removeItem('user_profile'); } catch {}
     };
 
     fetchUser();
@@ -605,6 +651,7 @@ export default function TopNavbar({
       localStorage.removeItem('demo_user');
       localStorage.removeItem('user_session');
       localStorage.removeItem('current_user');
+      localStorage.removeItem('user_profile');
       localStorage.removeItem('session_start_time');
       localStorage.removeItem('session_start_stats');
       sessionStorage.clear();
