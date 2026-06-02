@@ -1213,14 +1213,13 @@ export default function TopNavbar({
           ref={condensedBarRef}
           data-topnavbar="true"
           data-condensed-topnavbar="true"
-          // Desktop / tablet only. On phone-width viewports the balance
-          // pills + bell + chat + Pik Slip already eat the right-hand
-          // half of the row, leaving the horizontally-scrolling sport
-          // pills clipped by the right cluster (the "sports header is
-          // cut off by balance" report). There simply isn't room for
-          // a second pills row on a phone, so the condensed bar is
-          // hidden below the `sm` breakpoint.
-          className="hidden sm:block fixed top-0 left-0 right-0 z-50 piks-condensed-bar"
+          // Shown on every breakpoint so phone users keep the sport pills +
+          // Pik Slip pinned while scrolling. The balance pills + bell + chat
+          // cluster (which used to clip the pills on narrow widths — the
+          // "sports header cut off by balance" report) is hidden below `sm`
+          // via its own wrapper below, so the phone bar carries only the
+          // scrollable sport pills and the Pik Slip.
+          className="block fixed top-0 left-0 right-0 z-50 piks-condensed-bar"
           style={{
             backgroundColor: '#000000',
             paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -1238,12 +1237,15 @@ export default function TopNavbar({
               {renderCondensedSportPills && renderCondensedSportPills()}
             </div>
 
-            {/* Right cluster: balance pills + notif + msg + (optional) Pik
-                Slip. These mirror the main top nav so the user retains
-                access to balance / alerts / DMs without scrolling back
-                up. Sized compact (icon-only, smaller pills) to share
-                the row with the horizontally-scrolling sport pills on
-                narrow viewports. */}
+            {/* Right cluster: balance pills + notif + msg. These mirror the
+                main top nav so the user retains access to balance / alerts /
+                DMs without scrolling back up. Hidden below `sm` on phones —
+                there isn't room next to the horizontally-scrolling sport
+                pills and they'd clip them (the "sports header cut off by
+                balance" report). The Pik Slip stays visible on phone (it's
+                rendered after this cluster) so the bet slip is always
+                reachable while scrolling. */}
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
             {isLoggedIn && hasActiveChallenge && userProfile && (
               <button
                 onClick={() => setExplainerType('cash')}
@@ -1384,6 +1386,7 @@ export default function TopNavbar({
                 />
               </>
             )}
+            </div>
 
             {/* Pik Slip — only right-side affordance in the condensed bar.
                 Shown on both mobile and desktop so the bar reads identically

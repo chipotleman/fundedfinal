@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
 import { useNotifications } from '../../contexts/NotificationsContext';
+import { useMatchup } from '../../contexts/MatchupContext';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import { useSession } from 'next-auth/react';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
@@ -80,6 +81,7 @@ export default function IncomingInviteModal() {
   const { data: session } = useSession();
   const isBeta = useBetaMode();
   const ctx = useNotifications();
+  const { refresh: refreshMatchup } = useMatchup();
   const invite = ctx.currentIncomingInvite || null;
   const isOpen = !!invite;
 
@@ -147,6 +149,13 @@ export default function IncomingInviteModal() {
       const data = await ctx.acceptInvite(invite.id);
       if (data?.ok && data.matchup) {
         ctx.dismissIncomingInvite?.(invite.id);
+        // Kick MatchupContext to re-fetch /api/matchups/current right now so
+        // `hasActiveMatchup` hydrates before we land on /?battleStarted=true.
+        // Without this the acceptor reaches the dashboard with no active
+        // matchup yet, so the "How It Works" walkthrough is stuck on its
+        // loading skeleton (it only renders once hasActiveMatchup && matchup
+        // are true) — which is why only the inviter saw the walkthrough.
+        try { refreshMatchup && refreshMatchup(); } catch (_) {}
         navigateToBattleStart(router, data.matchup);
       } else {
         // Accept failed (expired / opponent already in a battle / already

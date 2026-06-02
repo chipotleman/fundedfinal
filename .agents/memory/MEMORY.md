@@ -1,1 +1,1 @@
-- [Light theme architecture](light-theme-architecture.md) — theme is all `html.light` CSS overrides in globals.css; cartoon/featured surfaces now flip to light (earlier "keep dark" decision overridden); keep accent chips.
+- [Messenger dual-event dedup](messaging-dual-event-dedup.md) — `piks:message:new` fires from local send AND SSE echo; dedup must `String(id)`-compare or messages double-render.

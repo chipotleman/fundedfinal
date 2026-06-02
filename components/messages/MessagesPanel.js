@@ -1542,7 +1542,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
       const fromMeToFriend = myId != null && m.senderId === myId && m.receiverId === friend.id;
       if (!fromFriend && !fromMeToFriend) return;
       setThread((prev) => {
-        if (prev.some((x) => x.id === m.id)) return prev;
+        if (prev.some((x) => String(x.id) === String(m.id))) return prev;
         return [...prev, m];
       });
       if (fromFriend) ctx.clearTyping?.(friend.id);
