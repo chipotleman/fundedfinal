@@ -101,9 +101,9 @@ function parseMatchup(matchupStr) {
   return { homeTeam: matchupStr, awayTeam: '' };
 }
 
-// Clash Coins glyph — the in-matchup currency (orange ⚔). Every amount
+// Clash Coins glyph — the in-matchup currency (white ⚔). Every amount
 // on this page lives inside a single battle, so they are all Clash Coins.
-function Coin({ color = '#fb923c' }) {
+function Coin({ color = '#ffffff' }) {
   return <span style={{ color }} aria-hidden="true">⚔</span>;
 }
 
@@ -309,7 +309,7 @@ export default function MyPicksPage() {
           {tile('Cashed', counts.cashedOut, '#fb923c')}
         </div>
         <div className="grid grid-cols-2 gap-2 mt-2">
-          {money('At Risk', counts.totalStake, '#fbbf24')}
+          {money('At Risk', counts.totalStake, '#ffffff')}
           {money('To Win', Math.max(0, counts.potentialPayout - counts.totalStake), '#34d399')}
         </div>
       </div>
@@ -509,7 +509,7 @@ export default function MyPicksPage() {
           <div className="flex items-center gap-4 min-w-0 justify-end text-right">
             <div className="min-w-0">
               <div className="text-2xl font-black truncate" style={{ color: '#fff' }}>{oppName}</div>
-              <div className="text-3xl font-black inline-flex items-center gap-1.5 justify-end" style={{ color: '#fff' }}><Coin color="#fb923c" />{formatMoney(oppLive, 0)}</div>
+              <div className="text-3xl font-black inline-flex items-center gap-1.5 justify-end" style={{ color: '#fff' }}><Coin color="#ffffff" />{formatMoney(oppLive, 0)}</div>
               <div className="mt-0.5 flex justify-end">{sideChange(oppChange)}</div>
             </div>
             <div className="rounded-2xl p-[3px]" style={{ background: hasOpponent ? 'linear-gradient(135deg,#fbbf24,#ea580c)' : 'rgba(148,163,184,0.4)', boxShadow: '0 0 0 4px rgba(251,146,60,0.16), 0 8px 24px rgba(234,88,12,0.3)' }}>
@@ -526,7 +526,7 @@ export default function MyPicksPage() {
             { label: 'Open', node: <span style={{ color: '#60a5fa' }}>{counts.open}</span> },
             { label: 'Won', node: <span style={{ color: '#34d399' }}>{counts.won}</span> },
             { label: 'Lost', node: <span style={{ color: '#f87171' }}>{counts.lost}</span> },
-            { label: 'At Risk', node: <span className="inline-flex items-center gap-1" style={{ color: '#fbbf24' }}><Coin color="#fbbf24" />{formatMoney(counts.totalStake, 0)}</span> },
+            { label: 'At Risk', node: <span className="inline-flex items-center gap-1" style={{ color: '#ffffff' }}><Coin color="#ffffff" />{formatMoney(counts.totalStake, 0)}</span> },
             { label: 'To Win', node: <span className="inline-flex items-center gap-1" style={{ color: '#34d399' }}><Coin color="#34d399" />{formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}</span> },
             { label: 'Streak', node: <span style={{ color: '#9ca3af' }}>—</span> },
           ].map((s, i) => (

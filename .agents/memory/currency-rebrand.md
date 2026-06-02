@@ -5,8 +5,10 @@ description: Which display currency maps to which surface, and the beta-vs-live 
 
 Two display currencies (labels/copy ONLY — never DB columns, API fields, or business logic):
 
-- **Clash Coins** (glyph `⚔`, orange `#fb923c`) = per-matchup currency: in-battle balances, bet stakes ("Picked"/"Total Pikked"), potential payouts, "At Risk"/"To Win"/"Change", the start stack / starting bankroll (10,000 / 100,000), and the active-matchup "Buy-In" (which is really `startingBalance`).
-- **Crowns** (glyph `👑`) = account-level / cross-matchup standing: navbar bankroll pill, leaderboard profit, lifetime winnings, and the prize/pot you WIN for winning a battle.
+- **Clash Coins** (glyph `⚔`) = per-matchup currency: in-battle balances, bet stakes ("Picked"/"Total Pikked"), potential payouts, "At Risk"/"To Win"/"Change", the start stack / starting bankroll (10,000 / 100,000), and the active-matchup "Buy-In" (which is really `startingBalance`).
+- **Crowns** (glyph `👑`) = account-level / cross-matchup standing: navbar balance, leaderboard profit, lifetime winnings, and the prize/pot you WIN for winning a battle.
+
+**Display color convention (current):** Clash Coins amounts render **white `#ffffff`**, Crowns amounts render **yellow `#facc15`**. (An earlier rev had Clash Coins orange `#fb923c` — that was replaced; do not reintroduce orange for Clash Coin amounts.) Semantic green `#34d399` for "To Win"/"Potential Payout" is intentionally retained. The navbar shows these Polymarket-style: a small uppercase label stacked above the value, no pill/gradient container.
 
 **Why:** Beta has no real money. The rebrand reframes cash → Crowns ("most Crowns wins the beta") and battle coins → Clash Coins, mapped onto the user's mental model (in-matchup vs account standing).
 

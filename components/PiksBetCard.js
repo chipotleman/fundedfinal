@@ -779,30 +779,30 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
         <div className="pt-3 mt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.2)' }}>
           <div className="flex justify-between items-end">
             <div>
-              <div className="font-bold text-xl flex items-center gap-1" style={{ color: '#ffffff' }}><span style={{ color: '#fb923c' }}>⚔</span>{formatMoney(bet.stake || 0)}</div>
+              <div className="font-bold text-xl flex items-center gap-1" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>⚔</span>{formatMoney(bet.stake || 0)}</div>
               <div className="text-xs uppercase" style={{ color: '#9ca3af' }}>Total Pikked</div>
             </div>
             {isWon && (
               <div className="text-right">
-                <div className="text-green-400 font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#fb923c' }}>⚔</span>{formatMoney(payout)}</div>
+                <div className="text-green-400 font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#ffffff' }}>⚔</span>{formatMoney(payout)}</div>
                 <div className="text-green-400/80 text-xs uppercase">Won on Piks</div>
               </div>
             )}
             {isOpen && (
               <div className="text-right">
-                <div className="font-bold text-xl flex items-center justify-end gap-1" style={{ color: '#ffffff' }}><span style={{ color: '#fb923c' }}>⚔</span>{formatMoney(payout)}</div>
+                <div className="font-bold text-xl flex items-center justify-end gap-1" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>⚔</span>{formatMoney(payout)}</div>
                 <div className="text-gray-400 text-xs uppercase">Potential Payout</div>
               </div>
             )}
             {isLost && (
               <div className="text-right">
-                <div className="text-gray-400 font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#fb923c' }}>⚔</span>0</div>
+                <div className="text-gray-400 font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#ffffff' }}>⚔</span>0</div>
                 <div className="text-gray-500 text-xs uppercase">Payout</div>
               </div>
             )}
             {isCashedOut && (
               <div className="text-right">
-                <div className="text-[#E9762B] font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#fb923c' }}>⚔</span>{formatMoney(bet.stake * 0.8)}</div>
+                <div className="text-[#E9762B] font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#ffffff' }}>⚔</span>{formatMoney(bet.stake * 0.8)}</div>
                 <div className="text-[#E9762B]/80 text-xs uppercase">Cashed Out</div>
               </div>
             )}

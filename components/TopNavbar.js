@@ -18,6 +18,57 @@ import haptic from '../utils/haptics';
 import DesktopGlobalSearch from './desktop/DesktopGlobalSearch';
 import HowItWorksModal from './desktop/HowItWorksModal';
 
+// Polymarket-style stacked balance readout: small uppercase label on top,
+// bold value below in the currency's signature color. No pill container.
+// Crowns = yellow (#facc15), Clash Coins = white (#ffffff).
+function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 'start', compact = false }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={ariaLabel}
+      className="no-hover-effect flex-shrink-0"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: align === 'end' ? 'flex-end' : 'flex-start',
+        gap: 1,
+        background: 'transparent',
+        border: 'none',
+        padding: 0,
+        cursor: 'pointer',
+        lineHeight: 1,
+      }}
+    >
+      <span
+        style={{
+          fontSize: compact ? 8 : 9,
+          fontWeight: 800,
+          letterSpacing: '0.09em',
+          textTransform: 'uppercase',
+          color,
+          opacity: 0.7,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: compact ? 14 : 17,
+          fontWeight: 900,
+          letterSpacing: '0.01em',
+          color,
+          lineHeight: 1.05,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {value}
+      </span>
+    </button>
+  );
+}
+
 export default function TopNavbar({
   betSlipCount,
   onBetSlipClick,
@@ -717,76 +768,26 @@ export default function TopNavbar({
                   top nav until they opened the Pik Slip — which side-loads
                   the profile and flips `hasActiveChallenge` true. */}
               {isLoggedIn && (hasActiveChallenge && userProfile || (hasActiveMatchup && matchupBalance != null)) && (
-                <div className="hidden sm:flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-5">
                   {hasActiveChallenge && userProfile && (
-                    <button
+                    <NavBalance
                       onClick={() => setExplainerType('cash')}
                       title="Your Crowns — click for details"
-                      className="cartoon-balance-pill"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '5px 12px 5px 10px',
-                        borderRadius: 999,
-                        background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
-                        border: '1.5px solid #0d0d0d',
-                        boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
-                        color: '#022c1f',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          fontSize: 16,
-                          lineHeight: 1,
-                          fontFamily:
-                            '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                          color: 'initial',
-                        }}
-                      >
-                        {`👑\uFE0F`}
-                      </span>
-                      <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                        {formatMoney(parseFloat(userProfile.bankroll), 0)}
-                      </span>
-                    </button>
+                      ariaLabel="Crowns balance"
+                      label="Crowns"
+                      value={formatMoney(parseFloat(userProfile.bankroll), 0)}
+                      color="#facc15"
+                    />
                   )}
                   {hasActiveMatchup && matchupBalance != null && (
-                    <button
+                    <NavBalance
                       onClick={() => setExplainerType('coins')}
                       title="Clash Coins — click for details"
-                      className="cartoon-balance-pill"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '5px 12px 5px 10px',
-                        borderRadius: 999,
-                        background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                        border: '1.5px solid #0d0d0d',
-                        boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(249,115,22,0.55)',
-                        color: '#2a1404',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          fontSize: 16,
-                          lineHeight: 1,
-                          fontFamily:
-                            '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                          color: 'initial',
-                        }}
-                      >
-                        {`⚔\uFE0F`}
-                      </span>
-                      <span style={{ fontWeight: 900, fontSize: 14, color: '#2a1404', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                        {formatMoney(parseFloat(matchupBalance), 0)}
-                      </span>
-                    </button>
+                      ariaLabel="Clash Coins balance"
+                      label="Clash Coins"
+                      value={formatMoney(parseFloat(matchupBalance), 0)}
+                      color="#ffffff"
+                    />
                   )}
                 </div>
               )}
@@ -877,38 +878,15 @@ export default function TopNavbar({
                   className="sm:hidden flex items-center gap-1"
                   style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
                 >
-                  <button
+                  <NavBalance
                     onClick={() => setExplainerType('coins')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      padding: '4px 10px 4px 8px',
-                      borderRadius: 999,
-                      background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                      border: '1.5px solid #0d0d0d',
-                      boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(249,115,22,0.55)',
-                      color: '#2a1404',
-                      cursor: 'pointer',
-                    }}
-                    aria-label="Clash Coins details"
-                  >
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        fontSize: 13,
-                        lineHeight: 1,
-                        fontFamily:
-                          '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                        color: 'initial',
-                      }}
-                    >
-                      {`⚔\uFE0F`}
-                    </span>
-                    <span style={{ fontWeight: 900, fontSize: 12, color: '#2a1404', letterSpacing: '0.02em', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
-                      {formatMoney(parseFloat(matchupBalance), 0)}
-                    </span>
-                  </button>
+                    title="Clash Coins — tap for details"
+                    ariaLabel="Clash Coins details"
+                    label="Clash Coins"
+                    value={formatMoney(parseFloat(matchupBalance), 0)}
+                    color="#ffffff"
+                    compact
+                  />
                 </div>
               )}
 
@@ -1265,78 +1243,24 @@ export default function TopNavbar({
                 reachable while scrolling. */}
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
             {isLoggedIn && hasActiveChallenge && userProfile && (
-              <button
+              <NavBalance
                 onClick={() => setExplainerType('cash')}
                 title="Your Crowns — click for details"
-                className="cartoon-balance-pill no-hover-effect flex-shrink-0"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '5px 12px 5px 10px',
-                  borderRadius: 999,
-                  background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
-                  border: '1.5px solid #0d0d0d',
-                  boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
-                  color: '#022c1f',
-                  cursor: 'pointer',
-                  lineHeight: 1,
-                }}
-                aria-label="Crowns balance"
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    fontSize: 16,
-                    lineHeight: 1,
-                    fontFamily:
-                      '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                    color: 'initial',
-                  }}
-                >
-                  {`👑\uFE0F`}
-                </span>
-                <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                  {formatMoney(parseFloat(userProfile.bankroll), 0)}
-                </span>
-              </button>
+                ariaLabel="Crowns balance"
+                label="Crowns"
+                value={formatMoney(parseFloat(userProfile.bankroll), 0)}
+                color="#facc15"
+              />
             )}
             {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
-              <button
+              <NavBalance
                 onClick={() => setExplainerType('coins')}
                 title="Clash Coins — click for details"
-                className="cartoon-balance-pill no-hover-effect flex-shrink-0"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '5px 12px 5px 10px',
-                  borderRadius: 999,
-                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                  border: '1.5px solid #0d0d0d',
-                  boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(249,115,22,0.55)',
-                  color: '#2a1404',
-                  cursor: 'pointer',
-                  lineHeight: 1,
-                }}
-                aria-label="Clash Coins balance"
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    fontSize: 16,
-                    lineHeight: 1,
-                    fontFamily:
-                      '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                    color: 'initial',
-                  }}
-                >
-                  {`⚔\uFE0F`}
-                </span>
-                <span style={{ fontWeight: 900, fontSize: 14, color: '#2a1404', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                  {formatMoney(parseFloat(matchupBalance), 0)}
-                </span>
-              </button>
+                ariaLabel="Clash Coins balance"
+                label="Clash Coins"
+                value={formatMoney(parseFloat(matchupBalance), 0)}
+                color="#ffffff"
+              />
             )}
             {isLoggedIn && (
               <button

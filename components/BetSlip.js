@@ -841,8 +841,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                       border: '1px solid rgba(251,146,60,0.45)',
                     }}
                   >
-                    <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                    <span className="text-xs font-bold" style={{ color: '#fed7aa' }}>{formatMoney(bankroll, 0)}</span>
+                    <span className="text-xs leading-none" style={{ color: '#ffffff' }}>⚔</span>
+                    <span className="text-xs font-bold" style={{ color: '#ffffff' }}>{formatMoney(bankroll, 0)}</span>
                   </div>
                 )}
                 {/* Cartoon-themed pik count badge — chunky black border
@@ -1322,7 +1322,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                       type="button"
                                       onClick={() => setShowCoinsExplainer(true)}
                                       className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded hover:bg-orange-400/10 transition-colors"
-                                      style={{ color: '#fb923c' }}
+                                      style={{ color: '#ffffff' }}
                                       aria-label="What are Clash Coins?"
                                       title="Clash Coins — tap for details"
                                     >
@@ -1360,8 +1360,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                   <div className="text-right min-w-[70px]">
                                     <div className="text-gray-500 text-[10px] uppercase tracking-wide">To Win</div>
                                     <div className="font-bold text-lg flex items-center justify-end gap-1">
-                                      <span className="leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                                      <span style={{ color: '#fed7aa' }}>{bet.stake ? formatMoney(calculatePayout(bet.odds, bet.stake) - bet.stake, 0) : '0'}</span>
+                                      <span className="leading-none" style={{ color: '#ffffff' }}>⚔</span>
+                                      <span style={{ color: '#ffffff' }}>{bet.stake ? formatMoney(calculatePayout(bet.odds, bet.stake) - bet.stake, 0) : '0'}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -1401,7 +1401,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                           type="button"
                           onClick={() => setShowCoinsExplainer(true)}
                           className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded hover:bg-orange-400/10 transition-colors"
-                          style={{ color: '#fb923c' }}
+                          style={{ color: '#ffffff' }}
                           aria-label="What are Clash Coins?"
                           title="Clash Coins — tap for details"
                         >
@@ -1420,7 +1420,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                       <div className="text-right min-w-[100px]">
                         <div className="text-gray-500 text-[10px] uppercase">Parlay Win</div>
                         <div className="font-bold text-lg inline-flex items-center justify-end gap-1">
-                          <span className="leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                          <span className="leading-none" style={{ color: '#ffffff' }}>⚔</span>
                           <span className="text-green-400">{parlayStake ? formatMoney(totalPayout - parlayStake, 0) : '0'}</span>
                         </div>
                       </div>
@@ -1487,14 +1487,14 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   <div className="flex justify-between text-sm mb-2">
                     <span style={{ color: '#9ca3af' }}>Total Pikked</span>
                     <span className="font-bold inline-flex items-center gap-1">
-                      <span className="leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                      <span style={{ color: '#fed7aa' }}>{formatMoney(totalStake, 0)}</span>
+                      <span className="leading-none" style={{ color: '#ffffff' }}>⚔</span>
+                      <span style={{ color: '#ffffff' }}>{formatMoney(totalStake, 0)}</span>
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span style={{ color: '#9ca3af' }}>Potential Payout</span>
                     <span className="font-bold text-lg inline-flex items-center gap-1">
-                      <span className="leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                      <span className="leading-none" style={{ color: '#ffffff' }}>⚔</span>
                       <span className="text-green-400">{formatMoney(totalPayout, 0)}</span>
                     </span>
                   </div>
