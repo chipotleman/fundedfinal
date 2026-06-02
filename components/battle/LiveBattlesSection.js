@@ -3220,13 +3220,21 @@ export default function LiveBattlesSection({
   // in lockstep. We still record which card was clicked in `expandedKey`
   // so Hide on any peer collapses the row back down cleanly.
   const anyPeerExpanded = typeof expandedKey === 'string' && expandedKey.startsWith('peer:');
-  const peerExpandedFor = useCallback((_battleId) => anyPeerExpanded, [anyPeerExpanded]);
+  // When the user's own active battle card (`youvs`) is expanded, the peer
+  // cards in the row get force-stretched (items-stretch) to its taller
+  // height. Rather than leave empty space below their footers, expand their
+  // pick previews in lockstep — the user shouldn't have to click "Preview"
+  // on each neighbor when their own card is already open. The row expands
+  // and collapses as one unit.
+  const youVsExpanded = expandedKey === 'youvs';
+  const peerExpandedFor = useCallback((_battleId) => anyPeerExpanded || youVsExpanded, [anyPeerExpanded, youVsExpanded]);
   const setPeerExpanded = useCallback((battleId) => (next) => {
     setExpandedKey((prev) => {
       if (next) return `peer:${battleId}`;
-      // Hide on any peer collapses the whole row (since the row
-      // expanded together, it should collapse together too).
-      if (typeof prev === 'string' && prev.startsWith('peer:')) return null;
+      // Hide on any peer collapses the whole row (since the row expanded
+      // together, it should collapse together too) — including the case
+      // where the row was opened by expanding the youvs card.
+      if (prev === 'youvs' || (typeof prev === 'string' && prev.startsWith('peer:'))) return null;
       return prev;
     });
   }, []);
