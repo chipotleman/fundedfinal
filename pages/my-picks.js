@@ -7,6 +7,7 @@ import TopNavbar from '../components/TopNavbar';
 import PiksBetCard from '../components/PiksBetCard';
 import UserAvatar from '../components/UserAvatar';
 import OddsHistoryChart from '../components/game/OddsHistoryChart';
+import { getTeamColor, inkFor } from '../utils/teamColors';
 import { SelectionLogos } from '../components/TeamLogo';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -380,6 +381,7 @@ export default function MyPicksPage() {
   // ===================== Live-odds tracker body (mobile inline) =====================
   const renderTrackingBody = (bet) => {
     const { gameId, homeTeam, awayTeam, isLive, isFinal, derivedLiveOdds } = getChartCtx(bet);
+    const trackHomeColor = getTeamColor(homeTeam, bet.sport || bet.sportName) || '#2563eb';
     return (
       <div className="space-y-4">
         <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.3)' }}>
@@ -393,7 +395,7 @@ export default function MyPicksPage() {
         <OddsHistoryChart gameId={gameId} homeTeam={homeTeam} awayTeam={awayTeam} liveOdds={derivedLiveOdds} commenceTime={bet.placedAt} isLive={isLive} isFinal={isFinal} />
         {gameId ? (
           <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch className="block w-full text-center px-3 py-3 rounded-xl text-sm font-black uppercase tracking-wider"
-            style={{ background: 'linear-gradient(135deg,#2563eb,#3b82f6)', color: '#ffffff', boxShadow: p.hardShadow }}>
+            style={{ background: trackHomeColor, color: inkFor(trackHomeColor), boxShadow: p.hardShadow }}>
             Open Game →
           </Link>
         ) : (
@@ -577,7 +579,8 @@ export default function MyPicksPage() {
   // Desktop pick row (custom, matches mockup).
   const renderDesktopPickRow = (bet) => {
     const isSelected = bet.id === selectedBetId;
-    const { gameId } = getChartCtx(bet);
+    const { gameId, homeTeam } = getChartCtx(bet);
+    const rowHomeColor = getTeamColor(homeTeam, bet.sport || bet.sportName) || '#2563eb';
     const isLive = !!(bet.isLive || bet.currentHomeScore != null);
     const placed = bet.placedAt ? new Date(bet.placedAt) : null;
     const placedStr = placed
@@ -635,7 +638,7 @@ export default function MyPicksPage() {
         <div className="flex items-center pr-3 pl-1">
           {gameId ? (
             <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch onClick={(e) => e.stopPropagation()}
-              className="no-hover-effect flex items-center justify-center rounded-xl" style={{ width: 40, height: 40, background: '#2563eb', color: '#fff' }} aria-label="Open game">
+              className="no-hover-effect flex items-center justify-center rounded-xl" style={{ width: 40, height: 40, background: rowHomeColor, color: inkFor(rowHomeColor) }} aria-label="Open game">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
             </Link>
           ) : (
@@ -670,6 +673,7 @@ export default function MyPicksPage() {
       );
     }
     const { gameId, homeTeam, awayTeam, isLive, isFinal, derivedLiveOdds } = getChartCtx(bet);
+    const railHomeColor = getTeamColor(homeTeam, bet.sport || bet.sportName) || '#2563eb';
     return (
       <div className="rounded-2xl overflow-hidden" style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}`, boxShadow: p.hardShadow }}>
         {sectionTitle}
@@ -716,7 +720,7 @@ export default function MyPicksPage() {
         <div className="px-5 pb-5">
           {gameId ? (
             <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider"
-              style={{ background: '#2563eb', color: '#fff', boxShadow: '0 8px 20px rgba(37,99,235,0.35)' }}>
+              style={{ background: railHomeColor, color: inkFor(railHomeColor), boxShadow: `0 8px 20px ${railHomeColor}59` }}>
               Open Game
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </Link>
