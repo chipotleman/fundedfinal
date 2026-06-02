@@ -652,7 +652,7 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                             {m.coins.toLocaleString()}
                           </div>
                           <div className="text-gray-500 text-[9px] uppercase tracking-wider">
-                            coins
+                            Clash Coins
                           </div>
                         </div>
                       </button>

@@ -1323,8 +1323,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                       onClick={() => setShowCoinsExplainer(true)}
                                       className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded hover:bg-orange-400/10 transition-colors"
                                       style={{ color: '#fb923c' }}
-                                      aria-label="What are battle coins?"
-                                      title="Battle coins — tap for details"
+                                      aria-label="What are Clash Coins?"
+                                      title="Clash Coins — tap for details"
                                     >
                                       <span className="text-base leading-none">⚔</span>
                                     </button>
@@ -1402,8 +1402,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                           onClick={() => setShowCoinsExplainer(true)}
                           className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded hover:bg-orange-400/10 transition-colors"
                           style={{ color: '#fb923c' }}
-                          aria-label="What are battle coins?"
-                          title="Battle coins — tap for details"
+                          aria-label="What are Clash Coins?"
+                          title="Clash Coins — tap for details"
                         >
                           <span className="text-base leading-none">⚔</span>
                         </button>
@@ -1431,7 +1431,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                 {isLoggedIn && !hasActiveMatchup ? (
                   <div className="rounded-lg p-4 mb-3 text-center" style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)', borderWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)' }}>
                     <p className="text-white font-semibold text-base mb-1">Start a match to place piks</p>
-                    <p className="text-gray-400 text-sm mb-4">Piks are played with battle coins. You need an active battle to submit your selections.</p>
+                    <p className="text-gray-400 text-sm mb-4">Piks are played with Clash Coins. You need an active battle to submit your selections.</p>
                     <button
                       type="button"
                       className="no-hover-effect"
@@ -1502,13 +1502,13 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
 
                 {isLoggedIn && totalStake > bankroll && (
                   <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 mb-3">
-                    <p className="text-red-400 text-sm">Insufficient balance: ${formatMoney(bankroll)}</p>
+                    <p className="text-red-400 text-sm">Insufficient balance: ⚔ {formatMoney(bankroll, 0)}</p>
                   </div>
                 )}
 
                 {isLoggedIn && validation.belowMinimum && (
                   <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 mb-3">
-                    <p className="text-red-400 text-sm">Minimum bet: ${minBetAmount}</p>
+                    <p className="text-red-400 text-sm">Minimum bet: ⚔ {minBetAmount}</p>
                   </div>
                 )}
 

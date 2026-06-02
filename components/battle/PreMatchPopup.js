@@ -41,7 +41,7 @@ export const PRE_MATCH_MODE_OPTIONS = [
     description: 'Highest balance after all games end wins',
     blurb: 'Place picks on real games all day long. When the final scoreboard locks, the bigger bankroll wins.',
     steps: [
-      { icon: '💸', text: 'Both start with 10,000 coins' },
+      { icon: '💸', text: 'Both start with 10,000 Clash Coins' },
       { icon: '📈', text: 'Place picks on real games all day' },
       { icon: '👑', text: 'Highest bankroll at lockout wins' },
     ],
@@ -55,9 +55,9 @@ export const PRE_MATCH_MODE_OPTIONS = [
     icon: '👑',
     tagline: 'Three-day epic',
     description: '3-day battle with a massive bankroll',
-    blurb: 'A 3-day grind with a massive 100,000-coin bankroll. Build, manage, defend — biggest balance at the buzzer takes it all.',
+    blurb: 'A 3-day grind with a massive 100,000 Clash Coins bankroll. Build, manage, defend — biggest balance at the buzzer takes it all.',
     steps: [
-      { icon: '💰', text: '100,000-coin starting bankroll' },
+      { icon: '💰', text: '100,000 Clash Coins starting bankroll' },
       { icon: '🗓️', text: '3 days of head-to-head action' },
       { icon: '🥇', text: 'Biggest balance at the buzzer wins' },
     ],
@@ -435,7 +435,7 @@ export default function PreMatchPopup({
                 >
                   <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Starting bankroll</span>
                   <span className="text-sm font-extrabold text-white tabular-nums">
-                    {selectedMode.coins.toLocaleString()} <span className="text-[10px] text-gray-400 uppercase tracking-wider">coins</span>
+                    {selectedMode.coins.toLocaleString()} <span className="text-[10px] text-gray-400 uppercase tracking-wider">Clash Coins</span>
                   </span>
                 </div>
               </div>

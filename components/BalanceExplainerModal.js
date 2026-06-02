@@ -36,11 +36,11 @@ export default function BalanceExplainerModal({
   const isCash = type === 'cash';
   const accent = isCash ? '#22c55e' : '#fb923c';
   const accentRgb = isCash ? '34,197,94' : '251,146,60';
-  const headerEmoji = isCash ? '💵' : '⚔️';
-  const title = isCash ? 'Cash Balance' : 'Battle Coins';
+  const headerEmoji = isCash ? '👑' : '⚔️';
+  const title = isCash ? 'Crowns' : 'Clash Coins';
   const subtitle = isCash
-    ? 'Real money in your Piks wallet'
-    : 'Coins you can wager inside your active battle';
+    ? 'Your beta standing — most Crowns wins the beta'
+    : 'Clash Coins you can wager inside your active battle';
 
   // Theme-aware surface palette. In light mode the popup is a clean
   // white card with slate text; the backdrop is a softer dim so the
@@ -123,8 +123,9 @@ export default function BalanceExplainerModal({
           <div className="rounded-xl p-4 text-center" style={{ background: surface.innerCard, border: surface.innerCardBorder }}>
             <div className="text-[11px] uppercase tracking-widest mb-1" style={{ color: surface.mutedText }}>Current Balance</div>
             {isCash ? (
-              <div className="text-4xl font-black" style={{ color: '#22c55e' }}>
-                ${formatMoney(parseFloat(cashBalance || 0), 2)}
+              <div className="text-4xl font-black flex items-center justify-center gap-2" style={{ color: '#22c55e' }}>
+                <span>👑</span>
+                <span>{formatMoney(parseFloat(cashBalance || 0), 0)}</span>
               </div>
             ) : (
               <div className="text-4xl font-black flex items-center justify-center gap-2" style={{ color: surface.coinsValue }}>
@@ -133,23 +134,23 @@ export default function BalanceExplainerModal({
               </div>
             )}
             <div className="text-xs mt-1" style={{ color: surface.mutedText }}>
-              {isCash ? 'Real cash · USD' : 'In-battle coins (not real money)'}
+              {isCash ? 'Your beta standing in Crowns' : 'In-battle Clash Coins'}
             </div>
           </div>
 
           {isCash ? (
             <div className="space-y-2 text-sm" style={{ color: surface.bodyText }}>
               <p>
-                This is the real money in your Piks wallet. You use it to buy in to battles, deposit more, or cash out.
+                This is your beta standing — the Crowns you've banked across battles. Whoever holds the most Crowns is winning the beta.
               </p>
               <div className="rounded-lg p-3 text-xs" style={{ background: surface.infoCashBg, border: '1px solid rgba(34,197,94,0.25)', color: surface.infoCashText }}>
-                Cash never moves into a battle — when you join one, your buy-in is converted to play coins for that battle only.
+                Crowns stay at the account level — when you join a battle you start with a fresh stack of Clash Coins, and the winner banks the Crowns.
               </div>
             </div>
           ) : (
             <div className="space-y-3 text-sm" style={{ color: surface.bodyText }}>
               <p>
-                These are play coins for your <span className="font-semibold" style={{ color: surface.titleText }}>active battle</span>. They aren't real money — winner takes the cash prize pot.
+                These are Clash Coins for your <span className="font-semibold" style={{ color: surface.titleText }}>active battle</span>. The winner takes the Crowns.
               </p>
               {matchup && (
                 <div className="rounded-lg p-3 space-y-2" style={{ background: surface.matchupCard, border: surface.matchupBorder }}>
@@ -165,14 +166,14 @@ export default function BalanceExplainerModal({
                     {payout > 0 && (
                       <div className="text-right">
                         <div className="text-[9px] uppercase tracking-widest" style={{ color: isLight ? '#b45309' : '#fcd34d' }}>Prize</div>
-                        <div className="text-sm font-bold" style={{ color: isLight ? '#b45309' : '#fbbf24' }}>${formatMoney(payout, 0)}</div>
+                        <div className="text-sm font-bold" style={{ color: isLight ? '#b45309' : '#fbbf24' }}>👑 {formatMoney(payout, 0)}</div>
                       </div>
                     )}
                   </div>
                 </div>
               )}
               <div className="rounded-lg p-3 text-xs" style={{ background: surface.infoBattleBg, border: '1px solid rgba(251,146,60,0.25)', color: surface.infoBattleText }}>
-                Your cash buy-in becomes coins for the duration of the battle. The player with the most coins at the end keeps the entire pot.
+                You start with a fresh stack of Clash Coins for the duration of the battle. The player with the most Clash Coins at the end banks the entire Crowns pot.
               </div>
             </div>
           )}

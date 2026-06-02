@@ -71,10 +71,10 @@ function formatProfit(n) {
   const value = Number(n) || 0;
   const sign = value < 0 ? '-' : value > 0 ? '+' : '';
   const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 10_000) return `${sign}$${(abs / 1_000).toFixed(0)}K`;
-  if (abs >= 1_000) return `${sign}$${(abs / 1_000).toFixed(1)}K`;
-  return `${sign}$${abs.toLocaleString()}`;
+  if (abs >= 1_000_000) return `${sign}👑${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs >= 10_000) return `${sign}👑${(abs / 1_000).toFixed(0)}K`;
+  if (abs >= 1_000) return `${sign}👑${(abs / 1_000).toFixed(1)}K`;
+  return `${sign}👑${abs.toLocaleString()}`;
 }
 
 function formatVolume(n) {

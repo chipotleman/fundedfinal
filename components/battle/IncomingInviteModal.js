@@ -116,9 +116,9 @@ export default function IncomingInviteModal() {
   const mode = modeMetaFor(invite.gameMode || invite.n);
   const buyIn = parseFloat(invite.buyIn) || 0;
   const pot = buyIn * 2;
-  // Beta uses coins (compact), live mode uses dollars.
-  const buyInLabel = isBeta ? `${compactCoins(buyIn)} Coins` : `$${buyIn} Buy-In`;
-  const potLabel = isBeta ? `Win ${compactCoins(Math.round(pot * 0.9))}` : `Win $${pot} Pot`;
+  // Beta uses Clash Coins (compact); live mode uses the buy-in amount.
+  const buyInLabel = isBeta ? `${compactCoins(buyIn)} Clash Coins` : `$${buyIn} Buy-In`;
+  const potLabel = isBeta ? `Win 👑 ${compactCoins(Math.round(pot * 0.9))}` : `Win $${pot} Pot`;
   // Prefer the mode's natural duration label; fall back to the
   // server-provided hours if the mode is unknown.
   const durationLabel = mode.durationLabel || (invite.duration ? `${invite.duration}h battle` : 'Battle');

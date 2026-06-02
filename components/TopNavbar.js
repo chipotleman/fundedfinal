@@ -721,7 +721,7 @@ export default function TopNavbar({
                   {hasActiveChallenge && userProfile && (
                     <button
                       onClick={() => setExplainerType('cash')}
-                      title="Real cash balance — click for details"
+                      title="Your Crowns — click for details"
                       className="cartoon-balance-pill"
                       style={{
                         display: 'flex',
@@ -746,17 +746,17 @@ export default function TopNavbar({
                           color: 'initial',
                         }}
                       >
-                        {`💵\uFE0F`}
+                        {`👑\uFE0F`}
                       </span>
                       <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                        ${formatMoney(parseFloat(userProfile.bankroll), 0)}
+                        {formatMoney(parseFloat(userProfile.bankroll), 0)}
                       </span>
                     </button>
                   )}
                   {hasActiveMatchup && matchupBalance != null && (
                     <button
                       onClick={() => setExplainerType('coins')}
-                      title="In-battle play coins — click for details"
+                      title="Clash Coins — click for details"
                       className="cartoon-balance-pill"
                       style={{
                         display: 'flex',
@@ -891,7 +891,7 @@ export default function TopNavbar({
                       color: '#2a1404',
                       cursor: 'pointer',
                     }}
-                    aria-label="Battle coins details"
+                    aria-label="Clash Coins details"
                   >
                     <span
                       aria-hidden="true"
@@ -1267,7 +1267,7 @@ export default function TopNavbar({
             {isLoggedIn && hasActiveChallenge && userProfile && (
               <button
                 onClick={() => setExplainerType('cash')}
-                title="Real cash balance — click for details"
+                title="Your Crowns — click for details"
                 className="cartoon-balance-pill no-hover-effect flex-shrink-0"
                 style={{
                   display: 'flex',
@@ -1282,7 +1282,7 @@ export default function TopNavbar({
                   cursor: 'pointer',
                   lineHeight: 1,
                 }}
-                aria-label="Cash balance"
+                aria-label="Crowns balance"
               >
                 <span
                   aria-hidden="true"
@@ -1294,17 +1294,17 @@ export default function TopNavbar({
                     color: 'initial',
                   }}
                 >
-                  {`💵\uFE0F`}
+                  {`👑\uFE0F`}
                 </span>
                 <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                  ${formatMoney(parseFloat(userProfile.bankroll), 0)}
+                  {formatMoney(parseFloat(userProfile.bankroll), 0)}
                 </span>
               </button>
             )}
             {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
               <button
                 onClick={() => setExplainerType('coins')}
-                title="In-battle play coins — click for details"
+                title="Clash Coins — click for details"
                 className="cartoon-balance-pill no-hover-effect flex-shrink-0"
                 style={{
                   display: 'flex',
@@ -1319,7 +1319,7 @@ export default function TopNavbar({
                   cursor: 'pointer',
                   lineHeight: 1,
                 }}
-                aria-label="Matchup coins balance"
+                aria-label="Clash Coins balance"
               >
                 <span
                   aria-hidden="true"

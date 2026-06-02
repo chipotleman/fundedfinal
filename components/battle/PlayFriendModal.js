@@ -1268,7 +1268,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       <button
                         type="button"
                         onClick={() => setShowGameModeInfo(v => !v)}
-                        aria-label="What's the difference between buy-in and coins?"
+                        aria-label="What's the difference between buy-in and Clash Coins?"
                         aria-expanded={showGameModeInfo}
                         className="pfm-cartoon-btn w-5 h-5 inline-flex items-center justify-center rounded-full text-[10px] font-extrabold leading-none"
                         style={{
@@ -1291,14 +1291,14 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           }}
                         >
                           {isBeta ? (
-                            <>During the public beta there&apos;s no money wager — both players start with the same coin stack and the winner takes the W on the leaderboard.</>
+                            <>During the public beta there&apos;s no real cash — both players start with the same Clash Coins stack and the most Crowns wins the beta.</>
                           ) : (
-                            <>The <span style={{ color: textPrimary, fontWeight: 800 }}>${buyIn}</span> above is each player&apos;s wager. The coins below are the in-battle starting bankroll each player gets to bet with.</>
+                            <>The <span style={{ color: textPrimary, fontWeight: 800 }}>${buyIn}</span> above is each player&apos;s wager. The Clash Coins below are the in-battle starting bankroll each player gets to bet with.</>
                           )}
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px]" style={{ color: textMuted }}>Coins = starting bankroll</span>
+                    <span className="text-[10px]" style={{ color: textMuted }}>Clash Coins = starting bankroll</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {GAME_MODE_OPTIONS.map(mode => {
@@ -1463,9 +1463,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           )}
                           <span className="inline-flex items-center gap-1.5 mt-2 relative">
                             <span className="font-black text-[15px] leading-none" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
-                            <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, filter: 'drop-shadow(0 0 6px #fbbf24)' }}>🪙</span>
+                            <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, color: '#fb923c', filter: 'drop-shadow(0 0 6px #fb923c)' }}>⚔</span>
                           </span>
-                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>coins</span>
+                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>Clash Coins</span>
                         </button>
                       );
                     })}

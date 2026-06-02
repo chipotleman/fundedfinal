@@ -49,12 +49,12 @@ function CoinChip({ amount, label }) {
         style={{
           width: 16,
           height: 16,
-          background: 'linear-gradient(180deg,#fde047,#eab308)',
-          boxShadow: '0 0 6px rgba(250,204,21,0.5)',
-          fontSize: 10,
+          color: '#fb923c',
+          boxShadow: '0 0 6px rgba(251,146,60,0.5)',
+          fontSize: 12,
         }}
       >
-        🪙
+        ⚔
       </span>
       {label || fmt(amount)}
     </span>
@@ -179,7 +179,7 @@ function StakeRow({ stake }) {
       <div className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: '#64748b' }}>Stake</div>
       <div className="mt-1 inline-flex items-center gap-2 text-[22px] font-extrabold text-white">
         {fmt(stake)}
-        <span aria-hidden="true" style={{ fontSize: 16 }}>🪙</span>
+        <span aria-hidden="true" style={{ fontSize: 16, color: '#fb923c' }}>⚔</span>
       </div>
     </div>
   );
@@ -522,7 +522,7 @@ export function MatchWin({
           >
             <div className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: GREEN }}>You Won</div>
             <div className="mt-1 flex items-center justify-center gap-2 text-[26px] font-extrabold text-white">
-              {fmt(prize)} <span aria-hidden="true" style={{ fontSize: 18 }}>🪙</span>
+              {fmt(prize)} <span aria-hidden="true" style={{ fontSize: 18 }}>👑</span>
             </div>
           </div>
         )}
@@ -571,7 +571,7 @@ export function PlayAgain({
               >−</button>
             )}
             <div className="inline-flex items-center gap-2 text-[22px] font-extrabold text-white min-w-[120px] justify-center">
-              {fmt(stake)} <span aria-hidden="true" style={{ fontSize: 15 }}>🪙</span>
+              {fmt(stake)} <span aria-hidden="true" style={{ fontSize: 15, color: '#fb923c' }}>⚔</span>
             </div>
             {onStakeChange && (
               <button

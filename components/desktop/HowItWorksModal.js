@@ -47,7 +47,7 @@ function VisualModes() {
         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
         <span className="text-[13px] font-bold" style={{ color: '#e5e7eb' }}>{name}</span>
       </span>
-      <span className="text-[12px] font-bold" style={{ color: C.gold }}>{coins}</span>
+      <span className="text-[12px] font-bold" style={{ color: C.orange }}>⚔ {coins}</span>
     </div>
   );
   return (
@@ -68,7 +68,7 @@ function VisualWin() {
       >
         <span className="text-4xl">🏆</span>
       </div>
-      <span className="mt-3 text-[12px] font-bold" style={{ color: C.gold }}>Winner takes the pot · −5% rake</span>
+      <span className="mt-3 text-[12px] font-bold" style={{ color: C.gold }}>Winner takes the Crowns · −5% rake</span>
     </div>
   );
 }
@@ -113,8 +113,9 @@ const STEPS = [
     title: 'Choose a mode',
     body: (
       <>
+        You start every battle with a stack of <strong style={{ color: '#e5e7eb' }}>Clash Coins</strong>.{' '}
         <strong style={{ color: '#e5e7eb' }}>Rush</strong> — 6 fast live-game props, race the clock.{' '}
-        <strong style={{ color: '#e5e7eb' }}>Original</strong> — full slate of the day, highest balance wins.{' '}
+        <strong style={{ color: '#e5e7eb' }}>Original</strong> — full slate of the day, most Clash Coins wins.{' '}
         <strong style={{ color: '#e5e7eb' }}>Tournament</strong> — a 3-day battle for the big pot.
       </>
     ),
@@ -123,12 +124,12 @@ const STEPS = [
   {
     accent: C.emerald,
     eyebrow: 'Step 3',
-    title: 'Win the pot',
+    title: 'Win the Crowns',
     body: (
       <>
-        The winner takes the combined pot, minus a small{' '}
-        <strong style={{ color: '#e5e7eb' }}>5% rake</strong>. Climb the leaderboard and build your record
-        battle by battle.
+        The winner banks the combined <strong style={{ color: '#e5e7eb' }}>Crowns</strong> pot, minus a small{' '}
+        <strong style={{ color: '#e5e7eb' }}>5% rake</strong>. Whoever holds the most Crowns wins the beta —
+        climb the leaderboard battle by battle.
       </>
     ),
     Visual: VisualWin,

@@ -1376,7 +1376,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                             <span className="font-black text-[15px] leading-none" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
                             <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, filter: 'drop-shadow(0 0 6px #fbbf24)' }}>🪙</span>
                           </span>
-                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>coins</span>
+                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>Clash Coins</span>
                           {selected && !betaLocked && (
                             <span
                               aria-hidden="true"

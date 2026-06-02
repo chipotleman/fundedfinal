@@ -1200,7 +1200,7 @@ export default function BattlePage() {
         });
         setShowPlayFriend(true);
       } else {
-        showQuickToast(`Invite sent to ${friend.username || 'friend'} · ${isBeta ? `${formatMoney(last.buyIn, 0)} coin buy-in` : `$${last.buyIn} buy-in`}`);
+        showQuickToast(`Invite sent to ${friend.username || 'friend'} · ${isBeta ? `${formatMoney(last.buyIn, 0)} Clash Coins buy-in` : `$${last.buyIn} buy-in`}`);
       }
       fetchData();
       return true;
@@ -1544,14 +1544,14 @@ export default function BattlePage() {
                         hasPendingInvite
                           ? 'Invite already pending'
                           : lastBuyIn
-                          ? `Quick invite — ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} coin` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'}`
+                          ? `Quick invite — ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} Clash Coins` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'}`
                           : 'Quick invite — pick a buy-in (opens the full picker)'
                       }
                       aria-label={
                         hasPendingInvite
                           ? `Invite to ${friend.username || 'friend'} already pending`
                           : lastBuyIn
-                          ? `Quick invite ${friend.username || 'friend'} with ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} coin` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'} buy-in`
+                          ? `Quick invite ${friend.username || 'friend'} with ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} Clash Coins` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'} buy-in`
                           : `Quick invite ${friend.username || 'friend'} — opens picker to set a buy-in`
                       }
                     >
@@ -1670,7 +1670,7 @@ export default function BattlePage() {
                       <div className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-yellow-500/15 text-yellow-300 border border-yellow-500/30">
                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 9v1" /></svg>
                         {isBeta
-                          ? `${formatMoney(invite.buyIn, 0)} coin buy-in · ${formatMoney(parseFloat(invite.buyIn) * 2, 0)} coin pot`
+                          ? `${formatMoney(invite.buyIn, 0)} Clash Coins buy-in · ${formatMoney(parseFloat(invite.buyIn) * 2, 0)} Crowns pot`
                           : `$${invite.buyIn} buy-in · $${parseFloat(invite.buyIn) * 2} pot`}
                       </div>
                     </div>
@@ -1925,7 +1925,7 @@ export default function BattlePage() {
                 <div className="flex gap-5 mb-3">
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Buy-In</p>
-                    <p className="font-semibold text-sm" style={{ color: textPrimary }}>${formatMoney(activeMatchup.startingBalance || 0, 0)}</p>
+                    <p className="font-semibold text-sm" style={{ color: textPrimary }}>⚔ {formatMoney(activeMatchup.startingBalance || 0, 0)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Duration</p>
@@ -1939,7 +1939,7 @@ export default function BattlePage() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                    <p className="font-semibold text-sm" style={{ color: textPrimary }}>${formatMoney(activeMatchup.potSize || activeMatchup.startingBalance * 2 || 0, 0)}</p>
+                    <p className="font-semibold text-sm" style={{ color: textPrimary }}>👑 {formatMoney(activeMatchup.potSize || activeMatchup.startingBalance * 2 || 0, 0)}</p>
                   </div>
                 </div>
                 {activeMatchup.privateCode && (

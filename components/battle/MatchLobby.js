@@ -27,7 +27,7 @@ const MODE_EXPLAINERS = {
     headline: 'How Original works',
     subline: 'Bigger bankroll wins the day.',
     bullets: [
-      { icon: '💰', text: 'Start with 10,000 coins each' },
+      { icon: '💰', text: 'Start with 10,000 Clash Coins each' },
       { icon: '🧠', text: 'Bet today\u2019s slate · any sport' },
       { icon: '🏆', text: 'Highest balance at the end takes it' },
     ],
@@ -36,7 +36,7 @@ const MODE_EXPLAINERS = {
     headline: 'How Tournament works',
     subline: '3-day grind, biggest pot.',
     bullets: [
-      { icon: '👑', text: '100,000 starting coins · big leagues' },
+      { icon: '👑', text: '100,000 Clash Coins · big leagues' },
       { icon: '📅', text: '3 days of bets across the slate' },
       { icon: '🥇', text: 'Highest balance after day 3 wins' },
     ],
@@ -529,7 +529,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                   letterSpacing: '-0.01em',
                 }}
               >
-                ${payout > 0 ? formatMoney(payout, 0) : formatMoney(parseFloat(potSize || 0), 0)}
+                👑 {payout > 0 ? formatMoney(payout, 0) : formatMoney(parseFloat(potSize || 0), 0)}
               </span>
               <span className="text-[10px] mt-2 font-extrabold uppercase tracking-wider" style={{ color: '#0a0a0a' }}>🏆 Winner takes all · 10% fee 🏆</span>
             </div>

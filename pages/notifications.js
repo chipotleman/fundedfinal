@@ -394,7 +394,7 @@ function NotificationsFeed({ ctx, router, filter }) {
                 </div>
                 <div className="text-xs" style={{ color: textSecondary }}>
                   {isBeta
-                    ? `${formatMoney(buyIn, 0)} coin buy-in · ${formatMoney(buyIn * 2, 0)} coin pot`
+                    ? `${formatMoney(buyIn, 0)} Clash Coins buy-in · ${formatMoney(buyIn * 2, 0)} Crowns pot`
                     : `$${buyIn} buy-in · $${buyIn * 2} pot`}{inv.duration ? ` · ${inv.duration}h` : ''}
                 </div>
                 <div className="flex gap-2 mt-2">
@@ -473,9 +473,9 @@ function NotificationsFeed({ ctx, router, filter }) {
             const amount = Math.abs(pnl);
             let label;
             if (r.outcome === 'won') {
-              label = amount > 0 ? (isBeta ? `Won ${formatMoney(amount)} coins` : `Won $${formatMoney(amount)}`) : 'Won';
+              label = amount > 0 ? (isBeta ? `Won ${formatMoney(amount)} Crowns` : `Won $${formatMoney(amount)}`) : 'Won';
             } else if (r.outcome === 'lost') {
-              label = amount > 0 ? (isBeta ? `Lost ${formatMoney(amount)} coins` : `Lost $${formatMoney(amount)}`) : 'Lost';
+              label = amount > 0 ? (isBeta ? `Lost ${formatMoney(amount)} Crowns` : `Lost $${formatMoney(amount)}`) : 'Lost';
             } else {
               label = 'Push';
             }
