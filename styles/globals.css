@@ -1073,6 +1073,26 @@ html.light .border-\[\#1a1a1a\],
 html.light .border-\[\#1a1a1a\]\/50 {
   border-color: rgba(15, 23, 42, 0.1) !important;
 }
+
+/* Top-bar helper buttons ("My Piks" / "How it works") use an inline
+   `color:#d1d5db` (light gray for the dark nav). On the white light-mode
+   nav that's washed out / near-invisible — the existing nav text
+   overrides only catch class-based and inline-styled *links*, not
+   inline-styled buttons. Force them dark in light mode. */
+html.light nav button[style*="#d1d5db"],
+html.light nav button[style*="rgb(209, 213, 219)"] {
+  color: #475569 !important;
+}
+
+/* Active nav/menu rows paint a dark navy `bg-[#0f1d3a]` with white
+   text. In light mode our nav overrides force that text dark, so the
+   row becomes dark-on-dark navy — the "My Piks menu item is invisible
+   / black covers the menu" report. Repaint the active row a soft blue
+   tint so the (now dark) label is legible, keeping the blue accent. */
+html.light .bg-\[\#0f1d3a\] {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
 html.light .text-gray-300 { color: #475569; }
 html.light .text-gray-400 { color: #64748b; }
 html.light .text-gray-500 { color: #64748b; }
