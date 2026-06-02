@@ -7,6 +7,7 @@ import QuickMatchModal from '../components/battle/QuickMatchModal';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
 import PrivateMatchModal from '../components/battle/PrivateMatchModal';
 import BattleModeChooser from '../components/battle/BattleModeChooser';
+import ActiveBattleBlocker from '../components/battle/ActiveBattleBlocker';
 import InviteToast from '../components/battle/InviteToast';
 import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
@@ -121,6 +122,9 @@ export default function BattlePage() {
   // { id, friend, buyIn, gameMode } and cleared on modal close.
   const [playFriendSentInvite, setPlayFriendSentInvite] = useState(null);
   const [showPrivateMatch, setShowPrivateMatch] = useState(false);
+  // Shows the "Finish your fight first" blocker when the user tries to start
+  // a Quick or Private Match while already in a live battle.
+  const [showBattleBlocker, setShowBattleBlocker] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [socialExpanded, setSocialExpanded] = useState(false);
   const [showLobby, setShowLobby] = useState(null);
@@ -474,8 +478,13 @@ export default function BattlePage() {
   // the stream is unhealthy.
   const invitesRef = useRef(invites);
   const activeMatchupRef = useRef(activeMatchup);
+  // Always-current mirror of `globalHasActive` so the once-registered resume
+  // listeners and the query-param entry effect can read the live value
+  // without re-subscribing on every matchup change (avoids stale closures).
+  const globalHasActiveRef = useRef(globalHasActive);
   useEffect(() => { invitesRef.current = invites; }, [invites]);
   useEffect(() => { activeMatchupRef.current = activeMatchup; }, [activeMatchup]);
+  useEffect(() => { globalHasActiveRef.current = globalHasActive; }, [globalHasActive]);
 
   // ?play=<friendId> opens the PlayFriendModal with that friend pre-selected.
   useEffect(() => {
@@ -517,7 +526,13 @@ export default function BattlePage() {
     } else if (openPlayFriend) {
       gate(setShowPlayFriend, 'resumePlayFriend');
     } else if (openPrivateMatch) {
-      gate(setShowPrivateMatch, 'resumePrivateMatch');
+      if (isGuest) {
+        gate(setShowPrivateMatch, 'resumePrivateMatch');
+      } else if (globalHasActiveRef.current) {
+        setShowBattleBlocker(true);
+      } else {
+        setShowPrivateMatch(true);
+      }
     }
     const cleaned = { ...router.query };
     delete cleaned.openChooser;
@@ -1224,7 +1239,10 @@ export default function BattlePage() {
   useEffect(() => {
     const handleResumeOptions = () => setShowBattleOptions(true);
     const handleResumePlayFriend = () => setShowPlayFriend(true);
-    const handleResumePrivateMatch = () => setShowPrivateMatch(true);
+    const handleResumePrivateMatch = () => {
+      if (globalHasActiveRef.current) setShowBattleBlocker(true);
+      else setShowPrivateMatch(true);
+    };
     window.addEventListener('resumeBattleOptions', handleResumeOptions);
     window.addEventListener('resumePlayFriend', handleResumePlayFriend);
     window.addEventListener('resumePrivateMatch', handleResumePrivateMatch);
@@ -1258,10 +1276,12 @@ export default function BattlePage() {
   // commitment: you can't matchmake into a random opponent while you're
   // already in a battle, or while you have a challenge invite still
   // pending with a friend (accepting it would create a second matchup).
+  // Being mid-battle shows the same "Finish your fight first" blocker that
+  // Play a Friend uses, so all three entry points behave identically.
   const openQuickMatch = () => {
     requireAuth(() => {
       if (globalHasActive) {
-        showQuickToast("You're already in a battle — finish it first.", 'error');
+        setShowBattleBlocker(true);
         return;
       }
       if ((invites.sent || []).length > 0) {
@@ -1270,6 +1290,23 @@ export default function BattlePage() {
       }
       setShowQuickMatch(true);
     });
+  };
+
+  // Private Match also creates a fresh matchup, so it carries the exact
+  // same mid-battle guard as Quick Match — otherwise "Generate Code" would
+  // silently spin up a second matchup while a fight is still live.
+  const openPrivateMatch = () => {
+    requireAuth(() => {
+      if (globalHasActive) {
+        setShowBattleBlocker(true);
+        return;
+      }
+      if ((invites.sent || []).length > 0) {
+        showQuickToast('You have a pending challenge — cancel it before a Private Match.', 'error');
+        return;
+      }
+      setShowPrivateMatch(true);
+    }, 'resumePrivateMatch');
   };
 
   const friendIds = new Set(friends.map(f => f.id));
@@ -2042,7 +2079,7 @@ export default function BattlePage() {
               onStartBattle: () => requireAuth(() => setShowBattleOptions(true)),
               onPickQuickMatch: openQuickMatch,
               onPickPlayFriend: () => requireAuth(() => setShowPlayFriend(true), 'resumePlayFriend'),
-              onPickPrivateMatch: () => requireAuth(() => setShowPrivateMatch(true), 'resumePrivateMatch'),
+              onPickPrivateMatch: openPrivateMatch,
               onAcceptInvite: handleAcceptInvite,
               onDeclineInvite: handleDeclineInvite,
               onAcceptFriendRequest: handleAcceptFriendRequest,
@@ -2067,12 +2104,16 @@ export default function BattlePage() {
         </div>
       </div>
 
+      {showBattleBlocker && (
+        <ActiveBattleBlocker onClose={() => setShowBattleBlocker(false)} />
+      )}
+
       <BattleModeChooser
         isOpen={showBattleOptions}
         onClose={() => setShowBattleOptions(false)}
         onPickQuickMatch={() => { setShowBattleOptions(false); openQuickMatch(); }}
         onPickChallengeFriend={() => handleBattleOptionClick(setShowPlayFriend)}
-        onPickPrivateMatch={() => handleBattleOptionClick(setShowPrivateMatch)}
+        onPickPrivateMatch={() => { setShowBattleOptions(false); openPrivateMatch(); }}
         currentUser={{ id: userId, username: profile?.username, avatar: profile?.avatar }}
       />
 
