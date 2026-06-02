@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import TapSurface from '../components/TapSurface';
+import { useTheme } from '../contexts/ThemeContext';
 import TeamLogo from '../components/TeamLogo';
 import LiveGameTimer from '../components/LiveGameTimer';
 import DepositMatchContainer from '../components/DepositMatchContainer';
@@ -193,6 +194,8 @@ export default function Dashboard() {
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, hasFetchedOnce: gamesHasFetchedOnce, error: gamesError, lastUpdated, isDemoMode } = useGames();
   const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup, myBalance: matchupMyBalance, opponentBalance: matchupOppBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl } = useMatchup();
+  const { theme: uiTheme } = useTheme();
+  const isLightTheme = uiTheme === 'light';
   const [selectedSport, setSelectedSport] = useState('Live');
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
@@ -1370,9 +1373,9 @@ export default function Dashboard() {
               key={pill.key}
               onTap={handleTap}
               isActive={isActive}
-              activeColor={'#1a1a1a'}
+              activeColor={isLightTheme ? '#facc15' : '#1a1a1a'}
               inactiveColor="transparent"
-              activeTextColor={'#ffffff'}
+              activeTextColor={isLightTheme ? '#0a0a0a' : '#ffffff'}
               inactiveTextColor={'#9ca3af'}
               aria-label={labelList}
               title={isCondensed ? labelList : undefined}
@@ -1399,7 +1402,7 @@ export default function Dashboard() {
                 // soft glow instead of the previous near-invisible
                 // gray border. We use box-shadow for the ring so the
                 // pill width doesn't shift when active vs. inactive.
-                borderColor: isActive ? '#3b82f6' : '#1f2937',
+                borderColor: isActive ? (isLightTheme ? '#eab308' : '#3b82f6') : '#1f2937',
                 boxShadow: 'none',
                 transition: 'box-shadow 140ms ease-out, border-color 140ms ease-out',
               }}
@@ -1436,8 +1439,8 @@ export default function Dashboard() {
                     height: 14,
                     padding: '0 3px',
                     borderRadius: 9999,
-                    backgroundColor: isActive ? '#3b82f6' : '#1f2937',
-                    color: '#ffffff',
+                    backgroundColor: isActive ? (isLightTheme ? '#facc15' : '#3b82f6') : '#1f2937',
+                    color: isActive && isLightTheme ? '#0a0a0a' : '#ffffff',
                     fontSize: 9,
                     fontWeight: 700,
                     lineHeight: '14px',
