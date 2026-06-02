@@ -42,8 +42,19 @@ export default function GameDetail() {
     // commits the next route looks much cleaner.
     // Defer to the next tick so React flushes any in-flight
     // state before we ask the router to navigate.
+    // When a page deep-links into the game with `?from=/path` (e.g. the
+    // My Piks pick rows / Battle Insights "Open Game"), prefer returning
+    // there. router.back() still wins when there's genuine in-app history
+    // (it preserves scroll); the `from` target only kicks in as the
+    // fallback when this page was a fresh/hard load (history idx 0), so
+    // the user lands back where they came from instead of the dashboard.
+    // Guard against open-redirects by requiring a single leading slash.
+    const fromParam = router.query.from;
+    const from = typeof fromParam === 'string' && fromParam.startsWith('/') && !fromParam.startsWith('//')
+      ? fromParam
+      : null;
     setTimeout(() => {
-      leavePage({ router, fallbackHref: '/dashboard' });
+      leavePage({ router, fallbackHref: from || '/dashboard' });
     }, 0);
   };
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
