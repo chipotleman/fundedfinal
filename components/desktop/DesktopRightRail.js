@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
+import { useSession } from 'next-auth/react';
 import UserAvatar from '../UserAvatar';
 import { getSimulatedBattles } from '../battle/LiveBattlesSection';
 import { formatLastSeen } from '../../utils/relativeTime';
+import { useUserPreview } from '../../contexts/UserPreviewContext';
+import { readLastBuyIn } from '../../utils/lastBattleBuyIn';
+
+// Lazy-load the invite modal so the rail's own bundle stays light — the
+// flow code only ships once a user actually taps "Battle" on a friend row.
+const PlayFriendModal = dynamic(() => import('../battle/PlayFriendModal'), { ssr: false });
 
 // =============================================================================
 // DesktopRightRail — the contextual right sidebar for the full-width desktop
@@ -50,6 +58,14 @@ function Card({ title, action, onAction, children }) {
 
 export default function DesktopRightRail({ isLoggedIn }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const { openPreview, openMessage } = useUserPreview();
+  // Friend the user is quick-inviting to a battle (null when the modal is
+  // closed). Opening the invite popup never navigates away from the dash.
+  const [playFriend, setPlayFriend] = useState(null);
+  const sessionUser = session?.user
+    ? { id: session.user.id, username: session.user.name, avatar: session.user.image }
+    : null;
   const [friends, setFriends] = useState([]);
   const [leaders, setLeaders] = useState([]);
   // Prefer real active battles from `/api/battles/live`; only fall back to the
@@ -165,33 +181,76 @@ export default function DesktopRightRail({ isLoggedIn }) {
             </div>
           ) : (
             sortedFriends.map((f) => (
-              <button
+              <div
                 key={f.id}
-                type="button"
-                onClick={() => router.push(`/profile/${f.id}`)}
-                className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left lg:hover:bg-white/5 transition-colors"
+                className="group w-full flex items-center gap-2 px-2 py-2 rounded-lg lg:hover:bg-white/5 transition-colors"
               >
-                <span className="relative flex-shrink-0">
-                  <span className="w-8 h-8 rounded-full overflow-hidden block">
-                    <UserAvatar user={{ id: f.id, username: f.username, avatar: f.avatar }} size={32} />
+                {/* Name + avatar — opens the mini-profile preview popover
+                    (View profile / DM / Add friend) instead of jumping
+                    straight to /profile. */}
+                <button
+                  type="button"
+                  onClick={(e) => openPreview({ id: f.id, username: f.username, avatar: f.avatar }, e.currentTarget)}
+                  className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
+                >
+                  <span className="relative flex-shrink-0">
+                    <span className="w-8 h-8 rounded-full overflow-hidden block">
+                      <UserAvatar user={{ id: f.id, username: f.username, avatar: f.avatar }} size={32} />
+                    </span>
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
+                      style={{
+                        backgroundColor: f.isOnline ? '#22c55e' : '#4b5563',
+                        borderColor: surface,
+                      }}
+                    />
                   </span>
-                  <span
-                    className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
-                    style={{
-                      backgroundColor: f.isOnline ? '#22c55e' : '#4b5563',
-                      borderColor: surface,
-                    }}
-                  />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[12px] font-semibold truncate" style={{ color: textPrimary }}>
-                    {f.username}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12px] font-semibold truncate" style={{ color: textPrimary }}>
+                      {f.username}
+                    </span>
+                    <span className="block text-[10px]" style={{ color: f.isOnline ? '#22c55e' : textMuted }}>
+                      {f.isOnline ? 'Online' : formatLastSeen ? formatLastSeen(f.lastSeenAt) : 'Offline'}
+                    </span>
                   </span>
-                  <span className="block text-[10px]" style={{ color: f.isOnline ? '#22c55e' : textMuted }}>
-                    {f.isOnline ? 'Online' : formatLastSeen ? formatLastSeen(f.lastSeenAt) : 'Offline'}
-                  </span>
-                </span>
-              </button>
+                </button>
+                {/* Quick actions — never leave the dashboard. Battle opens
+                    the Play-a-Friend invite popup preset to this friend;
+                    Message opens the DM popup overlay. */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPlayFriend({ id: f.id, username: f.username, avatar: f.avatar })}
+                    title={`Battle ${f.username}`}
+                    aria-label={`Battle ${f.username}`}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-transform active:scale-90"
+                    style={{ background: 'rgba(251,146,60,0.14)', border: '1px solid rgba(251,146,60,0.4)', color: '#fdba74' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
+                      <line x1="13" y1="19" x2="19" y2="13" />
+                      <line x1="16" y1="16" x2="20" y2="20" />
+                      <line x1="19" y1="21" x2="21" y2="19" />
+                      <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5" />
+                      <line x1="5" y1="14" x2="9" y2="18" />
+                      <line x1="7" y1="17" x2="4" y2="20" />
+                      <line x1="3" y1="19" x2="5" y2="21" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openMessage({ id: f.id, username: f.username, avatar: f.avatar })}
+                    title={`Message ${f.username}`}
+                    aria-label={`Message ${f.username}`}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-transform active:scale-90"
+                    style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.4)', color: '#67e8f9' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             ))
           )}
         </Card>
@@ -238,6 +297,20 @@ export default function DesktopRightRail({ isLoggedIn }) {
           ))
         )}
       </Card>
+
+      {/* Quick "Play a Friend" invite — opens inline as a popup (no
+          navigation) preset to the friend tapped in the list above. */}
+      {playFriend && (
+        <PlayFriendModal
+          isOpen={!!playFriend}
+          onClose={() => setPlayFriend(null)}
+          friends={friends}
+          initialFriend={playFriend}
+          currentUser={sessionUser}
+          initialBuyIn={sessionUser?.id ? readLastBuyIn(sessionUser.id) : null}
+          onOpenMessage={openMessage}
+        />
+      )}
     </div>
   );
 }
