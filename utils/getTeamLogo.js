@@ -459,6 +459,25 @@ const INTL_HOCKEY = {
   'lithuania': 'lt',
   'estonia': 'ee',
   'china': 'cn',
+  // KHL / CHL / DEL clubs that show up in the Goalserve "icehockey_intl"
+  // feed. Wikipedia exposes no crest thumbnail for these (their logos are
+  // non-free), so we represent each club by its country flag — same
+  // treatment as the national teams above. The last-word fallback in
+  // getTeamLogo also lets name variants ("SKA St. Petersburg" → ends with
+  // "petersburg", "Eisbären Berlin" → ends with "berlin") resolve here.
+  'cska moscow': 'ru',
+  'ska saint petersburg': 'ru',
+  'ak bars kazan': 'ru',
+  'metallurg magnitogorsk': 'ru',
+  'avangard omsk': 'ru',
+  'dynamo moscow': 'ru',
+  'jokerit helsinki': 'fi',
+  'tps turku': 'fi',
+  'eisbaeren berlin': 'de',
+  'zsc lions': 'ch',
+  'geneveservette hc': 'ch',
+  'frolunda hc': 'se',
+  'sparta prague': 'cz',
 };
 
 function espnBuilder(league) {
