@@ -1009,14 +1009,15 @@ html.light .min-h-screen.bg-\[\#0a0a0a\] {
   color: #1f2937;
 }
 
-/* Soften the top nav + condensed bar so it doesn't slam against the
-   off-white page. */
+/* Top nav + condensed bar share the same warm off-white as the page body so
+   the header reads as part of the page instead of a pasty-white slab. A thin
+   hairline border keeps it separated when content scrolls underneath. */
 html.light nav[class*="bg-black"],
 html.light [data-topnavbar="true"],
 html.light .piks-condensed-bar {
-  background-color: #ffffff !important;
+  background-color: #f5f1ea !important;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  box-shadow: none;
   color: #1f2937;
 }
 html.light nav a,

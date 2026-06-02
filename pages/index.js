@@ -1282,9 +1282,15 @@ export default function Dashboard() {
         style={isCondensed ? { WebkitOverflowScrolling: 'touch' } : undefined}
       >
         {isDemoMode && !isCondensed && (
-          <div className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10">
-            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
-            <span className="text-cyan-400 text-[10px] font-bold uppercase tracking-wider">Demo</span>
+          <div
+            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border"
+            style={{
+              borderColor: isLightTheme ? 'rgba(14, 116, 144, 0.5)' : 'rgba(6, 182, 212, 0.3)',
+              backgroundColor: isLightTheme ? 'rgba(14, 116, 144, 0.12)' : 'rgba(6, 182, 212, 0.1)',
+            }}
+          >
+            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: isLightTheme ? '#0e7490' : '#22d3ee' }}></div>
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isLightTheme ? '#0e7490' : '#22d3ee' }}>Demo</span>
           </div>
         )}
         <TapSurface
@@ -1755,7 +1761,14 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 text-[11px] font-medium">{game.league || sport}</span>
                           {game.isSimulated && (
-                            <span className="text-[9px] font-semibold text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">DEMO</span>
+                            <span
+                              className="text-[9px] font-semibold px-1.5 py-0.5 rounded border"
+                              style={{
+                                color: isLightTheme ? '#0e7490' : '#22d3ee',
+                                backgroundColor: isLightTheme ? 'rgba(14, 116, 144, 0.12)' : 'rgba(6, 182, 212, 0.1)',
+                                borderColor: isLightTheme ? 'rgba(14, 116, 144, 0.4)' : 'rgba(6, 182, 212, 0.2)',
+                              }}
+                            >DEMO</span>
                           )}
                           {isFinal ? (
                             <span className="text-gray-500 text-[11px] font-semibold">FINAL</span>
