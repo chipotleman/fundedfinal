@@ -271,13 +271,24 @@ export default function GameDetail() {
   const isFinal = game.isCompleted || game.status === 'FINAL';
   const betsForThisGame = betSlip.filter(b => String(b.gameId) === String(game.id));
 
+  // Theme the page after the home team. `homeColor` drives the LIVE pill,
+  // the selected-bet highlight, and the View Bet Slip button. Exposed as CSS
+  // vars on the page wrapper so Tailwind arbitrary-value classes (and the
+  // desktop sub-components) can pick up the dynamic color without prop drilling.
+  const homeName = game.homeTeamFull || game.homeTeam;
+  const homeColor = getTeamColor(homeName) || '#3b82f6';
+  const homeInk = inkFor(homeColor);
+
   return (
     <>
       <Head>
         <title>{game.awayTeamFull} vs {game.homeTeamFull} | Piks</title>
       </Head>
 
-      <div className="game-detail-page min-h-screen bg-black text-white pb-32">
+      <div
+        className="game-detail-page min-h-screen bg-black text-white pb-32"
+        style={{ '--home-color': homeColor, '--home-bg': `${homeColor}26`, '--home-ink': homeInk }}
+      >
         <DesktopGameDetail
           game={game}
           possession={possession}
@@ -361,12 +372,12 @@ export default function GameDetail() {
                   <span
                     className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
                     style={{
-                      background: 'rgba(239,68,68,0.18)',
-                      border: '1.5px solid rgba(239,68,68,0.55)',
-                      color: '#fca5a5',
+                      background: `${homeColor}2e`,
+                      border: `1.5px solid ${homeColor}8c`,
+                      color: homeColor,
                     }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: homeColor }} />
                     Live
                   </span>
                 ) : (
@@ -437,7 +448,7 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('moneyline', game.awayTeamFull || game.awayTeam)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
@@ -452,7 +463,7 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('moneyline', game.homeTeamFull || game.homeTeam)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
@@ -480,7 +491,7 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('spread', `${game.awayTeamFull || game.awayTeam} ${spread.away.point}`)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
@@ -496,7 +507,7 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('spread', `${game.homeTeamFull || game.homeTeam} ${spread.home.point}`)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
@@ -525,7 +536,7 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('total', `Over ${total.over.point}`)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
@@ -541,7 +552,7 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('total', `Under ${total.under.point}`)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
@@ -572,7 +583,7 @@ export default function GameDetail() {
           <div className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-[#1a1a1a] p-4 z-40 md:hidden">
             <button
               onClick={() => router.push(demo ? '/demo-dashboard' : '/dashboard')}
-              className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"
+              className="w-full bg-[var(--home-color)] text-[var(--home-ink)] font-bold py-4 rounded-xl flex items-center justify-center gap-2"
             >
               <span>View Bet Slip</span>
               <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">{betSlip.length}</span>
@@ -613,9 +624,9 @@ function DesktopMarketCard({ title, children }) {
 }
 
 function DesktopOptionButton({ active, disabled, label, value, sub, onClick, accent = 'blue' }) {
-  // Selection highlight uses the app's blue accent only — the odds numbers
-  // themselves stay white for readability (no orange/team tint on values).
-  const accentBg = '#3b82f6';
+  // Selection highlight is themed after the home team via the `--home-color` /
+  // `--home-bg` CSS vars set on the desktop page wrapper (falls back to the
+  // app blue). The odds numbers themselves stay white for readability.
   return (
     <button
       onClick={onClick}
@@ -627,7 +638,7 @@ function DesktopOptionButton({ active, disabled, label, value, sub, onClick, acc
             ? 'border-2 text-white'
             : 'bg-[#141414] border border-[#1a1a1a] hover:border-gray-600'
       }`}
-      style={active && !disabled ? { background: 'rgba(59,130,246,0.15)', borderColor: accentBg } : undefined}
+      style={active && !disabled ? { background: 'var(--home-bg, rgba(59,130,246,0.15))', borderColor: 'var(--home-color, #3b82f6)' } : undefined}
     >
       <div className="flex flex-col items-start">
         <span className="text-sm font-semibold text-gray-200">{label}</span>
@@ -739,7 +750,10 @@ function DesktopGameDetail({
   }, [game?.events]);
 
   return (
-    <div className="hidden md:block">
+    <div
+      className="hidden md:block"
+      style={{ '--home-color': homeColor, '--home-bg': `${homeColor}26`, '--home-ink': homeInk }}
+    >
       <div className="max-w-[1400px] mx-auto px-6 xl:px-10 py-4">
         {/* Top breadcrumb / back */}
         <div className="flex items-center justify-between mb-4">
@@ -806,9 +820,9 @@ function DesktopGameDetail({
                   <>
                     <span
                       className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
-                      style={{ background: 'rgba(239,68,68,0.18)', border: '1.5px solid rgba(239,68,68,0.55)', color: '#fca5a5' }}
+                      style={{ background: `${homeColor}2e`, border: `1.5px solid ${homeColor}8c`, color: homeColor }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: homeColor }} />
                       Live
                     </span>
                     {game.quarter && (
