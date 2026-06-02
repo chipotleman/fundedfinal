@@ -46,8 +46,11 @@ function fmtML(n) {
 }
 function fmtTime(t, range) {
   const d = new Date(t);
-  if (range === '1D' || range === 'ALL') {
-    return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  // The chart can be as narrow as ~320px, so three axis labels must stay short
+  // or they overlap. Use compact date-only for the multi-day "ALL" view and
+  // time-only everywhere else (1D still fits in a 24h window).
+  if (range === 'ALL') {
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   }
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
