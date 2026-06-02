@@ -5,7 +5,7 @@ import UserAvatar from '../UserAvatar';
 import PiksBetCard from '../PiksBetCard';
 import { TicketCarousel } from '../BattleOverviewPopup';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
-import { MatchWin, PlayAgain } from './matchflow/MatchFlowScreens';
+import { MatchWin } from './matchflow/MatchFlowScreens';
 
 function useCountUp(target, duration = 1000, shouldStart = false) {
   const [value, setValue] = useState(0);
@@ -711,6 +711,15 @@ export default function MatchResult({
               prize={prizeWon}
               onPrimary={isWinner ? handleShare : handleClose}
               primaryLabel={isWinner ? (copied ? 'Copied!' : 'Share Win') : 'Back to Battle'}
+              secondary={isWinner ? (
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="mt-3 w-full py-2 text-sm font-bold text-gray-300 hover:text-white transition-colors"
+                >
+                  Back to Battle
+                </button>
+              ) : null}
             />
           </div>
 
@@ -948,26 +957,6 @@ export default function MatchResult({
               {customError && (
                 <div className="mt-1 text-[11px] text-red-400 text-left px-1">{customError}</div>
               )}
-            </div>
-          )}
-
-          {showStats && (
-            <div className="mr-stats-card rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-              <PlayAgain
-                you={youPlayer}
-                opp={oppPlayer}
-                balance={myFinalBalance}
-                stake={cashBuyIn}
-                onRematch={() => {
-                  if (rematchDisabled || rematchAcceptedByMe) return;
-                  declineFiredRef.current = true; // accepting suppresses implicit decline
-                  onRematchAccept?.();
-                }}
-                onHome={handleClose}
-                rematchLabel={rematchLabel}
-                rematchDisabled={rematchDisabled || rematchAcceptedByMe}
-                statusText={rematchStatusText}
-              />
             </div>
           )}
         </div>
