@@ -1415,6 +1415,14 @@ html.light .piks-game-card svg[stroke="#4b5563"] {
   --rail-text: #f5f5f5;
   --rail-text-2: #9ca3af;
   --rail-text-3: #6b7280;
+  /* Friend quick-action icon accents (Battle = orange, Message = cyan).
+     Light theme uses deeper shades so the icons stay legible on white. */
+  --rail-battle-bg: rgba(251, 146, 60, 0.14);
+  --rail-battle-border: rgba(251, 146, 60, 0.4);
+  --rail-battle-icon: #fdba74;
+  --rail-msg-bg: rgba(34, 211, 238, 0.12);
+  --rail-msg-border: rgba(34, 211, 238, 0.4);
+  --rail-msg-icon: #67e8f9;
 }
 html.light .desktop-right-rail {
   --rail-surface: #ffffff;
@@ -1422,6 +1430,12 @@ html.light .desktop-right-rail {
   --rail-text: #0f172a;
   --rail-text-2: #475569;
   --rail-text-3: #64748b;
+  --rail-battle-bg: rgba(234, 88, 12, 0.12);
+  --rail-battle-border: rgba(234, 88, 12, 0.45);
+  --rail-battle-icon: #c2410c;
+  --rail-msg-bg: rgba(8, 145, 178, 0.1);
+  --rail-msg-border: rgba(8, 145, 178, 0.45);
+  --rail-msg-icon: #0e7490;
 }
 /* When the sticky rail is taller than the viewport it scrolls internally
    (see lg:overflow-y-auto on the root) — keep that scrollbar thin + themed

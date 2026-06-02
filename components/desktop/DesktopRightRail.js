@@ -224,7 +224,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
                     title={`Battle ${f.username}`}
                     aria-label={`Battle ${f.username}`}
                     className="w-7 h-7 rounded-lg flex items-center justify-center transition-transform active:scale-90"
-                    style={{ background: 'rgba(251,146,60,0.14)', border: '1px solid rgba(251,146,60,0.4)', color: '#fdba74' }}
+                    style={{ background: 'var(--rail-battle-bg)', border: '1px solid var(--rail-battle-border)', color: 'var(--rail-battle-icon)' }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
@@ -243,7 +243,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
                     title={`Message ${f.username}`}
                     aria-label={`Message ${f.username}`}
                     className="w-7 h-7 rounded-lg flex items-center justify-center transition-transform active:scale-90"
-                    style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.4)', color: '#67e8f9' }}
+                    style={{ background: 'var(--rail-msg-bg)', border: '1px solid var(--rail-msg-border)', color: 'var(--rail-msg-icon)' }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />

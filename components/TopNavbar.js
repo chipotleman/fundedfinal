@@ -22,6 +22,12 @@ import HowItWorksModal from './desktop/HowItWorksModal';
 // bold value below in the currency's signature color. No pill container.
 // Crowns = yellow (#facc15), Clash Coins = white (#ffffff).
 function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 'start', compact = false }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  // Clash Coins are white (#ffffff) in the dark theme — invisible on the light
+  // theme's white surface, so swap to near-black there. Crowns yellow stays.
+  const isWhite = color === '#ffffff' || color === '#fff';
+  const effColor = isLight && isWhite ? '#0f172a' : color;
   return (
     <button
       onClick={onClick}
@@ -46,8 +52,7 @@ function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 's
           fontWeight: 800,
           letterSpacing: '0.09em',
           textTransform: 'uppercase',
-          color,
-          opacity: 0.7,
+          color: effColor,
           whiteSpace: 'nowrap',
         }}
       >
@@ -58,7 +63,7 @@ function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 's
           fontSize: compact ? 14 : 17,
           fontWeight: 900,
           letterSpacing: '0.01em',
-          color,
+          color: effColor,
           lineHeight: 1.05,
           whiteSpace: 'nowrap',
         }}
