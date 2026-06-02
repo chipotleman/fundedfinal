@@ -7,7 +7,6 @@ import TopNavbar from '../components/TopNavbar';
 import PiksBetCard from '../components/PiksBetCard';
 import UserAvatar from '../components/UserAvatar';
 import OddsHistoryChart from '../components/game/OddsHistoryChart';
-import HowItWorksModal from '../components/desktop/HowItWorksModal';
 import { SelectionLogos } from '../components/TeamLogo';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -105,38 +104,6 @@ function Coin({ color = '#fb923c' }) {
   return <span style={{ color }} aria-hidden="true">⚔</span>;
 }
 
-// ---- Sidebar line icons (stroke = currentColor) ----
-const ICON_PATHS = {
-  battle: <path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M5 14l-2 2v3h3l2-2" />,
-  picks: <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />,
-  live: <path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8" />,
-  leagues: <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3" />,
-  history: <path d="M3 3v5h5M3.05 13A9 9 0 1 0 6 5.3L3 8M12 7v5l3 2" />,
-  wallet: <path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zM16 12h3M16 12a1.5 1.5 0 0 0 0 3h4v-3h-4z" />,
-  rewards: <path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />,
-  settings: <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />,
-};
-function NavIcon({ name, size = 18 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      {ICON_PATHS[name]}
-    </svg>
-  );
-}
-
-const NAV_ITEMS = [
-  { key: 'battle', label: 'Battle', href: '/dashboard' },
-  { key: 'picks', label: 'Picks', href: '/my-picks' },
-  { key: 'live', label: 'Live', href: '/battle' },
-  { key: 'leagues', label: 'Leagues', href: '/leaderboard' },
-  { key: 'history', label: 'History', href: '/bet-history' },
-  { key: 'wallet', label: 'Wallet', href: '/withdrawal' },
-  { key: 'rewards', label: 'Rewards', href: null },
-  { key: 'settings', label: 'Settings', href: '/settings' },
-];
-
-const SIDEBAR_W = 212;
-
 export default function MyPicksPage() {
   const router = useRouter();
   const { status: sessionStatus } = useSession();
@@ -160,7 +127,6 @@ export default function MyPicksPage() {
   const isLight = theme === 'light';
   const p = getPalette(isLight);
 
-  const [howOpen, setHowOpen] = useState(false);
   const isLoggedIn = sessionStatus === 'authenticated';
 
   const sortedBets = useMemo(() => {
@@ -485,98 +451,6 @@ export default function MyPicksPage() {
   else if (sortedBets.length === 0) mobileBody = renderEmptyNoPicks();
   else mobileBody = renderMobilePicksList();
 
-  // ===================== DESKTOP chrome =====================
-  const renderSidebar = () => (
-    <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 z-30"
-      style={{ width: SIDEBAR_W, background: p.chromeBg, borderRight: `1px solid ${p.chromeBorder}` }}>
-      <div className="px-5 pt-6 pb-4">
-        <img src="/pikslogotransparent.png" alt="Piks" className="h-9 w-auto object-contain" />
-      </div>
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
-          const active = item.href === '/my-picks';
-          const inner = (
-            <div className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors"
-              style={{
-                color: active ? '#3b82f6' : p.navIdleText,
-                background: active ? 'rgba(59,130,246,0.12)' : 'transparent',
-              }}>
-              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full" style={{ background: '#3b82f6' }} />}
-              <NavIcon name={item.key} />
-              <span>{item.label}</span>
-            </div>
-          );
-          return item.href ? (
-            <Link key={item.key} href={item.href} prefetch={false}>{inner}</Link>
-          ) : (
-            <div key={item.key} className="cursor-default opacity-80" title="Coming soon">{inner}</div>
-          );
-        })}
-      </nav>
-      <div className="px-5 py-5" style={{ borderTop: `1px solid ${p.chromeBorder}` }}>
-        <button type="button" onClick={toggleTheme} className="no-hover-effect inline-flex items-center gap-2 text-sm font-bold"
-          style={{ color: p.navIdleText, background: 'transparent', cursor: 'pointer' }} aria-label="Toggle theme">
-          <span aria-hidden="true">☀️</span>
-          <span className="w-9 h-5 rounded-full relative" style={{ background: isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.15)' }}>
-            <span className="absolute top-0.5 w-4 h-4 rounded-full transition-all" style={{ left: isLight ? 2 : 18, background: isLight ? '#fbbf24' : '#3b82f6' }} />
-          </span>
-          <span aria-hidden="true">🌙</span>
-        </button>
-      </div>
-    </aside>
-  );
-
-  const renderTopBar = () => {
-    const change = battleBalances.myLive - battleBalances.startingBalance;
-    return (
-      <header className="hidden lg:flex items-center gap-4 px-8 py-4 sticky top-0 z-20"
-        style={{ background: p.chromeBg, borderBottom: `1px solid ${p.chromeBorder}` }}>
-        <div className="flex-1 max-w-xl mx-auto w-full relative">
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl w-full"
-            style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}` }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={p.mutedText} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-            <input type="text" placeholder="Search players, teams, games…" className="bg-transparent flex-1 text-sm outline-none" style={{ color: p.bodyText }} />
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ color: p.faintText, border: `1px solid ${p.softBorder}` }}>⌘K</span>
-          </div>
-        </div>
-        <button type="button" onClick={() => setHowOpen(true)} className="no-hover-effect inline-flex items-center gap-2 text-sm font-bold flex-shrink-0"
-          style={{ color: p.mutedText, background: 'transparent', cursor: 'pointer' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" /></svg>
-          How it works
-        </button>
-        {hasActiveMatchup && (
-          <>
-            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl flex-shrink-0"
-              style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.4)' }}>
-              <Coin color="#34d399" />
-              <div className="leading-tight">
-                <div className="text-sm font-black" style={{ color: '#34d399' }}>{formatMoney(battleBalances.myLive, 0)}</div>
-                <div className="text-[8px] uppercase tracking-wider font-bold" style={{ color: p.faintText }}>Your Balance</div>
-              </div>
-            </div>
-            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl flex-shrink-0"
-              style={{ background: change < 0 ? 'rgba(248,113,113,0.12)' : 'rgba(251,146,60,0.12)', border: `1px solid ${change < 0 ? 'rgba(248,113,113,0.4)' : 'rgba(251,146,60,0.4)'}` }}>
-              <div className="leading-tight">
-                <div className="text-sm font-black" style={{ color: change < 0 ? '#f87171' : '#fb923c' }}>{change > 0 ? '+' : ''}{formatMoney(change, 0)}</div>
-                <div className="text-[8px] uppercase tracking-wider font-bold" style={{ color: p.faintText }}>Change</div>
-              </div>
-            </div>
-          </>
-        )}
-        <Link href="/notifications" className="relative flex-shrink-0 p-2 rounded-lg" style={{ color: p.mutedText }} aria-label="Notifications">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-        </Link>
-        <Link href="/messenger" className="flex-shrink-0 p-2 rounded-lg" style={{ color: p.mutedText }} aria-label="Messages">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.9 8.4 8.5 8.5 0 0 1-3.6-.8L3 21l1.9-5.7a8.38 8.38 0 0 1-.8-3.6A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z" /></svg>
-        </Link>
-        <Link href="/profile" className="flex-shrink-0" aria-label="Profile">
-          <div className="rounded-full p-[2px]" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)' }}>
-            <UserAvatar avatar={myProfile?.avatar} username={myProfile?.username || 'You'} size={34} />
-          </div>
-        </Link>
-      </header>
-    );
-  };
 
   const renderHero = () => {
     if (!matchup || !hasActiveMatchup) return null;
@@ -854,8 +728,6 @@ export default function MyPicksPage() {
         <title>My Piks · Piks</title>
         <meta name="description" content="See every pick you've placed in your current battle." />
       </Head>
-      <HowItWorksModal open={howOpen} onClose={() => setHowOpen(false)} />
-
       {/* ---------------- MOBILE / TABLET ---------------- */}
       <div className="lg:hidden min-h-screen" style={{ backgroundColor: p.pageBg }}>
         <TopNavbar />
@@ -873,19 +745,8 @@ export default function MyPicksPage() {
 
       {/* ---------------- DESKTOP ---------------- */}
       <div className="hidden lg:block min-h-screen" style={{ backgroundColor: p.pageBg }}>
-        {renderSidebar()}
-        <div style={{ marginLeft: SIDEBAR_W }} className="min-h-screen flex flex-col">
-          {renderTopBar()}
-          <main className="flex-1 px-8 py-6">{renderDesktopMain()}</main>
-        </div>
-        {/* Desktop Pik Slip entry (TopNavbar is hidden here) */}
-        {(betSlip?.length || 0) > 0 && (
-          <button type="button" onClick={openBetSlip}
-            className="no-hover-effect fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-black"
-            style={{ background: '#fb923c', color: '#1a0a02', boxShadow: '0 12px 30px rgba(251,146,60,0.4)', cursor: 'pointer' }}>
-            <Coin color="#1a0a02" /> Pik Slip ({betSlip.length})
-          </button>
-        )}
+        <TopNavbar />
+        <main className="max-w-7xl mx-auto px-6 xl:px-8 py-6">{renderDesktopMain()}</main>
       </div>
     </>
   );
