@@ -666,18 +666,36 @@ export default function TopNavbar({
               <div className="min-w-0 w-full max-w-[680px]">
                 <DesktopGlobalSearch />
               </div>
-              <button
-                type="button"
-                onClick={() => setShowHowItWorks(true)}
-                className="flex items-center gap-1.5 flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-colors lg:hover:text-white"
-                style={{ color: '#d1d5db' }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="9" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
-                </svg>
-                How it works
-              </button>
+              {/* When a logged-in user is mid-battle, swap the generic
+                  "How it works" helper for a direct "My Piks" shortcut to
+                  their active picks page — they don't need the explainer
+                  while fighting, they need their slip. */}
+              {isLoggedIn && hasActiveMatchup ? (
+                <button
+                  type="button"
+                  onClick={() => router.push('/my-picks')}
+                  className="flex items-center gap-1.5 flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-colors lg:hover:text-white"
+                  style={{ color: '#d1d5db' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                  My Piks
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowHowItWorks(true)}
+                  className="flex items-center gap-1.5 flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-colors lg:hover:text-white"
+                  style={{ color: '#d1d5db' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
+                  </svg>
+                  How it works
+                </button>
+              )}
             </div>
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
