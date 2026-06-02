@@ -480,8 +480,8 @@ export default function MyPicksPage() {
         <div className="relative flex items-center justify-between gap-3 px-6 py-7 sm:px-10 sm:py-9">
           {/* YOU */}
           <div className="flex items-center gap-4 min-w-0">
-            <div className="rounded-2xl p-[3px]" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', boxShadow: '0 0 0 4px rgba(59,130,246,0.18), 0 8px 24px rgba(59,130,246,0.35)' }}>
-              <div className="rounded-2xl overflow-hidden" style={{ background: '#0a0f1c' }}>
+            <div className="rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', boxShadow: '0 0 0 4px rgba(59,130,246,0.18), 0 8px 24px rgba(59,130,246,0.35)' }}>
+              <div className="rounded-full overflow-hidden" style={{ background: '#0a0f1c' }}>
                 <UserAvatar avatar={myProfile?.avatar} username={myProfile?.username || 'You'} size={76} />
               </div>
             </div>
@@ -512,8 +512,8 @@ export default function MyPicksPage() {
               <div className="text-3xl font-black inline-flex items-center gap-1.5 justify-end" style={{ color: '#fff' }}><Coin color="#ffffff" />{formatMoney(oppLive, 0)}</div>
               <div className="mt-0.5 flex justify-end">{sideChange(oppChange)}</div>
             </div>
-            <div className="rounded-2xl p-[3px]" style={{ background: hasOpponent ? 'linear-gradient(135deg,#fbbf24,#ea580c)' : 'rgba(148,163,184,0.4)', boxShadow: '0 0 0 4px rgba(251,146,60,0.16), 0 8px 24px rgba(234,88,12,0.3)' }}>
-              <div className="rounded-2xl overflow-hidden" style={{ background: '#0a0f1c' }}>
+            <div className="rounded-full p-[3px]" style={{ background: hasOpponent ? 'linear-gradient(135deg,#fbbf24,#ea580c)' : 'rgba(148,163,184,0.4)', boxShadow: '0 0 0 4px rgba(251,146,60,0.16), 0 8px 24px rgba(234,88,12,0.3)' }}>
+              <div className="rounded-full overflow-hidden" style={{ background: '#0a0f1c' }}>
                 <UserAvatar avatar={opponent?.avatar} username={oppName} size={76} />
               </div>
             </div>
