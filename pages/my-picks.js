@@ -517,11 +517,12 @@ export default function MyPicksPage() {
   // chart (desktop only — hidden on mobile where there's no chart).
   const renderPicksList = () => (
     <div className="space-y-3 sm:space-y-4">
-      {/* Desktop-only hint so users discover the click-to-track
-          interaction. Hidden on mobile where there's no right rail. */}
+      {/* Hint so users discover the tap-to-track interaction. On desktop
+          the chart opens in the right rail; on mobile it expands inline
+          under the tapped pick — so the copy differs per breakpoint. */}
       {sortedBets.length > 1 && (
         <div
-          className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider"
           style={{
             background: p.hintBg,
             color: p.hintText,
@@ -529,7 +530,8 @@ export default function MyPicksPage() {
           }}
         >
           <span aria-hidden="true">👆</span>
-          <span>Tap any pick to track its live odds →</span>
+          <span className="hidden lg:inline">Tap any pick to track its live odds →</span>
+          <span className="lg:hidden">Tap any pick to track its live odds ↓</span>
         </div>
       )}
 
@@ -574,6 +576,39 @@ export default function MyPicksPage() {
               </div>
             )}
             <PiksBetCard bet={bet} compactHeader prominentHeader isBattleEnded={false} />
+
+            {/* Mobile inline tracker — the right rail is hidden on
+                phone/tablet, so the live-odds chart for the tapped pick
+                renders right here instead. stopPropagation keeps taps on
+                the chart's range controls / Open Game button from
+                re-triggering the card's select handler. */}
+            {isSelected && (
+              <div
+                className="lg:hidden px-3 pb-3 pt-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div
+                  className="rounded-xl overflow-hidden"
+                  style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}` }}
+                >
+                  <div
+                    className="flex items-center justify-between px-3 py-2"
+                    style={{ background: 'linear-gradient(90deg, rgba(34,211,238,0.16), rgba(59,130,246,0.10))', borderBottom: `1px solid ${p.softBorder}` }}
+                  >
+                    <span className="text-[10px] uppercase tracking-wider font-black" style={{ color: p.bodyText }}>Live Odds Tracker</span>
+                    <span
+                      className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(34,211,238,0.15)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.45)' }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22d3ee' }} />Live
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    {renderTrackingBody(bet)}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
@@ -620,128 +655,134 @@ export default function MyPicksPage() {
     );
   };
 
+  // Builds the tracking panel body (pick summary + live odds chart +
+  // open-game button) for a given bet. Shared by the desktop right rail
+  // AND the mobile inline tracker (rendered under the selected pick on
+  // phone/tablet, where the right rail is hidden) so both stay in sync.
+  const renderTrackingBody = (bet) => {
+    const { homeTeam: parsedHome, awayTeam: parsedAway } = parseMatchup(bet.matchup);
+    // `userBets` does NOT have a top-level gameId column — the real
+    // gameId is stashed inside `legs[]` JSONB at insert time (see
+    // pages/api/bets/place.js). Fall back through every reasonable
+    // location so the chart can fetch real history when available.
+    const firstLeg = Array.isArray(bet.legs) && bet.legs.length > 0 ? bet.legs[0] : null;
+    const gameId = bet.gameId || firstLeg?.gameId || null;
+    const homeTeam = bet.homeTeamFull || firstLeg?.homeTeamFull || parsedHome || 'Home';
+    const awayTeam = bet.awayTeamFull || firstLeg?.awayTeamFull || parsedAway || 'Away';
+    const isLive = !!(bet.isLive || bet.currentHomeScore != null);
+    // Any terminal status counts as final for chart-rendering purposes
+    // (stops the live-tail random walk).
+    const isFinal = ['won', 'lost', 'cashed_out', 'voided', 'pushed'].includes(bet.status);
+
+    // Synthesize a liveOdds pair from the bet's own American odds so the
+    // chart has an anchor to plot around even when the server has no
+    // captured history. Mirrors the picked side's implied probability to
+    // derive the opposite side's American moneyline. Without this the
+    // chart sat on a perpetual spinner because the synthesized history
+    // path requires a non-null anchor.
+    const derivedLiveOdds = (() => {
+      const oddsRaw = Number(bet.odds ?? firstLeg?.odds);
+      if (!Number.isFinite(oddsRaw) || oddsRaw === 0) return null;
+      const myImplied = oddsRaw > 0 ? 100 / (oddsRaw + 100) : -oddsRaw / (-oddsRaw + 100);
+      const oppImplied = Math.min(0.95, Math.max(0.05, 1 - myImplied));
+      const oppAmerican = oppImplied >= 0.5
+        ? Math.round(-(oppImplied / (1 - oppImplied)) * 100)
+        : Math.round(((1 - oppImplied) / oppImplied) * 100);
+      // Map "selection" to home or away by simple substring match on
+      // the team names. Falls back to treating selection as home.
+      const sel = String(bet.selection || '').toLowerCase();
+      const homeKey = String(homeTeam || '').toLowerCase().split(/\s+/)[0];
+      const awayKey = String(awayTeam || '').toLowerCase().split(/\s+/)[0];
+      const selectionIsAway = awayKey && sel.includes(awayKey);
+      const selectionIsHome = homeKey && sel.includes(homeKey) && !selectionIsAway;
+      if (selectionIsAway) return { home: oppAmerican, away: oddsRaw };
+      if (selectionIsHome) return { home: oddsRaw, away: oppAmerican };
+      // Couldn't match — default to picked-side-is-home so the chart
+      // still gets an anchor instead of spinning.
+      return { home: oddsRaw, away: oppAmerican };
+    })();
+
+    return (
+      <div className="space-y-4">
+        <div
+          className="rounded-xl px-3 py-2.5"
+          style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.3)' }}
+        >
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22d3ee' }} />
+            <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#22d3ee' }}>Tracking your pick</span>
+          </div>
+          <div className="text-base font-black truncate" style={{ color: p.bodyText }}>
+            {bet.selection || '—'}
+          </div>
+          <div className="text-[11px] truncate" style={{ color: p.mutedText }}>
+            {awayTeam} @ {homeTeam}
+          </div>
+        </div>
+
+        <OddsHistoryChart
+          gameId={gameId}
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          liveOdds={derivedLiveOdds}
+          commenceTime={bet.placedAt}
+          isLive={isLive}
+          isFinal={isFinal}
+        />
+
+        {gameId ? (
+          <Link
+            href={`/game/${encodeURIComponent(gameId)}`}
+            prefetch
+            className="block w-full text-center px-3 py-3 rounded-xl text-sm font-black uppercase tracking-wider"
+            style={{
+              background: 'linear-gradient(135deg,#2563eb,#3b82f6)',
+              color: '#ffffff',
+              border: `2.5px solid ${p.cartoonBorder}`,
+              boxShadow: p.hardShadow,
+            }}
+          >
+            Open Game →
+          </Link>
+        ) : (
+          // No gameId on this pick — disable the button instead of
+          // falling back to '/', which previously caused a flash back
+          // to the home page when the user expected the game summary.
+          <div
+            className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider cursor-not-allowed select-none"
+            style={{
+              background: p.disabledGameBg,
+              color: p.disabledGameText,
+              border: p.disabledGameBorder,
+            }}
+            title="Game summary not available for this pick"
+          >
+            Game Unavailable
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Empty-state explainer shown in the right rail before a pick is
+  // selected.
+  const trackingPlaceholder = (
+    <div className="text-center py-6">
+      <div className="text-3xl mb-2" aria-hidden="true">📈</div>
+      <div className="text-sm font-bold mb-1" style={{ color: p.bodyText }}>Live odds tracker</div>
+      <p className="text-xs" style={{ color: p.mutedText }}>
+        Place a pick and we'll plot how its odds move in real time
+        right here.
+      </p>
+    </div>
+  );
+
   // Right rail — live-odds chart for the currently selected pick's
   // game. Falls back to an explainer panel when nothing's selectable.
   const renderRightRail = () => {
     if (!matchup || !hasActiveMatchup) return null;
 
-    let panelBody;
-    if (!selectedBet) {
-      panelBody = (
-        <div className="text-center py-6">
-          <div className="text-3xl mb-2" aria-hidden="true">📈</div>
-          <div className="text-sm font-bold mb-1" style={{ color: p.bodyText }}>Live odds tracker</div>
-          <p className="text-xs" style={{ color: p.mutedText }}>
-            Place a pick and we'll plot how its odds move in real time
-            right here.
-          </p>
-        </div>
-      );
-    } else {
-      const { homeTeam: parsedHome, awayTeam: parsedAway } = parseMatchup(selectedBet.matchup);
-      // `userBets` does NOT have a top-level gameId column — the real
-      // gameId is stashed inside `legs[]` JSONB at insert time (see
-      // pages/api/bets/place.js). Fall back through every reasonable
-      // location so the chart can fetch real history when available.
-      const firstLeg = Array.isArray(selectedBet.legs) && selectedBet.legs.length > 0 ? selectedBet.legs[0] : null;
-      const gameId = selectedBet.gameId || firstLeg?.gameId || null;
-      const homeTeam = selectedBet.homeTeamFull || firstLeg?.homeTeamFull || parsedHome || 'Home';
-      const awayTeam = selectedBet.awayTeamFull || firstLeg?.awayTeamFull || parsedAway || 'Away';
-      const isLive = !!(selectedBet.isLive || selectedBet.currentHomeScore != null);
-      // Any terminal status counts as final for chart-rendering purposes
-      // (stops the live-tail random walk).
-      const isFinal = ['won', 'lost', 'cashed_out', 'voided', 'pushed'].includes(selectedBet.status);
-
-      // Synthesize a liveOdds pair from the bet's own American odds so
-      // the chart has an anchor to plot around even when the server has
-      // no captured history. Mirrors the picked side's implied
-      // probability to derive the opposite side's American moneyline.
-      // Without this the chart sat on a perpetual spinner because the
-      // synthesized history path requires a non-null anchor.
-      const derivedLiveOdds = (() => {
-        const oddsRaw = Number(selectedBet.odds ?? firstLeg?.odds);
-        if (!Number.isFinite(oddsRaw) || oddsRaw === 0) return null;
-        const myImplied = oddsRaw > 0 ? 100 / (oddsRaw + 100) : -oddsRaw / (-oddsRaw + 100);
-        const oppImplied = Math.min(0.95, Math.max(0.05, 1 - myImplied));
-        const oppAmerican = oppImplied >= 0.5
-          ? Math.round(-(oppImplied / (1 - oppImplied)) * 100)
-          : Math.round(((1 - oppImplied) / oppImplied) * 100);
-        // Map "selection" to home or away by simple substring match on
-        // the team names. Falls back to treating selection as home.
-        const sel = String(selectedBet.selection || '').toLowerCase();
-        const homeKey = String(homeTeam || '').toLowerCase().split(/\s+/)[0];
-        const awayKey = String(awayTeam || '').toLowerCase().split(/\s+/)[0];
-        const selectionIsAway = awayKey && sel.includes(awayKey);
-        const selectionIsHome = homeKey && sel.includes(homeKey) && !selectionIsAway;
-        if (selectionIsAway) return { home: oppAmerican, away: oddsRaw };
-        if (selectionIsHome) return { home: oddsRaw, away: oppAmerican };
-        // Couldn't match — default to picked-side-is-home so the chart
-        // still gets an anchor instead of spinning.
-        return { home: oddsRaw, away: oppAmerican };
-      })();
-
-      panelBody = (
-        <div className="space-y-4">
-          <div
-            className="rounded-xl px-3 py-2.5"
-            style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.3)' }}
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22d3ee' }} />
-              <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#22d3ee' }}>Tracking your pick</span>
-            </div>
-            <div className="text-base font-black truncate" style={{ color: p.bodyText }}>
-              {selectedBet.selection || '—'}
-            </div>
-            <div className="text-[11px] truncate" style={{ color: p.mutedText }}>
-              {awayTeam} @ {homeTeam}
-            </div>
-          </div>
-
-          <OddsHistoryChart
-            gameId={gameId}
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-            liveOdds={derivedLiveOdds}
-            commenceTime={selectedBet.placedAt}
-            isLive={isLive}
-            isFinal={isFinal}
-          />
-
-          {gameId ? (
-            <Link
-              href={`/game/${encodeURIComponent(gameId)}`}
-              prefetch
-              className="block w-full text-center px-3 py-3 rounded-xl text-sm font-black uppercase tracking-wider"
-              style={{
-                background: 'linear-gradient(135deg,#2563eb,#3b82f6)',
-                color: '#ffffff',
-                border: `2.5px solid ${p.cartoonBorder}`,
-                boxShadow: p.hardShadow,
-              }}
-            >
-              Open Game →
-            </Link>
-          ) : (
-            // No gameId on this pick — disable the button instead of
-            // falling back to '/', which previously caused a flash
-            // back to the home page when the user expected the game
-            // summary.
-            <div
-              className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider cursor-not-allowed select-none"
-              style={{
-                background: p.disabledGameBg,
-                color: p.disabledGameText,
-                border: p.disabledGameBorder,
-              }}
-              title="Game summary not available for this pick"
-            >
-              Game Unavailable
-            </div>
-          )}
-        </div>
-      );
-    }
+    const panelBody = selectedBet ? renderTrackingBody(selectedBet) : trackingPlaceholder;
 
     return (
       <aside className="hidden lg:block lg:col-span-4">
