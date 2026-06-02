@@ -848,11 +848,14 @@ button.no-hover-effect.rounded-lg:focus-visible {
 }
 @media (min-width: 1024px) {
   .topnav-pikslip {
-    margin-right: 50px !important;
-    /* Desktop is intentionally NOT shifted: the user account
-       cluster (avatar / login buttons) sits immediately to the
-       right of Pik Slip in the lg+ layout, so any rightward
-       offset here would overlap that cluster. */
+    /* Tight gap to the avatar. The desktop right cluster shrinks to
+       fit and is anchored to the page's right edge, so a large
+       trailing margin here widened the whole cluster and pushed its
+       LEFT edge (the Crowns / Clash Coins pills) leftward until they
+       crowded the centered "My Piks" control. The avatar div already
+       carries ml-4 (16px), so a small margin keeps a clean ~20px gap
+       while pulling the Pik Slip closer to the profile image. */
+    margin-right: 4px !important;
     right: 0;
   }
 }
