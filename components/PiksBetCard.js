@@ -4,6 +4,7 @@ import TeamLogo, { SelectionLogos } from './TeamLogo';
 import { formatMoney } from '../utils/formatMoney';
 import { calculatePayout } from '../utils/odds';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false, prominentHeader = false, isBattleEnded = false }) {
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
@@ -45,6 +46,27 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
   }, [confirmingCashOut]);
 
   const { formatOdds } = useUserPreferences();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const c = isLight ? {
+    cardSurface: '#ffffff',
+    innerSurface: '#f0ebe1',
+    bodyText: '#0f172a',
+    mutedText: '#64748b',
+    faintText: '#94a3b8',
+    divider: 'rgba(15,23,42,0.10)',
+    posGreen: '#059669',
+    coinGlyph: '#0f172a',
+  } : {
+    cardSurface: '#0a0a0a',
+    innerSurface: '#1a1a1a',
+    bodyText: '#ffffff',
+    mutedText: '#9ca3af',
+    faintText: '#6b7280',
+    divider: 'rgba(55, 65, 81, 0.5)',
+    posGreen: '#34d399',
+    coinGlyph: '#ffffff',
+  };
 
 
   // Capitalize league identifiers like (w) -> (W), (m) -> (M)
@@ -345,29 +367,29 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
       <div className="flex justify-between items-center text-sm">
         <div className="flex items-center gap-2 min-w-0">
           <TeamLogo name={homeTeam} sport={bet.sport || bet.sportName} size={18} />
-          <span className="truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{homeTeam}</span>
+          <span className="truncate" style={{ color: isLight ? c.bodyText : 'rgba(255,255,255,0.9)' }}>{homeTeam}</span>
         </div>
         <div className="flex items-center space-x-2 flex-shrink-0">
           {homeQuarters && homeQuarters.length > 0 && (
-            <div className="flex space-x-1.5 text-gray-400 text-xs">
+            <div className="flex space-x-1.5 text-xs" style={{ color: c.mutedText }}>
               {homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
             </div>
           )}
-          <span className="text-white font-bold ml-2">{homeScore}</span>
+          <span className="font-bold ml-2" style={{ color: c.bodyText }}>{homeScore}</span>
         </div>
       </div>
       <div className="flex justify-between items-center text-sm">
         <div className="flex items-center gap-2 min-w-0">
           <TeamLogo name={awayTeam} sport={bet.sport || bet.sportName} size={18} />
-          <span className="truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{awayTeam}</span>
+          <span className="truncate" style={{ color: isLight ? c.bodyText : 'rgba(255,255,255,0.9)' }}>{awayTeam}</span>
         </div>
         <div className="flex items-center space-x-2 flex-shrink-0">
           {awayQuarters && awayQuarters.length > 0 && (
-            <div className="flex space-x-1.5 text-gray-400 text-xs">
+            <div className="flex space-x-1.5 text-xs" style={{ color: c.mutedText }}>
               {awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
             </div>
           )}
-          <span className="text-white font-bold ml-2">{awayScore}</span>
+          <span className="font-bold ml-2" style={{ color: c.bodyText }}>{awayScore}</span>
         </div>
       </div>
     </div>
@@ -380,7 +402,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
   };
 
   const getCardStyle = () => {
-    const baseStyle = { backgroundColor: '#0a0a0a' };
+    const baseStyle = { backgroundColor: c.cardSurface };
     const shadow = '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)';
     if (isOpponent) {
       return {
@@ -392,7 +414,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
     if (isWon) return { ...baseStyle, boxShadow: shadow };
     return {
       ...baseStyle,
-      border: '1px solid #4b5563',
+      border: isLight ? `1px solid ${c.divider}` : '1px solid #4b5563',
       boxShadow: shadow
     };
   };
@@ -464,22 +486,23 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
             )}
             <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <div className="font-bold text-base truncate" style={{ color: '#ffffff' }}>{isParlay ? formatParlayTitle : getFullSelectionName()}</div>
+              <div className="font-bold text-base truncate" style={{ color: c.bodyText }}>{isParlay ? formatParlayTitle : getFullSelectionName()}</div>
               {isParlay && isSettled && (
                 <svg 
-                  className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                  className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
+                  style={{ color: c.mutedText }}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               )}
             </div>
-            <div className="text-xs uppercase tracking-wide whitespace-nowrap" style={{ color: '#9ca3af' }}>{bet.betType}</div>
+            <div className="text-xs uppercase tracking-wide whitespace-nowrap" style={{ color: c.mutedText }}>{bet.betType}</div>
             </div>
           </div>
-          <div className="font-bold text-xl" style={{ color: '#ffffff' }}>
+          <div className="font-bold text-xl" style={{ color: c.bodyText }}>
             {formatOdds(bet.odds)}
           </div>
         </div>
@@ -501,7 +524,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
         )}
 
         {isParlay && isSettled && isExpanded && parlayLegs.legs.length > 0 && (
-          <div className="mb-3 space-y-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="mb-3 space-y-4 pt-3" style={{ borderTop: `1px solid ${isLight ? c.divider : 'rgba(255,255,255,0.1)'}` }}>
             {parlayLegs.legs.map((leg, index) => {
               const legScores = generateScoresForLeg(leg, index);
               const legTeams = getTeamNamesForLeg(leg, index);
@@ -520,14 +543,14 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                         />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-white font-bold text-base truncate">{capitalizeLeagueId(leg.selection)}</div>
-                        <div className="text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">
+                        <div className="font-bold text-base truncate" style={{ color: c.bodyText }}>{capitalizeLeagueId(leg.selection)}</div>
+                        <div className="text-xs uppercase tracking-wide whitespace-nowrap" style={{ color: c.mutedText }}>
                           {leg.betType || 'Moneyline'}
                         </div>
                       </div>
                     </div>
                     {parlayLegs.hasRealData && leg.odds && (
-                      <div className="text-white font-bold text-lg">
+                      <div className="font-bold text-lg" style={{ color: c.bodyText }}>
                         {formatOdds(leg.odds)}
                       </div>
                     )}
@@ -536,25 +559,25 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2 min-w-0">
                         <TeamLogo name={legTeams.homeTeam} sport={leg.sport || leg.sportName || bet.sport || bet.sportName} size={18} />
-                        <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.homeTeam)}</span>
+                        <span className="text-sm truncate" style={{ color: isLight ? c.bodyText : 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.homeTeam)}</span>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="flex gap-2 text-gray-400 text-sm">
+                        <div className="flex gap-2 text-sm" style={{ color: c.mutedText }}>
                           {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
                         </div>
-                        <span className={`font-bold text-lg w-8 text-right ${winHighlight.home ? 'text-green-400' : 'text-white'}`}>{legScores.homeScore}</span>
+                        <span className={`font-bold text-lg w-8 text-right ${winHighlight.home ? 'text-green-400' : 'text-white'}`} style={{ color: isLight ? (winHighlight.home ? c.posGreen : c.bodyText) : undefined }}>{legScores.homeScore}</span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2 min-w-0">
                         <TeamLogo name={legTeams.awayTeam} sport={leg.sport || leg.sportName || bet.sport || bet.sportName} size={18} />
-                        <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.awayTeam)}</span>
+                        <span className="text-sm truncate" style={{ color: isLight ? c.bodyText : 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.awayTeam)}</span>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="flex gap-2 text-gray-400 text-sm">
+                        <div className="flex gap-2 text-sm" style={{ color: c.mutedText }}>
                           {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
                         </div>
-                        <span className={`font-bold text-lg w-8 text-right ${winHighlight.away ? 'text-green-400' : 'text-white'}`}>{legScores.awayScore}</span>
+                        <span className={`font-bold text-lg w-8 text-right ${winHighlight.away ? 'text-green-400' : 'text-white'}`} style={{ color: isLight ? (winHighlight.away ? c.posGreen : c.bodyText) : undefined }}>{legScores.awayScore}</span>
                       </div>
                     </div>
                   </div>
@@ -588,28 +611,28 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                 )}
               </div>
             ) : (
-              <div className="text-xs uppercase mb-1" style={{ color: '#9ca3af' }}>Game</div>
+              <div className="text-xs uppercase mb-1" style={{ color: c.mutedText }}>Game</div>
             )}
             {isLiveGame && typeof currentHomeScore === 'number' ? (
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 min-w-0">
                     <TeamLogo name={bet.awayTeamFull || bet.matchup?.split(' @ ')[0]} sport={bet.sport || bet.sportName} size={18} />
-                    <span className="text-sm font-medium truncate" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.matchup?.split(' @ ')[0])}</span>
+                    <span className="text-sm font-medium truncate" style={{ color: c.bodyText }}>{capitalizeLeagueId(bet.awayTeamFull || bet.matchup?.split(' @ ')[0])}</span>
                   </div>
-                  <span className="text-white font-bold flex-shrink-0 ml-2">{currentAwayScore}</span>
+                  <span className="font-bold flex-shrink-0 ml-2" style={{ color: c.bodyText }}>{currentAwayScore}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 min-w-0">
                     <TeamLogo name={bet.homeTeamFull || bet.matchup?.split(' @ ')[1]} sport={bet.sport || bet.sportName} size={18} />
-                    <span className="text-sm font-medium truncate" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.matchup?.split(' @ ')[1])}</span>
+                    <span className="text-sm font-medium truncate" style={{ color: c.bodyText }}>{capitalizeLeagueId(bet.homeTeamFull || bet.matchup?.split(' @ ')[1])}</span>
                   </div>
-                  <span className="text-white font-bold flex-shrink-0 ml-2">{currentHomeScore}</span>
+                  <span className="font-bold flex-shrink-0 ml-2" style={{ color: c.bodyText }}>{currentHomeScore}</span>
                 </div>
               </div>
             ) : (
               <>
-                <div className="text-sm font-medium" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.matchup)}</div>
+                <div className="text-sm font-medium" style={{ color: c.bodyText }}>{capitalizeLeagueId(bet.matchup)}</div>
                 <div className="text-xs mt-0.5" style={{ color: '#93c5fd' }}>
                   {bet.gameStart ? new Date(bet.gameStart).toLocaleString('en-US', {
                     month: 'short',
@@ -631,7 +654,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
               onClick={() => setIsExpanded(!isExpanded)}
             >
               <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-xs uppercase">
+                <span className="text-xs uppercase" style={{ color: c.mutedText }}>
                   {parlayLegs.legs.length} Games
                 </span>
                 {parlayLegs.legs.some(leg => leg.isLive) && (
@@ -642,10 +665,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                 )}
               </div>
               <svg 
-                className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
+                style={{ color: c.mutedText }}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -687,20 +711,20 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <div className="text-white font-bold text-base truncate">{capitalizeLeagueId(getFullSelection())}</div>
+                              <div className="font-bold text-base truncate" style={{ color: c.bodyText }}>{capitalizeLeagueId(getFullSelection())}</div>
                               {isLegCompleted && (
                                 <span className={`text-xs font-bold px-2 py-0.5 rounded ${legWon ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                                   {legWon ? 'WON' : 'LOST'}
                                 </span>
                               )}
                             </div>
-                            <div className="text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">
+                            <div className="text-xs uppercase tracking-wide whitespace-nowrap" style={{ color: c.mutedText }}>
                               {leg.betType || 'Moneyline'}
                             </div>
                           </div>
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
-                          <div className="font-bold text-lg" style={{ color: '#ffffff' }}>
+                          <div className="font-bold text-lg" style={{ color: c.bodyText }}>
                             {formatOdds(leg.odds)}
                           </div>
                         )}
@@ -709,28 +733,28 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2 min-w-0">
                             <TeamLogo name={leg.homeTeamFull || legTeams.homeTeam} sport={leg.sport || leg.sportName || bet.sport || bet.sportName} size={18} />
-                            <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.homeTeamFull || legTeams.homeTeam)}</span>
+                            <span className="text-sm truncate" style={{ color: isLight ? c.bodyText : 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.homeTeamFull || legTeams.homeTeam)}</span>
                           </div>
                           {(isLegLive || hasScores) ? (
-                            <span className="text-white font-bold flex-shrink-0 ml-2">{leg.homeScore}</span>
+                            <span className="font-bold flex-shrink-0 ml-2" style={{ color: c.bodyText }}>{leg.homeScore}</span>
                           ) : (
-                            <span className="text-gray-500 text-xs flex-shrink-0 ml-2">-</span>
+                            <span className="text-xs flex-shrink-0 ml-2" style={{ color: c.mutedText }}>-</span>
                           )}
                         </div>
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2 min-w-0">
                             <TeamLogo name={leg.awayTeamFull || legTeams.awayTeam} sport={leg.sport || leg.sportName || bet.sport || bet.sportName} size={18} />
-                            <span className="text-sm truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.awayTeamFull || legTeams.awayTeam)}</span>
+                            <span className="text-sm truncate" style={{ color: isLight ? c.bodyText : 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.awayTeamFull || legTeams.awayTeam)}</span>
                           </div>
                           {(isLegLive || hasScores) ? (
-                            <span className="text-white font-bold flex-shrink-0 ml-2">{leg.awayScore}</span>
+                            <span className="font-bold flex-shrink-0 ml-2" style={{ color: c.bodyText }}>{leg.awayScore}</span>
                           ) : (
-                            <span className="text-gray-500 text-xs flex-shrink-0 ml-2">-</span>
+                            <span className="text-xs flex-shrink-0 ml-2" style={{ color: c.mutedText }}>-</span>
                           )}
                         </div>
                       </div>
                       {isLegCompleted && (
-                        <div className="text-gray-400 text-xs mt-1.5">FINAL</div>
+                        <div className="text-xs mt-1.5" style={{ color: c.mutedText }}>FINAL</div>
                       )}
                       {!isLegLive && !isLegCompleted && leg.gameStart && (
                         <div className="text-blue-300 text-xs mt-1.5">
@@ -759,11 +783,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
 
         {progressData && (
           <div className="mb-3">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <div className="flex justify-between text-xs mb-1" style={{ color: c.mutedText }}>
               <span>Current: {progressData.currentTotal}</span>
               <span>Target: {progressData.target}</span>
             </div>
-            <div className="h-2 bg-black/40 rounded-full overflow-hidden">
+            <div className="h-2 bg-black/40 rounded-full overflow-hidden" style={{ background: isLight ? c.innerSurface : undefined }}>
               <div 
                 className={`h-full rounded-full transition-all duration-500 ${
                   bet.selection?.toLowerCase().includes('over') 
@@ -776,40 +800,40 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
           </div>
         )}
 
-        <div className="pt-3 mt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+        <div className="pt-3 mt-2" style={{ borderTop: `1px solid ${isLight ? c.divider : 'rgba(255,255,255,0.2)'}` }}>
           <div className="flex justify-between items-end">
             <div>
-              <div className="font-bold text-xl flex items-center gap-1" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>⚔</span>{formatMoney(bet.stake || 0)}</div>
-              <div className="text-xs uppercase" style={{ color: '#9ca3af' }}>Total Pikked</div>
+              <div className="font-bold text-xl flex items-center gap-1" style={{ color: c.coinGlyph }}><span style={{ color: c.coinGlyph }}>⚔</span>{formatMoney(bet.stake || 0)}</div>
+              <div className="text-xs uppercase" style={{ color: c.mutedText }}>Total Pikked</div>
             </div>
             {isWon && (
               <div className="text-right">
-                <div className="text-green-400 font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#ffffff' }}>⚔</span>{formatMoney(payout)}</div>
-                <div className="text-green-400/80 text-xs uppercase">Won on Piks</div>
+                <div className="text-green-400 font-bold text-xl flex items-center justify-end gap-1" style={{ color: isLight ? c.posGreen : undefined }}><span style={{ color: c.coinGlyph }}>⚔</span>{formatMoney(payout)}</div>
+                <div className="text-green-400/80 text-xs uppercase" style={{ color: isLight ? c.posGreen : undefined }}>Won on Piks</div>
               </div>
             )}
             {isOpen && (
               <div className="text-right">
-                <div className="font-bold text-xl flex items-center justify-end gap-1" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>⚔</span>{formatMoney(payout)}</div>
-                <div className="text-gray-400 text-xs uppercase">Potential Payout</div>
+                <div className="font-bold text-xl flex items-center justify-end gap-1" style={{ color: c.coinGlyph }}><span style={{ color: c.coinGlyph }}>⚔</span>{formatMoney(payout)}</div>
+                <div className="text-xs uppercase" style={{ color: c.mutedText }}>Potential Payout</div>
               </div>
             )}
             {isLost && (
               <div className="text-right">
-                <div className="text-gray-400 font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#ffffff' }}>⚔</span>0</div>
-                <div className="text-gray-500 text-xs uppercase">Payout</div>
+                <div className="font-bold text-xl flex items-center justify-end gap-1" style={{ color: c.mutedText }}><span style={{ color: c.coinGlyph }}>⚔</span>0</div>
+                <div className="text-xs uppercase" style={{ color: c.mutedText }}>Payout</div>
               </div>
             )}
             {isCashedOut && (
               <div className="text-right">
-                <div className="text-[#E9762B] font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: '#ffffff' }}>⚔</span>{formatMoney(bet.stake * 0.8)}</div>
+                <div className="text-[#E9762B] font-bold text-xl flex items-center justify-end gap-1"><span style={{ color: c.coinGlyph }}>⚔</span>{formatMoney(bet.stake * 0.8)}</div>
                 <div className="text-[#E9762B]/80 text-xs uppercase">Cashed Out</div>
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-3 text-[10px] text-gray-500">
+        <div className="flex justify-between items-center mt-3 text-[10px]" style={{ color: c.mutedText }}>
           <div className="font-mono">PIK ID: {pikId}</div>
           <div>PLACED: {formatPlacedDate()}</div>
         </div>
@@ -866,9 +890,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
             onClick={() => onShare(bet)}
             className="w-full mt-3 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
             style={{
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              color: '#ffffff'
+              backgroundColor: isLight ? c.innerSurface : 'rgba(255,255,255,0.1)',
+              border: `1px solid ${isLight ? c.divider : 'rgba(255,255,255,0.3)'}`,
+              color: c.bodyText
             }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
