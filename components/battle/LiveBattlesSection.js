@@ -226,8 +226,8 @@ function PickPill({ pick, compact = false }) {
         >
           {pick.odds}
         </span>
-        <span style={{ color: 'rgba(148,163,184,0.7)', fontSize: compact ? '9px' : '10px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-          ${pick.amount}
+        <span style={{ color: '#fb923c', fontSize: compact ? '9px' : '10px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+          <span aria-hidden="true">⚔</span> {pick.amount}
         </span>
       </div>
     </div>
@@ -675,8 +675,8 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                                       >
                                         {pick.odds || '—'}
                                       </span>
-                                      <span className="text-[9px] text-gray-500 tabular-nums leading-tight">
-                                        ${Number(pick.amount || 0).toFixed(0)}
+                                      <span className="text-[9px] tabular-nums leading-tight inline-flex items-center gap-0.5" style={{ color: '#fb923c' }}>
+                                        <span aria-hidden="true">⚔</span>{Number(pick.amount || 0).toFixed(0)}
                                       </span>
                                     </div>
                                   </div>
@@ -691,8 +691,8 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                             <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">
                               Total wagered
                             </span>
-                            <span className="text-[12px] font-black text-white tabular-nums">
-                              ${totalStake.toFixed(0)}
+                            <span className="text-[12px] font-black tabular-nums inline-flex items-center gap-1" style={{ color: '#fb923c' }}>
+                              <span aria-hidden="true">⚔</span>{totalStake.toFixed(0)}
                             </span>
                           </div>
                         </div>
@@ -1825,6 +1825,15 @@ function YouVsCard({
         haptic.tap();
         router.push('/battle?openChooser=1');
       }
+      return;
+    }
+    // Active matchups open the full overview modal (a portal with Open
+    // Battle + forfeit + opponent/balances) rather than the inline expand.
+    // Inside the Featured Battles carousel the inline expand grows the card
+    // height, but the row clips overflow — so the preview / Open Battle /
+    // forfeit controls render but stay hidden ("nothing happens" on tap).
+    if (isActive && matchup?.id) {
+      handleNavigate();
       return;
     }
     if (onToggle) onToggle();
