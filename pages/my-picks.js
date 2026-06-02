@@ -664,16 +664,16 @@ export default function MyPicksPage() {
         {/* Pick summary card */}
         <div className="px-5 py-4">
           <div className="grid grid-cols-3 rounded-xl overflow-hidden" style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}` }}>
-            <div className="text-center py-3 px-1">
-              <div className="text-[8px] uppercase tracking-wider font-bold mb-1" style={{ color: p.faintText }}>Total Picked</div>
+            <div className="flex flex-col items-center justify-center text-center py-3 px-1">
+              <div className="text-[8px] uppercase tracking-wider font-bold mb-1 leading-tight min-h-[20px] flex items-center justify-center" style={{ color: p.faintText }}>Total Picked</div>
               <div className="text-sm font-black inline-flex items-center gap-1" style={{ color: p.bodyText }}><Coin />{formatMoney(bet.stake, 2)}</div>
             </div>
-            <div className="text-center py-3 px-1" style={{ borderLeft: `1px solid ${p.softBorder}`, borderRight: `1px solid ${p.softBorder}` }}>
-              <div className="text-[8px] uppercase tracking-wider font-bold mb-1" style={{ color: p.faintText }}>Odds</div>
+            <div className="flex flex-col items-center justify-center text-center py-3 px-1" style={{ borderLeft: `1px solid ${p.softBorder}`, borderRight: `1px solid ${p.softBorder}` }}>
+              <div className="text-[8px] uppercase tracking-wider font-bold mb-1 leading-tight min-h-[20px] flex items-center justify-center" style={{ color: p.faintText }}>Odds</div>
               <div className="text-sm font-black" style={{ color: p.bodyText }}>{formatOdds(bet.odds)}</div>
             </div>
-            <div className="text-center py-3 px-1">
-              <div className="text-[8px] uppercase tracking-wider font-bold mb-1" style={{ color: p.faintText }}>Potential Payout</div>
+            <div className="flex flex-col items-center justify-center text-center py-3 px-1">
+              <div className="text-[8px] uppercase tracking-wider font-bold mb-1 leading-tight min-h-[20px] flex items-center justify-center" style={{ color: p.faintText }}>Potential Payout</div>
               <div className="text-sm font-black inline-flex items-center gap-1" style={{ color: '#34d399' }}><Coin color="#34d399" />{formatMoney(betPayout(bet), 2)}</div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import UserAvatar from '../UserAvatar';
 import TeamLogo from '../TeamLogo';
 import { useUserPreview } from '../../contexts/UserPreviewContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Quick-challenge popup — lazy so the battle-flow bundle only loads when a
 // user actually challenges someone from the search results.
@@ -33,6 +34,14 @@ export default function DesktopGlobalSearch() {
   const [requestedIds, setRequestedIds] = useState(() => new Set());
   const sessionUser = session?.user || null;
   const { openMessage } = useUserPreview();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  // Theme-aware surface/text so the bar isn't a black box on the light page.
+  const BAR_BG = isLight ? '#f1f5f9' : '#0d0d0d';
+  const BAR_BORDER = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.08)';
+  const PANEL_BG = isLight ? '#ffffff' : '#0a0a0a';
+  const PANEL_BORDER = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.1)';
+  const TXT = isLight ? '#0f172a' : '#f5f5f5';
   const containerRef = useRef(null);
   const inputRef = useRef(null);
   const gamesCacheRef = useRef(null);
@@ -206,8 +215,8 @@ export default function DesktopGlobalSearch() {
       <div
         className="flex items-center gap-2 rounded-full px-4 h-10 transition-colors"
         style={{
-          backgroundColor: '#0d0d0d',
-          border: `1px solid ${open ? 'rgba(59,130,246,0.55)' : 'rgba(255,255,255,0.08)'}`,
+          backgroundColor: BAR_BG,
+          border: `1px solid ${open ? 'rgba(59,130,246,0.55)' : BAR_BORDER}`,
           boxShadow: open ? '0 0 0 3px rgba(59,130,246,0.12)' : 'none',
         }}
       >
@@ -229,7 +238,7 @@ export default function DesktopGlobalSearch() {
           }}
           placeholder="Search players, teams, games…"
           className="flex-1 bg-transparent text-sm focus:outline-none"
-          style={{ color: '#f5f5f5' }}
+          style={{ color: TXT }}
           aria-label="Search players and games"
         />
         {query && (
@@ -253,9 +262,9 @@ export default function DesktopGlobalSearch() {
         <div
           className="absolute left-0 right-0 mt-2 rounded-xl overflow-hidden z-50"
           style={{
-            backgroundColor: '#0a0a0a',
-            border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+            backgroundColor: PANEL_BG,
+            border: `1px solid ${PANEL_BORDER}`,
+            boxShadow: isLight ? '0 12px 40px rgba(15,23,42,0.18)' : '0 12px 40px rgba(0,0,0,0.6)',
             maxHeight: '70vh',
             overflowY: 'auto',
           }}
@@ -290,7 +299,7 @@ export default function DesktopGlobalSearch() {
                         <UserAvatar user={{ id: p.id, username: p.username, avatar: p.avatar }} size={32} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold truncate" style={{ color: '#f5f5f5' }}>
+                        <span className="block text-sm font-semibold truncate" style={{ color: TXT }}>
                           {p.username}
                         </span>
                         {(p.battleWins != null || p.battleLosses != null) && (
@@ -395,14 +404,14 @@ export default function DesktopGlobalSearch() {
                         <TeamLogo name={g.awayTeam || g.away_team || g.away} sport={g.sport} size={22} />
                         <span
                           className="min-w-0 flex-1 text-[13px] truncate"
-                          style={{ color: '#f5f5f5', fontWeight: awayWins ? 800 : 600, opacity: final && !awayWins ? 0.6 : 1 }}
+                          style={{ color: TXT, fontWeight: awayWins ? 800 : 600, opacity: final && !awayWins ? 0.6 : 1 }}
                         >
                           {awayName(g)}
                         </span>
                         {showScore && (
                           <span
                             className="text-[13px] tabular-nums"
-                            style={{ color: '#f5f5f5', fontWeight: awayWins ? 800 : 700, opacity: final && !awayWins ? 0.6 : 1 }}
+                            style={{ color: TXT, fontWeight: awayWins ? 800 : 700, opacity: final && !awayWins ? 0.6 : 1 }}
                           >
                             {Number.isFinite(as) ? as : '–'}
                           </span>
@@ -413,14 +422,14 @@ export default function DesktopGlobalSearch() {
                         <TeamLogo name={g.homeTeam || g.home_team || g.home} sport={g.sport} size={22} />
                         <span
                           className="min-w-0 flex-1 text-[13px] truncate"
-                          style={{ color: '#f5f5f5', fontWeight: homeWins ? 800 : 600, opacity: final && !homeWins ? 0.6 : 1 }}
+                          style={{ color: TXT, fontWeight: homeWins ? 800 : 600, opacity: final && !homeWins ? 0.6 : 1 }}
                         >
                           {homeName(g)}
                         </span>
                         {showScore && (
                           <span
                             className="text-[13px] tabular-nums"
-                            style={{ color: '#f5f5f5', fontWeight: homeWins ? 800 : 700, opacity: final && !homeWins ? 0.6 : 1 }}
+                            style={{ color: TXT, fontWeight: homeWins ? 800 : 700, opacity: final && !homeWins ? 0.6 : 1 }}
                           >
                             {Number.isFinite(hs) ? hs : '–'}
                           </span>

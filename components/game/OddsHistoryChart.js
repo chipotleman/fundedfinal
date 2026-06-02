@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getTeamColor, inkFor } from '../../utils/teamColors';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Kalshi-style live odds chart. Plots de-vigged implied win probability for
 // the home and away teams over time. The away team draws in a theme-neutral
@@ -16,12 +17,8 @@ const RANGES = [
   { key: 'ALL', label: 'ALL' },
 ];
 
-// Away team = neutral. The chart surface is always dark (#0d0d0d) regardless of
-// the page theme, so the away color is a fixed light value (not the themed
-// --team-neutral var, which would render dark-on-dark in light mode).
-const AWAY_COLOR = '#ffffff';
-// Ink for content placed on a neutral (white) chip/badge.
-const AWAY_INK = '#0a0a0a';
+// Cartoon shell border + hard shadow. Theme-independent — the black outline
+// reads well on both the dark and the light panel surface.
 const BORDER = '#0a0a0a';
 const SHADOW = '4px 4px 0 0 #0a0a0a';
 
@@ -62,6 +59,25 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   // for the legend won't match the color map and would fall back to blue.
   const HOME_COLOR = getTeamColor(homeTeamFull || homeTeam, sport) || '#3b82f6';
   const HOME_INK = inkFor(HOME_COLOR);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  // Away team = the theme-neutral line: near-black on the light panel, white on
+  // the dark panel. AWAY_INK is the contrasting ink for content on the away chip.
+  const AWAY_COLOR = isLight ? '#0a0a0a' : '#ffffff';
+  const AWAY_INK = isLight ? '#ffffff' : '#0a0a0a';
+  // Surface + axis colors that flip with the page theme so the chart never
+  // renders dark-on-dark (or a black panel on the light page).
+  const PANEL_BG = isLight ? '#ffffff' : '#0d0d0d';
+  const GRID_MID = isLight ? '#cbd5e1' : '#27272a';
+  const GRID_LINE = isLight ? '#e2e8f0' : '#1a1a1a';
+  const AXIS_TEXT = isLight ? '#64748b' : '#71717a';
+  const PCT_TEXT = isLight ? '#94a3b8' : '#52525b';
+  const PILL_BG = isLight ? '#f1f5f9' : '#0d0d0d';
+  const PILL_TEXT = isLight ? '#475569' : '#cbd5e1';
+  const EMPTY_TITLE = isLight ? '#334155' : '#d1d5db';
+  const EMPTY_BODY = isLight ? '#64748b' : '#6b7280';
+  const TOOLTIP_BG = isLight ? '#ffffff' : '#0a0a0a';
+  const TOOLTIP_TEXT = isLight ? '#0f172a' : '#e5e7eb';
   const [range, setRange] = useState('1H');
   const [data, setData] = useState({ points: [], openedAt: null, current: null });
   const [loading, setLoading] = useState(true);
@@ -474,8 +490,8 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
             onClick={() => setRange(r.key)}
             className="px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider rounded-md transition-transform active:translate-y-[1px]"
             style={{
-              background: active ? HOME_COLOR : '#0d0d0d',
-              color: active ? HOME_INK : '#cbd5e1',
+              background: active ? HOME_COLOR : PILL_BG,
+              color: active ? HOME_INK : PILL_TEXT,
               border: `2px solid ${BORDER}`,
               boxShadow: active ? '2px 2px 0 0 #0a0a0a' : '2px 2px 0 0 #0a0a0a',
             }}
@@ -490,8 +506,8 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   const emptyState = (
     <div className="flex flex-col items-center justify-center text-center" style={{ height: 184 }}>
       <div className="text-3xl mb-1">📈</div>
-      <div className="text-sm font-bold text-gray-300">Tracking odds…</div>
-      <div className="text-xs text-gray-500 mt-1 max-w-[260px]">
+      <div className="text-sm font-bold" style={{ color: EMPTY_TITLE }}>Tracking odds…</div>
+      <div className="text-xs mt-1 max-w-[260px]" style={{ color: EMPTY_BODY }}>
         We just started capturing this market. Check back in a few minutes to see how the line moves.
       </div>
     </div>
@@ -502,7 +518,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
       ref={wrapRef}
       className="rounded-xl p-3 sm:p-4"
       style={{
-        background: '#0d0d0d',
+        background: PANEL_BG,
         border: `2.5px solid ${BORDER}`,
         boxShadow: SHADOW,
       }}
@@ -534,7 +550,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
                 x2={PAD_L + plotW}
                 y1={yOf(p)}
                 y2={yOf(p)}
-                stroke={p === 0.5 ? '#27272a' : '#1a1a1a'}
+                stroke={p === 0.5 ? GRID_MID : GRID_LINE}
                 strokeDasharray={p === 0.5 ? '4 4' : ''}
                 strokeWidth="1"
               />
@@ -545,7 +561,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
                 x={PAD_L + plotW + 6}
                 y={yOf(p) + 4}
                 fontSize="11"
-                fill="#52525b"
+                fill={PCT_TEXT}
                 fontWeight="600"
               >
                 {Math.round(p * 100)}%
@@ -553,13 +569,13 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
             ))}
 
             {/* Time axis labels (start / mid / end) */}
-            <text x={PAD_L} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600">
+            <text x={PAD_L} y={VB_H - 6} fontSize="11" fill={AXIS_TEXT} fontWeight="600">
               {fmtTime(tMin, range)}
             </text>
-            <text x={PAD_L + plotW / 2} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600" textAnchor="middle">
+            <text x={PAD_L + plotW / 2} y={VB_H - 6} fontSize="11" fill={AXIS_TEXT} fontWeight="600" textAnchor="middle">
               {fmtTime((tMin + tMax) / 2, range)}
             </text>
-            <text x={PAD_L + plotW} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600" textAnchor="end">
+            <text x={PAD_L + plotW} y={VB_H - 6} fontSize="11" fill={AXIS_TEXT} fontWeight="600" textAnchor="end">
               now
             </text>
 
@@ -620,10 +636,10 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
               style={{
                 left: `clamp(0px, ${(xOf(hovered.t) / VB_W) * width + 8}px, ${Math.max(0, width - 160)}px)`,
                 top: 6,
-                background: '#0a0a0a',
+                background: TOOLTIP_BG,
                 border: `2px solid ${BORDER}`,
                 boxShadow: '2px 2px 0 0 #0a0a0a',
-                color: '#e5e7eb',
+                color: TOOLTIP_TEXT,
                 minWidth: 130,
               }}
             >
