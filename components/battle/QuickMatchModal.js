@@ -223,16 +223,19 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/battles/recent?limit=10');
+        const res = await fetch('/api/battles/opponent-pool?limit=24');
         if (!res.ok) return;
         const data = await res.json();
+        const selfId = session?.user?.id;
         const map = new Map();
-        (data.battles || []).forEach((b) => {
-          [b.winner, b.loser].forEach((p) => {
-            if (p && p.id != null && !map.has(p.id)) {
-              map.set(p.id, { id: p.id, name: p.username, avatar: p.avatar || null });
-            }
-          });
+        (data.players || []).forEach((p) => {
+          // Never let the searching user orbit around their own avatar, and
+          // dedupe so the same face is never shown twice in one orbit.
+          if (!p || p.id == null) return;
+          const key = String(p.id);
+          if (key !== String(selfId) && !map.has(key)) {
+            map.set(key, { id: p.id, name: p.username, avatar: p.avatar || null });
+          }
         });
         if (!cancelled) setOrbiterPlayers(Array.from(map.values()).slice(0, 6));
       } catch (_) {}

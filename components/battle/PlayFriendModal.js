@@ -10,7 +10,7 @@ import { useMatchup } from '../../contexts/MatchupContext';
 import { saveLastBuyIn } from '../../utils/lastBattleBuyIn';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
-import { FindingOpponent, FlowCard, FlowButton } from './matchflow/MatchFlowScreens';
+import { ConnectingToFriend, FlowCard, FlowButton } from './matchflow/MatchFlowScreens';
 
 const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
@@ -718,7 +718,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
           onClick={e => e.stopPropagation()}
         >
           {inviteCountdown > 0 ? (
-            <FindingOpponent
+            <ConnectingToFriend
+              you={currentUser}
+              friend={selectedFriend}
               balance={flowStake}
               onCancel={sentInviteId ? cancelInvite : onClose}
               subtitle={`Waiting for ${friendName} to accept · expires in ${formatCountdown(inviteCountdown)}`}

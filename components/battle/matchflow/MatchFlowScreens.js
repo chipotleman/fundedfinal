@@ -297,6 +297,72 @@ export function FindingOpponent({ you, others = [], balance, balanceLabel, onCan
   );
 }
 
+// 1b · CONNECTING TO FRIEND
+// Direct, two-player handshake used when challenging a specific friend.
+// Instead of a crowd of random orbiters, it shows YOUR avatar reaching out
+// to the friend's avatar with a pulsing link between them, so it reads as a
+// targeted connection rather than an open search.
+export function ConnectingToFriend({ you, friend, balance, balanceLabel, onCancel, subtitle = 'Connecting…' }) {
+  const Side = ({ player, ring, label }) => (
+    <div className="flex flex-col items-center" style={{ width: 96 }}>
+      <div
+        className="rounded-full overflow-hidden mf-pulse-scale"
+        style={{
+          width: 84, height: 84,
+          border: `3px solid ${ring}`,
+          boxShadow: `0 0 0 4px ${ring}22, 0 0 26px ${ring}88`,
+          background: '#0b1020',
+        }}
+      >
+        <UserAvatar user={{ id: player?.id, username: player?.name || player?.username, avatar: player?.avatar }} size={84} />
+      </div>
+      <span className="mt-2 text-[11px] font-extrabold uppercase tracking-wide" style={{ color: ring }}>{label}</span>
+      <span className="mt-0.5 max-w-[92px] truncate text-[12px] font-semibold" style={{ color: '#cbd5e1' }}>
+        {player?.name || player?.username || '—'}
+      </span>
+    </div>
+  );
+  return (
+    <FlowCard balance={balance} balanceLabel={balanceLabel}>
+      <div className="px-6 pt-6 pb-7 text-center">
+        <span aria-hidden="true" style={{ fontSize: 26 }}>🤝</span>
+        <h2 className="mt-1 font-black italic uppercase leading-[0.95]" style={{ fontSize: 'clamp(30px,8vw,42px)' }}>
+          <span style={{ color: '#fff' }}>Connecting</span>
+        </h2>
+        <p className="mt-2 text-[12px]" style={{ color: '#94a3b8' }}>{subtitle}</p>
+
+        {/* YOU ⟶ FRIEND handshake. A short track of dots travels from your
+            avatar toward the friend's, signalling the invite in flight. */}
+        <div className="my-8 flex items-center justify-center">
+          <Side player={you} ring={BLUE} label="You" />
+          <div className="relative mx-1 flex-1" style={{ maxWidth: 96, height: 84 }}>
+            <span
+              aria-hidden="true"
+              className="absolute left-0 right-0 top-1/2 -translate-y-1/2"
+              style={{ height: 2, background: 'linear-gradient(90deg, rgba(59,130,246,0.45), rgba(251,146,60,0.45))' }}
+            />
+            <div className="absolute inset-0 flex items-center justify-between">
+              <span className="mf-link-dot" style={{ background: BLUE, animationDelay: '0s' }} />
+              <span className="mf-link-dot" style={{ background: '#22d3ee', animationDelay: '0.18s' }} />
+              <span className="mf-link-dot" style={{ background: ORANGE, animationDelay: '0.36s' }} />
+            </div>
+          </div>
+          <Side player={friend} ring={ORANGE} label="Friend" />
+        </div>
+
+        <button
+          type="button"
+          onClick={onCancel}
+          className="inline-flex items-center justify-center rounded-full px-8 py-2.5 text-[13px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-white/10"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}
+        >
+          Cancel
+        </button>
+      </div>
+    </FlowCard>
+  );
+}
+
 // 2 · OPPONENT FOUND (accept / decline)
 export function OpponentFound({
   you, opp, balance, balanceLabel, stake, secondsLeft,
@@ -562,6 +628,15 @@ export function MatchFlowStyles() {
       .mf-pulse-scale { animation: mf-pulse-scale 1.8s ease-in-out infinite; }
       @keyframes mf-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
       .mf-blink { animation: mf-blink 0.9s ease-in-out infinite; }
+      @keyframes mf-link-dot {
+        0%, 100% { transform: scale(0.7); opacity: 0.35; }
+        50% { transform: scale(1.25); opacity: 1; }
+      }
+      .mf-link-dot {
+        width: 8px; height: 8px; border-radius: 9999px;
+        box-shadow: 0 0 8px currentColor;
+        animation: mf-link-dot 1.1s ease-in-out infinite;
+      }
       @keyframes mf-confetti {
         0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
         15% { opacity: 1; }
