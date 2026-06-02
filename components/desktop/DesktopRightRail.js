@@ -74,16 +74,24 @@ export default function DesktopRightRail({ isLoggedIn }) {
   // when real battles exist).
   const [battles, setBattles] = useState(() => getSimulatedBattles([]).slice(0, 3));
 
+  const userId = session?.user?.id;
+
   useEffect(() => {
     let cancelled = false;
+
+    // Friends are per-user, so their cache key is scoped to the signed-in
+    // user id — that way switching accounts can never flash the previous
+    // user's friend list. The leaderboard is public, so it stays global.
+    const friendsKey = userId ? `piks:rail:friends:${userId}` : null;
 
     // Hydrate instantly from the last-known cache so Friends and Top cappers
     // render the moment the page paints instead of flashing empty/loading
     // states while the network requests resolve. The fetches below refresh
     // this data and rewrite the cache in the background.
     try {
-      const cf = JSON.parse(localStorage.getItem('piks:rail:friends') || 'null');
+      const cf = friendsKey ? JSON.parse(localStorage.getItem(friendsKey) || 'null') : null;
       if (isLoggedIn && Array.isArray(cf) && cf.length) setFriends(cf);
+      else if (!isLoggedIn) setFriends([]);
       const cl = JSON.parse(localStorage.getItem('piks:rail:leaders') || 'null');
       if (Array.isArray(cl) && cl.length) setLeaders(cl);
     } catch {}
@@ -96,7 +104,9 @@ export default function DesktopRightRail({ isLoggedIn }) {
           const json = await res.json();
           const next = Array.isArray(json?.friends) ? json.friends : [];
           setFriends(next);
-          try { localStorage.setItem('piks:rail:friends', JSON.stringify(next)); } catch {}
+          if (friendsKey) {
+            try { localStorage.setItem(friendsKey, JSON.stringify(next)); } catch {}
+          }
         }
       } catch {}
     };
@@ -139,7 +149,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
     return () => {
       cancelled = true;
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, userId]);
 
   const onlineFriends = friends.filter((f) => f.isOnline);
   const sortedFriends = [...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0)).slice(0, 6);

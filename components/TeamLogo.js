@@ -149,33 +149,31 @@ export default function TeamLogo({
       }
     : null;
 
-  // Real team logos are full-color marks designed to sit on white (many
-  // are dark/navy — e.g. the Padres — and disappear on our dark surfaces
-  // when drawn on transparent). Render them on a small white "puck" so
-  // they stay legible in BOTH themes. The initials and accent-badge
-  // fallbacks keep their original transparent/colored treatment.
-  const logoPuckStyle = showLogo
-    ? {
-        background: '#ffffff',
-        padding: Math.max(1, Math.round(size * 0.08)),
-        border: '1px solid rgba(0,0,0,0.08)',
-        boxSizing: 'border-box',
-      }
-    : null;
-
+  // Real team logos render transparent (no white puck) so they pop
+  // against the black surface and can fill their full slot. A subtle
+  // lift + a faint light rim (see `.team-logo-img` in globals.css)
+  // keeps even dark/navy marks (e.g. the Padres) legible in dark mode,
+  // and a soft drop shadow gives every logo a little depth in light
+  // mode. The initials and accent-badge fallbacks keep their original
+  // transparent/colored treatment (and stay clipped to a circle).
   const baseStyle = {
     width: size,
     height: size,
     fontSize: Math.max(8, Math.round(size * 0.4)),
     lineHeight: 1,
     ...(fallbackStyles || {}),
-    ...(logoPuckStyle || {}),
     ...(extraStyle || {}),
   };
 
+  // Logos draw transparent + unclipped so their lift/rim isn't cut off;
+  // the initials/badge fallbacks keep the round clip + colored fill.
+  const containerClass = showLogo
+    ? `flex items-center justify-center flex-shrink-0 ${className}`
+    : `rounded-full flex items-center justify-center font-black overflow-hidden flex-shrink-0 ${className}`;
+
   return (
     <div
-      className={`rounded-full flex items-center justify-center font-black overflow-hidden flex-shrink-0 ${className}`}
+      className={containerClass}
       style={baseStyle}
       aria-hidden={!name ? 'true' : undefined}
     >
@@ -187,6 +185,7 @@ export default function TeamLogo({
           height={size}
           loading="lazy"
           onError={() => setFailed(true)}
+          className="team-logo-img"
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         />
       ) : (
