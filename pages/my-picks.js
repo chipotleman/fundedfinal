@@ -42,20 +42,23 @@ function getPalette(isLight) {
       disabledGameText: '#64748b',
     };
   }
+  // Dark theme mirrors the dashboard (pages/index.js): pure-black page,
+  // flat #0d0d0d cards with #1a1a1a hairline borders and NO drop shadows,
+  // so My Piks reads as the same site — not a separate themed app.
   return {
-    pageBg: '#05080f',
-    chromeBg: '#080c16',
-    cardSurface: 'linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(8,12,24,0.94) 100%)',
-    innerSurface: 'rgba(15,23,42,0.55)',
-    pickSurface: 'rgba(10,14,24,0.92)',
-    skeletonSurface: 'rgba(15,23,42,0.55)',
-    chromeBorder: 'rgba(255,255,255,0.07)',
-    softBorder: 'rgba(255,255,255,0.08)',
+    pageBg: '#000000',
+    chromeBg: '#0d0d0d',
+    cardSurface: '#0d0d0d',
+    innerSurface: '#141414',
+    pickSurface: '#0d0d0d',
+    skeletonSurface: '#1a1a1a',
+    chromeBorder: '#1a1a1a',
+    softBorder: '#1a1a1a',
     dashedBorder: '2.5px dashed rgba(59,130,246,0.4)',
-    hardShadow: '0 16px 40px rgba(0,0,0,0.55)',
+    hardShadow: 'none',
     bodyText: '#ffffff',
     mutedText: '#9ca3af',
-    faintText: '#64748b',
+    faintText: '#6b7280',
     navIdleText: '#cbd5e1',
     navHoverBg: 'rgba(255,255,255,0.05)',
     disabledGameBg: 'rgba(75,85,99,0.15)',
@@ -466,7 +469,7 @@ export default function MyPicksPage() {
     );
     return (
       <div className="relative rounded-3xl overflow-hidden mb-4"
-        style={{ border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+        style={{ border: '1px solid #1a1a1a', boxShadow: 'none' }}>
         {/* Cinematic stadium backdrop */}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,#0b1730 0%,#0a0f1c 48%,#1c1108 100%)' }} />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 50% -10%, rgba(96,165,250,0.22), transparent 60%)' }} />
