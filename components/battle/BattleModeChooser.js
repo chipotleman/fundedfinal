@@ -84,7 +84,7 @@ export default function BattleModeChooser({
           {/* QUICK MATCH */}
           <button type="button" className="bmc-card bmc-card-blue no-hover-effect" onClick={() => pick(onPickQuickMatch)}>
             <div className="bmc-art">
-              <img src="/images/battle-modes/quick-match.png" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
+              <img src="/images/battle-modes/quick-match.png?v=2" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
               <span className="bmc-art-fade" />
               <span className="bmc-icon-chip">
                 <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 20, height: 20 }} aria-hidden="true">
@@ -103,7 +103,7 @@ export default function BattleModeChooser({
           {/* CHALLENGE FRIEND */}
           <button type="button" className="bmc-card bmc-card-red no-hover-effect" onClick={() => pick(onPickChallengeFriend)}>
             <div className="bmc-art">
-              <img src="/images/battle-modes/challenge-friend.png" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
+              <img src="/images/battle-modes/challenge-friend.png?v=2" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
               <span className="bmc-art-fade" />
               <span className="bmc-icon-chip">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }} aria-hidden="true">
@@ -129,7 +129,7 @@ export default function BattleModeChooser({
           {/* PRIVATE MATCH */}
           <button type="button" className="bmc-card bmc-card-green no-hover-effect" onClick={() => pick(onPickPrivateMatch)}>
             <div className="bmc-art">
-              <img src="/images/battle-modes/private-match.png" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
+              <img src="/images/battle-modes/private-match.png?v=2" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
               <span className="bmc-art-fade" />
               <span className="bmc-icon-chip">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }} aria-hidden="true">
