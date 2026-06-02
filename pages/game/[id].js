@@ -7,6 +7,7 @@ import OddsHistoryChart from '../../components/game/OddsHistoryChart';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { leavePage } from '../../utils/leavePage';
 import TeamLogo from '../../components/TeamLogo';
+import { getTeamColor, inkFor } from '../../utils/teamColors';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -673,6 +674,8 @@ function DesktopGameDetail({
 }) {
   const awayName = game.awayTeamFull || game.awayTeam;
   const homeName = game.homeTeamFull || game.homeTeam;
+  const homeColor = getTeamColor(homeName) || '#3b82f6';
+  const homeInk = inkFor(homeColor);
   const awayScore = isLive || isFinal
     ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0)
     : '—';
@@ -1164,11 +1167,16 @@ function DesktopGameDetail({
                   type="button"
                   onClick={onOpenAllPicks}
                   disabled={betsForThisGame.length === 0}
-                  className={`w-full text-center text-xs font-bold py-2 rounded-lg transition-colors ${
+                  className={`w-full text-center text-xs font-bold py-2 rounded-lg transition-transform active:scale-[0.98] ${
                     betsForThisGame.length === 0
                       ? 'bg-[#141414] text-gray-600 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-500'
+                      : ''
                   }`}
+                  style={
+                    betsForThisGame.length === 0
+                      ? undefined
+                      : { background: homeColor, color: homeInk }
+                  }
                 >
                   View All Picks
                 </button>
