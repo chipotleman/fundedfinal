@@ -77,13 +77,26 @@ export default function DesktopRightRail({ isLoggedIn }) {
   useEffect(() => {
     let cancelled = false;
 
+    // Hydrate instantly from the last-known cache so Friends and Top cappers
+    // render the moment the page paints instead of flashing empty/loading
+    // states while the network requests resolve. The fetches below refresh
+    // this data and rewrite the cache in the background.
+    try {
+      const cf = JSON.parse(localStorage.getItem('piks:rail:friends') || 'null');
+      if (isLoggedIn && Array.isArray(cf) && cf.length) setFriends(cf);
+      const cl = JSON.parse(localStorage.getItem('piks:rail:leaders') || 'null');
+      if (Array.isArray(cl) && cl.length) setLeaders(cl);
+    } catch {}
+
     const loadFriends = async () => {
       if (!isLoggedIn) return;
       try {
         const res = await fetch('/api/friends');
         if (res.ok && !cancelled) {
           const json = await res.json();
-          setFriends(Array.isArray(json?.friends) ? json.friends : []);
+          const next = Array.isArray(json?.friends) ? json.friends : [];
+          setFriends(next);
+          try { localStorage.setItem('piks:rail:friends', JSON.stringify(next)); } catch {}
         }
       } catch {}
     };
@@ -106,7 +119,9 @@ export default function DesktopRightRail({ isLoggedIn }) {
         const res = await fetch('/api/leaderboard?sortBy=profit&limit=5');
         if (res.ok && !cancelled) {
           const json = await res.json();
-          setLeaders(Array.isArray(json?.leaders) ? json.leaders.slice(0, 5) : []);
+          const next = Array.isArray(json?.leaders) ? json.leaders.slice(0, 5) : [];
+          setLeaders(next);
+          try { localStorage.setItem('piks:rail:leaders', JSON.stringify(next)); } catch {}
         }
       } catch {}
     };
