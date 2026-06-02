@@ -1128,14 +1128,14 @@ export default function BattlePage() {
   // lightning shortcut. Falls back to opening the full Play Friend modal
   // when the user has no remembered buy-in yet.
   const handleQuickInvite = useCallback(async (friend) => {
-    if (!friend?.id) return;
+    if (!friend?.id) return false;
     if (isGuest) {
       requireAuth(() => {});
-      return;
+      return false;
     }
     if (globalHasActive) {
       showQuickToast("You're already in a battle — finish it first.", 'error');
-      return;
+      return false;
     }
     // Prefer the freshly-hydrated value (which already reflects the
     // cross-device server copy when available) and only fall back to the
@@ -1145,9 +1145,9 @@ export default function BattlePage() {
       // No remembered buy-in — open the modal so the user can pick one.
       setPlayFriendInitial(friend);
       setShowPlayFriend(true);
-      return;
+      return false;
     }
-    if (quickInviteFor) return;
+    if (quickInviteFor) return false;
     setQuickInviteFor(friend.id);
     try {
       const res = await fetch('/api/battles/invite', {
@@ -1163,7 +1163,7 @@ export default function BattlePage() {
         setPlayFriendInitial(friend);
         setShowPlayFriend(true);
         if (data?.error) showQuickToast(data.error, 'error');
-        return;
+        return false;
       }
       // Refresh the remembered values (mode may have been normalised
       // server-side) and persist to the user's profile so the shortcut
@@ -1188,8 +1188,10 @@ export default function BattlePage() {
         showQuickToast(`Invite sent to ${friend.username || 'friend'} · ${isBeta ? `${formatMoney(last.buyIn, 0)} coin buy-in` : `$${last.buyIn} buy-in`}`);
       }
       fetchData();
+      return true;
     } catch {
       showQuickToast('Could not send invite. Try again.', 'error');
+      return false;
     } finally {
       setQuickInviteFor(null);
     }
@@ -1250,6 +1252,24 @@ export default function BattlePage() {
   const handleBattleOptionClick = (setter) => {
     setShowBattleOptions(false);
     requireAuth(() => setter(true));
+  };
+
+  // Quick Match must be mutually exclusive with an outstanding 1v1
+  // commitment: you can't matchmake into a random opponent while you're
+  // already in a battle, or while you have a challenge invite still
+  // pending with a friend (accepting it would create a second matchup).
+  const openQuickMatch = () => {
+    requireAuth(() => {
+      if (globalHasActive) {
+        showQuickToast("You're already in a battle — finish it first.", 'error');
+        return;
+      }
+      if ((invites.sent || []).length > 0) {
+        showQuickToast('You have a pending challenge — cancel it before a Quick Match.', 'error');
+        return;
+      }
+      setShowQuickMatch(true);
+    });
   };
 
   const friendIds = new Set(friends.map(f => f.id));
@@ -2020,7 +2040,7 @@ export default function BattlePage() {
               invites,
               friendRequests,
               onStartBattle: () => requireAuth(() => setShowBattleOptions(true)),
-              onPickQuickMatch: () => requireAuth(() => setShowQuickMatch(true)),
+              onPickQuickMatch: openQuickMatch,
               onPickPlayFriend: () => requireAuth(() => setShowPlayFriend(true), 'resumePlayFriend'),
               onPickPrivateMatch: () => requireAuth(() => setShowPrivateMatch(true), 'resumePrivateMatch'),
               onAcceptInvite: handleAcceptInvite,
@@ -2050,7 +2070,7 @@ export default function BattlePage() {
       <BattleModeChooser
         isOpen={showBattleOptions}
         onClose={() => setShowBattleOptions(false)}
-        onPickQuickMatch={() => handleBattleOptionClick(setShowQuickMatch)}
+        onPickQuickMatch={() => { setShowBattleOptions(false); openQuickMatch(); }}
         onPickChallengeFriend={() => handleBattleOptionClick(setShowPlayFriend)}
         onPickPrivateMatch={() => handleBattleOptionClick(setShowPrivateMatch)}
         currentUser={{ id: userId, username: profile?.username, avatar: profile?.avatar }}

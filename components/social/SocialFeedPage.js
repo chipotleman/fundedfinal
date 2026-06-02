@@ -1889,18 +1889,26 @@ function RightSidebar({
     .sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0))
     .slice(0, 4);
 
+  const rollbackChallenge = (id) => setChallenged((p) => {
+    const next = { ...p };
+    delete next[id];
+    return next;
+  });
+
   const handleChallenge = async (friend) => {
     if (challenged[friend.id]) return;
     setChallenged((p) => ({ ...p, [friend.id]: true }));
     try {
-      await onChallengeFriend?.(friend);
+      // onChallengeFriend returns false when no invite was actually sent
+      // (e.g. the user is already in a battle, or a modal was opened to
+      // collect a buy-in instead). Only keep the "Sent" pill when an
+      // invite truly went out — otherwise roll it back so the button
+      // doesn't lie.
+      const sent = await onChallengeFriend?.(friend);
+      if (sent === false) rollbackChallenge(friend.id);
     } catch {
       // Roll back the "Sent" state so the user can retry if the invite failed.
-      setChallenged((p) => {
-        const next = { ...p };
-        delete next[friend.id];
-        return next;
-      });
+      rollbackChallenge(friend.id);
     }
   };
 
