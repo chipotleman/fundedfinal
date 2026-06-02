@@ -31,7 +31,10 @@ export default function DesktopGlobalSearch() {
   const [players, setPlayers] = useState([]);
   const [games, setGames] = useState([]);
   const [playFriend, setPlayFriend] = useState(null);
-  const [requestedIds, setRequestedIds] = useState(() => new Set());
+  // Map of userId -> 'pending' | 'friends'. Drives the add-friend button's
+  // "sent" state. We keep this even when the server reports the relationship
+  // already exists so the button reliably reflects reality.
+  const [requestStatus, setRequestStatus] = useState(() => ({}));
   const sessionUser = session?.user || null;
   const { openMessage } = useUserPreview();
   const { theme } = useTheme();
@@ -167,10 +170,16 @@ export default function DesktopGlobalSearch() {
   };
 
   const quickAddFriend = async (p) => {
-    if (!p?.id || requestedIds.has(p.id)) return;
-    // Optimistically flip to "requested" so the button gives instant
-    // feedback; roll back only if the request actually fails.
-    setRequestedIds((prev) => new Set(prev).add(p.id));
+    if (!p?.id || requestStatus[p.id]) return;
+    // Optimistically flip to "pending" so the button gives instant feedback.
+    setRequestStatus((prev) => ({ ...prev, [p.id]: 'pending' }));
+    const clear = () =>
+      setRequestStatus((prev) => {
+        const next = { ...prev };
+        delete next[p.id];
+        return next;
+      });
+    const settle = (st) => setRequestStatus((prev) => ({ ...prev, [p.id]: st }));
     try {
       const res = await fetch('/api/friends', {
         method: 'POST',
@@ -178,19 +187,25 @@ export default function DesktopGlobalSearch() {
         credentials: 'include',
         body: JSON.stringify({ friendId: p.id }),
       });
-      if (!res.ok) {
-        setRequestedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(p.id);
-          return next;
-        });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        // Server may auto-accept (mutual / bot) or queue a pending request.
+        settle(data?.status === 'accepted' ? 'friends' : 'pending');
+        return;
+      }
+      // A 400 because the relationship already exists isn't a failure from the
+      // user's perspective — keep the indicator so the button reflects reality
+      // instead of silently snapping back to "Add".
+      const err = (data?.error || '').toLowerCase();
+      if (res.status === 400 && err.includes('already friends')) {
+        settle('friends');
+      } else if (res.status === 400 && err.includes('pending')) {
+        settle('pending');
+      } else {
+        clear();
       }
     } catch {
-      setRequestedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(p.id);
-        return next;
-      });
+      clear();
     }
   };
 
@@ -284,7 +299,9 @@ export default function DesktopGlobalSearch() {
                 Players
               </div>
               {players.map((p) => {
-                const requested = requestedIds.has(p.id);
+                const reqStatus = requestStatus[p.id];
+                const requested = !!reqStatus;
+                const isFriend = reqStatus === 'friends';
                 return (
                   <div
                     key={`p-${p.id}`}
@@ -336,8 +353,8 @@ export default function DesktopGlobalSearch() {
                           type="button"
                           onClick={() => quickAddFriend(p)}
                           disabled={requested}
-                          title={requested ? 'Request sent' : `Add ${p.username}`}
-                          aria-label={requested ? `Request sent to ${p.username}` : `Add ${p.username}`}
+                          title={isFriend ? `Already friends with ${p.username}` : requested ? 'Request sent' : `Add ${p.username}`}
+                          aria-label={isFriend ? `Already friends with ${p.username}` : requested ? `Request sent to ${p.username}` : `Add ${p.username}`}
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform active:scale-90"
                           style={
                             requested
