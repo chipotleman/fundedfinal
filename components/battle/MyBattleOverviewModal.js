@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
+import SlideToForfeit from './SlideToForfeit';
 
 const MODE_META = {
   rush: {
@@ -41,6 +42,45 @@ function UserAvatar({ user, size = 72 }) {
   return <SharedUserAvatar user={user} size={size} />;
 }
 
+function fmtBalance(n, isBeta) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return null;
+  return isBeta ? compactCoins(v) : `$${compactCoins(v)}`;
+}
+
+function PnlPill({ pnl }) {
+  const v = Number(pnl);
+  if (!Number.isFinite(v) || v === 0) {
+    return (
+      <span className="text-[9px] font-black" style={{ color: '#94a3b8', letterSpacing: '0.04em' }}>
+        EVEN
+      </span>
+    );
+  }
+  const pos = v > 0;
+  return (
+    <span
+      className="text-[9px] font-black"
+      style={{ color: pos ? '#34d399' : '#f87171', letterSpacing: '0.04em' }}
+    >
+      {pos ? '+' : ''}{v.toFixed(1)}%
+    </span>
+  );
+}
+
+function PlayerStat({ balance, pnl, isBeta, accent }) {
+  const label = fmtBalance(balance, isBeta);
+  if (label == null) return null;
+  return (
+    <div className="mt-1 flex flex-col items-center gap-0.5">
+      <span className="text-white text-[13px] font-black tabular-nums" style={{ textShadow: `0 0 8px ${accent}55` }}>
+        {label}
+      </span>
+      <PnlPill pnl={pnl} />
+    </div>
+  );
+}
+
 export default function MyBattleOverviewModal({
   isOpen,
   onClose,
@@ -49,6 +89,12 @@ export default function MyBattleOverviewModal({
   myProfile,
   onOpenBattle,
   onForfeit,
+  onMessageOpponent,
+  onViewUpdates,
+  myLiveBalance = null,
+  opponentLiveBalance = null,
+  myUnrealizedPnl = null,
+  opponentUnrealizedPnl = null,
   isBeta = false,
 }) {
   useModalScrollLock(isOpen);
@@ -96,6 +142,16 @@ export default function MyBattleOverviewModal({
 
   const handleForfeit = () => {
     if (onForfeit) onForfeit(matchup);
+    close();
+  };
+
+  const handleMessage = () => {
+    if (onMessageOpponent) onMessageOpponent(opponent);
+    close();
+  };
+
+  const handleViewUpdates = () => {
+    if (onViewUpdates) onViewUpdates(matchup);
     close();
   };
 
@@ -317,6 +373,7 @@ export default function MyBattleOverviewModal({
             >
               You
             </div>
+            <PlayerStat balance={myLiveBalance} pnl={myUnrealizedPnl} isBeta={isBeta} accent="#3b82f6" />
           </div>
 
           <div className="flex flex-col items-center flex-shrink-0 self-center" style={{ minWidth: 48 }}>
@@ -365,6 +422,7 @@ export default function MyBattleOverviewModal({
             >
               Opp
             </div>
+            <PlayerStat balance={opponentLiveBalance} pnl={opponentUnrealizedPnl} isBeta={isBeta} accent="#fb923c" />
           </div>
         </div>
 
@@ -391,101 +449,88 @@ export default function MyBattleOverviewModal({
           </div>
         </div>
 
-        {/* Cartoon stat tiles — hard shadows + colored glows */}
-        <div className="px-4 pb-3">
-          <div className="grid grid-cols-3 gap-1.5">
-            {[
-              { icon: '🟢', label: 'Live Now', color: '#10b981', glow: 'rgba(16,185,129,0.5)' },
-              { icon: '🎯', label: 'Place Picks', color: '#3b82f6', glow: 'rgba(59,130,246,0.5)' },
-              { icon: isRush ? '⚡' : '⏰', label: isRush ? 'Race Now' : 'Ends Today', color: '#facc15', glow: 'rgba(250,204,21,0.5)' },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="rounded-xl px-1.5 py-2 flex flex-col items-center text-center"
-                style={{
-                  background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-                  border: `2.5px solid ${s.color}`,
-                  boxShadow: `0 3px 0 #0a0a0a, 0 0 10px ${s.glow}`,
-                }}
-              >
-                <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>{s.icon}</span>
-                <div className="text-white text-[9px] font-black uppercase mt-1 leading-tight" style={{ color: s.color, letterSpacing: '0.12em', textShadow: '0 1px 0 #0a0a0a' }}>
-                  {s.label}
-                </div>
-              </div>
-            ))}
+        {/* Quick actions — message the opponent + jump to battle updates */}
+        <div className="px-5 pb-3">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleMessage}
+              className="no-hover-effect flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[12px]"
+              style={{
+                background: 'linear-gradient(180deg, rgba(34,211,238,0.12), rgba(8,145,178,0.12))',
+                border: '1px solid rgba(34,211,238,0.4)',
+                color: '#67e8f9',
+                letterSpacing: '0.04em',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+              </svg>
+              <span className="truncate">Message {opponent?.username ? opponent.username.split(' ')[0] : 'opponent'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleViewUpdates}
+              className="no-hover-effect flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[12px]"
+              style={{
+                background: 'linear-gradient(180deg, rgba(59,130,246,0.12), rgba(29,78,216,0.12))',
+                border: '1px solid rgba(59,130,246,0.4)',
+                color: '#93c5fd',
+                letterSpacing: '0.04em',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              <span className="truncate">Battle updates</span>
+            </button>
           </div>
         </div>
 
-        {/* CTAs — orange OPEN BATTLE w/ yellow chevron caps */}
+        {/* Rush keeps a primary CTA because it actually enters live gameplay.
+            Original/Tournament battles are already "open" — you place picks on
+            the dashboard — so a redundant "Open Battle" button is dropped. */}
         <div className="px-5 pb-5">
-          <button
-            type="button"
-            onClick={handleOpen}
-            className="mbom-cta no-hover-effect w-full rounded-2xl font-black uppercase flex items-center justify-between gap-2 px-3 py-3"
-            style={{
-              background: 'linear-gradient(180deg,#fb923c 0%,#ea580c 55%,#c2410c 100%)',
-              border: '2.5px solid #0a0a0a',
-              color: '#fff',
-              letterSpacing: '0.06em',
-              textShadow: '0 2px 0 rgba(0,0,0,0.55)',
-              boxShadow: '0 5px 0 #0a0a0a, 0 0 28px rgba(251,146,60,0.55), inset 0 0 0 1.5px rgba(250,204,21,0.7)',
-              fontFamily: 'Impact, "Arial Black", system-ui, -apple-system, sans-serif',
-            }}
-          >
-            <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'linear-gradient(180deg,#0a0a0a,#1a1a1a)', border: '2.5px solid #facc15', boxShadow: '0 0 12px rgba(250,204,21,0.85), inset 0 0 6px rgba(250,204,21,0.3)', color: '#facc15', fontSize: 15 }}>»</span>
-            <span style={{ fontSize: 19, fontStyle: 'italic', WebkitTextStroke: '1px #0a0a0a' }}>
-              {isRush ? 'Jump Into Rush' : 'Open Battle'}
-            </span>
-            <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'linear-gradient(180deg,#0a0a0a,#1a1a1a)', border: '2.5px solid #facc15', boxShadow: '0 0 12px rgba(250,204,21,0.85), inset 0 0 6px rgba(250,204,21,0.3)', color: '#facc15', fontSize: 15 }}>«</span>
-          </button>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {onForfeit ? (
-              <button
-                type="button"
-                onClick={handleForfeit}
-                className="no-hover-effect py-3 rounded-xl font-black text-xs uppercase"
-                style={{
-                  background: 'linear-gradient(180deg,#1a0b0b,#0d0606)',
-                  border: '2.5px solid #ef4444',
-                  color: '#fca5a5',
-                  letterSpacing: '0.12em',
-                  boxShadow: '0 3px 0 #0a0a0a, 0 0 10px rgba(239,68,68,0.3)',
-                }}
-              >
-                Forfeit
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={close}
-                className="no-hover-effect py-3 rounded-xl font-black text-xs uppercase"
-                style={{
-                  background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                  border: '2.5px solid #0a0a0a',
-                  color: '#9ca3af',
-                  letterSpacing: '0.12em',
-                  boxShadow: '0 3px 0 #0a0a0a',
-                }}
-              >
-                Close
-              </button>
-            )}
+          {isRush && (
+            <button
+              type="button"
+              onClick={handleOpen}
+              className="mbom-cta no-hover-effect w-full rounded-2xl font-black uppercase flex items-center justify-between gap-2 px-3 py-3 mb-2"
+              style={{
+                background: 'linear-gradient(180deg,#fb923c 0%,#ea580c 55%,#c2410c 100%)',
+                border: '2.5px solid #0a0a0a',
+                color: '#fff',
+                letterSpacing: '0.06em',
+                textShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                boxShadow: '0 5px 0 #0a0a0a, 0 0 28px rgba(251,146,60,0.55), inset 0 0 0 1.5px rgba(250,204,21,0.7)',
+                fontFamily: 'Impact, "Arial Black", system-ui, -apple-system, sans-serif',
+              }}
+            >
+              <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'linear-gradient(180deg,#0a0a0a,#1a1a1a)', border: '2.5px solid #facc15', boxShadow: '0 0 12px rgba(250,204,21,0.85), inset 0 0 6px rgba(250,204,21,0.3)', color: '#facc15', fontSize: 15 }}>»</span>
+              <span style={{ fontSize: 19, fontStyle: 'italic', WebkitTextStroke: '1px #0a0a0a' }}>
+                Jump Into Rush
+              </span>
+              <span aria-hidden="true" className="inline-flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'linear-gradient(180deg,#0a0a0a,#1a1a1a)', border: '2.5px solid #facc15', boxShadow: '0 0 12px rgba(250,204,21,0.85), inset 0 0 6px rgba(250,204,21,0.3)', color: '#facc15', fontSize: 15 }}>«</span>
+            </button>
+          )}
+          {onForfeit ? (
+            <SlideToForfeit onConfirm={handleForfeit} />
+          ) : (
             <button
               type="button"
               onClick={close}
-              className="no-hover-effect py-3 rounded-xl font-black text-xs uppercase"
+              className="no-hover-effect w-full py-3 rounded-xl font-black text-xs uppercase"
               style={{
-                background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-                border: '2.5px solid #1a2238',
+                background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+                border: '1px solid #1a2238',
                 color: '#9ca3af',
                 letterSpacing: '0.12em',
-                boxShadow: '0 3px 0 #0a0a0a',
               }}
             >
-              Stay Here
+              Close
             </button>
-          </div>
+          )}
         </div>
       </div>
     </div>
