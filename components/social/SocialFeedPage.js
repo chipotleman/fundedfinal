@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import FramedAvatar from '../UserAvatar';
-import TeamLogo from '../TeamLogo';
 import { formatMoney } from '../../utils/formatMoney';
 import { formatLastSeen } from '../../utils/relativeTime';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
@@ -11,14 +10,22 @@ import { useBetaMode } from '../../contexts/SiteConfigContext';
 import { useUserPreview } from '../../contexts/UserPreviewContext';
 import SharedByPill from '../messages/SharedByPill';
 
-const surface = '#0d0d0d';
-const surfaceMuted = '#0a0a0a';
-const border = 'rgba(255, 255, 255, 0.06)';
-const borderStrong = 'rgba(255, 255, 255, 0.1)';
-const textPrimary = '#f5f5f5';
-const textSecondary = '#9ca3af';
-const textMuted = '#6b7280';
-const cardShadow = '0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.35)';
+// Theme-aware tokens. These are CSS custom properties resolved on the
+// `.sf-root` wrapper (see styles/globals.css), so the same inline styles
+// render dark by default and flip to light under `html.light .sf-root`.
+// Inline hex values can't be overridden by a light-mode class, which is
+// why the whole feed previously stayed black in light theme.
+const surface = 'var(--sf-surface)';
+const surfaceMuted = 'var(--sf-surface-muted)';
+const elevated = 'var(--sf-elevated)';
+const track = 'var(--sf-track)';
+const avatarBg = 'var(--sf-avatar-bg)';
+const border = 'var(--sf-border)';
+const borderStrong = 'var(--sf-border-strong)';
+const textPrimary = 'var(--sf-text-primary)';
+const textSecondary = 'var(--sf-text-secondary)';
+const textMuted = 'var(--sf-text-muted)';
+const cardShadow = 'var(--sf-card-shadow)';
 
 function timeAgo(input) {
   if (!input) return '';
@@ -127,8 +134,8 @@ function StoriesRail({ battles, onSpectate, onOpenStory, onStartBattle, currentU
                     background: 'linear-gradient(135deg, #22c55e, #06b6d4 60%, #3b82f6)',
                   }}
                 >
-                  <div className="rounded-full p-[2px]" style={{ backgroundColor: '#000' }}>
-                    <div className="w-14 h-14 rounded-full overflow-hidden relative" style={{ backgroundColor: '#1a1a1a' }}>
+                  <div className="rounded-full p-[2px]" style={{ backgroundColor: surface }}>
+                    <div className="w-14 h-14 rounded-full overflow-hidden relative" style={{ backgroundColor: avatarBg }}>
                       <div className="absolute inset-0 flex">
                         <div className="w-1/2 overflow-hidden" style={{ clipPath: 'polygon(0 0, 100% 0, 60% 100%, 0% 100%)' }}>
                           <FramedAvatar avatar={u1.avatar} username={u1.username || 'P'} size={56} bgColor="#1e40af" frameId={u1.equippedFrame} />
@@ -236,7 +243,7 @@ function PostComposer({
           username={currentUser?.username || 'Y'}
           frameId={currentUser?.frameId}
           size={40}
-          bgColor="#1a1a1a"
+          bgColor={avatarBg}
         />
         <div className="flex-1 min-w-0">
           {!expanded ? (
@@ -246,7 +253,7 @@ function PostComposer({
               disabled={isGuest}
               className="w-full text-left rounded-full px-4 py-2.5 text-sm transition-colors"
               style={{
-                backgroundColor: '#111',
+                backgroundColor: elevated,
                 border: `1px solid ${border}`,
                 color: textSecondary,
                 cursor: isGuest ? 'not-allowed' : 'pointer',
@@ -269,7 +276,7 @@ function PostComposer({
                 maxLength={POST_MAX + 50}
                 className="w-full rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-blue-500"
                 style={{
-                  backgroundColor: '#111',
+                  backgroundColor: elevated,
                   border: `1px solid ${border}`,
                   color: textPrimary,
                   minHeight: 80,
@@ -451,7 +458,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
     <div className="rounded-2xl mb-3 overflow-hidden transition-colors hover:bg-white/[0.015]" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
       <div className="flex gap-3 px-4 py-3.5">
         <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="flex-shrink-0 self-start">
-          <FramedAvatar avatar={author.avatar} username={author.username || 'P'} frameId={author.equippedFrame} size={40} bgColor="#1a1a1a" />
+          <FramedAvatar avatar={author.avatar} username={author.username || 'P'} frameId={author.equippedFrame} size={40} bgColor={avatarBg} />
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 leading-tight min-w-0">
@@ -529,9 +536,9 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
                 return (
                   <div key={c.id} className="flex items-start gap-2.5">
                     <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
-                      <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor="#1a1a1a" />
+                      <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor={avatarBg} />
                     </button>
-                    <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: '#111' }}>
+                    <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: elevated }}>
                       <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
                         {ca.username || 'Player'}
                       </button>
@@ -544,7 +551,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
             )}
             {!isGuest && (
               <div className="flex items-start gap-2.5 pt-1">
-                <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor="#1a1a1a" />
+                <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor={avatarBg} />
                 <div className="flex-1 flex items-center gap-2">
                   <input
                     type="text"
@@ -559,7 +566,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
                     placeholder="Post your reply…"
                     maxLength={300}
                     className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    style={{ backgroundColor: '#111', border: `1px solid ${border}`, color: textPrimary }}
+                    style={{ backgroundColor: elevated, border: `1px solid ${border}`, color: textPrimary }}
                   />
                   <button
                     type="button"
@@ -636,7 +643,7 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
                 username={item.user?.username || '?'}
                 frameId={item.user?.equippedFrame}
                 size={36}
-                bgColor="#1a1a1a"
+                bgColor={avatarBg}
               />
             </button>
             <div className="min-w-0 flex-1">
@@ -663,7 +670,7 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
                 type="button"
                 onClick={() => (item.kind === 'invite' ? onDeclineInvite?.(item.rawId) : onDeclineFriendRequest?.(item.rawId))}
                 className="px-2.5 py-1.5 rounded-md text-[11px] font-semibold"
-                style={{ backgroundColor: '#1a1a1a', color: textPrimary, border: `1px solid ${border}` }}
+                style={{ backgroundColor: avatarBg, color: textPrimary, border: `1px solid ${border}` }}
               >
                 Decline
               </button>
@@ -685,67 +692,9 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
 // override on whoever is currently leading. No purple. Hover utilities
 // gated to lg:hover (touch devices stay flat).
 // =============================================================================
-const HH_BORDER = '#0a0a0a';
 const HH_BLUE = '#3b82f6';
 const HH_ORANGE = '#fb923c';
 const HH_LEAD = '#10b981';
-
-function PnlMini({ value, align = 'left' }) {
-  const v = parseFloat(value);
-  if (!Number.isFinite(v)) return null;
-  const pos = v >= 0;
-  return (
-    <span
-      className={`inline-block text-[10px] font-black px-1.5 py-px rounded tabular-nums ${align === 'right' ? 'ml-auto' : ''}`}
-      style={{
-        background: pos ? 'rgba(16,185,129,0.14)' : 'rgba(239,68,68,0.14)',
-        color: pos ? '#34d399' : '#f87171',
-        border: `1px solid ${pos ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}`,
-      }}
-    >
-      {pos ? '+' : ''}{v}%
-    </span>
-  );
-}
-
-function PickMini({ pick, sideColor, align = 'left' }) {
-  if (!pick) return null;
-  const isWon = pick.status === 'won';
-  const isLost = pick.status === 'lost';
-  const accent = isWon ? HH_LEAD : isLost ? '#ef4444' : sideColor;
-  const insetShadow = align === 'right' ? `inset -3px 0 0 0 ${accent}` : `inset 3px 0 0 0 ${accent}`;
-  const oddsColor = isWon ? '#34d399' : isLost ? '#f87171' : '#e5e7eb';
-  return (
-    <div
-      className="px-2.5 py-1.5 rounded-lg flex items-center gap-2 min-w-0"
-      style={{
-        background: '#0d0d0d',
-        border: `1.5px solid ${HH_BORDER}`,
-        boxShadow: insetShadow,
-      }}
-    >
-      {align !== 'right' && <TeamLogo name={pick.team} sport={pick.sport} size={16} />}
-      <div className={`flex-1 min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
-        <div className="text-[11px] font-black truncate" style={{ color: '#fff' }}>
-          {pick.team}
-        </div>
-        <div
-          className="text-[9px] font-bold uppercase tracking-wider truncate"
-          style={{ color: textMuted }}
-        >
-          {pick.type}
-        </div>
-      </div>
-      <span
-        className="text-[12px] font-black tabular-nums flex-shrink-0"
-        style={{ color: oddsColor }}
-      >
-        {pick.odds}
-      </span>
-      {align === 'right' && <TeamLogo name={pick.team} sport={pick.sport} size={16} />}
-    </div>
-  );
-}
 
 // BattleCommentThread — persisted inline comment thread for a matchup
 // (live or completed). Mirrors PostCard's inline comment-thread UX
@@ -833,9 +782,9 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
             return (
               <div key={m.id} className="flex items-start gap-2.5">
                 <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
-                  <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor="#1a1a1a" />
+                  <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor={avatarBg} />
                 </button>
-                <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: '#111' }}>
+                <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: elevated }}>
                   <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
                     {ca.username || 'Spectator'}
                   </button>
@@ -848,7 +797,7 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
         )}
         {!isGuest && (
           <div className="flex items-start gap-2.5 pt-1">
-            <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor="#1a1a1a" />
+            <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor={avatarBg} />
             <div className="flex-1 flex items-center gap-2">
               <input
                 type="text"
@@ -863,7 +812,7 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
                 placeholder="Write a comment…"
                 maxLength={300}
                 className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                style={{ backgroundColor: '#111', border: `1px solid ${border}`, color: textPrimary }}
+                style={{ backgroundColor: elevated, border: `1px solid ${border}`, color: textPrimary }}
               />
               <button
                 type="button"
@@ -1061,8 +1010,10 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
         </div>
       </div>
 
-      {/* Embedded match — the post's "attachment", a quote-style card that
-          opens the full spectate view when tapped. */}
+      {/* Embedded match — a slim head-to-head chip (the post's "attachment").
+          Deliberately compact so the card reads as a social post ABOUT a 1v1,
+          not a full battle board: small avatars, one balance line each, a thin
+          momentum bar, and a single status/pot/spectate line. */}
       <div className="px-4 pb-3">
         <div
           role="button"
@@ -1075,114 +1026,83 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
             }
           }}
           aria-label={`Spectate ${u1.username || 'Player 1'} vs ${u2.username || 'Player 2'}`}
-          className="rounded-xl overflow-hidden cursor-pointer transition-colors lg:hover:bg-white/[0.02]"
+          className="rounded-xl cursor-pointer transition-colors lg:hover:bg-white/[0.02] px-3 py-2.5"
           style={{ background: surfaceMuted, border: `1px solid ${border}` }}
         >
-          <div className="px-3 pt-3 pb-2.5">
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-              {/* LEFT player */}
-              <div className="flex items-center gap-2 min-w-0 text-left">
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
-                  aria-label={`Open ${u1.username || 'Player 1'} profile`}
-                  className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
-                >
-                  <div
-                    className="rounded-full p-[2px]"
-                    style={{ background: u1Ring, boxShadow: u1Lead ? '0 0 10px rgba(16,185,129,0.5)' : `0 0 8px ${HH_BLUE}44` }}
-                  >
-                    <FramedAvatar avatar={u1.avatar} username={u1.username || 'P1'} frameId={u1.equippedFrame} size={36} bgColor="#1e40af" />
-                  </div>
-                  {u1OnFire && <span className="absolute -top-1 -right-1 text-sm hh-flame" aria-label="On fire">🔥</span>}
-                </button>
-                <div className="min-w-0">
-                  <div className="text-[12px] font-bold truncate" style={{ color: textPrimary }}>{u1.username || 'Player 1'}</div>
-                  <div className="text-[14px] font-black tabular-nums leading-tight" style={{ color: u1Lead ? '#34d399' : textPrimary }}>
-                    ${formatMoney(u1Bal, 0)}
-                  </div>
-                  <div className="mt-0.5"><PnlMini value={u1.pnlPercent} /></div>
-                </div>
+          <div className="flex items-center gap-2">
+            {/* LEFT player */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
+              aria-label={`Open ${u1.username || 'Player 1'} profile`}
+              className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
+            >
+              <div className="rounded-full p-[1.5px]" style={{ background: u1Ring }}>
+                <FramedAvatar avatar={u1.avatar} username={u1.username || 'P1'} frameId={u1.equippedFrame} size={28} bgColor="#1e40af" />
               </div>
-
-              {/* Center VS */}
-              <div className="flex flex-col items-center px-0.5">
-                <span
-                  className="text-[13px] font-black text-transparent bg-clip-text leading-none"
-                  style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}
-                >
-                  VS
-                </span>
-                <span className="text-[8px] mt-0.5 uppercase tracking-widest font-bold" style={{ color: textMuted }}>1v1</span>
-              </div>
-
-              {/* RIGHT player */}
-              <div className="flex items-center gap-2 min-w-0 justify-end">
-                <div className="min-w-0 text-right">
-                  <div className="text-[12px] font-bold truncate ml-auto" style={{ color: textPrimary }}>{u2.username || 'Player 2'}</div>
-                  <div className="text-[14px] font-black tabular-nums leading-tight" style={{ color: u2Lead ? '#34d399' : textPrimary }}>
-                    ${formatMoney(u2Bal, 0)}
-                  </div>
-                  <div className="mt-0.5 flex justify-end"><PnlMini value={u2.pnlPercent} align="right" /></div>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
-                  aria-label={`Open ${u2.username || 'Player 2'} profile`}
-                  className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
-                >
-                  <div
-                    className="rounded-full p-[2px]"
-                    style={{ background: u2Ring, boxShadow: u2Lead ? '0 0 10px rgba(16,185,129,0.5)' : `0 0 8px ${HH_ORANGE}44` }}
-                  >
-                    <FramedAvatar avatar={u2.avatar} username={u2.username || 'P2'} frameId={u2.equippedFrame} size={36} bgColor="#7c2d12" />
-                  </div>
-                  {u2OnFire && <span className="absolute -top-1 -left-1 text-sm hh-flame" aria-label="On fire">🔥</span>}
-                </button>
+              {u1OnFire && <span className="absolute -top-1 -right-1 text-[11px] hh-flame" aria-label="On fire">🔥</span>}
+            </button>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-bold truncate" style={{ color: textPrimary }}>{u1.username || 'Player 1'}</div>
+              <div className="text-[13px] font-black tabular-nums leading-tight" style={{ color: u1Lead ? '#34d399' : textPrimary }}>
+                ${formatMoney(u1Bal, 0)}
               </div>
             </div>
 
-            {/* Two-tone balance share bar */}
-            <div className="mt-2.5 h-2 rounded-full overflow-hidden flex" style={{ background: '#000', border: `1px solid ${border}` }}>
-              <div style={{ width: `${u1Pct}%`, background: u1Lead ? 'linear-gradient(90deg, #10b981, #22c55e)' : HH_BLUE, transition: 'width 700ms ease' }} />
-              <div style={{ width: `${100 - u1Pct}%`, background: u2Lead ? 'linear-gradient(90deg, #22c55e, #10b981)' : HH_ORANGE, transition: 'width 700ms ease' }} />
+            {/* Center VS + pot */}
+            <div className="flex flex-col items-center px-1 flex-shrink-0">
+              <span
+                className="text-[12px] font-black text-transparent bg-clip-text leading-none"
+                style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}
+              >
+                VS
+              </span>
+              <span className="text-[9px] font-bold tabular-nums mt-0.5" style={{ color: textMuted }}>
+                {isBeta ? `${formatMoney(pot, 0)}` : `$${formatMoney(pot, 0)}`}
+              </span>
             </div>
 
-            {/* Picks status */}
-            <div className="mt-2.5">
-              {bothPicked ? (
-                <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-stretch">
-                  <PickMini pick={u1PickPreview} sideColor={HH_BLUE} />
-                  <span className="self-center text-[9px] font-black uppercase tracking-widest" style={{ color: textMuted }}>vs</span>
-                  <PickMini pick={u2PickPreview} sideColor={HH_ORANGE} align="right" />
+            {/* RIGHT player */}
+            <div className="min-w-0 flex-1 flex items-center gap-2 justify-end">
+              <div className="min-w-0 text-right">
+                <div className="text-[11px] font-bold truncate ml-auto" style={{ color: textPrimary }}>{u2.username || 'Player 2'}</div>
+                <div className="text-[13px] font-black tabular-nums leading-tight" style={{ color: u2Lead ? '#34d399' : textPrimary }}>
+                  ${formatMoney(u2Bal, 0)}
                 </div>
-              ) : onlyU1Locked || onlyU2Locked ? (
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 hh-pending" />
-                  <span className="text-[11px] font-medium" style={{ color: textSecondary }}>
-                    {onlyU1Locked ? `${u1.username || 'P1'} locked` : `${u2.username || 'P2'} locked`} · awaiting other player
-                  </span>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
+                aria-label={`Open ${u2.username || 'Player 2'} profile`}
+                className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
+              >
+                <div className="rounded-full p-[1.5px]" style={{ background: u2Ring }}>
+                  <FramedAvatar avatar={u2.avatar} username={u2.username || 'P2'} frameId={u2.equippedFrame} size={28} bgColor="#7c2d12" />
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 hh-pending" />
-                  <span className="text-[11px] font-medium" style={{ color: textSecondary }}>Awaiting picks from both players</span>
-                </div>
-              )}
+                {u2OnFire && <span className="absolute -top-1 -left-1 text-[11px] hh-flame" aria-label="On fire">🔥</span>}
+              </button>
             </div>
           </div>
 
-          {/* Embed footer — pot + spectate hint */}
-          <div
-            className="flex items-center justify-between px-3 py-1.5"
-            style={{ borderTop: `1px solid ${border}`, background: '#0a0a0a' }}
-          >
-            <span className="text-[11px] font-bold tabular-nums" style={{ color: textPrimary }}>
-              {isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`}
-              <span className="font-normal" style={{ color: textMuted }}> pot</span>
+          {/* Thin two-tone momentum bar */}
+          <div className="mt-2 h-1.5 rounded-full overflow-hidden flex" style={{ background: track, border: `1px solid ${border}` }}>
+            <div style={{ width: `${u1Pct}%`, background: u1Lead ? 'linear-gradient(90deg, #10b981, #22c55e)' : HH_BLUE, transition: 'width 700ms ease' }} />
+            <div style={{ width: `${100 - u1Pct}%`, background: u2Lead ? 'linear-gradient(90deg, #22c55e, #10b981)' : HH_ORANGE, transition: 'width 700ms ease' }} />
+          </div>
+
+          {/* Compact status + spectate hint */}
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <span className="text-[10px] font-medium truncate min-w-0" style={{ color: textSecondary }}>
+              {bothPicked
+                ? 'Both players locked in'
+                : onlyU1Locked
+                  ? `${u1.username || 'P1'} locked · awaiting other`
+                  : onlyU2Locked
+                    ? `${u2.username || 'P2'} locked · awaiting other`
+                    : 'Awaiting picks from both players'}
             </span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: textSecondary }}>
-              <Icon.Eye size={12} /> Spectate
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold flex-shrink-0" style={{ color: textMuted }}>
+              <Icon.Eye size={11} /> Spectate
             </span>
           </div>
         </div>
@@ -1436,7 +1356,7 @@ function YourMatchPost({ match, onOpenProfile, onShowHistory }) {
   return (
     <div className="rounded-2xl mb-4 p-3 flex items-center gap-3" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
       <button type="button" onClick={(e) => onOpenProfile?.(opp, e)} className="flex-shrink-0">
-        <FramedAvatar avatar={opp.avatar} username={opp.username || '?'} frameId={opp.equippedFrame} size={40} bgColor="#1a1a1a" />
+        <FramedAvatar avatar={opp.avatar} username={opp.username || '?'} frameId={opp.equippedFrame} size={40} bgColor={avatarBg} />
       </button>
       <div className="flex-1 min-w-0">
         <div className="text-[13px]" style={{ color: textPrimary }}>
@@ -1505,7 +1425,7 @@ function FeedSidebar({ onStartBattle, friends, recentHighlights, onOpenProfile, 
             {onlineFriends.map((f) => (
               <div key={f.id} className="flex items-center gap-3 px-3 py-2.5">
                 <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="relative flex-shrink-0">
-                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor="#1a1a1a" isOnline onlineDotBorderColor={surface} />
+                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor={avatarBg} isOnline onlineDotBorderColor={surface} />
                 </button>
                 <div className="min-w-0 flex-1">
                   <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="block w-full text-left">
@@ -1547,7 +1467,7 @@ function FeedSidebar({ onStartBattle, friends, recentHighlights, onOpenProfile, 
                 onClick={() => onReplay?.(b)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-white/5"
               >
-                <FramedAvatar avatar={b.winner?.avatar} username={b.winner?.username || 'W'} frameId={b.winner?.equippedFrame} size={32} bgColor="#1a1a1a" />
+                <FramedAvatar avatar={b.winner?.avatar} username={b.winner?.username || 'W'} frameId={b.winner?.equippedFrame} size={32} bgColor={avatarBg} />
                 <div className="min-w-0 flex-1 text-[11px]" style={{ color: textPrimary }}>
                   <div className="truncate">
                     <span className="font-semibold text-green-400">{b.winner?.username || 'Player'}</span>
@@ -1749,7 +1669,7 @@ function ShareSheet({ target, friends, currentUser, onClose }) {
             placeholder="Search friends…"
             className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             style={{
-              backgroundColor: '#111',
+              backgroundColor: elevated,
               border: `1px solid ${border}`,
               color: textPrimary,
             }}
@@ -1775,7 +1695,7 @@ function ShareSheet({ target, friends, currentUser, onClose }) {
                   className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 text-left transition-colors"
                   aria-pressed={isSel}
                 >
-                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor="#1a1a1a" isOnline={f.isOnline} onlineDotBorderColor={surface} />
+                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor={avatarBg} isOnline={f.isOnline} onlineDotBorderColor={surface} />
                   <div className="min-w-0 flex-1">
                     <div className="text-[13px] font-semibold truncate" style={{ color: textPrimary }}>{f.username}</div>
                     <div className="text-[10px]" style={{ color: textMuted }}>{f.isOnline ? 'Online' : formatLastSeen(f.lastSeenAt)}</div>
@@ -1810,7 +1730,7 @@ function ShareSheet({ target, friends, currentUser, onClose }) {
             placeholder="Add a note (optional)"
             className="w-full rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
             style={{
-              backgroundColor: '#111',
+              backgroundColor: elevated,
               border: `1px solid ${border}`,
               color: textPrimary,
             }}
@@ -2011,7 +1931,7 @@ function RightSidebar({
               return (
                 <div key={f.id} className="flex items-center gap-2.5 px-4 py-2.5">
                   <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="flex-shrink-0">
-                    <FramedAvatar avatar={f.avatar} username={f.username || 'P'} frameId={f.equippedFrame} size={36} bgColor="#1a1a1a" isOnline={f.isOnline} onlineDotBorderColor={surface} />
+                    <FramedAvatar avatar={f.avatar} username={f.username || 'P'} frameId={f.equippedFrame} size={36} bgColor={avatarBg} isOnline={f.isOnline} onlineDotBorderColor={surface} />
                   </button>
                   <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="min-w-0 flex-1 text-left">
                     <span className="block text-[13px] font-bold truncate hover:underline" style={{ color: textPrimary }}>{f.username || 'Player'}</span>
@@ -2265,7 +2185,7 @@ export default function SocialFeedPage({ data }) {
   }, [deepLinkBattleId, liveBattles]);
 
   return (
-    <div className="pb-8 w-full">
+    <div className="sf-root pb-8 w-full">
       {/* Twitter-style centered layout: a constrained feed column (≤600px)
           plus a sticky right rail on desktop. The feed no longer spans the
           whole page — it reads like a focused timeline with breathing room.
