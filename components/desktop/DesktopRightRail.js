@@ -33,7 +33,7 @@ const textMuted = 'var(--rail-text-3)';
 function Card({ title, action, onAction, children }) {
   return (
     <div
-      className="rounded-2xl mb-4 overflow-hidden"
+      className="desktop-rail-card rounded-2xl mb-4 overflow-hidden"
       style={{ backgroundColor: surface, border: `1px solid ${border}` }}
     >
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
