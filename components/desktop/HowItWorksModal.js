@@ -83,11 +83,11 @@ function VisualBeyond() {
             className="flex items-center justify-center w-12 h-12 rounded-full text-lg"
             style={{ backgroundColor: '#101010', border: `2px solid ${c}`, zIndex: 10 - i }}
           >
-            {['🔥', '⚡', '💎', '🎟️'][i]}
+            {['🔥', '⚡', '💎', '🏆'][i]}
           </span>
         ))}
       </div>
-      <span className="mt-3 text-[12px] font-bold" style={{ color: C.cyan }}>Pik Pools · Capper marketplace</span>
+      <span className="mt-3 text-[12px] font-bold" style={{ color: C.cyan }}>Climb the ranks · Build your name</span>
     </div>
   );
 }
@@ -136,12 +136,12 @@ const STEPS = [
   {
     accent: C.orange,
     eyebrow: 'Step 4',
-    title: 'Go beyond 1v1',
+    title: 'Build your name',
     body: (
       <>
-        Join multiplayer <strong style={{ color: '#e5e7eb' }}>Pik Pools</strong> to compete against the whole
-        league, or visit the <strong style={{ color: '#e5e7eb' }}>marketplace</strong> to follow verified
-        cappers and their picks.
+        Every battle you win builds your <strong style={{ color: '#e5e7eb' }}>reputation</strong>. Stack wins,
+        climb the leaderboard, and make a <strong style={{ color: '#e5e7eb' }}>name for yourself</strong> across
+        the league.
       </>
     ),
     Visual: VisualBeyond,
