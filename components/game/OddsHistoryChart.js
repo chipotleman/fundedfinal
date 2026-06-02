@@ -474,8 +474,8 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
             onClick={() => setRange(r.key)}
             className="px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider rounded-md transition-transform active:translate-y-[1px]"
             style={{
-              background: active ? '#fb923c' : '#0d0d0d',
-              color: active ? '#0a0a0a' : '#cbd5e1',
+              background: active ? HOME_COLOR : '#0d0d0d',
+              color: active ? HOME_INK : '#cbd5e1',
               border: `2px solid ${BORDER}`,
               boxShadow: active ? '2px 2px 0 0 #0a0a0a' : '2px 2px 0 0 #0a0a0a',
             }}
