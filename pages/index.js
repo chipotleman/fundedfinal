@@ -1228,15 +1228,12 @@ export default function Dashboard() {
   // it, so both leagues remain reachable from the condensed bar.
   const renderSportPills = (variant = 'inline') => {
     const isCondensed = variant === 'condensed';
-    // On PHONES only: when the Pik Slip is empty in the condensed sticky
-    // header the bet-slip button is hidden and the pills row owns the full
-    // (narrow) width — spread them evenly so the bar doesn't look lopsided.
-    // From `sm` up (tablet/desktop) there's plenty of room, so the pills
-    // stay left-packed exactly like the pre-scroll inline row (handled by
-    // the responsive classes below). As soon as the user adds a pick, the
-    // bet-slip button mounts on the right and we collapse back to the
-    // natural left-packed layout on every size.
-    const spreadEvenly = isCondensed && (betSlip?.length || 0) === 0;
+    // In the condensed sticky header the pills always stay left-packed with a
+    // tight gap. We used to spread them evenly (justify-between, full width)
+    // when the Pik Slip was empty, but that pushed the rightmost pill toward
+    // the edge where it collided with the Pik Slip button on phones. Keeping
+    // them snug + left-packed means the row scrolls cleanly and never overlaps
+    // the Pik Slip.
     // Match the inline pill sizing in the condensed bar too — earlier
     // we shrank them, but that made the condensed row look mismatched
     // against the desktop top-nav icons that sit alongside the pills.
@@ -1278,7 +1275,7 @@ export default function Dashboard() {
 
     return (
       <div
-        className={`flex items-center overflow-x-auto scrollbar-hide ${spreadEvenly ? 'justify-between gap-1.5 w-full sm:w-auto sm:justify-start sm:gap-0 sm:space-x-2' : 'space-x-2'} ${isCondensed ? '' : 'pb-1'}`}
+        className={`flex items-center overflow-x-auto scrollbar-hide ${isCondensed ? 'space-x-1 sm:space-x-2' : 'space-x-2 pb-1'}`}
         style={isCondensed ? { WebkitOverflowScrolling: 'touch' } : undefined}
       >
         {isDemoMode && !isCondensed && (
