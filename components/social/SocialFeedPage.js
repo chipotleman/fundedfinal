@@ -887,11 +887,13 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
   );
 }
 
-function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGuest, onShare }) {
+function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGuest, onShare, defaultChatOpen = false }) {
   const isBeta = useBetaMode();
   // Inline chat lives directly inside the card so spectators can drop
   // a quick reaction without navigating to /battle/spectate/[id].
-  const [chatOpen, setChatOpen] = useState(false);
+  // `defaultChatOpen` is set when the user deep-links to this battle (e.g.
+  // from the "Live now" sidebar) so they land on the conversation.
+  const [chatOpen, setChatOpen] = useState(defaultChatOpen);
   const [liked, setLiked] = useState(!!battle.likedByMe);
   const [likeCount, setLikeCount] = useState(Number(battle.likeCount) || 0);
   const [likePending, setLikePending] = useState(false);
@@ -2248,6 +2250,20 @@ export default function SocialFeedPage({ data }) {
     return () => clearTimeout(t);
   }, [deepLinkPostId, posts]);
 
+  // Deep-link to a specific live battle via `?battle=<id>`: clicking a battle
+  // in the "Live now" sidebar drops the user on that battle's feed card with
+  // its comment thread open, so they land on the conversation instead of the
+  // top of /battle.
+  const deepLinkBattleId = typeof router.query.battle === 'string' ? router.query.battle : null;
+  useEffect(() => {
+    if (!deepLinkBattleId) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(`battle-${deepLinkBattleId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [deepLinkBattleId, liveBattles]);
+
   return (
     <div className="pb-8 w-full">
       {/* Twitter-style centered layout: a constrained feed column (≤600px)
@@ -2304,15 +2320,17 @@ export default function SocialFeedPage({ data }) {
           feedItems.map((item) => {
             if (item.kind === 'live') {
               return (
-                <LiveBattlePost
-                  key={item.key}
-                  battle={item.data}
-                  onSpectate={handleSpectate}
-                  onOpenProfile={onOpenProfile}
-                  currentUser={currentUser}
-                  isGuest={isGuest}
-                  onShare={handleOpenShare}
-                />
+                <div key={item.key} id={`battle-${item.data.id}`}>
+                  <LiveBattlePost
+                    battle={item.data}
+                    onSpectate={handleSpectate}
+                    onOpenProfile={onOpenProfile}
+                    currentUser={currentUser}
+                    isGuest={isGuest}
+                    onShare={handleOpenShare}
+                    defaultChatOpen={deepLinkBattleId === item.data.id}
+                  />
+                </div>
               );
             }
             if (item.kind === 'post') {

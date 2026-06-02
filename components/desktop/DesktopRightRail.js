@@ -127,7 +127,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
               <button
                 key={b.id}
                 type="button"
-                onClick={() => router.push('/battle')}
+                onClick={() => router.push(`/battle?battle=${b.id}`)}
                 className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left lg:hover:bg-white/5 transition-colors"
               >
                 <span className="flex items-center -space-x-2 flex-shrink-0">
