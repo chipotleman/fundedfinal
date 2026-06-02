@@ -55,10 +55,12 @@ function fmtTime(t, range) {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, sport, liveOdds, commenceTime, isLive, isFinal }) {
+export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamFull, awayTeamFull, sport, liveOdds, commenceTime, isLive, isFinal }) {
   // Home team draws in its brand color; fall back to the app blue when the
-  // team isn't in the color map. The away team is theme-neutral (AWAY_COLOR).
-  const HOME_COLOR = getTeamColor(homeTeam, sport) || '#3b82f6';
+  // team isn't in the color map. Resolve the color from the FULL team name
+  // (e.g. "Michigan Wolverines") — the short `homeTeam` label ("MICH") used
+  // for the legend won't match the color map and would fall back to blue.
+  const HOME_COLOR = getTeamColor(homeTeamFull || homeTeam, sport) || '#3b82f6';
   const HOME_INK = inkFor(HOME_COLOR);
   const [range, setRange] = useState('1H');
   const [data, setData] = useState({ points: [], openedAt: null, current: null });

@@ -7,7 +7,6 @@ import OddsHistoryChart from '../../components/game/OddsHistoryChart';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { leavePage } from '../../utils/leavePage';
 import TeamLogo from '../../components/TeamLogo';
-import { getTeamColor } from '../../utils/teamColors';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -338,7 +337,7 @@ export default function GameDetail() {
                     <TeamLogoBadge name={game.homeTeamFull || game.homeTeam} sport={game.sport} accent="blue" size={28} />
                     <span className="text-lg font-bold truncate text-white">{game.homeTeamFull || game.homeTeam}</span>
                   </div>
-                  <span className="text-2xl font-black tabular-nums" style={{ color: getTeamColor(game.homeTeamFull || game.homeTeam, game.sport) || '#3b82f6' }}>
+                  <span className="text-2xl font-black tabular-nums" style={{ color: '#ffffff' }}>
                     {isLive || isFinal ? (possession?.homeScore ?? game.scores?.home?.total ?? game.homeScore ?? 0) : '—'}
                   </span>
                 </div>
@@ -381,6 +380,8 @@ export default function GameDetail() {
               gameId={game.id}
               homeTeam={game.homeTeam || game.homeTeamFull}
               awayTeam={game.awayTeam || game.awayTeamFull}
+              homeTeamFull={game.homeTeamFull || game.homeTeam}
+              awayTeamFull={game.awayTeamFull || game.awayTeam}
               sport={game.sport}
               liveOdds={{ home: moneyline.home, away: moneyline.away }}
               commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
@@ -429,7 +430,7 @@ export default function GameDetail() {
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.awayTeamFull || game.awayTeam}</div>
-                    <div className={`text-xl font-bold ${checkBetInSlip('moneyline', game.awayTeamFull || game.awayTeam) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-xl font-bold ${checkBetInSlip('moneyline', game.awayTeamFull || game.awayTeam) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(moneyline.away) : '-'}
                     </div>
                   </button>
@@ -444,7 +445,7 @@ export default function GameDetail() {
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.homeTeamFull || game.homeTeam}</div>
-                    <div className={`text-xl font-bold ${checkBetInSlip('moneyline', game.homeTeamFull || game.homeTeam) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-xl font-bold ${checkBetInSlip('moneyline', game.homeTeamFull || game.homeTeam) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(moneyline.home) : '-'}
                     </div>
                   </button>
@@ -473,7 +474,7 @@ export default function GameDetail() {
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.awayTeamFull || game.awayTeam}</div>
                     <div className="text-lg font-bold text-white">{hasLines ? formatSpread(spread.away.point) : '-'}</div>
-                    <div className={`text-sm ${checkBetInSlip('spread', `${game.awayTeamFull || game.awayTeam} ${spread.away.point}`) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-sm ${checkBetInSlip('spread', `${game.awayTeamFull || game.awayTeam} ${spread.away.point}`) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(spread.away.odds) : '-'}
                     </div>
                   </button>
@@ -489,7 +490,7 @@ export default function GameDetail() {
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.homeTeamFull || game.homeTeam}</div>
                     <div className="text-lg font-bold text-white">{hasLines ? formatSpread(spread.home.point) : '-'}</div>
-                    <div className={`text-sm ${checkBetInSlip('spread', `${game.homeTeamFull || game.homeTeam} ${spread.home.point}`) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-sm ${checkBetInSlip('spread', `${game.homeTeamFull || game.homeTeam} ${spread.home.point}`) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(spread.home.odds) : '-'}
                     </div>
                   </button>
@@ -518,7 +519,7 @@ export default function GameDetail() {
                   >
                     <div className="text-sm text-gray-400 mb-1">Over</div>
                     <div className="text-lg font-bold text-white">{hasLines ? total.over.point : '-'}</div>
-                    <div className={`text-sm ${checkBetInSlip('total', `Over ${total.over.point}`) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-sm ${checkBetInSlip('total', `Over ${total.over.point}`) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(total.over.odds) : '-'}
                     </div>
                   </button>
@@ -534,7 +535,7 @@ export default function GameDetail() {
                   >
                     <div className="text-sm text-gray-400 mb-1">Under</div>
                     <div className="text-lg font-bold text-white">{hasLines ? total.under.point : '-'}</div>
-                    <div className={`text-sm ${checkBetInSlip('total', `Under ${total.under.point}`) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-sm ${checkBetInSlip('total', `Under ${total.under.point}`) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(total.under.odds) : '-'}
                     </div>
                   </button>
@@ -600,7 +601,9 @@ function DesktopMarketCard({ title, children }) {
 }
 
 function DesktopOptionButton({ active, disabled, label, value, sub, onClick, accent = 'blue' }) {
-  const accentBg = accent === 'orange' ? '#fb923c' : '#3b82f6';
+  // Selection highlight uses the app's blue accent only — the odds numbers
+  // themselves stay white for readability (no orange/team tint on values).
+  const accentBg = '#3b82f6';
   return (
     <button
       onClick={onClick}
@@ -627,7 +630,7 @@ function DesktopOptionButton({ active, disabled, label, value, sub, onClick, acc
       </div>
       <span
         className="text-lg font-extrabold tabular-nums"
-        style={{ color: active && !disabled ? '#ffffff' : accentBg }}
+        style={{ color: '#ffffff' }}
       >
         {value}
       </span>
@@ -659,8 +662,6 @@ function DesktopGameDetail({
 }) {
   const awayName = game.awayTeamFull || game.awayTeam;
   const homeName = game.homeTeamFull || game.homeTeam;
-  // Home team carries its brand color; away team stays theme-neutral.
-  const homeColor = getTeamColor(homeName, game.sport) || '#3b82f6';
   const awayScore = isLive || isFinal
     ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0)
     : '—';
@@ -782,7 +783,7 @@ function DesktopGameDetail({
               <div className="flex items-center justify-center gap-5">
                 <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>{awayScore}</div>
                 <div className="text-3xl font-bold text-gray-700">—</div>
-                <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: homeColor }}>{homeScore}</div>
+                <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: '#ffffff' }}>{homeScore}</div>
               </div>
               <div className="mt-2 flex items-center justify-center gap-2">
                 {isFinal ? (
@@ -840,7 +841,7 @@ function DesktopGameDetail({
                   <div key={i} className="text-center text-sm font-bold text-gray-300 tabular-nums">{awayPeriods[i] ?? '—'}</div>
                 ))}
                 <div className="text-center text-sm font-black text-white tabular-nums">{awayScore}</div>
-                <div className="text-sm font-bold truncate" style={{ color: homeColor }}>{homeName}</div>
+                <div className="text-sm font-bold truncate" style={{ color: '#ffffff' }}>{homeName}</div>
                 {Array.from({ length: periodCount }).map((_, i) => (
                   <div key={i} className="text-center text-sm font-bold text-gray-300 tabular-nums">{homePeriods[i] ?? '—'}</div>
                 ))}
@@ -860,6 +861,8 @@ function DesktopGameDetail({
                 gameId={game.id}
                 homeTeam={game.homeTeam || game.homeTeamFull}
                 awayTeam={game.awayTeam || game.awayTeamFull}
+                homeTeamFull={game.homeTeamFull || game.homeTeam}
+                awayTeamFull={game.awayTeamFull || game.awayTeam}
                 sport={game.sport}
                 liveOdds={{ home: moneyline.home, away: moneyline.away }}
                 commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
