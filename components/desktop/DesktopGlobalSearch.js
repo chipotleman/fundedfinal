@@ -335,7 +335,11 @@ export default function DesktopGlobalSearch() {
                           title={`Battle ${p.username}`}
                           aria-label={`Battle ${p.username}`}
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform active:scale-90"
-                          style={{ background: 'rgba(251,146,60,0.14)', border: '1px solid rgba(251,146,60,0.4)', color: '#fdba74' }}
+                          style={
+                            isLight
+                              ? { background: 'rgba(234,88,12,0.14)', border: '1px solid rgba(234,88,12,0.5)', color: '#ea580c' }
+                              : { background: 'rgba(251,146,60,0.14)', border: '1px solid rgba(251,146,60,0.4)', color: '#fdba74' }
+                          }
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
@@ -358,8 +362,12 @@ export default function DesktopGlobalSearch() {
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform active:scale-90"
                           style={
                             requested
-                              ? { background: 'rgba(16,185,129,0.14)', border: '1px solid rgba(16,185,129,0.4)', color: '#34d399', cursor: 'default' }
-                              : { background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.4)', color: '#93c5fd' }
+                              ? (isLight
+                                  ? { background: 'rgba(5,150,105,0.14)', border: '1px solid rgba(5,150,105,0.5)', color: '#059669', cursor: 'default' }
+                                  : { background: 'rgba(16,185,129,0.14)', border: '1px solid rgba(16,185,129,0.4)', color: '#34d399', cursor: 'default' })
+                              : (isLight
+                                  ? { background: 'rgba(37,99,235,0.14)', border: '1px solid rgba(37,99,235,0.5)', color: '#2563eb' }
+                                  : { background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.4)', color: '#93c5fd' })
                           }
                         >
                           {requested ? (
@@ -382,7 +390,11 @@ export default function DesktopGlobalSearch() {
                           title={`Message ${p.username}`}
                           aria-label={`Message ${p.username}`}
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform active:scale-90"
-                          style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.4)', color: '#67e8f9' }}
+                          style={
+                            isLight
+                              ? { background: 'rgba(8,145,178,0.14)', border: '1px solid rgba(8,145,178,0.5)', color: '#0891b2' }
+                              : { background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.4)', color: '#67e8f9' }
+                          }
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
