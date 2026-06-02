@@ -1258,7 +1258,7 @@ function SlideToForfeit({ onConfirm, disabled = false }) {
   };
 
   const progress = maxX > 0 ? thumbX / maxX : 0;
-  const trackBg = `linear-gradient(90deg, rgba(239,68,68,${0.16 + progress * 0.30}) 0%, rgba(249,115,22,${0.10 + progress * 0.22}) 100%)`;
+  const trackBg = `linear-gradient(90deg, rgba(239,68,68,${0.05 + progress * 0.20}) 0%, rgba(249,115,22,${0.03 + progress * 0.14}) 100%)`;
 
   return (
     <div
@@ -1266,10 +1266,10 @@ function SlideToForfeit({ onConfirm, disabled = false }) {
       style={{
         position: 'relative',
         height: 52,
-        borderRadius: 14,
-        background: `linear-gradient(180deg, rgba(15,20,36,0.95), rgba(10,14,28,0.95)), ${trackBg}`,
-        border: '2.5px solid #0a0a0a',
-        boxShadow: `0 4px 0 #0a0a0a, inset 0 0 0 1.5px rgba(239,68,68,${0.35 + progress * 0.4}), inset 0 0 18px rgba(239,68,68,${0.12 + progress * 0.2})`,
+        borderRadius: 26,
+        background: `linear-gradient(180deg, rgba(22,18,22,0.6), rgba(14,12,15,0.6)), ${trackBg}`,
+        border: `1px solid rgba(239,68,68,${0.16 + progress * 0.28})`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 4px rgba(0,0,0,0.35)`,
         overflow: 'hidden',
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -1282,21 +1282,21 @@ function SlideToForfeit({ onConfirm, disabled = false }) {
         style={{
           position: 'absolute',
           inset: 0,
+          paddingLeft: THUMB + 4,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'none',
-          color: '#fca5a5',
-          fontSize: 11.5,
-          fontWeight: 900,
-          letterSpacing: '0.18em',
+          color: '#f87171',
+          fontSize: 12.5,
+          fontWeight: 700,
+          letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          textShadow: '0 2px 0 #0a0a0a, 0 0 10px rgba(239,68,68,0.5)',
-          opacity: confirming ? 0 : Math.max(0.18, 1 - progress * 1.4),
+          opacity: confirming ? 0 : Math.max(0.22, 1 - progress * 1.4),
           transition: dragging ? 'none' : 'opacity 200ms ease',
         }}
       >
-        {confirming ? 'Forfeiting…' : '→  Slide to Forfeit  →'}
+        {confirming ? 'Forfeiting…' : 'Slide to forfeit'}
       </div>
       <div
         role="button"
@@ -1308,25 +1308,25 @@ function SlideToForfeit({ onConfirm, disabled = false }) {
         onClick={(e) => { e.stopPropagation(); }}
         style={{
           position: 'absolute',
-          top: 2,
-          left: 2,
+          top: '50%',
+          left: 4,
           width: THUMB,
           height: THUMB,
           borderRadius: '50%',
-          background: 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)',
-          border: '2.5px solid #0a0a0a',
-          boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(239,68,68,0.65)',
+          background: 'linear-gradient(180deg, #f05252 0%, #dc2626 100%)',
+          border: '1px solid rgba(0,0,0,0.18)',
+          boxShadow: '0 2px 6px rgba(220,38,38,0.4), inset 0 1px 0 rgba(255,255,255,0.28)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: '#fff',
-          transform: `translateX(${thumbX}px)`,
+          transform: `translate(${thumbX}px, -50%)`,
           transition: dragging ? 'none' : 'transform 220ms cubic-bezier(0.22,1,0.36,1)',
           cursor: disabled || confirming ? 'not-allowed' : 'grab',
           touchAction: 'none',
         }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 5l7 7-7 7" />
         </svg>
       </div>
