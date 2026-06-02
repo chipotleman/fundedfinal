@@ -108,6 +108,113 @@ function FriendMuteToggle({ friend }) {
   );
 }
 
+// Per-message "•••" actions menu (Instagram-style). Replaces the old bare
+// trashcan: tapping the three dots opens a small popover with "Unsend"
+// (delete for everyone — own messages only) and "Delete for me" (hide from
+// just this user's view). The trigger stays visible at low opacity on touch
+// (no-hover preference) and reveals on hover on desktop.
+function MessageActionsMenu({ mine, disabled, onUnsend, onDeleteForMe }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
+        aria-label="Message actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Message actions"
+        className={`flex-shrink-0 inline-flex items-center justify-center rounded-full transition-opacity ${
+          open ? 'opacity-100' : 'opacity-60 lg:opacity-0 lg:group-hover:opacity-80 lg:hover:opacity-100'
+        }`}
+        style={{
+          width: 26,
+          height: 26,
+          background: 'rgba(15,23,42,0.6)',
+          border: '1.5px solid rgba(148,163,184,0.35)',
+          color: '#cbd5e1',
+          cursor: disabled ? 'wait' : 'pointer',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="5" cy="12" r="1.7" />
+          <circle cx="12" cy="12" r="1.7" />
+          <circle cx="19" cy="12" r="1.7" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className={`absolute z-50 mt-1 rounded-xl overflow-hidden ${mine ? 'left-0' : 'right-0'}`}
+          style={{
+            top: '100%',
+            minWidth: 168,
+            background: '#0f1116',
+            border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
+          }}
+        >
+          {mine && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onUnsend();
+              }}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm lg:hover:bg-white/5 transition-colors"
+              style={{ color: '#f87171' }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 7v6h6" />
+                <path d="M3 13a9 9 0 1 0 3-7.7L3 8" />
+              </svg>
+              <span className="font-semibold">Unsend</span>
+            </button>
+          )}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onDeleteForMe();
+            }}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm lg:hover:bg-white/5 transition-colors"
+            style={{ color: '#e2e8f0', borderTop: mine ? '1px solid rgba(255,255,255,0.06)' : 'none' }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+            </svg>
+            <span className="font-semibold">Delete for me</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Scroll only the inner chat container — never call scrollIntoView, which can
 // scroll the outer page if the chat body isn't itself the nearest scrollable
 // ancestor. This fixes the long-standing scroll-hijack bug.
@@ -1361,6 +1468,54 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     });
     try {
       const res = await fetch(`/api/messages/${encodeURIComponent(messageId)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok && res.status !== 404) {
+        throw new Error('delete_failed');
+      }
+    } catch (_e) {
+      if (removed) {
+        setThread((prev) => {
+          if (prev.some((x) => x.id === messageId)) return prev;
+          const next = prev.slice();
+          const insertAt = Math.min(removed.idx, next.length);
+          next.splice(insertAt, 0, removed.msg);
+          return next;
+        });
+      }
+      setSendError('Could not delete message. Try again.');
+    } finally {
+      setDeletingIds((prev) => {
+        if (!prev.has(messageId)) return prev;
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
+    }
+  }, []);
+
+  // "Delete for me" — hides the bubble from this user's view only. The
+  // other participant keeps seeing it (no SSE broadcast). Optimistically
+  // removes locally, then persists via ?scope=me; restores on failure.
+  const handleDeleteForMe = useCallback(async (messageId) => {
+    if (!messageId) return;
+    let removed = null;
+    setThread((prev) => {
+      const idx = prev.findIndex((x) => x.id === messageId);
+      if (idx === -1) return prev;
+      removed = { msg: prev[idx], idx };
+      const next = prev.slice();
+      next.splice(idx, 1);
+      return next;
+    });
+    setDeletingIds((prev) => {
+      const next = new Set(prev);
+      next.add(messageId);
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/messages/${encodeURIComponent(messageId)}?scope=me`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -2870,43 +3025,22 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             key={m.id}
             className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}
           >
-            {/* Bubble row. For own messages we add a small unsend
-                affordance to the LEFT of the bubble (since the row is
-                right-aligned). The `group` class lets desktop hover
-                reveal it; on touch (no hover) we keep it visible at
-                low opacity so it's always tappable — per the
-                no-hover-on-touch app preference. */}
+            {/* Bubble row. A "•••" actions menu sits on the outer edge of
+                the bubble (LEFT for own right-aligned messages, RIGHT for
+                received ones). The `group` class lets desktop hover reveal
+                it; on touch (no hover) it stays at low opacity so it's
+                always tappable — per the no-hover-on-touch app preference. */}
             <div
               className={`flex items-center gap-1.5 max-w-full group ${
                 mine ? 'flex-row' : 'flex-row-reverse'
               }`}
             >
-              {mine && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteMessage(m.id)}
-                  disabled={isDeleting}
-                  aria-label="Unsend message"
-                  title="Unsend message"
-                  className="flex-shrink-0 inline-flex items-center justify-center rounded-full transition-opacity opacity-60 lg:opacity-0 lg:group-hover:opacity-80 lg:hover:opacity-100"
-                  style={{
-                    width: 26,
-                    height: 26,
-                    background: 'rgba(15,23,42,0.6)',
-                    border: '1.5px solid rgba(248,113,113,0.45)',
-                    color: '#f87171',
-                    cursor: isDeleting ? 'wait' : 'pointer',
-                  }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                    <path d="M10 11v6" />
-                    <path d="M14 11v6" />
-                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                  </svg>
-                </button>
-              )}
+              <MessageActionsMenu
+                mine={mine}
+                disabled={isDeleting}
+                onUnsend={() => handleDeleteMessage(m.id)}
+                onDeleteForMe={() => handleDeleteForMe(m.id)}
+              />
               {/* Cartoon-themed bubbles — chunky black border + offset
                   shadow on both sides. Mine uses a bold blue gradient
                   (matches the "Start Battle" CTA), theirs uses a dark

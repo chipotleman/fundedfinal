@@ -148,6 +148,12 @@ export const messages = pgTable("messages", {
   // (typically 36 entries between 0 and 1). Older messages predating this
   // column have NULL here and fall back to the on-demand decode path.
   attachmentPeaks: jsonb("attachment_peaks"),
+  // Per-user "delete for me" list. Holds the user IDs who have hidden this
+  // message from their own view (WhatsApp/Instagram-style). The row stays
+  // intact for the other participant; once everyone has hidden it the DELETE
+  // handler hard-deletes the row. NULL on rows predating this column is
+  // treated as an empty array everywhere it's read.
+  deletedFor: jsonb("deleted_for").default(sql`'[]'::jsonb`),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   senderIdIdx: index("messages_sender_id_idx").on(table.senderId),
