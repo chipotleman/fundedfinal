@@ -266,7 +266,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     }}
                     className="absolute top-2 right-2 p-1.5 text-gray-300 lg:hover:text-white focus:outline-none"
                     style={{ WebkitTapHighlightColor: 'transparent' }}
-                    aria-label={cashRevealed ? 'Hide cash balance' : 'Show cash balance'}
+                    aria-label={cashRevealed ? 'Hide Crowns balance' : 'Show Crowns balance'}
                     aria-pressed={cashRevealed}
                   >
                     {cashRevealed ? (
@@ -293,11 +293,11 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                       }}
                       className="text-center w-full focus:outline-none"
                       style={{ WebkitTapHighlightColor: 'transparent' }}
-                      aria-label="Cash balance details"
+                      aria-label="Crowns balance details"
                     >
-                      <p className="text-xs text-gray-400 mb-0.5">Balance</p>
-                      <p className="text-white font-semibold text-xl">
-                        {cashRevealed ? `$${formatMoney(userBalance)}` : '$••••'}
+                      <p className="text-xs text-gray-400 mb-0.5">Crowns</p>
+                      <p className="font-semibold text-xl" style={{ color: '#facc15' }}>
+                        {cashRevealed ? `👑 ${formatMoney(userBalance)}` : '👑 ••••'}
                       </p>
                     </button>
                     <Link
