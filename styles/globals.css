@@ -1503,9 +1503,14 @@ html.light .bc-surface [style*="background: rgb(17, 17, 17)" i] {
 }
 
 /* --- VS / PLAY NOW hero card (`.youvs-card`) --- */
+/* Light theme swaps the green/cyan hero tint for a warm Crowns-yellow tint.
+   The yellow border + glow themselves are driven by the component's inline
+   styles (which are `isLight`-aware and carry the expanded/non-expanded
+   variants), so we intentionally do NOT force `border-color` here — that
+   would override the inline expanded border. We only force the background
+   wash so the surface stays light regardless of the SSR inline value. */
 html.light .youvs-card {
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.10) 0%, rgba(6, 182, 212, 0.06) 45%, #ffffff 100%), #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.10) !important;
+  background: linear-gradient(180deg, rgba(250, 204, 21, 0.16) 0%, rgba(234, 179, 8, 0.08) 45%, #ffffff 100%), #ffffff !important;
 }
 /* Surface white text → dark, but EXCLUDE the cartoon "PLAY NOW" sticker, which
    is intentionally white with a black text-stroke outline in both themes. The

@@ -12,6 +12,7 @@ import TeamLogo from '../TeamLogo';
 import MutualFriendsLine from '../social/MutualFriendsLine';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import {
@@ -310,6 +311,8 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
   // real money in beta. Player balances and the pot are coin scores.
   const isBeta = useBetaMode();
   const router = useRouter();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
   const [internalExpanded, setInternalExpanded] = useState(false);
   const expanded = compact ? isExpanded : internalExpanded;
@@ -733,10 +736,14 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                       router.push(`/battle/spectate/${battle.id}`);
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold text-white"
+                  className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold ${isLight ? 'text-[#1a1505]' : 'text-white'}`}
                   style={{
-                    background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
-                    boxShadow: '0 4px 12px rgba(59,130,246,0.25)',
+                    background: isLight
+                      ? 'linear-gradient(135deg, #facc15, #eab308)'
+                      : 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+                    boxShadow: isLight
+                      ? '0 4px 12px rgba(234,179,8,0.35)'
+                      : '0 4px 12px rgba(59,130,246,0.25)',
                   }}
                 >
                   {battle.simulated || isSimulated ? 'Open in Social' : 'See More'}
@@ -1284,6 +1291,9 @@ function YouVsCard({
   }, [persistPrefs]);
   const selectedGameMode = ONE_TAP_GAME_MODE_OPTIONS.find((m) => m.id === gameMode)
     || ONE_TAP_GAME_MODE_OPTIONS[0];
+
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   const isActive = status === 'active';
   const isWaiting = status === 'waiting';
@@ -1946,13 +1956,19 @@ function YouVsCard({
       }
       aria-expanded={isIdle ? undefined : isExpanded}
       style={{
-        background:
-          'linear-gradient(180deg, rgba(16,185,129,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
-        border: isExpanded
-          ? '1.5px solid rgba(52, 211, 153, 0.85)'
-          : '1.5px solid rgba(16, 185, 129, 0.6)',
-        boxShadow:
-          '0 0 0 1px rgba(16,185,129,0.15) inset, 0 0 18px rgba(16,185,129,0.28), 0 0 32px rgba(6,182,212,0.12)',
+        background: isLight
+          ? 'linear-gradient(180deg, rgba(250,204,21,0.16) 0%, rgba(234,179,8,0.08) 45%, #ffffff 100%), #ffffff'
+          : 'linear-gradient(180deg, rgba(16,185,129,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
+        border: isLight
+          ? (isExpanded
+              ? '1.5px solid rgba(234, 179, 8, 0.9)'
+              : '1.5px solid rgba(234, 179, 8, 0.65)')
+          : (isExpanded
+              ? '1.5px solid rgba(52, 211, 153, 0.85)'
+              : '1.5px solid rgba(16, 185, 129, 0.6)'),
+        boxShadow: isLight
+          ? '0 0 0 1px rgba(250,204,21,0.25) inset, 0 0 18px rgba(250,204,21,0.4), 0 0 32px rgba(234,179,8,0.2)'
+          : '0 0 0 1px rgba(16,185,129,0.15) inset, 0 0 18px rgba(16,185,129,0.28), 0 0 32px rgba(6,182,212,0.12)',
         transition: 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease-out, border-color 180ms ease-out',
         outline: 'none',
         willChange: 'transform',
@@ -2968,11 +2984,15 @@ function YouVsCard({
                 modal frame language. */}
             <div className="px-3.5 pb-3">
               <div
-                className="rounded-xl px-3 py-2.5 text-[11.5px] text-gray-300 leading-snug font-semibold"
+                className={`rounded-xl px-3 py-2.5 text-[11.5px] leading-snug font-semibold ${isLight ? 'text-[#334155]' : 'text-gray-300'}`}
                 style={{
-                  background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 3px 0 #0a0a0a, inset 0 0 0 1.5px rgba(6,182,212,0.18)',
+                  background: isLight
+                    ? 'linear-gradient(180deg,#fffbeb,#fef9c3)'
+                    : 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                  border: isLight ? '2.5px solid #1a1505' : '2.5px solid #0a0a0a',
+                  boxShadow: isLight
+                    ? '0 3px 0 #1a1505, inset 0 0 0 1.5px rgba(234,179,8,0.25)'
+                    : '0 3px 0 #0a0a0a, inset 0 0 0 1.5px rgba(6,182,212,0.18)',
                 }}
               >
                 {expandedBody}
@@ -2987,13 +3007,17 @@ function YouVsCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleNavigate(); }}
-                className="w-full relative flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-black text-white uppercase tracking-[0.12em]"
+                className={`w-full relative flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-[0.12em] ${isLight ? 'text-[#1a1505]' : 'text-white'}`}
                 style={{
-                  background: 'linear-gradient(180deg,#3b82f6 0%,#0891b2 100%)',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(6,182,212,0.45)',
+                  background: isLight
+                    ? 'linear-gradient(180deg,#facc15 0%,#eab308 100%)'
+                    : 'linear-gradient(180deg,#3b82f6 0%,#0891b2 100%)',
+                  border: isLight ? '2.5px solid #1a1505' : '2.5px solid #0a0a0a',
+                  boxShadow: isLight
+                    ? '0 4px 0 #1a1505, 0 0 18px rgba(234,179,8,0.5)'
+                    : '0 4px 0 #0a0a0a, 0 0 18px rgba(6,182,212,0.45)',
                   letterSpacing: '0.14em',
-                  textShadow: '0 2px 0 rgba(0,0,0,0.45)',
+                  textShadow: isLight ? '0 1px 0 rgba(255,255,255,0.35)' : '0 2px 0 rgba(0,0,0,0.45)',
                 }}
               >
                 {ctaText}
@@ -3004,12 +3028,12 @@ function YouVsCard({
                     width: 22,
                     height: 22,
                     borderRadius: '50%',
-                    background: '#0a0e1c',
-                    border: '2px solid #67e8f9',
-                    boxShadow: '0 0 8px rgba(6,182,212,0.7)',
+                    background: isLight ? '#fffbeb' : '#0a0e1c',
+                    border: isLight ? '2px solid #1a1505' : '2px solid #67e8f9',
+                    boxShadow: isLight ? '0 0 8px rgba(234,179,8,0.6)' : '0 0 8px rgba(6,182,212,0.7)',
                   }}
                 >
-                  <svg width="11" height="11" fill="none" stroke="#67e8f9" viewBox="0 0 24 24">
+                  <svg width="11" height="11" fill="none" stroke={isLight ? '#1a1505' : '#67e8f9'} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
                   </svg>
                 </span>

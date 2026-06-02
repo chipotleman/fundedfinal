@@ -1,5 +1,6 @@
 - [Messenger dual-event dedup](messaging-dual-event-dedup.md) — `piks:message:new` fires from local send AND SSE echo; dedup must `String(id)`-compare or messages double-render.
 - [DB migration convention](db-migration-convention.md) — schema changes need BOTH drizzle db:push AND a hand-written migrations/*.sql file, or prod breaks.
+- [Light theme inline vs globals](light-theme-inline-vs-globals.md) — inline hex won't flip under html.light; globals.css `html.light .youvs-card`/`.bc-surface` !important rules can override your theme-aware inline fix.
 - [Battle card carousel expand](battle-card-carousel-expand.md) — active "Your Battle" taps must open the portal modal; inline-expand gets clipped by the Featured Battles carousel.
 - [Light-theme inline color trap](light-theme-inline-color.md) — hardcoded hex in inline style{} won't flip under html.light; use CSS vars or useTheme-computed color.
 - [Light theme overrides](light-theme-overrides.md) — light mode = class-based html.light rules in globals.css; inline styles & other dark hex classes (e.g. bg-[#0f1d3a]) stay dark unless explicitly matched.
