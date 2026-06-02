@@ -23,10 +23,10 @@ import { calculatePayout } from '../utils/odds';
 function getPalette(isLight) {
   if (isLight) {
     return {
-      pageBg: '#f4f6fb',
+      pageBg: '#f5f1ea',
       chromeBg: '#ffffff',
       cardSurface: '#ffffff',
-      innerSurface: '#f1f5f9',
+      innerSurface: '#f0ebe1',
       pickSurface: '#ffffff',
       skeletonSurface: 'rgba(148,163,184,0.25)',
       chromeBorder: 'rgba(15,23,42,0.10)',
@@ -41,6 +41,7 @@ function getPalette(isLight) {
       disabledGameBg: 'rgba(148,163,184,0.18)',
       disabledGameBorder: '1px solid rgba(148,163,184,0.4)',
       disabledGameText: '#64748b',
+      posGreen: '#059669',
     };
   }
   // Dark theme mirrors the dashboard (pages/index.js): pure-black page,
@@ -65,6 +66,7 @@ function getPalette(isLight) {
     disabledGameBg: 'rgba(75,85,99,0.15)',
     disabledGameBorder: '1px solid rgba(75,85,99,0.3)',
     disabledGameText: '#6b7280',
+    posGreen: '#34d399',
   };
 }
 
@@ -263,7 +265,7 @@ export default function MyPicksPage() {
     const delta = (d) => {
       if (!d) return <span className="text-[11px] font-bold" style={{ color: p.mutedText }}>even</span>;
       const up = d > 0;
-      return <span className="text-[11px] font-black" style={{ color: up ? '#34d399' : '#f87171' }}>{up ? '+' : ''}{formatMoney(d, 0)}</span>;
+      return <span className="text-[11px] font-black" style={{ color: up ? p.posGreen : (isLight ? '#dc2626' : '#f87171') }}>{up ? '+' : ''}{formatMoney(d, 0)}</span>;
     };
     return (
       <div>
@@ -275,7 +277,7 @@ export default function MyPicksPage() {
           </div>
           <div className="text-right min-w-0">
             <div className="text-[10px] uppercase tracking-wider font-bold truncate max-w-[120px] ml-auto" style={{ color: '#fb923c' }}>{oppName}</div>
-            <div className="text-xl font-black inline-flex items-center gap-1" style={{ color: p.bodyText }}><Coin />{formatMoney(oppLive, 0)}</div>
+            <div className="text-xl font-black inline-flex items-center gap-1" style={{ color: p.bodyText }}><Coin color={isLight ? '#0f172a' : '#ffffff'} />{formatMoney(oppLive, 0)}</div>
             <div className="text-right">{delta(oppLive - startingBalance)}</div>
           </div>
         </div>
@@ -305,13 +307,13 @@ export default function MyPicksPage() {
       <div>
         <div className="grid grid-cols-4 gap-2">
           {tile('Open', counts.open, '#3b82f6')}
-          {tile('Won', counts.won, '#34d399')}
+          {tile('Won', counts.won, p.posGreen)}
           {tile('Lost', counts.lost, '#f87171')}
           {tile('Cashed', counts.cashedOut, '#fb923c')}
         </div>
         <div className="grid grid-cols-2 gap-2 mt-2">
-          {money('At Risk', counts.totalStake, '#ffffff')}
-          {money('To Win', Math.max(0, counts.potentialPayout - counts.totalStake), '#34d399')}
+          {money('At Risk', counts.totalStake, isLight ? '#0f172a' : '#ffffff')}
+          {money('To Win', Math.max(0, counts.potentialPayout - counts.totalStake), p.posGreen)}
         </div>
       </div>
     );
@@ -465,7 +467,7 @@ export default function MyPicksPage() {
     const myChange = myLive - startingBalance;
     const oppChange = oppLive - startingBalance;
     const sideChange = (d) => (
-      <div className="text-xs font-black" style={{ color: d < 0 ? (isLight ? '#dc2626' : '#f87171') : d > 0 ? (isLight ? '#059669' : '#34d399') : (isLight ? '#64748b' : '#9ca3af') }}>
+      <div className="text-xs font-black" style={{ color: d < 0 ? (isLight ? '#dc2626' : '#f87171') : d > 0 ? p.posGreen : (isLight ? '#64748b' : '#9ca3af') }}>
         {d > 0 ? '+' : ''}{formatMoney(d, 0)} <span className="text-[9px] font-bold tracking-wider" style={{ color: isLight ? '#94a3b8' : '#64748b' }}>CHANGE</span>
       </div>
     );
@@ -560,10 +562,10 @@ export default function MyPicksPage() {
         <div className="relative grid grid-cols-6 px-2" style={{ background: hero.statBg, borderTop: `1px solid ${hero.statBorder}` }}>
           {[
             { label: 'Open', node: <span style={{ color: isLight ? '#2563eb' : '#60a5fa' }}>{counts.open}</span> },
-            { label: 'Won', node: <span style={{ color: isLight ? '#059669' : '#34d399' }}>{counts.won}</span> },
+            { label: 'Won', node: <span style={{ color: p.posGreen }}>{counts.won}</span> },
             { label: 'Lost', node: <span style={{ color: isLight ? '#dc2626' : '#f87171' }}>{counts.lost}</span> },
             { label: 'At Risk', node: <span className="inline-flex items-center gap-1" style={{ color: hero.text }}><Coin color={hero.oppCoin} />{formatMoney(counts.totalStake, 0)}</span> },
-            { label: 'To Win', node: <span className="inline-flex items-center gap-1" style={{ color: isLight ? '#059669' : '#34d399' }}><Coin color={isLight ? '#059669' : '#34d399'} />{formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}</span> },
+            { label: 'To Win', node: <span className="inline-flex items-center gap-1" style={{ color: p.posGreen }}><Coin color={p.posGreen} />{formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}</span> },
             { label: 'Streak', node: <span style={{ color: hero.faint }}>—</span> },
           ].map((s, i) => (
             <div key={s.label} className="text-center py-3.5" style={i > 0 ? { borderLeft: `1px solid ${hero.statBorder}` } : undefined}>
@@ -616,8 +618,8 @@ export default function MyPicksPage() {
             <div className="flex items-center gap-2">
               <span className="text-[15px] font-black truncate" style={{ color: p.bodyText }}>{bet.selectionFull || bet.selection || '—'}</span>
               {isLive && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider font-black" style={{ background: 'rgba(52,211,153,0.18)', color: '#34d399', border: '1px solid rgba(52,211,153,0.45)' }}>
-                  <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: '#34d399' }} />Live
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider font-black" style={{ background: 'rgba(52,211,153,0.18)', color: p.posGreen, border: '1px solid rgba(52,211,153,0.45)' }}>
+                  <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: p.posGreen }} />Live
                 </span>
               )}
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isSelected ? '#22d3ee' : p.faintText} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6" /></svg>
@@ -632,8 +634,8 @@ export default function MyPicksPage() {
         </div>
 
         {col('Odds', <span style={{ color: p.bodyText }}>{formatOdds(bet.odds)}</span>)}
-        {col('Picked', <span className="inline-flex items-center gap-1" style={{ color: p.bodyText }}><Coin />{formatMoney(bet.stake, 2)}</span>)}
-        {col('Potential Payout', <span className="inline-flex items-center gap-1" style={{ color: '#34d399' }}><Coin color="#34d399" />{formatMoney(betPayout(bet), 2)}</span>)}
+        {col('Picked', <span className="inline-flex items-center gap-1" style={{ color: p.bodyText }}><Coin color={isLight ? '#0f172a' : '#ffffff'} />{formatMoney(bet.stake, 2)}</span>)}
+        {col('Potential Payout', <span className="inline-flex items-center gap-1" style={{ color: p.posGreen }}><Coin color={p.posGreen} />{formatMoney(betPayout(bet), 2)}</span>)}
 
         <div className="flex items-center pr-3 pl-1">
           {gameId ? (
@@ -679,8 +681,8 @@ export default function MyPicksPage() {
         {sectionTitle}
         <div className="px-5">
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#34d399' }} />
-            <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#34d399' }}>Live Tracked Pick</span>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: p.posGreen }} />
+            <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: p.posGreen }}>Live Tracked Pick</span>
           </div>
           <div className="flex items-center justify-between gap-3 mb-4">
             <div className="min-w-0">
@@ -704,7 +706,7 @@ export default function MyPicksPage() {
           <div className="grid grid-cols-3 rounded-xl overflow-hidden" style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}` }}>
             <div className="flex flex-col items-center justify-center text-center py-3 px-1">
               <div className="text-[8px] uppercase tracking-wider font-bold mb-1 leading-tight min-h-[20px] flex items-center justify-center" style={{ color: p.faintText }}>Total Picked</div>
-              <div className="text-sm font-black inline-flex items-center gap-1" style={{ color: p.bodyText }}><Coin />{formatMoney(bet.stake, 2)}</div>
+              <div className="text-sm font-black inline-flex items-center gap-1" style={{ color: p.bodyText }}><Coin color={isLight ? '#0f172a' : '#ffffff'} />{formatMoney(bet.stake, 2)}</div>
             </div>
             <div className="flex flex-col items-center justify-center text-center py-3 px-1" style={{ borderLeft: `1px solid ${p.softBorder}`, borderRight: `1px solid ${p.softBorder}` }}>
               <div className="text-[8px] uppercase tracking-wider font-bold mb-1 leading-tight min-h-[20px] flex items-center justify-center" style={{ color: p.faintText }}>Odds</div>
@@ -712,7 +714,7 @@ export default function MyPicksPage() {
             </div>
             <div className="flex flex-col items-center justify-center text-center py-3 px-1">
               <div className="text-[8px] uppercase tracking-wider font-bold mb-1 leading-tight min-h-[20px] flex items-center justify-center" style={{ color: p.faintText }}>Potential Payout</div>
-              <div className="text-sm font-black inline-flex items-center gap-1" style={{ color: '#34d399' }}><Coin color="#34d399" />{formatMoney(betPayout(bet), 2)}</div>
+              <div className="text-sm font-black inline-flex items-center gap-1" style={{ color: p.posGreen }}><Coin color={p.posGreen} />{formatMoney(betPayout(bet), 2)}</div>
             </div>
           </div>
         </div>
