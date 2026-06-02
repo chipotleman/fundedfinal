@@ -1,8 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import dynamic from 'next/dynamic';
 import UserAvatar from '../UserAvatar';
 import TeamLogo from '../TeamLogo';
+import { useUserPreview } from '../../contexts/UserPreviewContext';
+
+// Quick-challenge popup — lazy so the battle-flow bundle only loads when a
+// user actually challenges someone from the search results.
+const PlayFriendModal = dynamic(() => import('../battle/PlayFriendModal'), { ssr: false });
 
 // =============================================================================
 // DesktopGlobalSearch — the prominent centered search bar for the lg+ top bar
@@ -16,13 +22,17 @@ import TeamLogo from '../TeamLogo';
 // =============================================================================
 export default function DesktopGlobalSearch() {
   const router = useRouter();
-  const { status: authStatus } = useSession();
+  const { data: session, status: authStatus } = useSession();
   const isAuthed = authStatus === 'authenticated';
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [players, setPlayers] = useState([]);
   const [games, setGames] = useState([]);
+  const [playFriend, setPlayFriend] = useState(null);
+  const [requestedIds, setRequestedIds] = useState(() => new Set());
+  const sessionUser = session?.user || null;
+  const { openMessage } = useUserPreview();
   const containerRef = useRef(null);
   const inputRef = useRef(null);
   const gamesCacheRef = useRef(null);
@@ -135,6 +145,46 @@ export default function DesktopGlobalSearch() {
     if (id) router.push(`/game/${id}`);
   };
 
+  // Quick actions from a player result row. Each closes the dropdown but
+  // keeps the query so the user can fire another action afterward.
+  const quickMessage = (p) => {
+    setOpen(false);
+    openMessage({ id: p.id, username: p.username, avatar: p.avatar });
+  };
+
+  const quickChallenge = (p) => {
+    setOpen(false);
+    setPlayFriend({ id: p.id, username: p.username, avatar: p.avatar });
+  };
+
+  const quickAddFriend = async (p) => {
+    if (!p?.id || requestedIds.has(p.id)) return;
+    // Optimistically flip to "requested" so the button gives instant
+    // feedback; roll back only if the request actually fails.
+    setRequestedIds((prev) => new Set(prev).add(p.id));
+    try {
+      const res = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ friendId: p.id }),
+      });
+      if (!res.ok) {
+        setRequestedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(p.id);
+          return next;
+        });
+      }
+    } catch {
+      setRequestedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(p.id);
+        return next;
+      });
+    }
+  };
+
   const awayName = (g) => g.awayTeamFull || g.awayTeam || g.away_team || g.away || 'Away';
   const homeName = (g) => g.homeTeamFull || g.homeTeam || g.home_team || g.home || 'Home';
   const toNum = (v) => {
@@ -224,28 +274,99 @@ export default function DesktopGlobalSearch() {
               <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: '#6b7280' }}>
                 Players
               </div>
-              {players.map((p) => (
-                <button
-                  key={`p-${p.id}`}
-                  type="button"
-                  onClick={() => goToPlayer(p)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left lg:hover:bg-white/5 transition-colors"
-                >
-                  <span className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                    <UserAvatar user={{ id: p.id, username: p.username, avatar: p.avatar }} size={32} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold truncate" style={{ color: '#f5f5f5' }}>
-                      {p.username}
-                    </span>
-                    {(p.battleWins != null || p.battleLosses != null) && (
-                      <span className="block text-[11px]" style={{ color: '#6b7280' }}>
-                        {parseInt(p.battleWins, 10) || 0}W · {parseInt(p.battleLosses, 10) || 0}L
+              {players.map((p) => {
+                const requested = requestedIds.has(p.id);
+                return (
+                  <div
+                    key={`p-${p.id}`}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 lg:hover:bg-white/5 transition-colors"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => goToPlayer(p)}
+                      className="min-w-0 flex-1 flex items-center gap-3 text-left"
+                    >
+                      <span className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                        <UserAvatar user={{ id: p.id, username: p.username, avatar: p.avatar }} size={32} />
                       </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold truncate" style={{ color: '#f5f5f5' }}>
+                          {p.username}
+                        </span>
+                        {(p.battleWins != null || p.battleLosses != null) && (
+                          <span className="block text-[11px]" style={{ color: '#6b7280' }}>
+                            {parseInt(p.battleWins, 10) || 0}W · {parseInt(p.battleLosses, 10) || 0}L
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                    {isAuthed && (
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {/* Challenge */}
+                        <button
+                          type="button"
+                          onClick={() => quickChallenge(p)}
+                          title={`Battle ${p.username}`}
+                          aria-label={`Battle ${p.username}`}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform active:scale-90"
+                          style={{ background: 'rgba(251,146,60,0.14)', border: '1px solid rgba(251,146,60,0.4)', color: '#fdba74' }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
+                            <line x1="13" y1="19" x2="19" y2="13" />
+                            <line x1="16" y1="16" x2="20" y2="20" />
+                            <line x1="19" y1="21" x2="21" y2="19" />
+                            <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5" />
+                            <line x1="5" y1="14" x2="9" y2="18" />
+                            <line x1="7" y1="17" x2="4" y2="20" />
+                            <line x1="3" y1="19" x2="5" y2="21" />
+                          </svg>
+                        </button>
+                        {/* Add friend */}
+                        <button
+                          type="button"
+                          onClick={() => quickAddFriend(p)}
+                          disabled={requested}
+                          title={requested ? 'Request sent' : `Add ${p.username}`}
+                          aria-label={requested ? `Request sent to ${p.username}` : `Add ${p.username}`}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform active:scale-90"
+                          style={
+                            requested
+                              ? { background: 'rgba(16,185,129,0.14)', border: '1px solid rgba(16,185,129,0.4)', color: '#34d399', cursor: 'default' }
+                              : { background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.4)', color: '#93c5fd' }
+                          }
+                        >
+                          {requested ? (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          ) : (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                              <circle cx="9" cy="7" r="4" />
+                              <line x1="19" y1="8" x2="19" y2="14" />
+                              <line x1="22" y1="11" x2="16" y2="11" />
+                            </svg>
+                          )}
+                        </button>
+                        {/* Message */}
+                        <button
+                          type="button"
+                          onClick={() => quickMessage(p)}
+                          title={`Message ${p.username}`}
+                          aria-label={`Message ${p.username}`}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform active:scale-90"
+                          style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.4)', color: '#67e8f9' }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                          </svg>
+                        </button>
+                      </div>
                     )}
-                  </span>
-                </button>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -332,6 +453,17 @@ export default function DesktopGlobalSearch() {
             </div>
           )}
         </div>
+      )}
+
+      {playFriend && (
+        <PlayFriendModal
+          isOpen={!!playFriend}
+          onClose={() => setPlayFriend(null)}
+          friends={[]}
+          initialFriend={playFriend}
+          currentUser={sessionUser}
+          onOpenMessage={openMessage}
+        />
       )}
     </div>
   );
