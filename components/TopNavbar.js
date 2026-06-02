@@ -765,8 +765,8 @@ export default function TopNavbar({
                 (logged in) — logged-out users get Sign In / Sign Up on the
                 right instead. This whole cluster is `hidden lg:flex`, so the
                 mobile/tablet hamburger experience below is unaffected. */}
-            <div className="hidden lg:flex items-center justify-center gap-3 flex-1 min-w-0 mx-4">
-              <div className="min-w-0 w-full max-w-[680px]">
+            <div className="hidden lg:flex items-center justify-start gap-3 flex-1 min-w-0 ml-3 mr-4">
+              <div className="min-w-0 w-full max-w-[520px]">
                 <DesktopGlobalSearch />
               </div>
               {/* When a logged-in user is mid-battle, swap the generic
