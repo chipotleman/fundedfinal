@@ -689,7 +689,6 @@ const HH_BORDER = '#0a0a0a';
 const HH_BLUE = '#3b82f6';
 const HH_ORANGE = '#fb923c';
 const HH_LEAD = '#10b981';
-const HH_SHADOW = '4px 4px 0 #0a0a0a';
 
 function PnlMini({ value, align = 'left' }) {
   const v = parseFloat(value);
@@ -1003,322 +1002,207 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
   // (profile links, Spectate/Chat buttons, inline chat panel) stop
   // propagation so they don't double-fire onSpectate.
   const handleCardClick = () => onSpectate?.(battle);
+  const posterHandle = `@${(u1.username || 'player').replace(/\s+/g, '').toLowerCase()}`;
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={handleCardClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleCardClick();
-        }
-      }}
-      aria-label={`Spectate ${u1.username || 'Player 1'} vs ${u2.username || 'Player 2'}`}
-      className="rounded-2xl mb-4 overflow-hidden cursor-pointer"
-      style={{
-        backgroundColor: surface,
-        border: `2.5px solid ${HH_BORDER}`,
-        boxShadow: HH_SHADOW,
-      }}
+      className="rounded-2xl mb-3 overflow-hidden transition-colors lg:hover:bg-white/[0.015]"
+      style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}
     >
-      {/* Top status strip — LIVE pill + pot + countdown */}
-      <div
-        className="flex items-center justify-between px-3.5 py-2"
-        style={{ borderBottom: `2px solid ${HH_BORDER}`, background: '#0a0a0a' }}
-      >
-        <div className="flex items-center gap-2 min-w-0">
+      {/* Author header — frames the live battle as a post by the player who
+          started it, so it reads like the rest of the feed (Twitter/Facebook
+          style) rather than a standalone block. */}
+      <div className="flex items-start gap-3 px-4 pt-3.5 pb-2">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
+          aria-label={`Open ${u1.username || 'Player 1'} profile`}
+          className="flex-shrink-0 self-start"
+        >
+          <FramedAvatar avatar={u1.avatar} username={u1.username || 'P1'} frameId={u1.equippedFrame} size={40} bgColor="#1e40af" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 leading-tight min-w-0">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
+              className="text-[14px] font-bold hover:underline truncate flex-shrink-0 max-w-[45%]"
+              style={{ color: textPrimary }}
+            >
+              {u1.username || 'Player 1'}
+            </button>
+            <span className="text-[13px] truncate" style={{ color: textMuted }}>{posterHandle}</span>
+            <span className="text-[13px] flex-shrink-0" style={{ color: textMuted }}>·</span>
+            <span className="text-[13px] flex-shrink-0" style={{ color: textMuted }}>{timeAgo(battle.startsAt)}</span>
+          </div>
+          <div className="mt-0.5 text-[14px] leading-snug" style={{ color: textSecondary }}>
+            started a battle with{' '}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
+              className="font-semibold hover:underline"
+              style={{ color: textPrimary }}
+            >
+              {u2.username || 'Player 2'}
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
           <span
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
-            style={{
-              background: 'rgba(239,68,68,0.18)',
-              border: '1.5px solid rgba(239,68,68,0.5)',
-              color: '#fca5a5',
-            }}
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+            style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             Live
           </span>
-          {battle.startsAt && (
-            <span className="text-[10px] truncate" style={{ color: textMuted }}>
-              · started {timeAgo(battle.startsAt)}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2.5 flex-shrink-0">
-          <span className="text-[12px] font-black tabular-nums" style={{ color: textPrimary }}>
-            {isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`}
-          </span>
-          <span className="text-[10px] tabular-nums" style={{ color: textMuted }}>
-            {formatTimeLeft(timeLeft)}
-          </span>
+          <span className="text-[10px] tabular-nums" style={{ color: textMuted }}>{formatTimeLeft(timeLeft)}</span>
         </div>
       </div>
 
-      {/* Head-to-Head body */}
-      <div className="px-3.5 pt-3.5 pb-3">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          {/* LEFT player — only the avatar and the username are
-              profile links; the surrounding row (balance, PnL) falls
-              through to the card's spectate click handler. */}
-          <div className="flex items-center gap-2.5 min-w-0 text-left">
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
-              aria-label={`Open ${u1.username || 'Player 1'} profile`}
-              className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
-            >
-              <div
-                className="rounded-full p-[2.5px]"
-                style={{
-                  background: u1Ring,
-                  boxShadow: u1Lead
-                    ? '0 0 14px rgba(16,185,129,0.55)'
-                    : `0 0 10px ${HH_BLUE}55`,
-                }}
-              >
-                <FramedAvatar
-                  avatar={u1.avatar}
-                  username={u1.username || 'P1'}
-                  frameId={u1.equippedFrame}
-                  size={48}
-                  bgColor="#1e40af"
-                />
-              </div>
-              {u1OnFire && (
-                <span className="absolute -top-1 -right-1 text-base hh-flame" aria-label="On fire">
-                  🔥
-                </span>
-              )}
-            </button>
-            <div className="min-w-0">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
-                className="text-[13px] font-black truncate text-left lg:hover:underline rounded"
-                style={{ color: textPrimary }}
-              >
-                {u1.username || 'Player 1'}
-              </button>
-              <div
-                className="text-[15px] font-black tabular-nums leading-tight"
-                style={{ color: u1Lead ? '#34d399' : textPrimary }}
-              >
-                ${formatMoney(u1Bal, 0)}
-              </div>
-              <div className="mt-0.5">
-                <PnlMini value={u1.pnlPercent} />
-              </div>
-            </div>
-          </div>
-
-          {/* Center VS chip */}
-          <div className="flex flex-col items-center px-1">
-            <div
-              className="px-2.5 py-1 rounded-md"
-              style={{
-                background: '#000',
-                border: `2px solid ${HH_BORDER}`,
-                boxShadow: '2px 2px 0 #0a0a0a',
-              }}
-            >
-              <span
-                className="text-[15px] font-black text-transparent bg-clip-text leading-none"
-                style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}
-              >
-                VS
-              </span>
-            </div>
-            <span
-              className="text-[8px] mt-1 uppercase tracking-widest font-bold"
-              style={{ color: textMuted }}
-            >
-              1v1
-            </span>
-          </div>
-
-          {/* RIGHT player — mirror of LEFT: only avatar + username
-              open the profile; the rest of the row falls through to
-              the card's spectate handler. */}
-          <div className="flex items-center gap-2.5 min-w-0 justify-end">
-            <div className="min-w-0 text-right">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
-                className="text-[13px] font-black truncate text-right lg:hover:underline rounded ml-auto block"
-                style={{ color: textPrimary }}
-              >
-                {u2.username || 'Player 2'}
-              </button>
-              <div
-                className="text-[15px] font-black tabular-nums leading-tight"
-                style={{ color: u2Lead ? '#34d399' : textPrimary }}
-              >
-                ${formatMoney(u2Bal, 0)}
-              </div>
-              <div className="mt-0.5 flex justify-end">
-                <PnlMini value={u2.pnlPercent} align="right" />
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
-              aria-label={`Open ${u2.username || 'Player 2'} profile`}
-              className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
-            >
-              <div
-                className="rounded-full p-[2.5px]"
-                style={{
-                  background: u2Ring,
-                  boxShadow: u2Lead
-                    ? '0 0 14px rgba(16,185,129,0.55)'
-                    : `0 0 10px ${HH_ORANGE}55`,
-                }}
-              >
-                <FramedAvatar
-                  avatar={u2.avatar}
-                  username={u2.username || 'P2'}
-                  frameId={u2.equippedFrame}
-                  size={48}
-                  bgColor="#7c2d12"
-                />
-              </div>
-              {u2OnFire && (
-                <span className="absolute -top-1 -left-1 text-base hh-flame" aria-label="On fire">
-                  🔥
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Two-tone balance share bar (blue / orange, green-tinted on the leader's side) */}
+      {/* Embedded match — the post's "attachment", a quote-style card that
+          opens the full spectate view when tapped. */}
+      <div className="px-4 pb-3">
         <div
-          className="mt-3 h-2.5 rounded-full overflow-hidden flex"
-          style={{ background: '#000', border: `1.5px solid ${HH_BORDER}` }}
+          role="button"
+          tabIndex={0}
+          onClick={handleCardClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleCardClick();
+            }
+          }}
+          aria-label={`Spectate ${u1.username || 'Player 1'} vs ${u2.username || 'Player 2'}`}
+          className="rounded-xl overflow-hidden cursor-pointer transition-colors lg:hover:bg-white/[0.02]"
+          style={{ background: surfaceMuted, border: `1px solid ${border}` }}
         >
-          <div
-            style={{
-              width: `${u1Pct}%`,
-              background: u1Lead
-                ? 'linear-gradient(90deg, #10b981, #22c55e)'
-                : HH_BLUE,
-              transition: 'width 700ms ease',
-            }}
-          />
-          <div
-            style={{
-              width: `${100 - u1Pct}%`,
-              background: u2Lead
-                ? 'linear-gradient(90deg, #22c55e, #10b981)'
-                : HH_ORANGE,
-              transition: 'width 700ms ease',
-            }}
-          />
-        </div>
+          <div className="px-3 pt-3 pb-2.5">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+              {/* LEFT player */}
+              <div className="flex items-center gap-2 min-w-0 text-left">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
+                  aria-label={`Open ${u1.username || 'Player 1'} profile`}
+                  className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
+                >
+                  <div
+                    className="rounded-full p-[2px]"
+                    style={{ background: u1Ring, boxShadow: u1Lead ? '0 0 10px rgba(16,185,129,0.5)' : `0 0 8px ${HH_BLUE}44` }}
+                  >
+                    <FramedAvatar avatar={u1.avatar} username={u1.username || 'P1'} frameId={u1.equippedFrame} size={36} bgColor="#1e40af" />
+                  </div>
+                  {u1OnFire && <span className="absolute -top-1 -right-1 text-sm hh-flame" aria-label="On fire">🔥</span>}
+                </button>
+                <div className="min-w-0">
+                  <div className="text-[12px] font-bold truncate" style={{ color: textPrimary }}>{u1.username || 'Player 1'}</div>
+                  <div className="text-[14px] font-black tabular-nums leading-tight" style={{ color: u1Lead ? '#34d399' : textPrimary }}>
+                    ${formatMoney(u1Bal, 0)}
+                  </div>
+                  <div className="mt-0.5"><PnlMini value={u1.pnlPercent} /></div>
+                </div>
+              </div>
 
-        {/* Picks row — preview each side's top pick once both locked, otherwise status pill */}
-        <div className="mt-3">
-          {bothPicked ? (
-            <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-stretch">
-              <PickMini pick={u1PickPreview} sideColor={HH_BLUE} />
-              <span
-                className="self-center text-[9px] font-black uppercase tracking-widest"
-                style={{ color: textMuted }}
-              >
-                vs
-              </span>
-              <PickMini pick={u2PickPreview} sideColor={HH_ORANGE} align="right" />
-            </div>
-          ) : onlyU1Locked || onlyU2Locked ? (
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-lg"
-              style={{ background: '#0a0a0a', border: `1.5px solid ${HH_BORDER}` }}
-            >
-              <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9ca3af' }} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-                {onlyU1Locked ? `${u1.username || 'P1'} locked` : `${u2.username || 'P2'} locked`}
-                <span className="font-normal normal-case" style={{ color: textMuted }}>
-                  {' '}· awaiting other player
+              {/* Center VS */}
+              <div className="flex flex-col items-center px-0.5">
+                <span
+                  className="text-[13px] font-black text-transparent bg-clip-text leading-none"
+                  style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}
+                >
+                  VS
                 </span>
-              </span>
-            </div>
-          ) : (
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-lg"
-              style={{ background: '#0a0a0a', border: `1.5px solid ${HH_BORDER}` }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 hh-pending" />
-              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-                Awaiting picks from both players
-              </span>
-            </div>
-          )}
-        </div>
+                <span className="text-[8px] mt-0.5 uppercase tracking-widest font-bold" style={{ color: textMuted }}>1v1</span>
+              </div>
 
-        {/* Cartoon info chips: pik counts when both locked, fire when on a heater */}
-        {(bothPicked || u1OnFire || u2OnFire) && (
-          <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
-            {bothPicked && (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider"
-                style={{
-                  background: 'rgba(59,130,246,0.14)',
-                  border: `1.5px solid ${HH_BORDER}`,
-                  color: '#93c5fd',
-                  boxShadow: '1.5px 1.5px 0 #0a0a0a',
-                }}
-              >
-                🎯 {u1Picks.length} vs {u2Picks.length} piks
-              </span>
-            )}
-            {(u1OnFire || u2OnFire) && (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider"
-                style={{
-                  background: 'rgba(251,146,60,0.16)',
-                  border: `1.5px solid ${HH_BORDER}`,
-                  color: '#fed7aa',
-                  boxShadow: '1.5px 1.5px 0 #0a0a0a',
-                }}
-              >
-                🔥 {(u1OnFire ? (u1.username || 'P1') : (u2.username || 'P2'))} hot
-              </span>
-            )}
+              {/* RIGHT player */}
+              <div className="flex items-center gap-2 min-w-0 justify-end">
+                <div className="min-w-0 text-right">
+                  <div className="text-[12px] font-bold truncate ml-auto" style={{ color: textPrimary }}>{u2.username || 'Player 2'}</div>
+                  <div className="text-[14px] font-black tabular-nums leading-tight" style={{ color: u2Lead ? '#34d399' : textPrimary }}>
+                    ${formatMoney(u2Bal, 0)}
+                  </div>
+                  <div className="mt-0.5 flex justify-end"><PnlMini value={u2.pnlPercent} align="right" /></div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
+                  aria-label={`Open ${u2.username || 'Player 2'} profile`}
+                  className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
+                >
+                  <div
+                    className="rounded-full p-[2px]"
+                    style={{ background: u2Ring, boxShadow: u2Lead ? '0 0 10px rgba(16,185,129,0.5)' : `0 0 8px ${HH_ORANGE}44` }}
+                  >
+                    <FramedAvatar avatar={u2.avatar} username={u2.username || 'P2'} frameId={u2.equippedFrame} size={36} bgColor="#7c2d12" />
+                  </div>
+                  {u2OnFire && <span className="absolute -top-1 -left-1 text-sm hh-flame" aria-label="On fire">🔥</span>}
+                </button>
+              </div>
+            </div>
+
+            {/* Two-tone balance share bar */}
+            <div className="mt-2.5 h-2 rounded-full overflow-hidden flex" style={{ background: '#000', border: `1px solid ${border}` }}>
+              <div style={{ width: `${u1Pct}%`, background: u1Lead ? 'linear-gradient(90deg, #10b981, #22c55e)' : HH_BLUE, transition: 'width 700ms ease' }} />
+              <div style={{ width: `${100 - u1Pct}%`, background: u2Lead ? 'linear-gradient(90deg, #22c55e, #10b981)' : HH_ORANGE, transition: 'width 700ms ease' }} />
+            </div>
+
+            {/* Picks status */}
+            <div className="mt-2.5">
+              {bothPicked ? (
+                <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-stretch">
+                  <PickMini pick={u1PickPreview} sideColor={HH_BLUE} />
+                  <span className="self-center text-[9px] font-black uppercase tracking-widest" style={{ color: textMuted }}>vs</span>
+                  <PickMini pick={u2PickPreview} sideColor={HH_ORANGE} align="right" />
+                </div>
+              ) : onlyU1Locked || onlyU2Locked ? (
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 hh-pending" />
+                  <span className="text-[11px] font-medium" style={{ color: textSecondary }}>
+                    {onlyU1Locked ? `${u1.username || 'P1'} locked` : `${u2.username || 'P2'} locked`} · awaiting other player
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 hh-pending" />
+                  <span className="text-[11px] font-medium" style={{ color: textSecondary }}>Awaiting picks from both players</span>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* Embed footer — pot + spectate hint */}
+          <div
+            className="flex items-center justify-between px-3 py-1.5"
+            style={{ borderTop: `1px solid ${border}`, background: '#0a0a0a' }}
+          >
+            <span className="text-[11px] font-bold tabular-nums" style={{ color: textPrimary }}>
+              {isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`}
+              <span className="font-normal" style={{ color: textMuted }}> pot</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: textSecondary }}>
+              <Icon.Eye size={12} /> Spectate
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Like / comment count strip — only shown when there's something
-          to count, mirroring the user-post card's social signals. */}
+      {/* Like / comment count strip */}
       {(likeCount > 0 || commentCount > 0) && (
-        <div
-          className="px-3.5 py-1.5 flex items-center gap-3 text-[11px]"
-          style={{ borderTop: `2px solid ${HH_BORDER}`, color: textMuted, background: '#0a0a0a' }}
-        >
+        <div className="px-4 py-1.5 flex items-center gap-3 text-[11px]" style={{ borderTop: `1px solid ${border}`, color: textMuted }}>
           {likeCount > 0 && <span>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>}
           {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
         </div>
       )}
 
-      {/* Action bar — Spectate routes to the full overview page;
-          Like toggles a battle_likes row; Chat opens the inline
-          spectator chat thread (labeled "Hide" when already open);
-          Share opens the in-platform share sheet. */}
-      <div
-        className="grid grid-cols-4"
-        style={{ borderTop: `2px solid ${HH_BORDER}` }}
-      >
+      {/* Action row — lightweight post style shared with ResultPost */}
+      <div className="grid grid-cols-4 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onSpectate?.(battle); }}
-          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{ color: textPrimary, borderRight: `2px solid ${HH_BORDER}` }}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: textPrimary }}
         >
-          <Icon.Eye size={14} />
+          <Icon.Eye size={16} />
           <span className="hidden sm:inline">Spectate</span>
         </button>
         <button
@@ -1326,15 +1210,10 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
           onClick={handleLike}
           disabled={isGuest || likePending}
           aria-pressed={liked}
-          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{
-            color: liked ? '#f87171' : textPrimary,
-            borderRight: `2px solid ${HH_BORDER}`,
-            cursor: isGuest ? 'not-allowed' : 'pointer',
-            opacity: isGuest ? 0.55 : 1,
-          }}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: liked ? '#f87171' : textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.55 : 1 }}
         >
-          <svg viewBox="0 0 24 24" width={14} height={14} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" width={16} height={16} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
           <span>{liked ? 'Liked' : 'Like'}</span>
@@ -1343,28 +1222,20 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
           type="button"
           onClick={(e) => { e.stopPropagation(); setChatOpen((v) => !v); }}
           aria-expanded={chatOpen}
-          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{
-            color: chatOpen ? HH_BLUE : textPrimary,
-            background: chatOpen ? 'rgba(59,130,246,0.08)' : 'transparent',
-            borderRight: `2px solid ${HH_BORDER}`,
-          }}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: chatOpen ? '#60a5fa' : textPrimary }}
         >
-          <Icon.Chat size={14} />
+          <Icon.Chat size={16} />
           <span>{chatOpen ? 'Hide' : 'Chat'}</span>
         </button>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); if (!isGuest) onShare?.({ type: 'battle', id: battle.id, isSimulated, snapshot: { potSize: battle.potSize, durationType: battle.durationType, user1: { username: u1.username, avatar: u1.avatar }, user2: { username: u2.username, avatar: u2.avatar } } }); }}
           disabled={isGuest}
-          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{
-            color: textPrimary,
-            cursor: isGuest ? 'not-allowed' : 'pointer',
-            opacity: isGuest ? 0.55 : 1,
-          }}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.55 : 1 }}
         >
-          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
             <polyline points="16 6 12 2 8 6" />
             <line x1="12" y1="2" x2="12" y2="15" />
