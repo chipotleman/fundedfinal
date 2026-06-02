@@ -124,7 +124,7 @@ export default async function handler(req, res) {
     }
 
     if (!isFakeOpponent && !activeChallenge) {
-      return res.status(400).json({ error: 'No active battle. Piks can only be placed using battle coins.' });
+      return res.status(400).json({ error: 'No active battle. Piks can only be placed using Clash Coins.' });
     }
 
     // ---- Validate & normalize stakes BEFORE computing totalStake -----------

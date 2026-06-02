@@ -73,6 +73,21 @@ function VisualWin() {
   );
 }
 
+function VisualBeta() {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div
+        className="flex items-center justify-center px-5 h-20 rounded-2xl"
+        style={{ background: `linear-gradient(135deg, ${C.gold}33, rgba(217,119,6,0.12))`, border: `2px solid ${C.gold}`, boxShadow: `0 0 26px ${C.gold}40` }}
+      >
+        <span className="text-3xl mr-2">🏆</span>
+        <span className="text-3xl font-black" style={{ color: C.gold }}>$1,000</span>
+      </div>
+      <span className="mt-3 text-[12px] font-bold" style={{ color: C.gold }}>Top capper of the week · every week</span>
+    </div>
+  );
+}
+
 function VisualBeyond() {
   return (
     <div className="flex flex-col items-center justify-center">
@@ -128,15 +143,29 @@ const STEPS = [
     body: (
       <>
         The winner banks the combined <strong style={{ color: '#e5e7eb' }}>Crowns</strong> pot, minus a small{' '}
-        <strong style={{ color: '#e5e7eb' }}>5% rake</strong>. Whoever holds the most Crowns wins the beta —
-        climb the leaderboard battle by battle.
+        <strong style={{ color: '#e5e7eb' }}>5% rake</strong>. Crowns are the currency of the beta — whoever holds the{' '}
+        <strong style={{ color: '#e5e7eb' }}>most Crowns wins the beta</strong>.
       </>
     ),
     Visual: VisualWin,
   },
   {
-    accent: C.orange,
+    accent: C.gold,
     eyebrow: 'Step 4',
+    title: 'Weekly beta · $1,000 prize',
+    body: (
+      <>
+        We run a fresh beta <strong style={{ color: '#e5e7eb' }}>every week</strong> with a{' '}
+        <strong style={{ color: '#e5e7eb' }}>$1,000 cash grand prize</strong> — the{' '}
+        <strong style={{ color: '#e5e7eb' }}>top capper of the week</strong> takes it home. And once the beta ends, your
+        Crowns <strong style={{ color: '#e5e7eb' }}>convert to real cash</strong> and you'll be able to play for real money.
+      </>
+    ),
+    Visual: VisualBeta,
+  },
+  {
+    accent: C.orange,
+    eyebrow: 'Step 5',
     title: 'Build your name',
     body: (
       <>
