@@ -21,7 +21,7 @@ import HowItWorksModal from './desktop/HowItWorksModal';
 // Polymarket-style stacked balance readout: small uppercase label on top,
 // bold value below in the currency's signature color. No pill container.
 // Crowns = yellow (#facc15), Clash Coins = white (#ffffff).
-function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 'start', compact = false }) {
+function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 'start', compact = false, glyph = null, glyphColor = null }) {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   // Clash Coins are white (#ffffff) in the dark theme — invisible on the light
@@ -60,6 +60,9 @@ function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 's
       </span>
       <span
         style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: compact ? 3 : 4,
           fontSize: compact ? 14 : 17,
           fontWeight: 900,
           letterSpacing: '0.01em',
@@ -68,6 +71,14 @@ function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 's
           whiteSpace: 'nowrap',
         }}
       >
+        {glyph && (
+          <span
+            aria-hidden="true"
+            style={{ color: glyphColor || effColor, fontSize: compact ? 13 : 16, lineHeight: 1 }}
+          >
+            {glyph}
+          </span>
+        )}
         {value}
       </span>
     </button>
@@ -802,7 +813,7 @@ export default function TopNavbar({
             </div>
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
-            <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 sm:relative sm:right-0">
+            <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 top-1/2 -translate-y-1/2 sm:relative sm:right-0 sm:top-auto sm:translate-y-0">
               {/* Desktop Balances — Cash (always) + Coins (only when in active
                   battle). Both use the cartoon-chip aesthetic shared with the
                   Featured Battles cards: chunky rounded-full pill, thick dark
@@ -839,6 +850,8 @@ export default function TopNavbar({
                       label="Clash Coins"
                       value={formatMoney(parseFloat(matchupBalance), 0)}
                       color="#ffffff"
+                      glyph="⚔"
+                      glyphColor="#fb923c"
                     />
                   )}
                 </div>
@@ -937,6 +950,8 @@ export default function TopNavbar({
                     label="Clash Coins"
                     value={formatMoney(parseFloat(matchupBalance), 0)}
                     color="#ffffff"
+                    glyph="⚔"
+                    glyphColor="#fb923c"
                     compact
                   />
                 </div>
@@ -1312,6 +1327,8 @@ export default function TopNavbar({
                 label="Clash Coins"
                 value={formatMoney(parseFloat(matchupBalance), 0)}
                 color="#ffffff"
+                glyph="⚔"
+                glyphColor="#fb923c"
               />
             )}
             {isLoggedIn && (
