@@ -6,6 +6,7 @@ import UserAvatar from '../UserAvatar';
 import { getSimulatedBattles } from '../battle/LiveBattlesSection';
 import { formatLastSeen } from '../../utils/relativeTime';
 import { useUserPreview } from '../../contexts/UserPreviewContext';
+import { useBetaMode } from '../../contexts/SiteConfigContext';
 import { readLastBuyIn } from '../../utils/lastBattleBuyIn';
 
 // Lazy-load the invite modal so the rail's own bundle stays light — the
@@ -66,6 +67,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
   const router = useRouter();
   const { data: session } = useSession();
   const { openPreview, openMessage } = useUserPreview();
+  const isBeta = useBetaMode();
   // Friend the user is quick-inviting to a battle (null when the modal is
   // closed). Opening the invite popup never navigates away from the dash.
   const [playFriend, setPlayFriend] = useState(null);
@@ -192,7 +194,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
       title: `@${l.username}`,
       meta:
         typeof l.profit === 'number'
-          ? `${l.profit >= 0 ? '+' : ''}${l.profit.toLocaleString()} this week`
+          ? `${l.profit >= 0 ? '+' : ''}${l.profit.toLocaleString()}${isBeta ? ' Crowns' : ''} this week`
           : 'On the leaderboard',
       onClick: () => router.push('/leaderboard'),
     });
@@ -391,12 +393,23 @@ export default function DesktopRightRail({ isLoggedIn }) {
                 </span>
               </span>
               {typeof l.profit === 'number' && (
-                <span
-                  className="flex-shrink-0 text-[11px] font-bold"
-                  style={{ color: l.profit >= 0 ? '#10b981' : '#ef4444' }}
-                >
-                  {l.profit >= 0 ? '+' : ''}{l.profit.toLocaleString()}
-                </span>
+                isBeta ? (
+                  <span className="flex-shrink-0 text-right leading-tight">
+                    <span className="block text-[8px] font-semibold uppercase tracking-wider" style={{ color: '#facc15', opacity: 0.65 }}>
+                      Crowns
+                    </span>
+                    <span className="block text-[11px] font-bold" style={{ color: '#facc15' }}>
+                      {l.profit >= 0 ? '+' : ''}{l.profit.toLocaleString()}
+                    </span>
+                  </span>
+                ) : (
+                  <span
+                    className="flex-shrink-0 text-[11px] font-bold"
+                    style={{ color: l.profit >= 0 ? '#10b981' : '#ef4444' }}
+                  >
+                    {l.profit >= 0 ? '+' : ''}{l.profit.toLocaleString()}
+                  </span>
+                )
               )}
             </button>
           ))
