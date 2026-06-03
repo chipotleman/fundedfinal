@@ -296,7 +296,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                       aria-label="Crowns balance details"
                     >
                       <p className="text-xs text-gray-400 mb-0.5">Crowns</p>
-                      <p className="font-semibold text-xl" style={{ color: '#facc15' }}>
+                      <p className="font-semibold text-xl" style={{ color: theme === 'light' ? '#D99A16' : '#facc15' }}>
                         {cashRevealed ? `👑 ${formatMoney(userBalance)}` : '👑 ••••'}
                       </p>
                     </button>

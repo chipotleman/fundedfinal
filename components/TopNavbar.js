@@ -25,9 +25,13 @@ function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 's
   const { theme } = useTheme();
   const isLight = theme === 'light';
   // Clash Coins are white (#ffffff) in the dark theme — invisible on the light
-  // theme's white surface, so swap to near-black there. Crowns yellow stays.
+  // theme's white surface, so swap to near-black there. Crowns yellow (#facc15)
+  // washes out on the light surface too, so darken it to #D99A16 there.
   const isWhite = color === '#ffffff' || color === '#fff';
-  const effColor = isLight && isWhite ? '#0f172a' : color;
+  const isCrownYellow = color === '#facc15';
+  const effColor = isLight
+    ? (isWhite ? '#0f172a' : isCrownYellow ? '#D99A16' : color)
+    : color;
   return (
     <button
       onClick={onClick}
