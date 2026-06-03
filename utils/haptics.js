@@ -32,19 +32,23 @@ function triggerIOSHaptic() {
     wrapper.appendChild(checkbox);
     wrapper.appendChild(label);
     document.body.appendChild(wrapper);
-    
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      label.click();
-      
-      // Clean up after haptic triggers
-      setTimeout(() => {
-        if (wrapper.parentNode) {
-          wrapper.remove();
-        }
-      }, 50);
-    });
-    
+
+    // Click SYNCHRONOUSLY inside the originating user gesture. iOS Safari
+    // only fires the switch-toggle haptic while the page has "user
+    // activation"; deferring the click with requestAnimationFrame (or any
+    // async hop) drops that activation and the haptic silently no-ops —
+    // which is exactly why tapping odds / the bet slip / buttons stopped
+    // buzzing. appendChild is synchronous, so the element is already in the
+    // DOM and clickable on this same tick.
+    label.click();
+
+    // Clean up on a later tick (after the haptic has fired).
+    setTimeout(() => {
+      if (wrapper.parentNode) {
+        wrapper.remove();
+      }
+    }, 50);
+
     return true;
   } catch (e) {
     console.warn('iOS haptic failed:', e);
