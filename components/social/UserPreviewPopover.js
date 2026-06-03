@@ -14,6 +14,23 @@ import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 const CARD_W = 320;
 const CARD_MARGIN = 12;
 
+// Module-level cache of resolved preview payloads, keyed by userId. Persists
+// for the page session so reopening a player's popover is instant and never
+// re-flashes the wrong relationship CTA (e.g. "Add Friend" → "✓ Friends").
+const previewCache = new Map();
+const PREVIEW_CACHE_MAX = 60;
+
+// Set with simple LRU-ish eviction (Map preserves insertion order) so the
+// cache can't grow unbounded over a long session.
+function cacheSet(id, payload) {
+  if (!id) return;
+  if (previewCache.has(id)) previewCache.delete(id);
+  previewCache.set(id, payload);
+  while (previewCache.size > PREVIEW_CACHE_MAX) {
+    previewCache.delete(previewCache.keys().next().value);
+  }
+}
+
 function clampPosition(anchorRect, cardW, cardH) {
   if (typeof window === 'undefined') return { top: 80, left: 80 };
   const vw = window.innerWidth;
@@ -58,19 +75,32 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
   // Message CTAs for one render until /api/users/:id/preview came back
   // and told us friendStatus='self'.
   const seedIsSelf = !!myId && !!seedUser?.id && seedUser.id === myId;
-  const [user, setUser] = useState({
-    id: seedUser?.id,
-    username: seedUser?.username || 'Player',
-    avatar: seedUser?.avatar || null,
-    bio: null,
-    battleWins: seedUser?.battleWins ?? null,
-    battleLosses: seedUser?.battleLosses ?? null,
-    winRate: null,
-    isOnline: !!seedUser?.isOnline,
-    friendStatus: seedIsSelf ? 'self' : 'none',
-    canMessage: false,
+  const cached = seedUser?.id ? previewCache.get(seedUser.id) : null;
+  const [user, setUser] = useState(() => {
+    const base = {
+      id: seedUser?.id,
+      username: seedUser?.username || 'Player',
+      avatar: seedUser?.avatar || null,
+      bio: null,
+      battleWins: seedUser?.battleWins ?? null,
+      battleLosses: seedUser?.battleLosses ?? null,
+      winRate: null,
+      isOnline: !!seedUser?.isOnline,
+      // `null` = relationship not yet known. The CTA renders a neutral
+      // skeleton (never a wrong "Add Friend") until the cache/seed/fetch
+      // resolves it, so the button can't flip states in front of the user.
+      friendStatus: seedIsSelf ? 'self' : (seedUser?.friendStatus ?? null),
+      canMessage: false,
+    };
+    // A cached payload (from a prior open this session) is authoritative for
+    // the relationship/bio/stats; keep live presence from the fresh seed.
+    // Prefer the fresh seed's presence (live from the caller) over any
+    // cached `isOnline`, which can be stale from an earlier open.
+    if (cached) return { ...base, ...cached, isOnline: base.isOnline };
+    return base;
   });
-  const [loading, setLoading] = useState(true);
+  // Only show the busy spinner state on a cold open (no cached payload yet).
+  const [loading, setLoading] = useState(!cached);
   const [actionPending, setActionPending] = useState(false);
   const [actionError, setActionError] = useState('');
 
@@ -106,17 +136,30 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
   useEffect(() => {
     let cancelled = false;
     if (!seedUser?.id) return undefined;
-    setLoading(true);
+    // Refresh in the background even when we opened from cache (so stats /
+    // relationship stay fresh), but only show the loading state on cold open.
+    if (!previewCache.has(seedUser.id)) setLoading(true);
     fetch(`/api/users/${seedUser.id}/preview`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled || !data?.user) return;
+        cacheSet(seedUser.id, { ...(previewCache.get(seedUser.id) || {}), ...data.user });
         setUser((prev) => ({ ...prev, ...data.user }));
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [seedUser?.id]);
+
+  // Persist a relationship change into the module cache so the next open of
+  // this player's popover reflects it instantly (no flash, no stale CTA).
+  const rememberStatus = (friendStatus, canMessage) => {
+    if (!user.id) return;
+    const prev = previewCache.get(user.id) || {};
+    const next = { ...prev, friendStatus };
+    if (canMessage !== undefined) next.canMessage = canMessage;
+    cacheSet(user.id, next);
+  };
 
   const handleAddFriend = async () => {
     if (actionPending || !user.id || user.friendStatus === 'self') return;
@@ -138,10 +181,12 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
         const msg = (data?.error || '').toLowerCase();
         if (msg.includes('already friends')) {
           setUser((prev) => ({ ...prev, friendStatus: 'friends', canMessage: true }));
+          rememberStatus('friends', true);
           return;
         }
         if (msg.includes('already pending') || msg.includes('request already')) {
           setUser((prev) => ({ ...prev, friendStatus: 'pending_outgoing' }));
+          rememberStatus('pending_outgoing');
           return;
         }
         setActionError(data?.error || 'Could not send request');
@@ -155,6 +200,7 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
         friendStatus: newStatus,
         canMessage: newStatus === 'friends' ? true : prev.canMessage,
       }));
+      rememberStatus(newStatus, newStatus === 'friends' ? true : undefined);
     } catch (_e) {
       setActionError('Network error');
     } finally {
@@ -201,8 +247,13 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
         return { label: 'Accept Request', disabled: false, tone: 'emerald' };
       case 'self':
         return null;
-      default:
+      case 'none':
         return { label: '+ Add Friend', disabled: false, tone: 'blue' };
+      default:
+        // Relationship not yet resolved — render a neutral skeleton instead
+        // of guessing "+ Add Friend" so the CTA never flips in front of the
+        // user once the real status loads.
+        return { loading: true };
     }
   }, [user.friendStatus]);
 
@@ -370,20 +421,33 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
           {/* Actions */}
           <div className="px-4 pb-4 space-y-2">
             {!isSelf && friendCta && (
-              <button
-                type="button"
-                onClick={handleAddFriend}
-                disabled={friendCta.disabled || actionPending || loading || !myId}
-                className="w-full py-2.5 rounded-xl font-extrabold text-white uppercase text-[12px] disabled:opacity-60 transition-transform active:scale-[0.98]"
-                style={{
-                  background: toneStyles[friendCta.tone],
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 3px 0 #0a0a0a',
-                  letterSpacing: '0.12em',
-                }}
-              >
-                {actionPending ? 'Working…' : friendCta.label}
-              </button>
+              friendCta.loading ? (
+                <div
+                  aria-hidden="true"
+                  className="w-full py-2.5 rounded-xl animate-pulse"
+                  style={{
+                    height: 41,
+                    background: 'linear-gradient(180deg,#1a1a1a,#101010)',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 3px 0 #0a0a0a',
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleAddFriend}
+                  disabled={friendCta.disabled || actionPending || loading || !myId}
+                  className="w-full py-2.5 rounded-xl font-extrabold text-white uppercase text-[12px] disabled:opacity-60 transition-transform active:scale-[0.98]"
+                  style={{
+                    background: toneStyles[friendCta.tone],
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 3px 0 #0a0a0a',
+                    letterSpacing: '0.12em',
+                  }}
+                >
+                  {actionPending ? 'Working…' : friendCta.label}
+                </button>
+              )
             )}
             {!isSelf && (
               <button

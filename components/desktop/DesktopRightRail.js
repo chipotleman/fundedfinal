@@ -225,7 +225,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
                     straight to /profile. */}
                 <button
                   type="button"
-                  onClick={(e) => openPreview({ id: f.id, username: f.username, avatar: f.avatar }, e.currentTarget)}
+                  onClick={(e) => openPreview({ id: f.id, username: f.username, avatar: f.avatar, isOnline: f.isOnline, friendStatus: 'friends' }, e.currentTarget)}
                   className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
                 >
                   <span className="relative flex-shrink-0">
