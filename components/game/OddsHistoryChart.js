@@ -328,9 +328,11 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
         const openingBlend = Math.max(0, 0.4 - frac);
         intent = intent * (1 - openingBlend) + opening * openingBlend;
 
-        // Per-tick jitter for the jagged look — bigger than pre-game.
-        const noise = (rand() - 0.5) * 0.05;
-        const pull = (intent - v) * 0.32;
+        // Per-tick jitter for the jagged look — bigger than pre-game. A lower
+        // pull lets the line wander off the intent path between swings so it
+        // reads as live movement rather than a smooth glide to the target.
+        const noise = (rand() - 0.5) * 0.065;
+        const pull = (intent - v) * 0.26;
         v = Math.min(0.98, Math.max(0.02, v + noise + pull));
 
         const t = gameStartInWindow + frac * inGameSpan;
@@ -459,7 +461,33 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
     if (tMax === tMin) return PAD_L;
     return PAD_L + ((t - tMin) / (tMax - tMin)) * plotW;
   }, [tMin, tMax, plotW]);
-  const yOf = useCallback((p) => PAD_T + (1 - p) * plotH, [plotH]);
+
+  // Mini sparkline auto-scales its vertical axis to the data's actual win-%
+  // range (with padding + a minimum span) so a live game's movement fills the
+  // tiny chart instead of collapsing into a near-flat line across the full
+  // 0–100% scale. The full chart keeps the fixed 0–1 domain — it pins axis
+  // labels at 0/50/100%, so it must not auto-zoom.
+  const yDomain = useMemo(() => {
+    if (!mini || series.length === 0) return { lo: 0, hi: 1 };
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const p of series) {
+      if (p.homeImplied != null) { lo = Math.min(lo, p.homeImplied); hi = Math.max(hi, p.homeImplied); }
+      if (p.awayImplied != null) { lo = Math.min(lo, p.awayImplied); hi = Math.max(hi, p.awayImplied); }
+    }
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) return { lo: 0, hi: 1 };
+    const mid = (lo + hi) / 2;
+    // Min half-span keeps a dead-flat market from zooming so far in that the
+    // jitter looks like an earthquake; the 1.4x pad stops lines from kissing
+    // the top/bottom edges.
+    const half = Math.max((hi - lo) / 2, 0.05) * 1.4;
+    return { lo: Math.max(0, mid - half), hi: Math.min(1, mid + half) };
+  }, [mini, series]);
+
+  const yOf = useCallback((p) => {
+    const span = (yDomain.hi - yDomain.lo) || 1;
+    return PAD_T + (1 - (p - yDomain.lo) / span) * plotH;
+  }, [yDomain, plotH]);
 
   const pathFor = useCallback((key) => {
     if (series.length === 0) return '';
