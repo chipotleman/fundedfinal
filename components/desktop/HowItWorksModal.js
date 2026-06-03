@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
 
 // =============================================================================
@@ -206,6 +207,12 @@ export default function HowItWorksModal({ open, onClose }) {
   }, [open, onClose]);
 
   if (!open) return null;
+  // Portal to document.body so the fixed overlay isn't trapped by a
+  // transformed/animated ancestor (TopNavbar lives inside containers that
+  // can establish a containing block for `position: fixed`). Otherwise the
+  // walkthrough renders inside that container on mobile instead of covering
+  // the viewport.
+  if (typeof document === 'undefined') return null;
 
   const isLast = step === STEPS.length - 1;
   const current = STEPS[step];
@@ -221,7 +228,7 @@ export default function HowItWorksModal({ open, onClose }) {
   };
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
-  return (
+  return createPortal((
     <div
       className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(4px)' }}
@@ -314,5 +321,5 @@ export default function HowItWorksModal({ open, onClose }) {
         </div>
       </div>
     </div>
-  );
+  ), document.body);
 }

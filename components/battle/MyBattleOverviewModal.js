@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
 import SlideToForfeit from './SlideToForfeit';
@@ -105,6 +106,13 @@ export default function MyBattleOverviewModal({
   }, [isOpen]);
 
   if (!isOpen || !matchup) return null;
+  // Render through a portal to document.body so the fixed-position overlay
+  // escapes any ancestor with a transform/filter/animation (e.g. the
+  // LiveBattlesSection cartoon pop-in / HUD frames). Without this, the
+  // transformed ancestor becomes the containing block for `position: fixed`,
+  // trapping the modal inside that container on mobile — it fills the
+  // container, pushes page content down, and scrolls within itself.
+  if (typeof document === 'undefined') return null;
 
   const mode = modeMetaFor(matchup?.durationType || 'original');
   const isRush = matchup?.durationType === 'rush';
@@ -155,7 +163,7 @@ export default function MyBattleOverviewModal({
     close();
   };
 
-  return (
+  return createPortal((
     <div
       className="fixed inset-0 z-[2000] flex items-center justify-center p-3 mbom-fade-in"
       style={{ background: 'rgba(0,0,0,0.78)' }}
@@ -534,5 +542,5 @@ export default function MyBattleOverviewModal({
         </div>
       </div>
     </div>
-  );
+  ), document.body);
 }
