@@ -1051,12 +1051,16 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
                             onTouchEnd={() => handleTouchEnd(bet.id)}
                           >
-                            {/* Connector column - full height, no padding */}
-                            <div className="flex-shrink-0 flex flex-col items-center" style={{ width: '16px' }}>
+                            {/* Connector column - full height, no padding.
+                                Width must exceed the 18px circle (below) so
+                                the row's overflow-hidden — needed for the
+                                swipe-to-delete reveal — doesn't clip the
+                                circle's left edge. */}
+                            <div className="flex-shrink-0 flex flex-col items-center" style={{ width: '22px' }}>
                               {/* Top segment - connects from previous circle */}
                               <div 
                                 className="flex-1 flex items-center justify-center"
-                                style={{ width: '16px' }}
+                                style={{ width: '22px' }}
                               >
                                 {!isFirst && (
                                   <div style={{ 
@@ -1097,7 +1101,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               {/* Bottom segment - connects to next circle */}
                               <div 
                                 className="flex-1 flex items-center justify-center"
-                                style={{ width: '16px' }}
+                                style={{ width: '22px' }}
                               >
                                 {!isLast && (
                                   <div style={{ 
