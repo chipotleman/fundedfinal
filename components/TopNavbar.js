@@ -724,6 +724,39 @@ export default function TopNavbar({
     }
   };
 
+  // Shared Crowns + Clash Coins readout. Rendered in two slots: centered in
+  // the desktop top-bar gap (lg+) and inside the right cluster on tablet
+  // widths (sm–lg) where the desktop bar is hidden. Kept as one definition
+  // so the two placements never drift apart.
+  const showNavBalances =
+    isLoggedIn && ((hasActiveChallenge && userProfile) || (hasActiveMatchup && matchupBalance != null));
+  const navBalancesInner = (
+    <>
+      {hasActiveChallenge && userProfile && (
+        <NavBalance
+          onClick={() => setExplainerType('cash')}
+          title="Your Crowns — click for details"
+          ariaLabel="Crowns balance"
+          label="Crowns"
+          value={formatMoney(parseFloat(userProfile.bankroll), 0)}
+          color="#facc15"
+        />
+      )}
+      {hasActiveMatchup && matchupBalance != null && (
+        <NavBalance
+          onClick={() => setExplainerType('coins')}
+          title="Clash Coins — click for details"
+          ariaLabel="Clash Coins balance"
+          label="Clash Coins"
+          value={formatMoney(parseFloat(matchupBalance), 0)}
+          color="#ffffff"
+          glyph="⚔"
+          glyphColor="#fb923c"
+        />
+      )}
+    </>
+  );
+
   return (
     <>
       <nav
@@ -781,7 +814,7 @@ export default function TopNavbar({
                 right instead. This whole cluster is `hidden lg:flex`, so the
                 mobile/tablet hamburger experience below is unaffected. */}
             <div className="hidden lg:flex items-center justify-start gap-3 flex-1 min-w-0 ml-3 mr-4">
-              <div className="min-w-0 w-full max-w-[520px]">
+              <div className="min-w-0 w-[clamp(220px,30vw,440px)] flex-shrink-0">
                 <DesktopGlobalSearch />
               </div>
               {/* When a logged-in user is mid-battle, swap the generic
@@ -814,6 +847,15 @@ export default function TopNavbar({
                   How it works
                 </button>
               )}
+              {/* Desktop (lg+) Crowns + Clash Coins — centered in the empty
+                  space between the "How it works" / "My Piks" link and the
+                  notifications bell. `mx-auto` splits the leftover flex space
+                  evenly on both sides so the readout sits equidistant. */}
+              {showNavBalances && (
+                <div className="flex items-center gap-5 mx-auto">
+                  {navBalancesInner}
+                </div>
+              )}
             </div>
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
@@ -834,30 +876,12 @@ export default function TopNavbar({
                   the second player in a battle would see no balance in the
                   top nav until they opened the Pik Slip — which side-loads
                   the profile and flips `hasActiveChallenge` true. */}
-              {isLoggedIn && (hasActiveChallenge && userProfile || (hasActiveMatchup && matchupBalance != null)) && (
-                <div className="hidden sm:flex items-center gap-5">
-                  {hasActiveChallenge && userProfile && (
-                    <NavBalance
-                      onClick={() => setExplainerType('cash')}
-                      title="Your Crowns — click for details"
-                      ariaLabel="Crowns balance"
-                      label="Crowns"
-                      value={formatMoney(parseFloat(userProfile.bankroll), 0)}
-                      color="#facc15"
-                    />
-                  )}
-                  {hasActiveMatchup && matchupBalance != null && (
-                    <NavBalance
-                      onClick={() => setExplainerType('coins')}
-                      title="Clash Coins — click for details"
-                      ariaLabel="Clash Coins balance"
-                      label="Clash Coins"
-                      value={formatMoney(parseFloat(matchupBalance), 0)}
-                      color="#ffffff"
-                      glyph="⚔"
-                      glyphColor="#fb923c"
-                    />
-                  )}
+              {/* Tablet (sm–lg) balances. On desktop (lg+) the same readout is
+                  rendered centered inside the top-bar gap instead, so this copy
+                  hides at lg to avoid showing twice. */}
+              {showNavBalances && (
+                <div className="hidden sm:flex lg:hidden items-center gap-5">
+                  {navBalancesInner}
                 </div>
               )}
 
