@@ -1253,6 +1253,16 @@ export default function Dashboard() {
     const pillFontSize = '14px';
     const iconSize = '16px';
 
+    // A whisper of depth so the pills read as slightly raised chips rather
+    // than flat outlines: a soft drop shadow below + a faint highlight along
+    // the top edge (inset). Kept deliberately subtle per request.
+    const pillDepthShadow = isLightTheme
+      ? '0 1px 2px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.7)'
+      : '0 1px 2px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)';
+    const pillActiveShadow = isLightTheme
+      ? '0 2px 5px rgba(234,179,8,0.30), inset 0 1px 0 rgba(255,255,255,0.55)'
+      : '0 2px 6px rgba(59,130,246,0.35), inset 0 1px 0 rgba(255,255,255,0.06)';
+
     // Build the per-variant list of pill sources. For the inline row
     // each league is its own pill; for the condensed bar we collapse
     // by emoji into bundles, preserving the original sport order so
@@ -1296,6 +1306,7 @@ export default function Dashboard() {
             style={{
               borderColor: isLightTheme ? 'rgba(14, 116, 144, 0.5)' : 'rgba(6, 182, 212, 0.3)',
               backgroundColor: isLightTheme ? 'rgba(14, 116, 144, 0.12)' : 'rgba(6, 182, 212, 0.1)',
+              boxShadow: pillDepthShadow,
             }}
           >
             <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: isLightTheme ? '#0e7490' : '#22d3ee' }}></div>
@@ -1320,7 +1331,10 @@ export default function Dashboard() {
             fontWeight: '600',
             borderWidth: '1px',
             borderStyle: 'solid',
-            borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937')
+            borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937'),
+            boxShadow: selectedSport === 'Live'
+              ? (isLightTheme ? '0 2px 5px rgba(220,38,38,0.30), inset 0 1px 0 rgba(255,255,255,0.25)' : '0 2px 6px rgba(220,38,38,0.40), inset 0 1px 0 rgba(255,255,255,0.10)')
+              : pillDepthShadow,
           }}
         >
           <span
@@ -1421,7 +1435,7 @@ export default function Dashboard() {
                 // gray border. We use box-shadow for the ring so the
                 // pill width doesn't shift when active vs. inactive.
                 borderColor: isActive ? (isLightTheme ? '#eab308' : '#3b82f6') : '#1f2937',
-                boxShadow: 'none',
+                boxShadow: isActive ? pillActiveShadow : pillDepthShadow,
                 transition: 'box-shadow 140ms ease-out, border-color 140ms ease-out',
               }}
             >
