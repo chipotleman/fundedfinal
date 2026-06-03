@@ -22,7 +22,11 @@ const TIMEFRAME_DAYS: Record<string, number | null> = {
   alltime: null,
 };
 
-const SORT_BY = new Set(["profit", "winrate", "roi", "volume"]);
+const SORT_BY = new Set(["crowns", "profit", "winrate", "roi", "volume"]);
+
+// Beta default: the leaderboard crowns whoever holds the most Crowns
+// (their bankroll). Other sorts are exploratory views.
+const DEFAULT_SORT = "crowns";
 
 /**
  * Lightweight sport inference from `userBets.matchupName`.
@@ -91,6 +95,8 @@ function sportFilterSql(sport: string) {
  */
 function orderBySql(sortBy: string) {
   switch (sortBy) {
+    case "crowns":
+      return sql`crowns DESC, total_bets DESC`;
     case "winrate":
       return sql`
         (CASE WHEN total_bets >= 5 THEN 1 ELSE 0 END) DESC,
@@ -136,6 +142,7 @@ function shapeRow(r: any) {
   const profit = Number(r.profit) || 0;
   const winRate = Number(r.win_rate) || 0;
   const roi = Number(r.roi) || 0;
+  const crowns = Number(r.crowns) || 0;
   const lastSeenAt = r.last_seen_at ? new Date(r.last_seen_at) : null;
   const isOnline = lastSeenAt
     ? Date.now() - lastSeenAt.getTime() <= 5 * 60 * 1000
@@ -147,6 +154,7 @@ function shapeRow(r: any) {
     equippedFrame: r.equipped_frame || null,
     profit: Math.round(profit),
     roi: Math.round(roi * 10) / 10,
+    crowns: Math.round(crowns),
     wins,
     losses: totalBets - wins,
     totalBets,
@@ -178,8 +186,8 @@ export default async function handler(
   const sortByParam =
     typeof req.query.sortBy === "string"
       ? req.query.sortBy.toLowerCase()
-      : "profit";
-  const sortBy = SORT_BY.has(sortByParam) ? sortByParam : "profit";
+      : DEFAULT_SORT;
+  const sortBy = SORT_BY.has(sortByParam) ? sortByParam : DEFAULT_SORT;
 
   const sportParam =
     typeof req.query.sport === "string" ? req.query.sport.toLowerCase() : "all";
@@ -209,6 +217,14 @@ export default async function handler(
     const order = orderBySql(sortBy);
     const tierSql = tierFilterSql(tier);
 
+    // The Crowns board ranks every real user by their bankroll, including
+    // those who haven't settled a bet yet — your Crowns balance is what
+    // wins the beta. Every other sort is bet-performance based, so we keep
+    // those boards limited to users with at least one settled bet (in the
+    // active timeframe/sport) by requiring total_bets > 0.
+    const presenceSql =
+      sortBy === "crowns" ? sql`` : sql`AND COALESCE(b.total_bets, 0) > 0`;
+
     // Single CTE pipeline:
     //   bet_stats  → aggregate bets per user (timeframe + sport filter applied)
     //   joined     → join profiles, drop fake accounts, derive win_rate/roi
@@ -230,24 +246,26 @@ export default async function handler(
       ),
       joined AS (
         SELECT
-          b.user_id,
-          b.total_bets,
-          b.wins,
-          b.profit,
-          b.total_stake,
+          p.id AS user_id,
+          COALESCE(b.total_bets, 0)::int AS total_bets,
+          COALESCE(b.wins, 0)::int AS wins,
+          COALESCE(b.profit, 0)::float AS profit,
+          COALESCE(b.total_stake, 0)::float AS total_stake,
           p.username,
           p.avatar,
           p.equipped_frame,
           p.last_seen_at,
-          CASE WHEN b.total_bets > 0
+          COALESCE(p.bankroll, 0)::float AS crowns,
+          CASE WHEN COALESCE(b.total_bets, 0) > 0
                THEN (b.wins::float / b.total_bets) * 100
                ELSE 0 END AS win_rate,
-          CASE WHEN b.total_stake > 0
+          CASE WHEN COALESCE(b.total_stake, 0) > 0
                THEN (b.profit / b.total_stake) * 100
                ELSE 0 END AS roi
-        FROM bet_stats b
-        INNER JOIN profiles p ON p.id = b.user_id
+        FROM profiles p
+        LEFT JOIN bet_stats b ON b.user_id = p.id
         WHERE COALESCE(p.is_fake_account, false) = false
+          ${presenceSql}
       ),
       ranked AS (
         SELECT
@@ -292,24 +310,26 @@ export default async function handler(
         ),
         joined AS (
           SELECT
-            b.user_id,
-            b.total_bets,
-            b.wins,
-            b.profit,
-            b.total_stake,
+            p.id AS user_id,
+            COALESCE(b.total_bets, 0)::int AS total_bets,
+            COALESCE(b.wins, 0)::int AS wins,
+            COALESCE(b.profit, 0)::float AS profit,
+            COALESCE(b.total_stake, 0)::float AS total_stake,
             p.username,
             p.avatar,
             p.equipped_frame,
             p.last_seen_at,
-            CASE WHEN b.total_bets > 0
+            COALESCE(p.bankroll, 0)::float AS crowns,
+            CASE WHEN COALESCE(b.total_bets, 0) > 0
                  THEN (b.wins::float / b.total_bets) * 100
                  ELSE 0 END AS win_rate,
-            CASE WHEN b.total_stake > 0
+            CASE WHEN COALESCE(b.total_stake, 0) > 0
                  THEN (b.profit / b.total_stake) * 100
                  ELSE 0 END AS roi
-          FROM bet_stats b
-          INNER JOIN profiles p ON p.id = b.user_id
+          FROM profiles p
+          LEFT JOIN bet_stats b ON b.user_id = p.id
           WHERE COALESCE(p.is_fake_account, false) = false
+            ${presenceSql}
         ),
         ranked AS (
           SELECT

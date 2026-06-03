@@ -40,6 +40,7 @@ const SPORTS = [
 ];
 
 const SORTS = [
+  { id: 'crowns',  label: 'Crowns',  short: '👑',  accent: '#facc15' },
   { id: 'profit',  label: 'Profit',  short: '$$$', accent: '#10b981' },
   { id: 'winrate', label: 'Win %',   short: 'W%',  accent: '#3b82f6' },
   { id: 'roi',     label: 'ROI',     short: 'ROI', accent: '#06b6d4' },
@@ -136,11 +137,25 @@ function formatVolume(n) {
   return v.toLocaleString();
 }
 
+function formatCrowns(n) {
+  const v = Math.max(0, Number(n) || 0);
+  if (v >= 1_000_000) return `👑${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 10_000) return `👑${(v / 1_000).toFixed(0)}K`;
+  if (v >= 1_000) return `👑${(v / 1_000).toFixed(1)}K`;
+  return `👑${v.toLocaleString()}`;
+}
+
 /* The headline stat for each row depends on which sort is active so
    the user always sees the number the board is ranked by, big and
    centered. Other stats fall to a compact secondary line. */
 function primaryStatFor(leader, sortBy) {
   switch (sortBy) {
+    case 'crowns':
+      return {
+        label: 'Crowns',
+        value: formatCrowns(leader.crowns),
+        accent: '#facc15',
+      };
     case 'winrate':
       return {
         label: 'Win Rate',
@@ -180,7 +195,7 @@ const Leaderboard = () => {
   const p = getPalette(isLight);
 
   const [timeframe, setTimeframe] = useState('alltime');
-  const [sortBy, setSortBy] = useState('profit');
+  const [sortBy, setSortBy] = useState('crowns');
   const [sport, setSport] = useState('all');
 
   const [leaders, setLeaders] = useState([]);
@@ -451,6 +466,37 @@ const Leaderboard = () => {
                 </span>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Beta-winner explainer — the board is ranked by Crowns during the
+            beta, and whoever holds the most Crowns when it ends wins. Crowns
+            yellow (#facc15) per brand. */}
+        <div
+          className="relative mb-4 sm:mb-5 rounded-2xl overflow-hidden flex items-start gap-3 px-4 sm:px-5 py-3 sm:py-3.5"
+          style={{
+            background: p.surface,
+            border: `3px solid ${p.ink}`,
+            boxShadow: `4px 4px 0 ${p.shadowInk}`,
+          }}
+        >
+          <div
+            className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-lg sm:text-xl flex-shrink-0"
+            style={{
+              background: '#facc15',
+              border: `2.5px solid ${p.ink}`,
+              boxShadow: `2px 2px 0 ${p.shadowInk}`,
+            }}
+          >
+            👑
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs sm:text-sm font-black uppercase tracking-wide" style={{ color: p.primaryText }}>
+              Beta: most <span style={{ color: '#facc15' }}>Crowns</span> wins
+            </div>
+            <div className="text-[11px] sm:text-xs font-semibold mt-0.5 leading-snug" style={{ color: p.mutedText }}>
+              Through the beta, the leaderboard is ranked by Crowns — whoever holds the most Crowns when the beta ends takes the crown. Sort by Profit, Win %, ROI, or Volume to explore other angles.
+            </div>
           </div>
         </div>
 
