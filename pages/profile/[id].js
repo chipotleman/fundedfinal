@@ -39,10 +39,12 @@ export default function PublicProfile() {
   const cache = useProfileCache();
   const { theme } = useTheme();
   const isLight = theme === 'light';
-  const pageBg = isLight ? '#f1f5f9' : '#000';
+  const pageBg = isLight ? '#f5f1ea' : '#000';
   const cardBg = isLight ? '#ffffff' : '#0d0d0d';
-  const innerBg = isLight ? '#f1f5f9' : '#111';
-  const hairline = isLight ? '#e2e8f0' : '#1a1a1a';
+  const innerBg = isLight ? '#f3eee4' : '#111';
+  const hairline = isLight ? '#e7e0d3' : '#1a1a1a';
+  const mutedText = isLight ? '#64748b' : '#9ca3af';
+  const cardShadow = isLight ? '0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)' : 'none';
   const router = useRouter();
   const { id, badge: badgeQuery, highlight: highlightQuery } = router.query;
   const notificationsCtx = useNotifications();
@@ -867,14 +869,16 @@ export default function PublicProfile() {
       />
       
       <div className="pt-16 pb-24 px-4 max-w-4xl mx-auto">
-        <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: cardBg, border: `1px solid ${hairline}`, boxShadow: 'none' }}>
+        <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: cardBg, border: `1px solid ${hairline}`, boxShadow: cardShadow }}>
           <div
             className={`relative w-full group ${isOwnProfile ? 'cursor-pointer' : ''}`}
             style={{
-              height: '160px',
+              height: '150px',
               background: profile.bannerUrl
                 ? `url(${profile.bannerUrl}) center/cover`
-                : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                : (isLight
+                    ? 'linear-gradient(120deg, #93c5fd 0%, #67e8f9 55%, #5eead4 100%)'
+                    : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'),
             }}
             onClick={isOwnProfile ? () => bannerFileRef.current?.click() : undefined}
             role={isOwnProfile ? 'button' : undefined}
@@ -931,7 +935,7 @@ export default function PublicProfile() {
                 saving={saving}
               />
             ) : (
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
+            <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 <div
                   className={`rounded-full p-1 group relative ${isOwnProfile ? 'cursor-pointer' : ''}`}
@@ -954,8 +958,8 @@ export default function PublicProfile() {
                     username={profile.username}
                     frameId={profile.equippedFrame}
                     size={96}
-                    bgColor={'#1a1a1a'}
-                    textColor={'#fff'}
+                    bgColor={isLight ? '#e7e0d3' : '#1a1a1a'}
+                    textColor={isLight ? '#475569' : '#fff'}
                   />
                   {isOwnProfile && (
                     <>
@@ -971,7 +975,7 @@ export default function PublicProfile() {
                           {savingInline === 'avatar' ? 'Saving...' : (profile.avatar ? 'Change' : 'Add photo')}
                         </span>
                       </div>
-                      <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-blue-600 border-2 border-[#0d0d0d] flex items-center justify-center pointer-events-none">
+                      <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-blue-600 border-2 flex items-center justify-center pointer-events-none" style={{ borderColor: cardBg }}>
                         <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -987,11 +991,11 @@ export default function PublicProfile() {
                 )}
               </div>
 
-              <div className="flex-1 text-center md:text-left">
+              <div className="w-full text-center">
                 <>
                   {editingUsername ? (
                     <div className="mb-1">
-                      <div className="flex items-center gap-2 justify-center md:justify-start">
+                      <div className="flex items-center gap-2 justify-center">
                         <input
                           type="text"
                           value={usernameDraft}
@@ -1024,7 +1028,7 @@ export default function PublicProfile() {
                           Cancel
                         </button>
                       </div>
-                      <div className="mt-1 text-xs min-h-[16px] text-center md:text-left" aria-live="polite">
+                      <div className="mt-1 text-xs min-h-[16px] text-center" aria-live="polite">
                         {inlineUsernameStatus.checking && (
                           <span className="text-gray-400">Checking availability…</span>
                         )}
@@ -1037,7 +1041,7 @@ export default function PublicProfile() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
+                    <div className="flex items-center gap-2 mb-1 justify-center">
                       <h1 className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         {profile.username || 'Anonymous'}
                       </h1>
@@ -1055,7 +1059,7 @@ export default function PublicProfile() {
                     </div>
                   )}
                   {!profile.isFakeOpponent && (
-                    <div className="mb-2 flex justify-center md:justify-start">
+                    <div className="mb-2 flex justify-center">
                       <ActiveStatus
                         isOnline={profile.isOnline}
                         lastSeenAt={profile.lastSeenAt}
@@ -1075,7 +1079,7 @@ export default function PublicProfile() {
                         style={{ backgroundColor: innerBg, border: `1px solid ${hairline}`, color: isLight ? '#0f172a' : '#ffffff' }}
                         placeholder="Tell people about yourself..."
                       />
-                      <div className="flex items-center gap-2 mt-2 justify-center md:justify-start">
+                      <div className="flex items-center gap-2 mt-2 justify-center">
                         <button
                           onClick={saveBio}
                           disabled={savingInline === 'bio'}
@@ -1094,7 +1098,7 @@ export default function PublicProfile() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-start gap-2 mb-3 justify-center md:justify-start">
+                    <div className="flex items-start gap-2 mb-3 justify-center">
                       <p className="text-gray-500 text-sm">{profile.bio || (isOwnProfile ? 'Add a bio' : 'No bio yet')}</p>
                       {isOwnProfile && (
                         <button
@@ -1123,7 +1127,7 @@ export default function PublicProfile() {
                     );
                   })()}
                   {!isOwnProfile && session?.user?.id && mutualFriendsCount > 0 && (
-                    <div className="flex justify-center md:justify-start mb-3">
+                    <div className="flex justify-center mb-3">
                       {/*
                         Pill: avatar stack + count text. We can't nest the
                         per-avatar `<Link>`s inside an outer `<button>` (HTML
@@ -1139,9 +1143,9 @@ export default function PublicProfile() {
                       <div
                         className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
                         style={{
-                          backgroundColor: 'rgba(168,85,247,0.12)',
-                          border: '1px solid rgba(168,85,247,0.45)',
-                          color: '#e9d5ff',
+                          backgroundColor: isLight ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.14)',
+                          border: '1px solid rgba(59,130,246,0.45)',
+                          color: isLight ? '#1d4ed8' : '#bfdbfe',
                         }}
                       >
                         {mutualFriendsPreview.length > 0 ? (
@@ -1165,7 +1169,7 @@ export default function PublicProfile() {
                         <button
                           type="button"
                           onClick={() => setMutualFriendsOpen(true)}
-                          className="rounded-full transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                          className="rounded-full transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                           style={{ color: 'inherit', background: 'transparent' }}
                           aria-label={`See ${mutualFriendsCount} mutual ${mutualFriendsCount === 1 ? 'friend' : 'friends'}`}
                         >
@@ -1175,7 +1179,7 @@ export default function PublicProfile() {
                     </div>
                   )}
                   {Array.isArray(profile.favoriteTeams) && profile.favoriteTeams.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 justify-center md:justify-start mb-3">
+                    <div className="flex flex-wrap gap-1.5 justify-center mb-3">
                       {profile.favoriteTeams.map((t) => (
                         <span
                           key={`${t.league}:${t.teamId}`}
@@ -1213,13 +1217,14 @@ export default function PublicProfile() {
                     )}
                     
                     {!isOwnProfile && session?.user && (
-                      <div className="flex flex-wrap gap-2 mt-3">
+                      <div className="flex flex-wrap gap-2 mt-3 justify-center">
                         <button
                           type="button"
                           onClick={() => setMessageOpen(true)}
                           aria-label="Message"
                           title="Message"
-                          className="bg-[#1a1a1a] hover:bg-[#222] focus:bg-[#222] text-blue-400 hover:text-blue-300 font-semibold p-2 rounded-lg transition-all text-sm flex items-center justify-center border border-[#2a2a2a] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          className="text-blue-500 font-semibold p-2 rounded-lg transition-all text-sm flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          style={{ backgroundColor: innerBg, border: `1px solid ${hairline}` }}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -1341,7 +1346,7 @@ export default function PublicProfile() {
             style={{
               backgroundColor: cardBg,
               border: `1px solid ${hairline}`,
-              boxShadow: 'none',
+              boxShadow: cardShadow,
             }}
           >
             {/* Pulse + glow used to emphasise the just-unlocked badge when
@@ -1380,7 +1385,7 @@ export default function PublicProfile() {
               }
             `}</style>
             <div className="flex items-baseline justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wider flex items-center gap-2" style={{ color: mutedText }}>
                 <span>Achievements</span>
                 {isOwnProfile && unviewedAchievementCount > 0 && (
                   <span
@@ -1462,9 +1467,9 @@ export default function PublicProfile() {
           </div>
         )}
 
-        <div className="rounded-2xl p-5" style={{ backgroundColor: cardBg, border: `1px solid ${hairline}`, boxShadow: 'none' }}>
+        <div className="rounded-2xl p-5" style={{ backgroundColor: cardBg, border: `1px solid ${hairline}`, boxShadow: cardShadow }}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Battle History</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: mutedText }}>Battle History</h2>
             {battleStats && battleStats.completedBattles > 0 && (
               <span className="text-[11px] font-semibold text-gray-500">
                 <span className="text-green-400">{battleStats.wins}W</span>

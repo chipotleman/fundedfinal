@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import UserAvatar from './UserAvatar';
 import { TEAM_CATALOG, FAVORITE_TEAMS_LIMIT, BANNER_LIBRARY } from '../lib/teamCatalog';
 import { uploadFailureMessage, reportUploadFailure } from '../utils/uploadErrors';
+import { useTheme } from '../contexts/ThemeContext';
 
 const BIO_MAX = 200;
 
@@ -29,9 +30,15 @@ export default function ProfileEditPanel({
   const [bannerUploading, setBannerUploading] = useState(false);
   const [activeLeague, setActiveLeague] = useState(TEAM_CATALOG[0].league);
 
-  const inputBg = '#111';
-  const inputBorder = '#1a1a1a';
-  const inputText = 'text-white';
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const inputBg = isLight ? '#f3eee4' : '#111';
+  const fieldBg = isLight ? '#ffffff' : '#111';
+  const inputBorder = isLight ? '#e7e0d3' : '#1a1a1a';
+  const inputText = isLight ? 'text-slate-900' : 'text-white';
+  const mutedTextColor = isLight ? '#475569' : '#d1d5db';
+  const avatarBg = isLight ? '#e7e0d3' : '#111';
+  const avatarText = isLight ? '#475569' : '#fff';
   const labelClass = 'block text-xs text-gray-500 mb-1 uppercase tracking-wider';
 
   const frames = Array.isArray(profile?.frames) ? profile.frames : [];
@@ -171,7 +178,7 @@ export default function ProfileEditPanel({
           onClick={() => bannerInputRef.current?.click()}
           disabled={bannerUploading}
           className="text-xs font-medium px-3 py-1.5 rounded-md"
-          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}`, color: '#d1d5db' }}
+          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}`, color: mutedTextColor }}
         >
           {bannerUploading ? 'Uploading…' : 'Upload custom banner'}
         </button>
@@ -187,8 +194,8 @@ export default function ProfileEditPanel({
               username={formData.username || profile?.username}
               frameId={formData.equippedFrame}
               size={72}
-              bgColor={inputBg}
-              textColor={'#fff'}
+              bgColor={avatarBg}
+              textColor={avatarText}
             />
             <input
               type="file"
@@ -207,7 +214,7 @@ export default function ProfileEditPanel({
             value={formData.username}
             onChange={onUsernameChange}
             className={`w-full rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${inputText}`}
-            style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}`, fontSize: '16px' }}
+            style={{ backgroundColor: fieldBg, border: `1px solid ${inputBorder}`, fontSize: '16px' }}
             maxLength={20}
           />
           {usernameStatus?.checking && <p className="text-gray-400 text-xs mt-1">Checking…</p>}
@@ -230,7 +237,7 @@ export default function ProfileEditPanel({
           value={formData.bio}
           onChange={(e) => setFormData({ ...formData, bio: e.target.value.slice(0, BIO_MAX) })}
           className={`w-full rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${inputText}`}
-          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}`, fontSize: '16px' }}
+          style={{ backgroundColor: fieldBg, border: `1px solid ${inputBorder}`, fontSize: '16px' }}
           rows={3}
           maxLength={BIO_MAX}
           placeholder="Tell others about yourself…"
@@ -256,7 +263,7 @@ export default function ProfileEditPanel({
               className="text-xs font-semibold px-2.5 py-1 rounded-full"
               style={{
                 backgroundColor: activeLeague === g.league ? '#3b82f6' : inputBg,
-                color: activeLeague === g.league ? '#fff' : '#d1d5db',
+                color: activeLeague === g.league ? '#fff' : mutedTextColor,
                 border: `1px solid ${activeLeague === g.league ? '#3b82f6' : inputBorder}`,
               }}
             >
@@ -280,7 +287,7 @@ export default function ProfileEditPanel({
                 className="flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-xs"
                 style={{
                   backgroundColor: selected ? '#3b82f6' : 'transparent',
-                  color: selected ? '#fff' : '#e5e7eb',
+                  color: selected ? '#fff' : (isLight ? '#334155' : '#e5e7eb'),
                 }}
               >
                 {t.logo ? (
@@ -289,8 +296,8 @@ export default function ProfileEditPanel({
                   <span
                     className="w-5 h-5 inline-flex items-center justify-center rounded-full text-[10px] font-bold"
                     style={{
-                      backgroundColor: selected ? 'rgba(255,255,255,0.2)' : inputBorder,
-                      color: selected ? '#fff' : '#fff',
+                      backgroundColor: selected ? 'rgba(255,255,255,0.2)' : (isLight ? '#cbd5e1' : inputBorder),
+                      color: selected ? '#fff' : (isLight ? '#1e293b' : '#fff'),
                     }}
                   >
                     {t.id}
@@ -313,7 +320,7 @@ export default function ProfileEditPanel({
             className="rounded-lg p-2 text-xs flex items-center gap-2"
             style={{
               backgroundColor: !formData.equippedFrame ? '#3b82f6' : inputBg,
-              color: !formData.equippedFrame ? '#fff' : '#d1d5db',
+              color: !formData.equippedFrame ? '#fff' : mutedTextColor,
               border: `1px solid ${!formData.equippedFrame ? '#3b82f6' : inputBorder}`,
             }}
           >
@@ -321,8 +328,8 @@ export default function ProfileEditPanel({
               avatar={formData.avatar}
               username={formData.username || profile?.username}
               size={32}
-              bgColor={inputBg}
-              textColor={'#fff'}
+              bgColor={avatarBg}
+              textColor={avatarText}
             />
             <span>No frame</span>
           </button>
@@ -337,7 +344,7 @@ export default function ProfileEditPanel({
                 className="rounded-lg p-2 text-xs flex items-center gap-2"
                 style={{
                   backgroundColor: isEquipped ? '#3b82f6' : inputBg,
-                  color: isEquipped ? '#fff' : '#d1d5db',
+                  color: isEquipped ? '#fff' : mutedTextColor,
                   border: `1px solid ${isEquipped ? '#3b82f6' : inputBorder}`,
                   opacity: f.unlocked ? 1 : 0.55,
                   cursor: f.unlocked ? 'pointer' : 'not-allowed',
@@ -349,8 +356,8 @@ export default function ProfileEditPanel({
                   username={formData.username || profile?.username}
                   frame={f}
                   size={32}
-                  bgColor={inputBg}
-                  textColor={'#fff'}
+                  bgColor={avatarBg}
+                  textColor={avatarText}
                 />
                 <span className="flex-1 min-w-0 truncate">
                   <span className="block truncate font-semibold">{f.name}</span>
@@ -374,8 +381,8 @@ export default function ProfileEditPanel({
         </button>
         <button
           onClick={onCancel}
-          className={`font-semibold py-2 px-6 rounded-lg text-sm ${'text-gray-400'}`}
-          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}` }}
+          className="font-semibold py-2 px-6 rounded-lg text-sm"
+          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}`, color: mutedTextColor }}
         >
           Cancel
         </button>
