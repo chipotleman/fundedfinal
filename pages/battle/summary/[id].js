@@ -187,13 +187,23 @@ function PicksColumn({ bets, p, isOpp, opponentName, opponentAvatar }) {
               opponentAvatar={opponentAvatar}
             />
             {isSelected && (
-              <div className="px-3 pb-3 pt-1" onClick={(e) => e.stopPropagation()}>
-                <div className="rounded-xl overflow-hidden" style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}` }}>
+              <div
+                className="px-3 pb-3 pt-3 mt-1"
+                onClick={(e) => e.stopPropagation()}
+                style={{ borderTop: `1px dashed ${p.softBorder}` }}
+              >
+                <div
+                  className="rounded-xl overflow-hidden"
+                  style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}
+                >
                   <div
                     className="flex items-center justify-between px-3 py-2"
                     style={{ background: 'linear-gradient(90deg, rgba(34,211,238,0.16), rgba(59,130,246,0.10))', borderBottom: `1px solid ${p.softBorder}` }}
                   >
-                    <span className="text-[10px] uppercase tracking-wider font-black" style={{ color: p.bodyText }}>Odds History</span>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-black" style={{ color: '#0891b2' }}>
+                      <span aria-hidden="true">📈</span>
+                      <span style={{ color: p.bodyText }}>Odds History</span>
+                    </span>
                     <span
                       className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full"
                       style={{ background: 'rgba(148,163,184,0.15)', color: p.mutedText, border: `1px solid ${p.softBorder}` }}
