@@ -754,7 +754,7 @@ export default function TopNavbar({
               {showNavBalances && (
                 <div
                   className="hidden sm:flex lg:hidden items-center gap-5"
-                  style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
+                  style={{ marginRight: 0 }}
                 >
                   {navBalancesInner}
                 </div>
@@ -844,7 +844,7 @@ export default function TopNavbar({
               {isLoggedIn && (
                 <div
                   className="sm:hidden flex items-center gap-1"
-                  style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
+                  style={{ marginRight: 0 }}
                 >
                   <NavBalance
                     onClick={() => setExplainerType('coins')}
@@ -869,37 +869,37 @@ export default function TopNavbar({
                   cluster — the !important rule guarantees the shift
                   applies regardless of cluster layout quirks, and the
                   media query keeps the desktop spacing tight. */}
-              {effectiveBetSlipCount > 0 && (
-                <button
-                  onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
-                  className="relative no-hover-effect topnav-pikslip"
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 16px',
-                    borderRadius: '9999px',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: '#2563eb',
-                    backgroundColor: '#2563eb',
-                    color: '#ffffff',
-                    lineHeight: 1,
-                  }}
-                  aria-label="Open Pik Slip"
-                >
-                  <svg style={{ width: '16px', height: '16px', fill: '#ffffff' }} viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
-                  </svg>
-                  <span style={{ color: '#ffffff' }}>Pik Slip</span>
+              <button
+                onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
+                className="relative no-hover-effect topnav-pikslip"
+                style={{
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  borderRadius: '9999px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: '#2563eb',
+                  backgroundColor: '#2563eb',
+                  color: '#ffffff',
+                  lineHeight: 1,
+                }}
+                aria-label="Open Pik Slip"
+              >
+                <svg style={{ width: '16px', height: '16px', fill: '#ffffff' }} viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <span style={{ color: '#ffffff' }}>Pik Slip</span>
+                {effectiveBetSlipCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center" style={{ color: '#ffffff' }}>
                     {effectiveBetSlipCount}
                   </span>
-                </button>
-              )}
+                )}
+              </button>
 
               {/* Desktop Authentication Buttons - All the way on the right */}
               <div className="hidden lg:flex items-center space-x-3 ml-4">
