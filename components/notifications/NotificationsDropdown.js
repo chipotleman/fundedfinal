@@ -306,13 +306,14 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
         {socialActivity.length > 0 && (
           <Section type="social_like" title="Social Activity">
             {socialActivity.map((s) => {
-              const isComment = s.type === 'comment';
+              const isReply = s.type === 'reply';
+              const isComment = s.type === 'comment' || isReply;
               const rowType = isComment ? 'social_comment' : 'social_like';
               return (
                 <Row key={s.id} type={rowType} sender={s.actor} time={s.createdAt}>
                   <div className="text-white text-sm font-semibold truncate">
                     {(s.actor?.username || 'Someone')}{' '}
-                    {isComment ? 'commented on your post' : 'liked your post'}
+                    {isReply ? 'replied to you' : isComment ? 'commented on your post' : 'liked your post'}
                   </div>
                   {(isComment ? s.commentPreview : s.postPreview) && (
                     <div className="text-gray-400 text-xs truncate">

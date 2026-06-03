@@ -543,7 +543,8 @@ function NotificationsFeed({ ctx, router, filter }) {
         <div>
           <SectionHeader type="social_like" title="Social Activity" />
           {socialActivity.map((s) => {
-            const isComment = s.type === 'comment';
+            const isReply = s.type === 'reply';
+            const isComment = s.type === 'comment' || isReply;
             const rowType = isComment ? 'social_comment' : 'social_like';
             return (
               <TypedRow
@@ -557,7 +558,7 @@ function NotificationsFeed({ ctx, router, filter }) {
                 </div>
                 <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
                   <UserNameLink user={s.actor} fallback="Someone" />{' '}
-                  {isComment ? 'commented on your post' : 'liked your post'}
+                  {isReply ? 'replied to you' : isComment ? 'commented on your post' : 'liked your post'}
                 </div>
                 {(isComment ? s.commentPreview : s.postPreview) && (
                   <div className="text-xs truncate" style={{ color: textSecondary }}>

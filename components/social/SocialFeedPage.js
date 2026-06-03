@@ -356,9 +356,69 @@ function PostComposer({
 }
 
 // =============================================================================
+// Render a comment body with @mentions highlighted (Instagram-style). The
+// leading "@username" tokens link visually (blue) so it's obvious who a reply
+// is addressed to. Pure display — no navigation.
+function renderCommentBody(body, mentionColor, baseColor) {
+  if (!body) return null;
+  const parts = String(body).split(/(@[A-Za-z0-9_]+)/g);
+  return parts.map((part, i) =>
+    part.startsWith('@') && part.length > 1 ? (
+      <span key={i} style={{ color: mentionColor, fontWeight: 600 }}>{part}</span>
+    ) : (
+      <span key={i} style={{ color: baseColor }}>{part}</span>
+    )
+  );
+}
+
+// Group a flat comment list into Instagram-style threads: top-level comments,
+// each followed by all of its descendant replies (flattened, chronological).
+// A reply whose parent is itself a reply still surfaces under the same root.
+function buildCommentThreads(comments) {
+  const byId = new Map(comments.map((c) => [c.id, c]));
+  // Walk up to the top-level ancestor. A comment with no resolvable parent — or
+  // one caught in a (theoretically impossible) cycle — resolves to itself, so
+  // every comment is guaranteed a root and nothing is ever dropped.
+  const resolveRoot = (c) => {
+    let cur = c;
+    const seen = new Set();
+    while (cur.parentId && byId.has(cur.parentId)) {
+      if (seen.has(cur.id)) break; // cycle guard: treat current node as root
+      seen.add(cur.id);
+      cur = byId.get(cur.parentId);
+    }
+    return cur.id;
+  };
+  const order = []; // root ids in first-seen (chronological) order
+  const rootSet = new Set();
+  const repliesByRoot = new Map();
+  const ensureRoot = (id) => {
+    if (!rootSet.has(id)) { rootSet.add(id); order.push(id); }
+  };
+  comments.forEach((c) => {
+    const rid = resolveRoot(c);
+    if (rid === c.id) {
+      ensureRoot(c.id);
+    } else {
+      ensureRoot(rid);
+      if (!repliesByRoot.has(rid)) repliesByRoot.set(rid, []);
+      repliesByRoot.get(rid).push(c);
+    }
+  });
+  return order
+    .map((id) => ({
+      root: byId.get(id),
+      replies: (repliesByRoot.get(id) || []).sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      ),
+    }))
+    .filter((t) => t.root);
+}
+
 // PostCard — a user-authored post in the feed: avatar/name/time + body, with
 // like + comment toggle. Tapping comment expands an inline thread (lazy loaded
-// on first expand) plus a comment composer.
+// on first expand) plus a comment composer. Comments support threaded replies:
+// each one has a "Reply" action that addresses that user with an @mention.
 // =============================================================================
 function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultOpen = false, scrollRef }) {
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
@@ -370,8 +430,31 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
   const [commentsLoaded, setCommentsLoaded] = useState(false);
   const [commentDraft, setCommentDraft] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [replyTo, setReplyTo] = useState(null); // { id, username }
+  const commentInputRef = useRef(null);
 
   const author = post.author || {};
+
+  // Begin a threaded reply to a specific comment: prefill the composer with the
+  // target's @handle (Instagram-style) and remember the parent so the next
+  // submit nests under it and notifies/mentions that user.
+  const startReply = useCallback((comment) => {
+    if (isGuest) return;
+    const ca = comment.author || {};
+    const handle = `@${(ca.username || 'player').replace(/\s+/g, '').toLowerCase()}`;
+    setReplyTo({ id: comment.id, username: ca.username || 'Player' });
+    setCommentDraft((d) => {
+      const stripped = d.replace(/^@[A-Za-z0-9_]+\s+/, '');
+      return `${handle} ${stripped}`.trimStart();
+    });
+    setCommentsOpen(true);
+    requestAnimationFrame(() => commentInputRef.current?.focus());
+  }, [isGuest]);
+
+  const cancelReply = useCallback(() => {
+    setReplyTo(null);
+    setCommentDraft((d) => d.replace(/^@[A-Za-z0-9_]+\s+/, ''));
+  }, []);
 
   // Auto-load comments once when opened via deep-link (?post=<id>).
   useEffect(() => {
@@ -438,7 +521,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
       const res = await fetch(`/api/social/posts/${post.id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: trimmed }),
+        body: JSON.stringify({ body: trimmed, parentId: replyTo?.id || null }),
       });
       if (!res.ok) throw new Error('Comment failed');
       const json = await res.json();
@@ -446,6 +529,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
         setComments((prev) => [...prev, json.comment]);
         setCommentCount((c) => c + 1);
         setCommentDraft('');
+        setReplyTo(null);
       }
     } catch {} finally {
       setCommentSubmitting(false);
@@ -531,56 +615,87 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
             ) : comments.length === 0 ? (
               <div className="text-[11px]" style={{ color: textMuted }}>Be the first to comment.</div>
             ) : (
-              comments.map((c) => {
-                const ca = c.author || {};
-                return (
-                  <div key={c.id} className="flex items-start gap-2.5">
-                    <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
-                      <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor={avatarBg} />
-                    </button>
-                    <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: elevated }}>
-                      <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
-                        {ca.username || 'Player'}
+              buildCommentThreads(comments).map(({ root, replies }) => {
+                const renderComment = (c, isReplyRow) => {
+                  const ca = c.author || {};
+                  return (
+                    <div key={c.id} className={`flex items-start gap-2.5 ${isReplyRow ? 'mt-2 ml-7' : ''}`}>
+                      <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
+                        <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={isReplyRow ? 24 : 28} bgColor={avatarBg} />
                       </button>
-                      <div className="text-[13px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>{c.body}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: textMuted }}>{timeAgo(c.createdAt)}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="rounded-2xl px-3 py-2" style={{ backgroundColor: elevated }}>
+                          <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
+                            {ca.username || 'Player'}
+                          </button>
+                          <div className="text-[13px] whitespace-pre-wrap break-words">{renderCommentBody(c.body, '#60a5fa', textPrimary)}</div>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 pl-1">
+                          <span className="text-[10px]" style={{ color: textMuted }}>{timeAgo(c.createdAt)}</span>
+                          {!isGuest && (
+                            <button
+                              type="button"
+                              onClick={() => startReply(c)}
+                              className="text-[10px] font-semibold hover:underline"
+                              style={{ color: textSecondary }}
+                            >
+                              Reply
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
+                  );
+                };
+                return (
+                  <div key={root.id}>
+                    {renderComment(root, false)}
+                    {replies.map((r) => renderComment(r, true))}
                   </div>
                 );
               })
             )}
             {!isGuest && (
-              <div className="flex items-start gap-2.5 pt-1">
-                <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor={avatarBg} />
-                <div className="flex-1 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={commentDraft}
-                    onChange={(e) => setCommentDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmitComment();
-                      }
-                    }}
-                    placeholder="Post your reply…"
-                    maxLength={300}
-                    className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    style={{ backgroundColor: elevated, border: `1px solid ${border}`, color: textPrimary }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSubmitComment}
-                    disabled={!commentDraft.trim() || commentSubmitting}
-                    className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
-                    style={{
-                      background: commentDraft.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
-                      cursor: commentDraft.trim() && !commentSubmitting ? 'pointer' : 'not-allowed',
-                      opacity: commentSubmitting ? 0.7 : 1,
-                    }}
-                  >
-                    {commentSubmitting ? '…' : 'Send'}
-                  </button>
+              <div className="pt-1">
+                {replyTo && (
+                  <div className="flex items-center justify-between gap-2 mb-1.5 ml-[38px] px-3 py-1 rounded-full text-[11px]" style={{ backgroundColor: elevated, color: textSecondary }}>
+                    <span className="truncate">Replying to <span style={{ color: '#60a5fa', fontWeight: 600 }}>@{(replyTo.username || 'player').replace(/\s+/g, '').toLowerCase()}</span></span>
+                    <button type="button" onClick={cancelReply} className="flex-shrink-0 font-bold" style={{ color: textMuted }} aria-label="Cancel reply">✕</button>
+                  </div>
+                )}
+                <div className="flex items-start gap-2.5">
+                  <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor={avatarBg} />
+                  <div className="flex-1 flex items-center gap-2">
+                    <input
+                      ref={commentInputRef}
+                      type="text"
+                      value={commentDraft}
+                      onChange={(e) => setCommentDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSubmitComment();
+                        }
+                      }}
+                      placeholder={replyTo ? `Reply to ${replyTo.username}…` : 'Post your reply…'}
+                      maxLength={300}
+                      className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      style={{ backgroundColor: elevated, border: `1px solid ${border}`, color: textPrimary }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSubmitComment}
+                      disabled={!commentDraft.trim() || commentSubmitting}
+                      className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
+                      style={{
+                        background: commentDraft.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
+                        cursor: commentDraft.trim() && !commentSubmitting ? 'pointer' : 'not-allowed',
+                        opacity: commentSubmitting ? 0.7 : 1,
+                      }}
+                    >
+                      {commentSubmitting ? '…' : 'Send'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

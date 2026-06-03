@@ -1037,10 +1037,12 @@ export const socialPostComments = pgTable("social_post_comments", {
   postId: varchar("post_id").notNull(),
   userId: varchar("user_id").notNull(),
   body: text("body").notNull(),
+  parentId: varchar("parent_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   postIdIdx: index("social_post_comments_post_id_idx").on(table.postId),
   createdAtIdx: index("social_post_comments_created_at_idx").on(table.createdAt),
+  parentIdIdx: index("social_post_comments_parent_id_idx").on(table.parentId),
 }));
 
 export const socialPostLikes = pgTable("social_post_likes", {
