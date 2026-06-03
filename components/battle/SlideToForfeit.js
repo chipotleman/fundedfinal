@@ -1,7 +1,10 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import haptic from '../../utils/haptics';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function SlideToForfeit({ onConfirm, disabled = false }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const trackRef = useRef(null);
   const animRef = useRef(null);
   const startPointerXRef = useRef(0);
@@ -105,6 +108,16 @@ export default function SlideToForfeit({ onConfirm, disabled = false }) {
 
   const progress = maxX > 0 ? thumbX / maxX : 0;
   const trackBg = `linear-gradient(90deg, rgba(239,68,68,${0.05 + progress * 0.20}) 0%, rgba(249,115,22,${0.03 + progress * 0.14}) 100%)`;
+  const baseLayer = isLight
+    ? `linear-gradient(180deg, rgba(254,242,242,0.9), rgba(255,247,237,0.9))`
+    : `linear-gradient(180deg, rgba(22,18,22,0.6), rgba(14,12,15,0.6))`;
+  const trackBorder = isLight
+    ? `1px solid rgba(220,38,38,${0.22 + progress * 0.30})`
+    : `1px solid rgba(239,68,68,${0.16 + progress * 0.28})`;
+  const trackShadow = isLight
+    ? `inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 3px rgba(220,38,38,0.12)`
+    : `inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 4px rgba(0,0,0,0.35)`;
+  const labelColor = isLight ? '#dc2626' : '#f87171';
 
   return (
     <div
@@ -113,9 +126,9 @@ export default function SlideToForfeit({ onConfirm, disabled = false }) {
         position: 'relative',
         height: 52,
         borderRadius: 26,
-        background: `linear-gradient(180deg, rgba(22,18,22,0.6), rgba(14,12,15,0.6)), ${trackBg}`,
-        border: `1px solid rgba(239,68,68,${0.16 + progress * 0.28})`,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 4px rgba(0,0,0,0.35)`,
+        background: `${baseLayer}, ${trackBg}`,
+        border: trackBorder,
+        boxShadow: trackShadow,
         overflow: 'hidden',
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -133,7 +146,7 @@ export default function SlideToForfeit({ onConfirm, disabled = false }) {
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'none',
-          color: '#f87171',
+          color: labelColor,
           fontSize: 12.5,
           fontWeight: 700,
           letterSpacing: '0.1em',
