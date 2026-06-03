@@ -2312,10 +2312,14 @@ function YouVsCard({
             <span
               className="text-[9px] font-extrabold uppercase tracking-[0.18em] px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
               style={{
-                background: 'linear-gradient(135deg, #34d399, #10b981)',
-                color: '#022c1f',
+                background: isLight
+                  ? 'linear-gradient(135deg, #facc15, #eab308)'
+                  : 'linear-gradient(135deg, #34d399, #10b981)',
+                color: isLight ? '#1a1505' : '#022c1f',
                 border: '1.5px solid #0d0d0d',
-                boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(16,185,129,0.45)',
+                boxShadow: isLight
+                  ? '0 2px 0 rgba(0,0,0,0.45), 0 0 10px rgba(234,179,8,0.45)'
+                  : '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(16,185,129,0.45)',
               }}
             >
               <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -2329,7 +2333,7 @@ function YouVsCard({
             ></div>
             <span
               className="text-[10px] font-semibold uppercase tracking-wider truncate"
-              style={{ color: topDotColor }}
+              style={{ color: isLight ? '#0a0a0a' : topDotColor }}
             >
               {topLabel}
             </span>
@@ -2726,7 +2730,7 @@ function YouVsCard({
                 </div>
                 <span
                   className="text-[11px] font-medium flex items-center gap-1 flex-shrink-0"
-                  style={{ color: '#34d399' }}
+                  style={{ color: isLight ? '#0a0a0a' : '#34d399' }}
                 >
                   {isExpanded ? 'Hide' : 'More'}
                   <svg
@@ -2957,7 +2961,7 @@ function YouVsCard({
                 )}
                 <span
                   className="text-[11px] font-semibold flex items-center gap-1"
-                  style={{ color: '#34d399' }}
+                  style={{ color: isLight ? '#0a0a0a' : '#34d399' }}
                 >
                   {isExpanded ? 'Hide' : 'More'}
                   <svg
