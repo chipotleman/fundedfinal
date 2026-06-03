@@ -130,6 +130,20 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        // Self-heal: the server is the source of truth. If it rejects
+        // because a relationship already exists (e.g. the preview fetch
+        // 404'd and we fell back to a seeded 'none'), flip the UI to the
+        // correct state instead of showing an error + a stale "Add
+        // Friend" button the user can keep mashing.
+        const msg = (data?.error || '').toLowerCase();
+        if (msg.includes('already friends')) {
+          setUser((prev) => ({ ...prev, friendStatus: 'friends', canMessage: true }));
+          return;
+        }
+        if (msg.includes('already pending') || msg.includes('request already')) {
+          setUser((prev) => ({ ...prev, friendStatus: 'pending_outgoing' }));
+          return;
+        }
         setActionError(data?.error || 'Could not send request');
         return;
       }
@@ -359,7 +373,7 @@ export default function UserPreviewPopover({ seedUser, anchorRect, onClose, onRe
               <button
                 type="button"
                 onClick={handleAddFriend}
-                disabled={friendCta.disabled || actionPending || !myId}
+                disabled={friendCta.disabled || actionPending || loading || !myId}
                 className="w-full py-2.5 rounded-xl font-extrabold text-white uppercase text-[12px] disabled:opacity-60 transition-transform active:scale-[0.98]"
                 style={{
                   background: toneStyles[friendCta.tone],

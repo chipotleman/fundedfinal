@@ -38,23 +38,12 @@ export default async function handler(req, res) {
       .where(eq(profiles.id, id))
       .limit(1);
 
-    let user = null;
-    if (!profile) {
-      const [u] = await db
-        .select({ id: users.id, email: users.email, image: users.image })
-        .from(users)
-        .where(eq(users.id, id))
-        .limit(1);
-      user = u || null;
-      if (!user) return res.status(404).json({ error: 'User not found' });
-    } else {
-      const [u] = await db
-        .select({ id: users.id, email: users.email, image: users.image })
-        .from(users)
-        .where(eq(users.id, id))
-        .limit(1);
-      user = u || null;
-    }
+    const [u] = await db
+      .select({ id: users.id, email: users.email, image: users.image })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    const user = u || null;
 
     let friendStatus = 'none'; // 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends'
     if (viewerId === id) {
@@ -78,6 +67,15 @@ export default async function handler(req, res) {
             f.userId === viewerId ? 'pending_outgoing' : 'pending_incoming';
         }
       }
+    }
+
+    // Only 404 when we truly have nothing to show AND no relationship to
+    // report. A sparse bot/legacy friend (no profile or users row) still
+    // needs a valid payload — otherwise the popover never learns it's
+    // 'friends' and falls back to its seeded "Add Friend" CTA, letting
+    // the user re-request someone they're already friends with.
+    if (!profile && !user && friendStatus === 'none') {
+      return res.status(404).json({ error: 'User not found' });
     }
 
     const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
