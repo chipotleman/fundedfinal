@@ -136,9 +136,6 @@ export default function MyBattleOverviewModal({
   const buyInLabel = buyIn != null
     ? (isBeta ? `${compactCoins(buyIn)} coins` : `$${compactCoins(buyIn)}`)
     : '—';
-  const potLabel = pot != null
-    ? (isBeta ? `${compactCoins(pot)} pot` : `$${compactCoins(pot)} pot`)
-    : '—';
 
   // Theme tokens. The cartoon HUD keeps its chunky black borders + neon
   // accents in both themes; only the dark panel/card/pill surfaces and the
@@ -352,7 +349,7 @@ export default function MyBattleOverviewModal({
             <div className="min-w-0 flex-1">
               <div
                 className="text-[10px] font-black uppercase"
-                style={{ color: mode.color, letterSpacing: '0.2em', textShadow: '0 1px 0 #0a0a0a' }}
+                style={{ color: mode.color, letterSpacing: '0.2em', textShadow: isLight ? 'none' : '0 1px 0 #0a0a0a' }}
               >
                 {mode.label} MODE
               </div>
@@ -477,14 +474,12 @@ export default function MyBattleOverviewModal({
             }}
           >
             <span style={{ fontSize: 16, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }} aria-hidden="true">🪙</span>
-            <span className="font-black text-[12px] uppercase" style={{ letterSpacing: '0.06em', color: t.durationText }}>
+            <span className="font-black text-[10px] uppercase" style={{ letterSpacing: '0.1em', color: isLight ? '#475569' : '#94a3b8' }}>
+              Playing for
+            </span>
+            <span className="font-black text-[13px] uppercase" style={{ letterSpacing: '0.06em', color: t.durationText }}>
               {buyInLabel}
             </span>
-            <span style={{ color: 'rgba(148,163,184,0.5)', fontSize: 12 }}>·</span>
-            <span className="font-black text-[12px] uppercase" style={{ letterSpacing: '0.06em', color: t.durationText }}>
-              {potLabel}
-            </span>
-            <span style={{ fontSize: 16, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }} aria-hidden="true">🏆</span>
           </div>
         </div>
 
@@ -496,9 +491,11 @@ export default function MyBattleOverviewModal({
               onClick={handleMessage}
               className="no-hover-effect flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[12px]"
               style={{
-                background: 'linear-gradient(180deg, rgba(34,211,238,0.12), rgba(8,145,178,0.12))',
-                border: '1px solid rgba(34,211,238,0.4)',
-                color: isLight ? '#0891b2' : '#67e8f9',
+                background: isLight
+                  ? 'linear-gradient(180deg, #ecfeff, #cffafe)'
+                  : 'linear-gradient(180deg, rgba(34,211,238,0.12), rgba(8,145,178,0.12))',
+                border: isLight ? '1.5px solid #0891b2' : '1px solid rgba(34,211,238,0.4)',
+                color: isLight ? '#0e7490' : '#67e8f9',
                 letterSpacing: '0.04em',
               }}
             >
@@ -512,9 +509,11 @@ export default function MyBattleOverviewModal({
               onClick={handleViewUpdates}
               className="no-hover-effect flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[12px]"
               style={{
-                background: 'linear-gradient(180deg, rgba(59,130,246,0.12), rgba(29,78,216,0.12))',
-                border: '1px solid rgba(59,130,246,0.4)',
-                color: isLight ? '#2563eb' : '#93c5fd',
+                background: isLight
+                  ? 'linear-gradient(180deg, #eff6ff, #dbeafe)'
+                  : 'linear-gradient(180deg, rgba(59,130,246,0.12), rgba(29,78,216,0.12))',
+                border: isLight ? '1.5px solid #2563eb' : '1px solid rgba(59,130,246,0.4)',
+                color: isLight ? '#1d4ed8' : '#93c5fd',
                 letterSpacing: '0.04em',
               }}
             >

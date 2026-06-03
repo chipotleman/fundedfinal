@@ -216,7 +216,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
       key: `b-${b.id}`,
       category: 'Live battle',
       title: `${b.user1?.username || 'Player 1'} vs ${b.user2?.username || 'Player 2'}`,
-      meta: `${(b.potSize || 0).toLocaleString()} coin pot`,
+      meta: Number(b.potSize) > 0 ? `${Number(b.potSize).toLocaleString()} coins on the line` : 'Live now',
       onClick: () => router.push(`/battle?battle=${b.id}`),
     });
   });
@@ -271,7 +271,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
                     {(u1.username || 'P1')} vs {(u2.username || 'P2')}
                   </span>
                   <span className="block text-[10px]" style={{ color: textMuted }}>
-                    {b.potSize} coin pot
+                    {Number(b.potSize) > 0 ? `${Number(b.potSize).toLocaleString()} coins on the line` : 'Live now'}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 flex-shrink-0">
