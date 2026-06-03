@@ -17,6 +17,7 @@ import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useProfileCache } from '../../contexts/ProfileCacheContext';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import { getFrameById } from '../../lib/profileFrames';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   trackBadgeShareProfileVisit,
   BADGE_SHARE_REF,
@@ -36,6 +37,12 @@ const EMPTY_PROFILE = {
 
 export default function PublicProfile() {
   const cache = useProfileCache();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const pageBg = isLight ? '#f1f5f9' : '#000';
+  const cardBg = isLight ? '#ffffff' : '#0d0d0d';
+  const innerBg = isLight ? '#f1f5f9' : '#111';
+  const hairline = isLight ? '#e2e8f0' : '#1a1a1a';
   const router = useRouter();
   const { id, badge: badgeQuery, highlight: highlightQuery } = router.query;
   const notificationsCtx = useNotifications();
@@ -836,9 +843,9 @@ export default function PublicProfile() {
 
   if (profileNotFound && !hasProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#000' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: pageBg }}>
         <div className="text-center">
-          <h2 className={`text-2xl font-bold mb-4 ${'text-white'}`}>Profile not found</h2>
+          <h2 className={`text-2xl font-bold mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`}>Profile not found</h2>
           <Link href="/">
             <button className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg">
               Go to Dashboard
@@ -850,7 +857,7 @@ export default function PublicProfile() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#000' }}>
+    <div className="min-h-screen" style={{ background: pageBg }}>
       <TopNavbar 
         user={session?.user}
         bankroll={0}
@@ -860,7 +867,7 @@ export default function PublicProfile() {
       />
       
       <div className="pt-16 pb-24 px-4 max-w-4xl mx-auto">
-        <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>
+        <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: cardBg, border: `1px solid ${hairline}`, boxShadow: 'none' }}>
           <div
             className={`relative w-full group ${isOwnProfile ? 'cursor-pointer' : ''}`}
             style={{
@@ -929,7 +936,7 @@ export default function PublicProfile() {
                 <div
                   className={`rounded-full p-1 group relative ${isOwnProfile ? 'cursor-pointer' : ''}`}
                   style={{
-                    backgroundColor: '#0d0d0d',
+                    backgroundColor: cardBg,
                   }}
                   onClick={isOwnProfile ? () => avatarFileRef.current?.click() : undefined}
                   role={isOwnProfile ? 'button' : undefined}
@@ -991,7 +998,8 @@ export default function PublicProfile() {
                           onChange={(e) => setUsernameDraft(e.target.value)}
                           autoFocus
                           maxLength={20}
-                          className="bg-[#111] border border-[#1a1a1a] rounded-lg px-3 py-1.5 text-white text-xl font-bold focus:outline-none focus:border-blue-500"
+                          className="rounded-lg px-3 py-1.5 text-xl font-bold focus:outline-none focus:border-blue-500"
+                          style={{ backgroundColor: innerBg, border: `1px solid ${hairline}`, color: isLight ? '#0f172a' : '#ffffff' }}
                         />
                         <button
                           onClick={saveUsername}
@@ -1010,7 +1018,8 @@ export default function PublicProfile() {
                             setInlineError(null);
                             setInlineUsernameStatus({ checking: false, available: null, error: null });
                           }}
-                          className="text-gray-400 text-xs font-semibold py-1.5 px-3 rounded-lg bg-[#111] border border-[#1a1a1a]"
+                          className="text-xs font-semibold py-1.5 px-3 rounded-lg"
+                          style={{ backgroundColor: innerBg, border: `1px solid ${hairline}`, color: isLight ? '#475569' : '#9ca3af' }}
                         >
                           Cancel
                         </button>
@@ -1029,7 +1038,7 @@ export default function PublicProfile() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
-                      <h1 className={`text-2xl font-black ${'text-white'}`}>
+                      <h1 className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         {profile.username || 'Anonymous'}
                       </h1>
                       {isOwnProfile && (
@@ -1062,7 +1071,8 @@ export default function PublicProfile() {
                         autoFocus
                         maxLength={200}
                         rows={3}
-                        className="w-full bg-[#111] border border-[#1a1a1a] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
+                        className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                        style={{ backgroundColor: innerBg, border: `1px solid ${hairline}`, color: isLight ? '#0f172a' : '#ffffff' }}
                         placeholder="Tell people about yourself..."
                       />
                       <div className="flex items-center gap-2 mt-2 justify-center md:justify-start">
@@ -1075,7 +1085,8 @@ export default function PublicProfile() {
                         </button>
                         <button
                           onClick={() => { setEditingBio(false); setInlineError(null); }}
-                          className="text-gray-400 text-xs font-semibold py-1.5 px-3 rounded-lg bg-[#111] border border-[#1a1a1a]"
+                          className="text-xs font-semibold py-1.5 px-3 rounded-lg"
+                          style={{ backgroundColor: innerBg, border: `1px solid ${hairline}`, color: isLight ? '#475569' : '#9ca3af' }}
                         >
                           Cancel
                         </button>
@@ -1107,7 +1118,7 @@ export default function PublicProfile() {
                     return (
                       <p className="text-xs mb-3" style={{ color: '#9ca3af' }}>
                         <span className="mr-1">{equipped.icon}</span>
-                        Wearing <span style={{ color: '#fff' }}>{equipped.name}</span>
+                        Wearing <span style={{ color: isLight ? '#0f172a' : '#fff' }}>{equipped.name}</span>
                       </p>
                     );
                   })()}
@@ -1170,9 +1181,9 @@ export default function PublicProfile() {
                           key={`${t.league}:${t.teamId}`}
                           className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
                           style={{
-                            backgroundColor: '#111',
-                            border: `1px solid ${'#1a1a1a'}`,
-                            color: '#e5e7eb',
+                            backgroundColor: innerBg,
+                            border: `1px solid ${hairline}`,
+                            color: isLight ? '#334155' : '#e5e7eb',
                           }}
                         >
                           {t.logo ? (
@@ -1180,7 +1191,7 @@ export default function PublicProfile() {
                           ) : (
                             <span
                               className="w-4 h-4 inline-flex items-center justify-center rounded-full text-[8px] font-bold"
-                              style={{ backgroundColor: '#1a1a1a' }}
+                              style={{ backgroundColor: hairline }}
                             >
                               {t.teamId?.slice(0, 3)}
                             </span>
@@ -1194,8 +1205,8 @@ export default function PublicProfile() {
                     {isOwnProfile && (
                       <button
                         onClick={() => setEditing(true)}
-                        className={`font-medium py-1.5 px-4 rounded-lg transition-all text-xs ${'text-gray-400'}`}
-                        style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}
+                        className={`font-medium py-1.5 px-4 rounded-lg transition-all text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}
+                        style={{ backgroundColor: innerBg, border: `1px solid ${hairline}` }}
                       >
                         Edit Profile
                       </button>
@@ -1303,16 +1314,16 @@ export default function PublicProfile() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: `1px solid ${'#1a1a1a'}` }}>
-            <div className="p-4 text-center" style={{ borderRight: `1px solid ${'#1a1a1a'}` }}>
+          <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: `1px solid ${hairline}` }}>
+            <div className="p-4 text-center" style={{ borderRight: `1px solid ${hairline}` }}>
               <p className="text-gray-500 text-xs uppercase tracking-wider">Battles</p>
-              <p className={`text-xl font-black mt-1 ${'text-white'}`}>{battleStats?.totalBattles || 0}</p>
+              <p className={`text-xl font-black mt-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>{battleStats?.totalBattles || 0}</p>
             </div>
-            <div className="p-4 text-center" style={{ borderRight: `1px solid ${'#1a1a1a'}` }}>
+            <div className="p-4 text-center" style={{ borderRight: `1px solid ${hairline}` }}>
               <p className="text-gray-500 text-xs uppercase tracking-wider">Win Rate</p>
               <p className="text-xl font-black text-green-500 mt-1">{winRate}%</p>
             </div>
-            <div className="p-4 text-center" style={{ borderRight: `1px solid ${'#1a1a1a'}` }}>
+            <div className="p-4 text-center" style={{ borderRight: `1px solid ${hairline}` }}>
               <p className="text-gray-500 text-xs uppercase tracking-wider">Wins</p>
               <p className="text-xl font-black text-green-500 mt-1">{battleStats?.wins || 0}</p>
             </div>
@@ -1328,8 +1339,8 @@ export default function PublicProfile() {
             ref={achievementsSectionRef}
             className="rounded-2xl p-5 mb-6"
             style={{
-              backgroundColor: '#0d0d0d',
-              border: `1px solid ${'#1a1a1a'}`,
+              backgroundColor: cardBg,
+              border: `1px solid ${hairline}`,
               boxShadow: 'none',
             }}
           >
@@ -1414,17 +1425,17 @@ export default function PublicProfile() {
                     onClick={() => setSelectedAchievement(detail)}
                     aria-label={`View details for ${f.name} ${f.unlocked ? '(unlocked)' : '(locked)'}`}
                     data-highlighted={isHighlighted ? 'true' : undefined}
-                    className={`rounded-xl p-3 flex flex-col items-center text-center gap-2 text-left transition-colors hover:bg-[#161616] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                    className={`rounded-xl p-3 flex flex-col items-center text-center gap-2 text-left transition-colors hover:bg-blue-500/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                       isHighlighted ? 'achv-highlight-pulse' : ''
                     }`}
                     style={{
-                      backgroundColor: '#111',
+                      backgroundColor: innerBg,
                       border: `1px solid ${
                         isHighlighted
                           ? '#facc15'
                           : isEquipped
                             ? '#3b82f6'
-                            : '#1a1a1a'
+                            : hairline
                       }`,
                     }}
                   >
@@ -1434,7 +1445,7 @@ export default function PublicProfile() {
                       size={72}
                     />
                     <div className="min-w-0 w-full">
-                      <div className={`text-xs font-bold truncate ${f.unlocked ? 'text-white' : 'text-gray-400'}`}>
+                      <div className={`text-xs font-bold truncate ${f.unlocked ? (isLight ? 'text-slate-900' : 'text-white') : 'text-gray-400'}`}>
                         {f.name}
                       </div>
                       <div className="text-[10px] text-gray-500 leading-snug line-clamp-2">
@@ -1451,7 +1462,7 @@ export default function PublicProfile() {
           </div>
         )}
 
-        <div className="rounded-2xl p-5" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>
+        <div className="rounded-2xl p-5" style={{ backgroundColor: cardBg, border: `1px solid ${hairline}`, boxShadow: 'none' }}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Battle History</h2>
             {battleStats && battleStats.completedBattles > 0 && (
@@ -1484,8 +1495,8 @@ export default function PublicProfile() {
                     onClick={() => setHistoryFilter(pill.key)}
                     className="flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
                     style={{
-                      backgroundColor: active ? 'rgba(59,130,246,0.15)' : '#111',
-                      border: `1px solid ${active ? 'rgba(59,130,246,0.55)' : '#1a1a1a'}`,
+                      backgroundColor: active ? 'rgba(59,130,246,0.15)' : innerBg,
+                      border: `1px solid ${active ? 'rgba(59,130,246,0.55)' : hairline}`,
                       color: active ? '#60a5fa' : '#9ca3af',
                     }}
                   >
@@ -1503,17 +1514,17 @@ export default function PublicProfile() {
                 <div
                   key={i}
                   className="rounded-xl p-3.5 animate-pulse"
-                  style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}
+                  style={{ backgroundColor: innerBg, border: `1px solid ${hairline}` }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full" style={{ backgroundColor: '#1a1a1a' }} />
+                      <div className="w-9 h-9 rounded-full" style={{ backgroundColor: hairline }} />
                       <div className="space-y-1.5">
-                        <div className="h-3 w-32 rounded" style={{ backgroundColor: '#1a1a1a' }} />
-                        <div className="h-2.5 w-20 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+                        <div className="h-3 w-32 rounded" style={{ backgroundColor: hairline }} />
+                        <div className="h-2.5 w-20 rounded" style={{ backgroundColor: hairline }} />
                       </div>
                     </div>
-                    <div className="h-3 w-12 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+                    <div className="h-3 w-12 rounded" style={{ backgroundColor: hairline }} />
                   </div>
                 </div>
               ))}
@@ -1535,19 +1546,19 @@ export default function PublicProfile() {
                       <div
                         key={battle.id}
                         className="rounded-xl p-3.5"
-                        style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}
+                        style={{ backgroundColor: innerBg, border: `1px solid ${hairline}` }}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+                            <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: hairline }}>
                               {battle.opponent?.avatar ? (
                                 <img src={battle.opponent.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                               ) : (
-                                <span className={`font-bold text-xs ${'text-white'}`}>{battle.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
+                                <span className={`font-bold text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>{battle.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
                               )}
                             </div>
                             <div>
-                              <p className={`font-semibold text-sm ${'text-white'}`}>
+                              <p className={`font-semibold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>
                                 vs {battle.opponent?.username || battle.opponent?.displayName || 'Unknown'}
                               </p>
                               <p className="text-gray-500 text-xs">
