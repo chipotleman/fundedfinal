@@ -1306,19 +1306,15 @@ export default function Dashboard() {
             type="button"
             onClick={() => router.push('/battle')}
             aria-label="Go to Social"
-            className="social-pill flex-shrink-0 flex items-center"
+            className="flex-shrink-0 flex items-center"
             style={{
               gap: '8px',
               padding: pillPadding,
               borderRadius: '9999px',
               fontSize: pillFontSize,
               fontWeight: '700',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: '#ca8a04',
-              color: '#422006',
-              background: 'linear-gradient(135deg, #fde047 0%, #facc15 50%, #eab308 100%)',
-              boxShadow: '0 0 0 0 rgba(250,204,21,0.55), 0 3px 7px rgba(202,138,4,0.40), 0 7px 16px rgba(234,179,8,0.30), inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -2px 2px rgba(120,53,15,0.22)',
+              color: '#1a1505',
+              background: 'linear-gradient(135deg, #facc15, #eab308)',
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
