@@ -1157,7 +1157,7 @@ export default function TopNavbar({
                   <>
                     <button
                       onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin' } }))}
-                      className="bg-[#111111] hover:bg-[#1a1a1a] text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-[#1a1a1a] hover:border-[#333]"
+                      className="bg-[#111111] hover:bg-[#1a1a1a] text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border-2 border-black"
                       style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       SIGN IN
