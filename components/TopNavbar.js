@@ -583,6 +583,13 @@ export default function TopNavbar({
   // battle there's no matchup balance, so fall back to "0" rather than hiding
   // the pill entirely.
   const coinsValue = matchupBalance != null ? formatMoney(parseFloat(matchupBalance), 0) : '0';
+  // Small crown mark shown beside the Crowns value — mirrors the ⚔ glyph on the
+  // Clash Coins pill. SVG uses currentColor so it picks up the pill's yellow.
+  const crownGlyph = (
+    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" style={{ display: 'block' }}>
+      <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2.5h14V21H5v-2.5z" />
+    </svg>
+  );
   const showNavBalances = isLoggedIn;
   const navBalancesInner = (
     <>
@@ -594,6 +601,8 @@ export default function TopNavbar({
           label="Crowns"
           value={formatMoney(parseFloat(userProfile.bankroll), 0)}
           color="#facc15"
+          glyph={crownGlyph}
+          glyphColor="#facc15"
         />
       )}
       {isLoggedIn && (
@@ -1197,6 +1206,8 @@ export default function TopNavbar({
                 label="Crowns"
                 value={formatMoney(parseFloat(userProfile.bankroll), 0)}
                 color="#facc15"
+                glyph={crownGlyph}
+                glyphColor="#facc15"
               />
             )}
             {isLoggedIn && (
