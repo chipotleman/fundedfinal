@@ -406,7 +406,7 @@ export default function BetHistory() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
+    <div className="min-h-screen bg-black">
       <TopNavbar 
         bankroll={user ? bankroll : null}
         pnl={totalProfit}

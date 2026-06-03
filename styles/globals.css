@@ -1095,6 +1095,59 @@ html.light .sf-root {
   --sf-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
+/* Battle History table (/bet-history) theme tokens. The table + its controls
+   use inline styles with raw hex, so a plain light-mode class can't override
+   them — these custom properties on .bht-root let the same markup render dark by
+   default and flip to light under html.light (set pre-paint by _document.js,
+   so no FOUC). */
+.bht-root {
+  --bht-card-bg: rgba(10, 10, 12, 0.85);
+  --bht-card-border: rgba(75, 85, 99, 0.35);
+  --bht-divider: rgba(55, 65, 81, 0.25);
+  --bht-control-bg: #111111;
+  --bht-control-bg-strong: #0a0a0a;
+  --bht-control-border: rgba(75, 85, 99, 0.5);
+  --bht-control-text: #d1d5db;
+  --bht-text-strong: #ffffff;
+  --bht-input-bg: #1a1a1a;
+  --bht-input-scheme: dark;
+  --bht-row-hover: rgba(255, 255, 255, 0.03);
+  --bht-row-active: rgba(255, 255, 255, 0.04);
+  --bht-detail-bg: rgba(255, 255, 255, 0.04);
+  --bht-detail-border: rgba(255, 255, 255, 0.12);
+  --bht-menu-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --bht-page-active-text: #ffffff;
+  --bht-avatar-bg: #111111;
+}
+html.light .bht-root {
+  --bht-card-bg: #ffffff;
+  --bht-card-border: rgba(15, 23, 42, 0.10);
+  --bht-divider: rgba(15, 23, 42, 0.08);
+  --bht-control-bg: #ffffff;
+  --bht-control-bg-strong: #ffffff;
+  --bht-control-border: rgba(15, 23, 42, 0.15);
+  --bht-control-text: #334155;
+  --bht-text-strong: #0f172a;
+  --bht-input-bg: #f5f1ea;
+  --bht-input-scheme: light;
+  --bht-row-hover: rgba(15, 23, 42, 0.03);
+  --bht-row-active: rgba(15, 23, 42, 0.05);
+  --bht-detail-bg: rgba(15, 23, 42, 0.04);
+  --bht-detail-border: rgba(15, 23, 42, 0.15);
+  --bht-menu-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  --bht-page-active-text: #2563eb;
+  --bht-avatar-bg: #e2e8f0;
+}
+/* Strong (was white) text + muted/faint labels inside the table flip with theme.
+   Scoped to .bht-root so nested components (avatars, etc.) are untouched. */
+.bht-root .bht-strong { color: var(--bht-text-strong); }
+.bht-root .bht-hover-strong:hover { color: var(--bht-text-strong); }
+.bht-root .bht-row:hover { background: var(--bht-row-hover); }
+.bht-root .bht-row-m:active { background: var(--bht-row-active); }
+html.light .bht-root .text-gray-200 { color: #334155; }
+html.light .bht-root .text-gray-400 { color: #64748b; }
+html.light .bht-root .text-gray-500 { color: #94a3b8; }
+
 /* Desktop global search bar — CSS-var driven so its surface resolves from the
    html.light/.dark class applied before paint (by the _document.js inline
    script). This avoids the FOUC where a JS-derived inline style SSR'd dark and

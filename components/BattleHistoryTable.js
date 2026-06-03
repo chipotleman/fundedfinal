@@ -133,8 +133,8 @@ function ResultPill({ result }) {
 }
 
 function ScoreDisplay({ my, opp, didWin, didLose }) {
-  const myColor = didWin ? '#22c55e' : didLose ? '#ef4444' : '#d1d5db';
-  const oppColor = didLose ? '#22c55e' : didWin ? '#ef4444' : '#d1d5db';
+  const myColor = didWin ? '#22c55e' : didLose ? '#ef4444' : 'var(--bht-control-text)';
+  const oppColor = didLose ? '#22c55e' : didWin ? '#ef4444' : 'var(--bht-control-text)';
   return (
     <span className="font-bold tabular-nums" style={{ fontSize: 13 }}>
       <span style={{ color: myColor }}>{my}</span>
@@ -159,7 +159,7 @@ function EarningsCell({ value, result }) {
   if (result === 'OPEN') return <span className="text-gray-500" style={{ fontSize: 13 }}>—</span>;
   const positive = value > 0;
   const negative = value < 0;
-  const color = positive ? '#22c55e' : negative ? '#ef4444' : '#d1d5db';
+  const color = positive ? '#22c55e' : negative ? '#ef4444' : 'var(--bht-control-text)';
   const sign = positive ? '+' : negative ? '-' : '';
   return (
     <span className="font-bold tabular-nums" style={{ color, fontSize: 13 }}>
@@ -176,11 +176,11 @@ function PlayersCell({ me, opponent }) {
         username={me.username}
         frameId={me.equippedFrame}
         size={26}
-        bgColor="#111"
+        bgColor="var(--bht-avatar-bg)"
       />
       <UsernameLink
         user={me}
-        className="text-white text-[12px] font-medium truncate max-w-[110px]"
+        className="bht-strong text-[12px] font-medium truncate max-w-[110px]"
         onClick={(e) => e.stopPropagation()}
       >
         {me.username}
@@ -191,11 +191,11 @@ function PlayersCell({ me, opponent }) {
         username={opponent.username}
         frameId={opponent.equippedFrame}
         size={26}
-        bgColor="#111"
+        bgColor="var(--bht-avatar-bg)"
       />
       <UsernameLink
         user={opponent}
-        className="text-white text-[12px] font-medium truncate max-w-[110px]"
+        className="bht-strong text-[12px] font-medium truncate max-w-[110px]"
         onClick={(e) => e.stopPropagation()}
       >
         {opponent.username}
@@ -211,9 +211,9 @@ function ViewDetailsButton({ onClick }) {
       onClick={onClick}
       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold uppercase tracking-wider transition-colors"
       style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        color: '#d1d5db',
+        background: 'var(--bht-detail-bg)',
+        border: '1px solid var(--bht-detail-border)',
+        color: 'var(--bht-control-text)',
         fontSize: 10,
         letterSpacing: '0.1em',
       }}
@@ -234,8 +234,8 @@ function FilterPill({ label, active, onClick, activeColor = '#2563eb' }) {
       className="px-4 py-1.5 rounded-full font-semibold transition-all"
       style={{
         background: active ? activeColor : 'transparent',
-        color: active ? '#fff' : '#9ca3af',
-        border: active ? `1px solid ${activeColor}` : '1px solid rgba(75,85,99,0.4)',
+        color: active ? '#fff' : 'var(--bht-control-text)',
+        border: active ? `1px solid ${activeColor}` : '1px solid var(--bht-control-border)',
         fontSize: 12,
         letterSpacing: '0.08em',
       }}
@@ -303,9 +303,9 @@ function SortDropdown({ value, onChange, options }) {
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-colors"
         style={{
-          background: '#111',
-          border: '1px solid rgba(75,85,99,0.5)',
-          color: '#d1d5db',
+          background: 'var(--bht-control-bg)',
+          border: '1px solid var(--bht-control-border)',
+          color: 'var(--bht-control-text)',
           fontSize: 12,
           letterSpacing: '0.08em',
         }}
@@ -322,10 +322,10 @@ function SortDropdown({ value, onChange, options }) {
         <div
           className="absolute right-0 mt-1 rounded-lg overflow-hidden z-20"
           style={{
-            background: '#0a0a0a',
-            border: '1px solid rgba(75,85,99,0.5)',
+            background: 'var(--bht-control-bg-strong)',
+            border: '1px solid var(--bht-control-border)',
             minWidth: 200,
-            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+            boxShadow: 'var(--bht-menu-shadow)',
           }}
         >
           {options.map(opt => (
@@ -336,7 +336,7 @@ function SortDropdown({ value, onChange, options }) {
               className="w-full text-left px-3 py-2 transition-colors"
               style={{
                 background: opt.value === value ? 'rgba(59,130,246,0.15)' : 'transparent',
-                color: opt.value === value ? '#fff' : '#d1d5db',
+                color: opt.value === value ? '#fff' : 'var(--bht-control-text)',
                 fontSize: 12,
                 letterSpacing: '0.08em',
               }}
@@ -362,9 +362,9 @@ function SortableHeader({ label, column, sort, onSort, align = 'left' }) {
       <button
         type="button"
         onClick={() => onSort(column)}
-        className="inline-flex items-center gap-1 transition-colors hover:text-white"
+        className="inline-flex items-center gap-1 transition-colors bht-hover-strong"
         style={{
-          color: active ? '#fff' : 'inherit',
+          color: active ? 'var(--bht-text-strong)' : 'inherit',
           fontSize: 10,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -415,9 +415,9 @@ function ModeDropdown({ value, onChange, options }) {
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-colors"
         style={{
-          background: '#111',
-          border: '1px solid rgba(75,85,99,0.5)',
-          color: '#d1d5db',
+          background: 'var(--bht-control-bg)',
+          border: '1px solid var(--bht-control-border)',
+          color: 'var(--bht-control-text)',
           fontSize: 12,
           letterSpacing: '0.08em',
         }}
@@ -434,10 +434,10 @@ function ModeDropdown({ value, onChange, options }) {
         <div
           className="absolute right-0 mt-1 rounded-lg overflow-hidden z-20"
           style={{
-            background: '#0a0a0a',
-            border: '1px solid rgba(75,85,99,0.5)',
+            background: 'var(--bht-control-bg-strong)',
+            border: '1px solid var(--bht-control-border)',
             minWidth: 160,
-            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+            boxShadow: 'var(--bht-menu-shadow)',
           }}
         >
           {options.map(opt => (
@@ -448,7 +448,7 @@ function ModeDropdown({ value, onChange, options }) {
               className="w-full text-left px-3 py-2 transition-colors"
               style={{
                 background: opt.value === value ? 'rgba(59,130,246,0.15)' : 'transparent',
-                color: opt.value === value ? '#fff' : '#d1d5db',
+                color: opt.value === value ? '#fff' : 'var(--bht-control-text)',
                 fontSize: 12,
                 letterSpacing: '0.08em',
               }}
@@ -488,9 +488,9 @@ function DateRangePicker({ from, to, onChange }) {
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-colors"
         style={{
-          background: '#111',
-          border: '1px solid rgba(75,85,99,0.5)',
-          color: '#d1d5db',
+          background: 'var(--bht-control-bg)',
+          border: '1px solid var(--bht-control-border)',
+          color: 'var(--bht-control-text)',
           fontSize: 12,
           letterSpacing: '0.08em',
         }}
@@ -507,9 +507,9 @@ function DateRangePicker({ from, to, onChange }) {
         <div
           className="absolute right-0 mt-1 rounded-lg p-3 z-20"
           style={{
-            background: '#0a0a0a',
-            border: '1px solid rgba(75,85,99,0.5)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+            background: 'var(--bht-control-bg-strong)',
+            border: '1px solid var(--bht-control-border)',
+            boxShadow: 'var(--bht-menu-shadow)',
             minWidth: 240,
           }}
         >
@@ -520,8 +520,8 @@ function DateRangePicker({ from, to, onChange }) {
                 type="date"
                 value={from || ''}
                 onChange={(e) => onChange({ from: e.target.value || null, to })}
-                className="mt-1 w-full px-2 py-1.5 rounded text-white text-sm"
-                style={{ background: '#1a1a1a', border: '1px solid rgba(75,85,99,0.5)', colorScheme: 'dark' }}
+                className="mt-1 w-full px-2 py-1.5 rounded bht-strong text-sm"
+                style={{ background: 'var(--bht-input-bg)', border: '1px solid var(--bht-control-border)', colorScheme: 'var(--bht-input-scheme)' }}
               />
             </label>
             <label className="block">
@@ -530,8 +530,8 @@ function DateRangePicker({ from, to, onChange }) {
                 type="date"
                 value={to || ''}
                 onChange={(e) => onChange({ from, to: e.target.value || null })}
-                className="mt-1 w-full px-2 py-1.5 rounded text-white text-sm"
-                style={{ background: '#1a1a1a', border: '1px solid rgba(75,85,99,0.5)', colorScheme: 'dark' }}
+                className="mt-1 w-full px-2 py-1.5 rounded bht-strong text-sm"
+                style={{ background: 'var(--bht-input-bg)', border: '1px solid var(--bht-control-border)', colorScheme: 'var(--bht-input-scheme)' }}
               />
             </label>
             {(from || to) && (
@@ -539,7 +539,7 @@ function DateRangePicker({ from, to, onChange }) {
                 type="button"
                 onClick={() => onChange({ from: null, to: null })}
                 className="w-full mt-1 px-2 py-1 rounded text-gray-300 text-[11px] uppercase tracking-wider font-semibold"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(75,85,99,0.5)' }}
+                style={{ background: 'var(--bht-detail-bg)', border: '1px solid var(--bht-control-border)' }}
               >
                 Clear
               </button>
@@ -576,7 +576,7 @@ function Pagination({ page, totalPages, onChange }) {
         onClick={() => onChange(Math.max(1, page - 1))}
         disabled={page === 1}
         className="w-8 h-8 flex items-center justify-center rounded-md transition-opacity disabled:opacity-30"
-        style={{ background: '#111', border: '1px solid rgba(75,85,99,0.5)', color: '#d1d5db' }}
+        style={{ background: 'var(--bht-control-bg)', border: '1px solid var(--bht-control-border)', color: 'var(--bht-control-text)' }}
         aria-label="Previous page"
       >
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -592,9 +592,9 @@ function Pagination({ page, totalPages, onChange }) {
           onClick={() => onChange(p)}
           className="min-w-[32px] h-8 px-2 rounded-md font-semibold tabular-nums transition-colors"
           style={{
-            background: p === page ? 'rgba(37,99,235,0.18)' : '#111',
-            color: p === page ? '#fff' : '#d1d5db',
-            border: `1px solid ${p === page ? '#2563eb' : 'rgba(75,85,99,0.5)'}`,
+            background: p === page ? 'rgba(37,99,235,0.18)' : 'var(--bht-control-bg)',
+            color: p === page ? 'var(--bht-page-active-text)' : 'var(--bht-control-text)',
+            border: `1px solid ${p === page ? '#2563eb' : 'var(--bht-control-border)'}`,
             fontSize: 12,
           }}
         >
@@ -606,7 +606,7 @@ function Pagination({ page, totalPages, onChange }) {
         onClick={() => onChange(Math.min(totalPages, page + 1))}
         disabled={page === totalPages}
         className="flex items-center gap-1 h-8 px-3 rounded-md font-semibold transition-opacity disabled:opacity-30"
-        style={{ background: '#111', border: '1px solid rgba(75,85,99,0.5)', color: '#d1d5db', fontSize: 12 }}
+        style={{ background: 'var(--bht-control-bg)', border: '1px solid var(--bht-control-border)', color: 'var(--bht-control-text)', fontSize: 12 }}
       >
         Next
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -777,11 +777,11 @@ export default function BattleHistoryTable({
   const filters = ['all', 'open', 'won', 'lost'];
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="bht-root max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
         <div>
-          <h1 className="text-white font-black tracking-wider" style={{ fontSize: 22, letterSpacing: '0.08em' }}>
+          <h1 className="bht-strong font-black tracking-wider" style={{ fontSize: 22, letterSpacing: '0.08em' }}>
             BATTLE HISTORY
           </h1>
           <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -814,9 +814,9 @@ export default function BattleHistoryTable({
             aria-busy={exporting}
             className="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-colors disabled:opacity-70 disabled:cursor-wait"
             style={{
-              background: '#111',
-              border: '1px solid rgba(75,85,99,0.5)',
-              color: '#d1d5db',
+              background: 'var(--bht-control-bg)',
+              border: '1px solid var(--bht-control-border)',
+              color: 'var(--bht-control-text)',
               fontSize: 12,
               letterSpacing: '0.08em',
             }}
@@ -840,8 +840,8 @@ export default function BattleHistoryTable({
       <div
         className="rounded-2xl overflow-hidden"
         style={{
-          background: 'rgba(10,10,12,0.85)',
-          border: '1px solid rgba(75,85,99,0.35)',
+          background: 'var(--bht-card-bg)',
+          border: '1px solid var(--bht-card-border)',
           backdropFilter: 'blur(10px)',
         }}
       >
@@ -849,7 +849,7 @@ export default function BattleHistoryTable({
         <div className="hidden md:block">
           <table className="w-full" style={{ borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(75,85,99,0.35)' }}>
+              <tr style={{ borderBottom: '1px solid var(--bht-card-border)' }}>
                 <SortableHeader label="Date" column="date" sort={sort} onSort={handleSort} />
                 <SortableHeader label="Mode" column="mode" sort={sort} onSort={handleSort} />
                 <th className="text-left px-3 py-3 text-gray-400 font-bold uppercase tracking-wider" style={{ fontSize: 10, letterSpacing: '0.1em' }}>Players</th>
@@ -868,11 +868,11 @@ export default function BattleHistoryTable({
                   <tr
                     key={r.key}
                     onClick={() => r.openable && onOpenChange(r.matchupId, true)}
-                    className={r.openable ? 'cursor-pointer transition-colors hover:bg-white/[0.03]' : ''}
-                    style={{ borderBottom: isLast ? 'none' : '1px solid rgba(55,65,81,0.25)' }}
+                    className={r.openable ? 'cursor-pointer transition-colors bht-row' : ''}
+                    style={{ borderBottom: isLast ? 'none' : '1px solid var(--bht-divider)' }}
                   >
                     <td className="px-4 py-3 align-middle">
-                      <div className="text-white font-medium leading-tight" style={{ fontSize: 12 }}>{parts.date}</div>
+                      <div className="bht-strong font-medium leading-tight" style={{ fontSize: 12 }}>{parts.date}</div>
                       <div className="text-gray-500 leading-tight" style={{ fontSize: 11 }}>{parts.time}</div>
                     </td>
                     <td className="px-3 py-3 align-middle">
@@ -926,12 +926,12 @@ export default function BattleHistoryTable({
               <div
                 key={r.key}
                 onClick={() => r.openable && onOpenChange(r.matchupId, true)}
-                className="px-4 py-3 active:bg-white/[0.04]"
-                style={{ borderBottom: isLast ? 'none' : '1px solid rgba(55,65,81,0.25)' }}
+                className="px-4 py-3 bht-row-m"
+                style={{ borderBottom: isLast ? 'none' : '1px solid var(--bht-divider)' }}
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <div className="text-white font-medium leading-tight" style={{ fontSize: 12 }}>{parts.date}</div>
+                    <div className="bht-strong font-medium leading-tight" style={{ fontSize: 12 }}>{parts.date}</div>
                     <div className="text-gray-500 leading-tight" style={{ fontSize: 11 }}>{parts.time}</div>
                   </div>
                   <div className="flex items-center gap-2">
