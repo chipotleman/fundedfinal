@@ -839,12 +839,10 @@ button.no-hover-effect.rounded-lg:focus-visible {
 .topnav-pikslip {
   margin-right: 60px !important;
   position: relative;
-  /* Pulled back 60px to the left vs. the previous `right: -56px`
-     (so now `right: 4px`) per user feedback that the Pik Slip was
-     sitting too far over toward the hamburger / edge of the screen.
-     Positive `right` values move the position-relative element
-     leftward. */
-  right: 4px;
+  /* Positive `right` values move the position-relative element
+     leftward; negative values move it rightward. Nudged from
+     `right: 4px` to `-6px` (10px further right) per user feedback. */
+  right: -6px;
 }
 @media (min-width: 1024px) {
   .topnav-pikslip {

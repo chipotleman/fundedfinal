@@ -867,7 +867,7 @@ export default function TopNavbar({
               {isLoggedIn && hasActiveMatchup && (
                 <div
                   className="sm:hidden flex items-center gap-1"
-                  style={{ marginRight: 0, position: 'relative', top: '6px' }}
+                  style={{ marginRight: 0, position: 'relative', top: '14px' }}
                 >
                   <NavBalance
                     onClick={() => setExplainerType('coins')}
