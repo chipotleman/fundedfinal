@@ -840,7 +840,7 @@ export default function PublicProfile() {
     { key: 'all', label: 'All', count: battleStats?.totalBattles ?? battleHistory.length },
     { key: 'wins', label: 'Wins', count: battleStats?.wins ?? 0 },
     { key: 'losses', label: 'Losses', count: battleStats?.losses ?? 0 },
-    { key: 'active', label: 'Active', count: battleHistory.filter((b) => b.result === 'pending' || b.status !== 'completed').length },
+    { key: 'active', label: 'Active', count: battleStats?.active ?? battleHistory.filter((b) => b.result === 'pending' || b.status !== 'completed').length },
   ];
 
   if (profileNotFound && !hasProfile) {
