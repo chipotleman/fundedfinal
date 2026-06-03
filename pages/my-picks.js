@@ -9,7 +9,7 @@ import ForfeitModal from '../components/battle/ForfeitModal';
 import UserAvatar from '../components/UserAvatar';
 import OddsHistoryChart from '../components/game/OddsHistoryChart';
 import { getTeamColor, inkFor } from '../utils/teamColors';
-import { SelectionLogos } from '../components/TeamLogo';
+import TeamLogo, { SelectionLogos } from '../components/TeamLogo';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -185,6 +185,16 @@ export default function MyPicksPage() {
     () => sortedBets.find((b) => b.id === selectedBetId) || sortedBets[0] || null,
     [sortedBets, selectedBetId],
   );
+
+  // When a pick is opened, the big hero container switches to show that pick's
+  // ticket/receipt (so users can flip through their tickets and screenshot
+  // them). `ticketBetId` is null when the hero shows the live battle info.
+  const [ticketBetId, setTicketBetId] = useState(null);
+  const ticketBet = useMemo(
+    () => (ticketBetId == null ? null : sortedBets.find((b) => b.id === ticketBetId) || null),
+    [sortedBets, ticketBetId],
+  );
+  const openTicket = (id) => { setSelectedBetId(id); setTicketBetId(id); };
 
   const counts = useMemo(() => {
     let open = 0, won = 0, lost = 0, cashedOut = 0;
@@ -641,6 +651,156 @@ export default function MyPicksPage() {
     );
   };
 
+  // Inline ticket/receipt shown inside the big hero container when a pick is
+  // opened. Premium, theme-aware, screenshot-friendly (mirrors the share card).
+  const renderTicket = (bet) => {
+    const { gameId, homeTeam, awayTeam, isLive: ctxLive } = getChartCtx(bet);
+    const status = bet.status || 'open';
+    const statusMeta = ({
+      won: { label: 'WON', color: p.posGreen },
+      lost: { label: 'LOST', color: isLight ? '#dc2626' : '#f87171' },
+      cashed_out: { label: 'CASHED OUT', color: '#e9762b' },
+      open: { label: 'OPEN', color: isLight ? '#2563eb' : '#60a5fa' },
+    })[status] || { label: String(status).toUpperCase(), color: p.mutedText };
+    const isLive = !!(bet.isLive || ctxLive);
+    const homeScore = bet.homeScore ?? bet.currentHomeScore;
+    const awayScore = bet.awayScore ?? bet.currentAwayScore;
+    const hasScores = homeScore != null && awayScore != null;
+    const isParlay = Array.isArray(bet.legs) && bet.legs.length > 1;
+    const placed = bet.placedAt ? new Date(bet.placedAt) : null;
+    const placedStr = placed
+      ? `${placed.toLocaleString('en-US', { month: 'short' }).toUpperCase()} ${String(placed.getDate()).padStart(2, '0')}, ${placed.getFullYear()} ${placed.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+      : '';
+    const gameTime = bet.gameStart
+      ? new Date(bet.gameStart).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+      : (bet.gameTime || null);
+    const pikId = (() => {
+      const raw = String(bet.id ?? '');
+      const digits = raw.replace(/\D/g, '');
+      if (digits.length >= 6) return digits.slice(-12);
+      let h = 0; for (let i = 0; i < raw.length; i++) { h = (h * 31 + raw.charCodeAt(i)) >>> 0; }
+      return String(100000000 + (h % 900000000));
+    })();
+    const ticketBg = isLight ? '#ffffff' : '#0b1119';
+    const divider = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.12)';
+    const coinColor = isLight ? '#0f172a' : '#ffffff';
+    const scoreRow = (team, score) => (
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <TeamLogo name={team} sport={bet.sport || bet.sportName} size={20} />
+          <span className="text-sm font-semibold truncate" style={{ color: p.bodyText }}>{team}</span>
+        </div>
+        <span className="text-sm font-black flex-shrink-0 ml-2" style={{ color: p.bodyText }}>{score}</span>
+      </div>
+    );
+    return (
+      <div className="relative rounded-3xl overflow-hidden mb-4"
+        style={{ border: `1px solid ${p.softBorder}`, background: isLight ? 'linear-gradient(180deg,#eef1f7,#e2e7f0)' : 'linear-gradient(180deg,#10141d,#0a0d13)', boxShadow: p.hardShadow }}>
+        <div className="flex items-center justify-between px-5 pt-4">
+          <span className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: p.mutedText }}>Your Ticket</span>
+          <button type="button" onClick={() => setTicketBetId(null)}
+            className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg"
+            style={{ color: '#22d3ee', background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.4)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 19l-7-7 7-7" /></svg>
+            Back to Battle
+          </button>
+        </div>
+        <div className="px-5 pb-6 pt-3">
+          <div className="max-w-md mx-auto rounded-2xl overflow-hidden" style={{ background: ticketBg, border: `1px solid ${p.softBorder}`, boxShadow: p.hardShadow }}>
+            <div className="px-5 pt-3 pb-4">
+              {/* Header: logo + status */}
+              <div className="flex items-center justify-between mb-1">
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-11 object-contain" style={{ filter: isLight ? 'brightness(0)' : 'none' }} />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                  style={{ color: statusMeta.color, background: `${statusMeta.color}1f`, border: `1px solid ${statusMeta.color}59` }}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${status === 'open' ? 'animate-pulse' : ''}`} style={{ background: statusMeta.color }} />
+                  {statusMeta.label}
+                </span>
+              </div>
+
+              {/* Selection + odds */}
+              <div className="flex items-start justify-between gap-3 pt-1">
+                <div className="flex items-start gap-2 min-w-0">
+                  <div className="mt-0.5"><SelectionLogos selection={bet.selectionFull || bet.selection} bet={bet} size={22} sport={bet.sport || bet.sportName} /></div>
+                  <div className="min-w-0">
+                    <div className="text-base font-black truncate" style={{ color: p.bodyText }}>{isParlay ? `${bet.legs.length} Leg Parlay` : (bet.selectionFull || bet.selection || '—')}</div>
+                    <div className="text-[11px] uppercase tracking-wide" style={{ color: p.mutedText }}>{isParlay ? 'Parlay' : (bet.betType || 'Moneyline')}</div>
+                  </div>
+                </div>
+                <div className="text-xl font-black flex-shrink-0" style={{ color: p.bodyText }}>{formatOdds(bet.odds)}</div>
+              </div>
+
+              {/* Game block */}
+              <div className="mt-3 space-y-1.5">
+                {isParlay ? (
+                  bet.legs.map((leg, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5" style={{ background: isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.04)' }}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <SelectionLogos selection={leg.selection} bet={leg} size={16} sport={leg.sport || leg.sportName} />
+                        <span className="text-xs font-semibold truncate" style={{ color: p.bodyText }}>{leg.selection}</span>
+                      </div>
+                      <span className="text-xs font-black flex-shrink-0" style={{ color: isLight ? '#2563eb' : '#60a5fa' }}>{formatOdds(leg.odds)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {(isLive || hasScores) && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#ef4444' }} />
+                        <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: '#ef4444' }}>Live</span>
+                        {gameTime && <span className="text-[11px]" style={{ color: p.mutedText }}>{gameTime} ET</span>}
+                      </div>
+                    )}
+                    {hasScores ? (
+                      <>
+                        {scoreRow(awayTeam, awayScore)}
+                        {scoreRow(homeTeam, homeScore)}
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold truncate" style={{ color: p.bodyText }}>{bet.matchup || `${awayTeam} @ ${homeTeam}`}</span>
+                        {gameTime && <span className="text-[11px] flex-shrink-0 ml-2" style={{ color: p.mutedText }}>{gameTime}</span>}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Totals */}
+              <div className="mt-3 pt-3 flex items-end justify-between" style={{ borderTop: `1px solid ${divider}` }}>
+                <div>
+                  <div className="text-lg font-black inline-flex items-center gap-1.5" style={{ color: p.bodyText }}><Coin color={coinColor} />{formatMoney(bet.stake, 2)}</div>
+                  <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: p.faintText }}>Total Pikked</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-black inline-flex items-center gap-1.5" style={{ color: p.posGreen }}><Coin color={p.posGreen} />{formatMoney(betPayout(bet), 2)}</div>
+                  <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: p.faintText }}>Potential Payout</div>
+                </div>
+              </div>
+
+              {/* Meta */}
+              <div className="mt-2 pt-2 flex items-center justify-between" style={{ borderTop: `1px solid ${divider}` }}>
+                <span className="text-[10px] font-mono" style={{ color: p.faintText }}>PIK ID: {pikId}</span>
+                {placedStr && <span className="text-[10px]" style={{ color: p.faintText }}>PLACED: {placedStr}</span>}
+              </div>
+            </div>
+          </div>
+
+          {gameId && (
+            <div className="max-w-md mx-auto mt-3">
+              <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-black uppercase tracking-wider"
+                style={{ background: '#22d3ee', color: '#06222a', boxShadow: p.hardShadow }}>
+                Open Game
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Desktop pick row (custom, matches mockup).
   const renderDesktopPickRow = (bet) => {
     const isSelected = bet.id === selectedBetId;
@@ -659,8 +819,8 @@ export default function MyPicksPage() {
       </div>
     );
     return (
-      <div key={bet.id} role="button" tabIndex={0} onClick={() => setSelectedBetId(bet.id)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedBetId(bet.id); } }}
+      <div key={bet.id} role="button" tabIndex={0} onClick={() => openTicket(bet.id)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTicket(bet.id); } }}
         className="relative flex items-stretch rounded-2xl overflow-hidden transition-all"
         style={{
           background: p.pickSurface,
@@ -807,12 +967,12 @@ export default function MyPicksPage() {
     return (
       <div className="flex gap-6 items-start">
         <div className="flex-1 min-w-0">
-          {renderHero()}
+          {ticketBet ? renderTicket(ticketBet) : renderHero()}
           {sortedBets.length === 0 ? renderEmptyNoPicks() : (
             <>
               <div className="flex items-center justify-between mb-3 mt-5">
                 <div className="text-base font-black" style={{ color: p.bodyText }}>
-                  Your Active Picks <span style={{ color: p.faintText }}>({sortedBets.length})</span>
+                  Your Active Piks <span style={{ color: p.faintText }}>({sortedBets.length})</span>
                 </div>
                 <div className="relative">
                   <button
