@@ -1553,6 +1553,30 @@ html.light .bc-surface [style*="background: rgb(17, 17, 17)" i] {
   background: #f1f5f9 !important;
   border-color: rgba(15, 23, 42, 0.10) !important;
 }
+/* "BOTH PLAYERS LOCKED IN" parlay tickets: the ticket body is inline
+   `background:#0a0a0a` (keep its accent border) and the leg badge + "Total
+   wagered" footer are inline `background:#000`. Neither was matched by the
+   `#111` rule above, so they stayed pure black on the light theme. Cover the
+   SSR literal (`#0a0a0a` / `#000`), the 6-digit form (`#000000`), and the
+   CSSOM-normalized `rgb(...)` serializations. */
+html.light .bc-surface [style*="background: #0a0a0a" i],
+html.light .bc-surface [style*="background:#0a0a0a" i],
+html.light .bc-surface [style*="background: rgb(10, 10, 10)" i] {
+  background: #ffffff !important;
+}
+html.light .bc-surface [style*="background: #000" i],
+html.light .bc-surface [style*="background:#000" i],
+html.light .bc-surface [style*="background: rgb(0, 0, 0)" i] {
+  background: #f1f5f9 !important;
+}
+/* Ticket odds use inline `color:#e5e7eb` (near-white) for non-plus prices,
+   which is invisible on the now-white ticket. Darken it; the green `+` odds
+   (#34d399) and orange stakes (#fb923c) stay as-is. */
+html.light .bc-surface [style*="color: #e5e7eb" i],
+html.light .bc-surface [style*="color:#e5e7eb" i],
+html.light .bc-surface [style*="color: rgb(229, 231, 235)" i] {
+  color: #0f172a !important;
+}
 
 /* --- VS / PLAY NOW hero card (`.youvs-card`) --- */
 /* Light theme swaps the green/cyan hero tint for a warm Crowns-yellow tint.
