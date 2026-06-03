@@ -975,7 +975,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
 
             <div className="flex-1 overflow-y-auto min-h-0">
               {bets.length === 0 ? (
-                <div className="p-8 text-center">
+                <div className="p-8 text-center h-full flex flex-col items-center justify-center">
                   <svg className="w-16 h-16 mx-auto mb-4" style={{ color: c.faintText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
@@ -1439,6 +1439,52 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                 </div>
               )}
             </div>
+
+            {bets.length === 0 && (
+              /* Empty-slip footer — gives the empty state the same anchored
+                 action area as a populated slip instead of a tall blank
+                 scroll. Logged-out users get the sign-in CTA; logged-in
+                 users get a clear "add a selection" prompt. */
+              <div className="flex-shrink-0 p-4" style={{ borderTopWidth: 1, borderColor: c.divider, backgroundColor: c.panelBg }}>
+                {!isLoggedIn ? (
+                  <button
+                    type="button"
+                    className="no-hover-effect"
+                    onClick={() => {
+                      localStorage.setItem('betslip_pending_login', JSON.stringify({ redirect: 'betslip', timestamp: Date.now() }));
+                      setShowBetSlip(false);
+                      window.dispatchEvent(new CustomEvent('openAuthPopup'));
+                    }}
+                    style={{
+                      display: 'block', width: '100%', padding: '16px 0', borderRadius: '12px',
+                      fontSize: '18px', fontWeight: 'bold', textAlign: 'center',
+                      appearance: 'none', WebkitAppearance: 'none',
+                      backgroundColor: '#2563eb', color: '#ffffff', cursor: 'pointer',
+                      border: 'none', outline: 'none', WebkitTapHighlightColor: 'transparent', transition: 'none',
+                    }}
+                  >
+                    Sign In to Place Piks
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="no-hover-effect"
+                    style={{
+                      display: 'block', width: '100%', padding: '16px 0', borderRadius: '12px',
+                      fontSize: '18px', fontWeight: 'bold', textAlign: 'center',
+                      appearance: 'none', WebkitAppearance: 'none',
+                      backgroundColor: isLight ? c.innerSurface : 'rgba(15, 23, 42, 0.5)',
+                      color: c.mutedText, cursor: 'not-allowed',
+                      borderWidth: 1, borderStyle: 'solid', borderColor: c.divider,
+                      outline: 'none', WebkitTapHighlightColor: 'transparent', transition: 'none',
+                    }}
+                  >
+                    Add a selection to place
+                  </button>
+                )}
+              </div>
+            )}
 
             {bets.length > 0 && (
               <div className="flex-shrink-0 p-4" style={{ borderTopWidth: 1, borderColor: c.divider, backgroundColor: c.panelBg }}>

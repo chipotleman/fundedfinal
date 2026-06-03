@@ -840,11 +840,18 @@ export default function TopNavbar({
               {/* Mobile Balances - sword/battle-coins pill only (cash lives
                   in drawer). Cartoon-chip aesthetic mirrors the desktop
                   pills above so the look is identical across breakpoints —
-                  just sized down for the cramped mobile right rail. */}
-              {isLoggedIn && (
+                  just sized down for the cramped mobile right rail.
+                  Only shown mid-battle on phones: when there's no active
+                  matchup the Clash Coins balance is meaningless (it falls
+                  back to "0"), so we hide it entirely on mobile to keep the
+                  bar clean. Desktop keeps the readout because the centered
+                  top-bar gap has the room. The small `top` nudge drops the
+                  stacked label/value so its baseline lines up with the logo
+                  and hamburger instead of riding high. */}
+              {isLoggedIn && hasActiveMatchup && (
                 <div
                   className="sm:hidden flex items-center gap-1"
-                  style={{ marginRight: 0 }}
+                  style={{ marginRight: 0, position: 'relative', top: '6px' }}
                 >
                   <NavBalance
                     onClick={() => setExplainerType('coins')}
@@ -1149,7 +1156,7 @@ export default function TopNavbar({
                 <button
                   onClick={() => { haptic.tap(); toggleMobileMenu(); }}
                   className="lg:hidden absolute no-hover-effect hamburger-btn"
-                  style={{ WebkitTapHighlightColor: 'transparent', right: '4px', top: '50%', marginTop: '-19px', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
+                  style={{ WebkitTapHighlightColor: 'transparent', right: '-6px', top: '50%', marginTop: '-19px', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
                   aria-label={isLoggedIn && (notifAlerts + notifMessages) > 0 ? 'Open menu (you have unread notifications)' : 'Open menu'}
                 >
                   <svg className="w-7 h-7 text-gray-300 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
