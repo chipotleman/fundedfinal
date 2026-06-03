@@ -116,6 +116,10 @@ export default function BattlePage() {
 
   const [showQuickMatch, setShowQuickMatch] = useState(false);
   const [showPlayFriend, setShowPlayFriend] = useState(false);
+  // Only true when PlayFriendModal was opened from the BattleModeChooser, so the
+  // back arrow (return to chooser) shows only for that flow — not for deep-link
+  // (?play=), auth-resume, or quick-invite fallback openings.
+  const [playFriendFromChooser, setPlayFriendFromChooser] = useState(false);
   const [playFriendInitial, setPlayFriendInitial] = useState(null);
   // When the friend-row "Battle" shortcut succeeds we open PlayFriendModal
   // pre-set into its waiting/sent overlay instead of just toasting. Set to
@@ -2112,7 +2116,7 @@ export default function BattlePage() {
         isOpen={showBattleOptions}
         onClose={() => setShowBattleOptions(false)}
         onPickQuickMatch={() => { setShowBattleOptions(false); openQuickMatch(); }}
-        onPickChallengeFriend={() => handleBattleOptionClick(setShowPlayFriend)}
+        onPickChallengeFriend={() => { setPlayFriendFromChooser(true); handleBattleOptionClick(setShowPlayFriend); }}
         onPickPrivateMatch={() => { setShowBattleOptions(false); openPrivateMatch(); }}
         currentUser={{ id: userId, username: profile?.username, avatar: profile?.avatar }}
       />
@@ -2136,7 +2140,8 @@ export default function BattlePage() {
 
       <PlayFriendModal
         isOpen={showPlayFriend}
-        onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); refreshLastBuyIn(); }}
+        onClose={() => { setShowPlayFriend(false); setPlayFriendFromChooser(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); refreshLastBuyIn(); }}
+        onBack={playFriendFromChooser ? () => { setShowPlayFriend(false); setPlayFriendFromChooser(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); setShowBattleOptions(true); } : undefined}
         friends={friends}
         initialFriend={playFriendInitial}
         initialBuyIn={lastBuyIn}
@@ -2144,8 +2149,8 @@ export default function BattlePage() {
         currentUser={profile ? { id: userId, username: profile.username, avatar: profile.avatar, frameId: profile.equippedFrame } : (session?.user ? { id: userId, username: session.user.name, avatar: session.user.image } : null)}
         onInviteSent={() => { fetchData(); refreshLastBuyIn(); }}
         onInviteCancelled={() => { setPlayFriendSentInvite(null); fetchData(); }}
-        onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); setShowPrivateMatch(true); }}
-        onOpenMessage={(friend) => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); openMessagePopup(friend); }}
+        onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendFromChooser(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); setShowPrivateMatch(true); }}
+        onOpenMessage={(friend) => { setShowPlayFriend(false); setPlayFriendFromChooser(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); openMessagePopup(friend); }}
       />
 
       <MessagePopup

@@ -3179,6 +3179,7 @@ function YouVsCard({
         <PlayFriendModal
           isOpen={showPlayFriend}
           onClose={() => setShowPlayFriend(false)}
+          onBack={() => { setShowPlayFriend(false); setShowChooser(true); }}
           friends={friends}
           currentUser={currentUser}
           initialBuyIn={lastBuyIn}

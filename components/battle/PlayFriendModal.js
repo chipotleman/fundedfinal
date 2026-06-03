@@ -37,7 +37,7 @@ function UserAvatar({ user, size = 36 }) {
   return <SharedUserAvatar user={user} size={size} />;
 }
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null, initialBuyIn = null, initialSentInvite = null }) {
+export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null, initialBuyIn = null, initialSentInvite = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
   const { hasActiveMatchup, matchup: activeMatchup, opponent: activeOpponent, refresh: refreshMatchup } = useMatchup();
@@ -770,6 +770,17 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       >
         <div className="px-5 pt-5 pb-0 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              {onBack && (
+                <button
+                  aria-label="Back"
+                  onClick={onBack}
+                  className="pfm-close-btn w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                >
+                  <svg className="w-4 h-4" style={{ color: textPrimary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                </button>
+              )}
             <div>
               {/* Cartoon-styled title to match BattleModeChooser:
                   uppercase, extrabold, drop shadow on the heading and a
@@ -807,6 +818,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               >
                 Challenge someone to a 1v1 battle
               </p>
+            </div>
             </div>
             <button
               aria-label="Close"
