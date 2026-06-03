@@ -335,7 +335,7 @@ function SortDropdown({ value, onChange, options }) {
               onClick={() => { onChange(opt.value); setOpen(false); }}
               className="w-full text-left px-3 py-2 transition-colors"
               style={{
-                background: opt.value === value ? 'rgba(59,130,246,0.15)' : 'transparent',
+                background: opt.value === value ? '#3b82f6' : 'transparent',
                 color: opt.value === value ? '#fff' : 'var(--bht-control-text)',
                 fontSize: 12,
                 letterSpacing: '0.08em',
@@ -447,7 +447,7 @@ function ModeDropdown({ value, onChange, options }) {
               onClick={() => { onChange(opt.value); setOpen(false); }}
               className="w-full text-left px-3 py-2 transition-colors"
               style={{
-                background: opt.value === value ? 'rgba(59,130,246,0.15)' : 'transparent',
+                background: opt.value === value ? '#3b82f6' : 'transparent',
                 color: opt.value === value ? '#fff' : 'var(--bht-control-text)',
                 fontSize: 12,
                 letterSpacing: '0.08em',
