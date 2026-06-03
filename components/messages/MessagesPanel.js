@@ -1323,7 +1323,7 @@ function SharedItemBubble({ raw, mine, onNavigate, senderId, senderUsername }) {
   };
   const handleClick = () => {
     if (!payload.id) return;
-    if (type === 'battle') onNavigate?.(`/battle/spectate/${payload.id}${buildShareSuffix('?')}`);
+    if (type === 'battle') onNavigate?.(`/battle?battle=${encodeURIComponent(payload.id)}${buildShareSuffix('&')}`);
     else if (type === 'result') onNavigate?.(`/battle/replay/${payload.id}${buildShareSuffix('?')}`);
     // Post deep-link: SocialFeedPage reads ?post= and scrolls + opens
     // the post's comment thread so the recipient lands on the original.
@@ -1355,7 +1355,7 @@ function SharedItemBubble({ raw, mine, onNavigate, senderId, senderUsername }) {
                 {(snap.user1?.username || 'P1')} vs {(snap.user2?.username || 'P2')}
               </div>
               <div className="text-[11px] text-white/70 mt-0.5">
-                {snap.durationType ? `${snap.durationType} · ` : ''}Tap to spectate
+                {snap.durationType ? `${snap.durationType} · ` : ''}Tap to view
               </div>
             </>
           )}
