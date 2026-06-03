@@ -99,14 +99,53 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
-  const cardBg = '#0d0d0d';
-  const cardBorder = '#1a1a1a';
-  const inputBg = '#111';
-  const inputBorder = '#1a1a1a';
-  const textPrimary = '#fff';
-  const textSecondary = '#9ca3af';
-  const textMuted = '#6b7280';
-  const elevatedBg = '#111';
+  const cardBg = isLight ? '#fffdf7' : '#1b2230';
+  const cardBorder = isLight ? 'rgba(10,10,10,0.12)' : 'rgba(255,255,255,0.08)';
+  const inputBg = isLight ? '#ffffff' : '#2b3446';
+  const inputBorder = isLight ? 'rgba(10,10,10,0.18)' : 'rgba(255,255,255,0.12)';
+  const textPrimary = isLight ? '#0a0a0a' : '#f8fafc';
+  const textSecondary = isLight ? '#475569' : '#cbd5e1';
+  const textMuted = isLight ? '#64748b' : '#94a3b8';
+  const elevatedBg = isLight ? '#ffffff' : '#2b3446';
+
+  // Cartoon shell + chrome tokens (mirrors BattleModeChooser / QuickMatchModal
+  // config view). Only the browse view uses these — the sent/waiting screens
+  // render the shared dark FlowCard components and stay dark.
+  const pf = isLight
+    ? {
+        overlayBg: 'rgba(15,23,42,0.35)',
+        shellBorder: '3px solid #0a0a0a',
+        shellShadow: '7px 7px 0 #0a0a0a',
+        btnBg: 'rgba(10,10,10,0.05)',
+        btnBorder: '1px solid rgba(10,10,10,0.15)',
+        tabBarBg: 'rgba(10,10,10,0.04)',
+        tabBarBorder: '1px solid rgba(10,10,10,0.10)',
+        eyebrow: '#2563eb',
+        titleColor: '#0a0a0a',
+        titleShadow: 'none',
+        hairline: 'rgba(10,10,10,0.10)',
+        tooltipShadow: '0 12px 28px rgba(10,10,10,0.18)',
+        tileBase: '#ffffff',
+        tileTagline: '#475569',
+        tileCoinsShadow: 'none',
+      }
+    : {
+        overlayBg: 'rgba(0,0,0,0.8)',
+        shellBorder: '3px solid #0a0a0a',
+        shellShadow: '7px 7px 0 #000',
+        btnBg: 'rgba(255,255,255,0.06)',
+        btnBorder: '1px solid rgba(255,255,255,0.12)',
+        tabBarBg: 'rgba(255,255,255,0.04)',
+        tabBarBorder: '1px solid rgba(255,255,255,0.08)',
+        eyebrow: '#93c5fd',
+        titleColor: '#fff',
+        titleShadow: '0 0 22px rgba(59,130,246,0.45)',
+        hairline: 'rgba(255,255,255,0.10)',
+        tooltipShadow: '0 12px 28px rgba(0,0,0,0.6)',
+        tileBase: '#0a0a0a',
+        tileTagline: '#e2e8f0',
+        tileCoinsShadow: '0 1px 0 #000',
+      };
 
   useEffect(() => {
     if (!isOpen) {
@@ -664,13 +703,13 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
   }
 
   const content = (
-    <div data-allow-fixed-overlay="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
+    <div data-allow-fixed-overlay="true" className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: pf.overlayBg }} onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pfm-title"
         className="rounded-3xl max-w-md w-full max-h-[88vh] overflow-hidden flex flex-col pfm-slide-in my-auto"
-        style={{ backgroundColor: cardBg, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 60px rgba(0,0,0,0.6)' }}
+        style={{ backgroundColor: cardBg, border: pf.shellBorder, boxShadow: pf.shellShadow }}
         onClick={e => e.stopPropagation()}
       >
         <div className="px-5 pt-5 pb-0 flex-shrink-0">
@@ -681,7 +720,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                   aria-label="Back"
                   onClick={onBack}
                   className="pfm-close-btn w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                  style={{ background: pf.btnBg, border: pf.btnBorder }}
                 >
                   <svg className="w-4 h-4" style={{ color: textPrimary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
                 </button>
@@ -703,8 +742,8 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                     fontSize: 'clamp(22px, 5.5vw, 30px)',
                     lineHeight: 1.2,
                     letterSpacing: '0.01em',
-                    color: '#fff',
-                    textShadow: '0 0 22px rgba(59,130,246,0.45)',
+                    color: pf.titleColor,
+                    textShadow: pf.titleShadow,
                     whiteSpace: 'nowrap',
                     margin: 0,
                     padding: '2px 0',
@@ -716,7 +755,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
               <p
                 className="mt-1 font-bold uppercase"
                 style={{
-                  color: '#93c5fd',
+                  color: pf.eyebrow,
                   fontSize: '10px',
                   letterSpacing: '0.22em',
                 }}
@@ -729,7 +768,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
               aria-label="Close"
               onClick={onClose}
               className="pfm-close-btn w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+              style={{ background: pf.btnBg, border: pf.btnBorder }}
             >
               <svg className="w-4 h-4" style={{ color: textPrimary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -738,7 +777,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
           {!sent && !lockedFriend && (
             <div
               className="flex gap-1.5 p-1.5 rounded-2xl mb-4"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ background: pf.tabBarBg, border: pf.tabBarBorder }}
             >
               {TABS.map(tab => {
                 const active = activeTab === tab.id;
@@ -1135,7 +1174,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                       style={{
                         backgroundColor: elevatedBg,
                         color: textPrimary,
-                        border: '1px solid rgba(255,255,255,0.12)',
+                        border: `1px solid ${cardBorder}`,
                       }}
                     >
                       Change
@@ -1165,7 +1204,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                               : {
                                   backgroundColor: elevatedBg,
                                   color: textSecondary,
-                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  border: `1px solid ${cardBorder}`,
                                 }
                           }
                         >
@@ -1191,9 +1230,9 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                         aria-expanded={showGameModeInfo}
                         className="pfm-cartoon-btn w-5 h-5 inline-flex items-center justify-center rounded-full text-[10px] font-extrabold leading-none"
                         style={{
-                          background: showGameModeInfo ? 'linear-gradient(180deg,#60a5fa,#2563eb)' : 'rgba(255,255,255,0.08)',
-                          color: '#ffffff',
-                          border: '1px solid rgba(255,255,255,0.12)',
+                          background: showGameModeInfo ? 'linear-gradient(180deg,#60a5fa,#2563eb)' : pf.btnBg,
+                          color: showGameModeInfo ? '#ffffff' : textPrimary,
+                          border: pf.btnBorder,
                         }}
                       >
                         ?
@@ -1205,8 +1244,8 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                           style={{
                             backgroundColor: cardBg,
                             color: textSecondary,
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            boxShadow: '0 12px 28px rgba(0,0,0,0.6)',
+                            border: `1px solid ${pf.hairline}`,
+                            boxShadow: pf.tooltipShadow,
                           }}
                         >
                           {isBeta ? (
@@ -1268,7 +1307,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                           style={
                             selected
                               ? {
-                                  background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.08) 100%), #0a0a0a`,
+                                  background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.08) 100%), ${pf.tileBase}`,
                                   border: `1.5px solid ${mode.color}`,
                                   boxShadow: `0 8px 24px ${glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
                                   opacity: locked ? 0.5 : 1,
@@ -1276,7 +1315,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                                   minHeight: 132,
                                 }
                               : {
-                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), #0a0a0a`,
+                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), ${pf.tileBase}`,
                                   border: `1px solid ${mode.color}55`,
                                   boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 16px ${glow}`,
                                   opacity: locked ? 0.5 : 1,
@@ -1371,20 +1410,20 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                           >
                             {mode.icon}
                           </span>
-                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: '#fff' }}>{mode.label}</span>
+                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: textPrimary }}>{mode.label}</span>
                           {mode.tagline && (
                             <span
                               className="text-[8px] font-extrabold uppercase mt-1 leading-none relative"
-                              style={{ color: '#e2e8f0', letterSpacing: '0.16em', opacity: 0.9 }}
+                              style={{ color: pf.tileTagline, letterSpacing: '0.16em', opacity: 0.9 }}
                             >
                               {mode.tagline}
                             </span>
                           )}
                           <span className="inline-flex items-center gap-1.5 mt-2 relative">
-                            <span className="font-black text-[15px] leading-none" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
+                            <span className="font-black text-[15px] leading-none" style={{ color: textPrimary, textShadow: pf.tileCoinsShadow }}>{mode.coins.toLocaleString()}</span>
                             <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, color: '#fb923c', filter: 'drop-shadow(0 0 6px #fb923c)' }}>⚔</span>
                           </span>
-                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>Clash Coins</span>
+                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: textMuted }}>Clash Coins</span>
                         </button>
                       );
                     })}
@@ -1429,7 +1468,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                         className="mt-2 flex items-start gap-2 rounded-2xl px-3 py-2.5"
                         style={{
                           background: `linear-gradient(180deg, ${selectedMode.color}1f, ${selectedMode.color}0a)`,
-                          border: '1px solid rgba(255,255,255,0.08)',
+                          border: `1px solid ${pf.hairline}`,
                         }}
                       >
                         <span className="text-sm leading-none mt-0.5" aria-hidden="true">{selectedMode.icon}</span>
