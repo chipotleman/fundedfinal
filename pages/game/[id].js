@@ -645,7 +645,10 @@ function DesktopMarketCard({ title, children }) {
 function DesktopOptionButton({ active, disabled, label, value, sub, onClick, accent = 'blue' }) {
   // Selection highlight is themed after the home team via the `--home-color` /
   // `--home-bg` CSS vars set on the desktop page wrapper (falls back to the
-  // app blue). The odds numbers themselves stay white for readability.
+  // app blue). The odds number uses the `text-white` class (not an inline
+  // color) so the page's light-theme override (`.game-detail-page .text-white
+  // -> #0f172a`) flips it to dark slate in light mode — an inline #ffffff
+  // can't be overridden by CSS and left the odds invisible on white cards.
   return (
     <button
       onClick={onClick}
@@ -670,10 +673,7 @@ function DesktopOptionButton({ active, disabled, label, value, sub, onClick, acc
           {sub != null ? sub : '\u00a0'}
         </span>
       </div>
-      <span
-        className="text-lg font-extrabold tabular-nums"
-        style={{ color: '#ffffff' }}
-      >
+      <span className="text-lg font-extrabold tabular-nums text-white">
         {value}
       </span>
     </button>
