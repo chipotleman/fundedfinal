@@ -8,10 +8,10 @@ export default function Document() {
         {/* No-FOUC theme bootstrap — runs before paint so light-mode
             users don't flash the dark background. Mirrors the
             persistence contract in `contexts/ThemeContext.js`
-            (localStorage key `piks-theme`, default `dark`). */}
+            (localStorage key `piks-theme`, default `light`). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('piks-theme');if(t!=='light'&&t!=='dark')t='dark';var r=document.documentElement;r.classList.add(t);r.classList.remove(t==='light'?'dark':'light');r.setAttribute('data-theme',t);}catch(e){document.documentElement.classList.add('dark');}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('piks-theme');if(t!=='light'&&t!=='dark')t='light';var r=document.documentElement;r.classList.add(t);r.classList.remove(t==='light'?'dark':'light');r.setAttribute('data-theme',t);}catch(e){document.documentElement.classList.add('light');}})();`,
           }}
         />
         {/* Preload critical images */}

@@ -11,7 +11,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 // to localStorage.
 
 const STORAGE_KEY = 'piks-theme';
-const DEFAULT_THEME = 'dark';
+const DEFAULT_THEME = 'light';
 
 const ThemeContext = createContext({
   theme: DEFAULT_THEME,
