@@ -105,7 +105,7 @@ export default function PiksNewsPage({ initialItems = [] }) {
 
       {/* League filter pills — full screen width */}
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4">
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-2 -mx-1 px-1 scrollbar-hide">
+        <div className="flex gap-2 sm:justify-between overflow-x-auto pb-3 mb-2 -mx-1 px-1 scrollbar-hide">
           {leagues.map((lg) => {
             const active = lg === activeLeague;
             const tint = LEAGUE_TINT[lg] || '#60a5fa';
