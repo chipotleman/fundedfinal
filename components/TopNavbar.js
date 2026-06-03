@@ -579,8 +579,11 @@ export default function TopNavbar({
   // the desktop top-bar gap (lg+) and inside the right cluster on tablet
   // widths (sm–lg) where the desktop bar is hidden. Kept as one definition
   // so the two placements never drift apart.
-  const showNavBalances =
-    isLoggedIn && ((hasActiveChallenge && userProfile) || (hasActiveMatchup && matchupBalance != null));
+  // Clash Coins always render for a logged-in user — when they aren't in a
+  // battle there's no matchup balance, so fall back to "0" rather than hiding
+  // the pill entirely.
+  const coinsValue = matchupBalance != null ? formatMoney(parseFloat(matchupBalance), 0) : '0';
+  const showNavBalances = isLoggedIn;
   const navBalancesInner = (
     <>
       {hasActiveChallenge && userProfile && (
@@ -593,13 +596,13 @@ export default function TopNavbar({
           color="#facc15"
         />
       )}
-      {hasActiveMatchup && matchupBalance != null && (
+      {isLoggedIn && (
         <NavBalance
           onClick={() => setExplainerType('coins')}
           title="Clash Coins — click for details"
           ariaLabel="Clash Coins balance"
           label="Clash Coins"
-          value={formatMoney(parseFloat(matchupBalance), 0)}
+          value={coinsValue}
           color="#ffffff"
           glyph="⚔"
           glyphColor="#fb923c"
@@ -817,7 +820,7 @@ export default function TopNavbar({
                   in drawer). Cartoon-chip aesthetic mirrors the desktop
                   pills above so the look is identical across breakpoints —
                   just sized down for the cramped mobile right rail. */}
-              {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
+              {isLoggedIn && (
                 <div
                   className="sm:hidden flex items-center gap-1"
                   style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
@@ -827,7 +830,7 @@ export default function TopNavbar({
                     title="Clash Coins — tap for details"
                     ariaLabel="Clash Coins details"
                     label="Clash Coins"
-                    value={formatMoney(parseFloat(matchupBalance), 0)}
+                    value={coinsValue}
                     color="#ffffff"
                     glyph="⚔"
                     glyphColor="#fb923c"
@@ -1196,13 +1199,13 @@ export default function TopNavbar({
                 color="#facc15"
               />
             )}
-            {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
+            {isLoggedIn && (
               <NavBalance
                 onClick={() => setExplainerType('coins')}
                 title="Clash Coins — click for details"
                 ariaLabel="Clash Coins balance"
                 label="Clash Coins"
-                value={formatMoney(parseFloat(matchupBalance), 0)}
+                value={coinsValue}
                 color="#ffffff"
                 glyph="⚔"
                 glyphColor="#fb923c"
