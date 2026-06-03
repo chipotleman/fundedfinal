@@ -178,7 +178,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                         onClose?.();
                         if (data?.ok && data.matchup) navigateToBattleStart(router, data.matchup);
                       })}
-                      className="flex-1 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      className="notif-primary-action flex-1 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
                       style={{ background: 'linear-gradient(180deg,#3b82f6,#4f46e5)', boxShadow: '0 2px 10px rgba(59,130,246,0.28)' }}
                     >Accept</button>
                     <button
@@ -268,7 +268,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                         // Ack after navigation so the popup is rendered first.
                         ctx.ackGameResult(r.matchupId);
                       })}
-                      className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      className="notif-primary-action flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
                       style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                     >View</button>
                     <button

@@ -1234,23 +1234,28 @@ html.light [role="menu"] .lg\:hover\:text-blue-400:hover {
   color: #1f2937 !important;
 }
 
-/* Notifications dropdown: keep the blue "View" action buttons, "View all" link,
-   and "N new" pill on-brand (blue) in light mode. We only deepen the blue-300
-   text/link so it stays legible on the light surface; the buttons keep the
-   native blue-500 fill with white text. */
-html.light [data-notifications-dropdown] .bg-blue-500 {
-  background-color: #3b82f6 !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35) !important;
+/* Notifications dropdown: the blue "View"/"Accept" action buttons + "View all"
+   link read as the dark-theme blue on the light surface. Rebrand them to the
+   light-theme gold so they match the Crowns palette; dark text for contrast on
+   the gold. Every primary action button across notification types carries a
+   stable `.notif-primary-action` class (Results "View" also keeps `.bg-blue-500`
+   and the battle-invite "Accept" keeps its inline blue→indigo gradient for dark
+   mode), so we target that class rather than fragile inline-style matching. */
+html.light [data-notifications-dropdown] .notif-primary-action {
+  background: #facc15 !important;
+  background-color: #facc15 !important;
+  color: #1f2937 !important;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.40) !important;
 }
-html.light [data-notifications-dropdown] .bg-blue-500:hover {
-  background-color: #2563eb !important;
+html.light [data-notifications-dropdown] .notif-primary-action:hover {
+  background: #eab308 !important;
+  background-color: #eab308 !important;
 }
 html.light [data-notifications-dropdown] .text-blue-300 {
-  color: #2563eb !important;
+  color: #b8860b !important;
 }
 html.light [data-notifications-dropdown] .text-blue-300:hover {
-  color: #1d4ed8 !important;
+  color: #92710a !important;
 }
 
 /* ─── Inline-style black background overrides ────────────────────
