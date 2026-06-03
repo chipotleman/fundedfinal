@@ -196,6 +196,12 @@ const Leaderboard = () => {
   const profileRequestRef = useRef(0);
   const userRowRefs = useRef({});
 
+  // The top-of-page "Your rank" badge. We watch it with an IntersectionObserver
+  // so the floating "You're #N" pill only appears once that badge has scrolled
+  // out of view (i.e. you can no longer see your rank at the top).
+  const yourRankRef = useRef(null);
+  const [showRankPill, setShowRankPill] = useState(false);
+
   // ── User's own bankroll for the navbar pill ─────────────────────
   useEffect(() => {
     if (!user?.id) return;
@@ -316,6 +322,25 @@ const Leaderboard = () => {
     return leaders.find((l) => l.id === user.id) || null;
   }, [user, leaders, myRank]);
 
+  // Show the floating "You're #N" pill only when the top "Your rank" badge is
+  // out of view. On phone widths that badge is hidden (`display:none`), so the
+  // observer reports it as not visible and the pill stays available there.
+  useEffect(() => {
+    if (!userRank) { setShowRankPill(false); return undefined; }
+    const el = yourRankRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      // No anchor to track — fall back to always showing the pill.
+      setShowRankPill(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowRankPill(!entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [userRank]);
+
   const scrollToMyRank = () => {
     if (!userRank) return;
     const el = userRowRefs.current[userRank.id];
@@ -411,7 +436,7 @@ const Leaderboard = () => {
               </div>
             </div>
             {userRank && (
-              <div className="hidden sm:flex flex-col items-end">
+              <div ref={yourRankRef} className="hidden sm:flex flex-col items-end">
                 <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: p.mutedText }}>Your rank</span>
                 <span
                   className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-black"
@@ -663,8 +688,9 @@ const Leaderboard = () => {
               )}
             </div>
 
-            {/* ── Sticky "You're #N" pill ─────────────────────── */}
-            {userRank && (
+            {/* ── Sticky "You're #N" pill — only once the top rank badge
+                 has scrolled out of view ─────────────────────── */}
+            {userRank && showRankPill && (
               <button
                 onClick={scrollToMyRank}
                 className="fixed bottom-20 right-4 z-30 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider transition-transform active:scale-95"
