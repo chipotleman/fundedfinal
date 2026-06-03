@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { usePushNotifications } from '../../contexts/PushNotificationsContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const CATS = [
   { key: 'catInvites', label: 'Battle invites', help: 'When a friend challenges you to a battle' },
@@ -11,12 +12,14 @@ const CATS = [
 ];
 
 function Toggle({ value, onChange, disabled }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   return (
     <button
       onClick={() => !disabled && onChange(!value)}
       disabled={disabled}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-        value ? 'bg-blue-500' : 'bg-[#222]'
+        value ? 'bg-blue-500' : (isLight ? 'bg-slate-300' : 'bg-[#222]')
       }`}
     >
       <span
@@ -31,11 +34,22 @@ function Toggle({ value, onChange, disabled }) {
 export default function PushSettingsSection() {
   const push = usePushNotifications();
   const [error, setError] = useState(null);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
+  const cardClass = isLight
+    ? 'bg-white backdrop-blur-lg rounded-2xl border border-slate-200 shadow-sm p-8 mb-8'
+    : 'bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8 mb-8';
+  const headingColor = isLight ? 'text-slate-900' : 'text-white';
+  const dividerColor = isLight ? 'border-slate-200' : 'border-[#1a1a1a]';
+  const subtleBtn = isLight
+    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800'
+    : 'bg-[#1a1a1a] hover:bg-[#222] text-white';
 
   if (!push.supported) {
     return (
-      <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8 mb-8">
-        <h2 className="text-xl font-bold text-white mb-2">Push Notifications</h2>
+      <div className={cardClass}>
+        <h2 className={`text-xl font-bold ${headingColor} mb-2`}>Push Notifications</h2>
         <p className="text-gray-400 text-sm">
           This browser doesn't support web push notifications. Try Chrome, Edge, or Firefox on
           desktop, or install Piks to your iPhone/iPad Home Screen on iOS 16.4+.
@@ -58,9 +72,9 @@ export default function PushSettingsSection() {
   };
 
   return (
-    <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8 mb-8">
+    <div className={cardClass}>
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xl font-bold text-white">Push Notifications</h2>
+        <h2 className={`text-xl font-bold ${headingColor}`}>Push Notifications</h2>
         {push.subscribed ? (
           <span className="text-blue-400 text-xs font-semibold uppercase tracking-wide">On</span>
         ) : (
@@ -99,7 +113,7 @@ export default function PushSettingsSection() {
         <button
           onClick={push.unsubscribe}
           disabled={push.busy}
-          className="px-4 py-2 text-sm font-semibold rounded-lg bg-[#1a1a1a] hover:bg-[#222] text-white disabled:opacity-50"
+          className={`px-4 py-2 text-sm font-semibold rounded-lg ${subtleBtn} disabled:opacity-50`}
         >
           {push.busy ? 'Disabling…' : 'Disable on this device'}
         </button>
@@ -108,8 +122,8 @@ export default function PushSettingsSection() {
       {error && <div className="mt-3 text-xs text-red-300">{error}</div>}
 
       {/* Categories */}
-      <div className="mt-8 border-t border-[#1a1a1a] pt-6">
-        <h3 className="text-white font-semibold mb-4">Notify me about</h3>
+      <div className={`mt-8 border-t ${dividerColor} pt-6`}>
+        <h3 className={`${headingColor} font-semibold mb-4`}>Notify me about</h3>
         <div className="space-y-4">
           {CATS.map(({ key, label, help }) => {
             // Show union of all device prefs — toggling updates all subscribed devices.
@@ -119,7 +133,7 @@ export default function PushSettingsSection() {
             return (
               <div key={key} className="flex items-center justify-between py-2">
                 <div>
-                  <div className="text-white font-medium">{label}</div>
+                  <div className={`${headingColor} font-medium`}>{label}</div>
                   <div className="text-gray-400 text-sm">{help}</div>
                 </div>
                 <Toggle
@@ -140,13 +154,13 @@ export default function PushSettingsSection() {
 
       {/* Devices */}
       {push.devices.length > 0 && (
-        <div className="mt-8 border-t border-[#1a1a1a] pt-6">
-          <h3 className="text-white font-semibold mb-4">Your devices</h3>
+        <div className={`mt-8 border-t ${dividerColor} pt-6`}>
+          <h3 className={`${headingColor} font-semibold mb-4`}>Your devices</h3>
           <div className="space-y-2">
             {push.devices.map(d => (
-              <div key={d.id} className="flex items-center justify-between bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg px-4 py-3">
+              <div key={d.id} className={`flex items-center justify-between rounded-lg px-4 py-3 ${isLight ? "bg-slate-50 border border-slate-200" : "bg-[#0d0d0d] border border-[#1a1a1a]"}`}>
                 <div className="min-w-0">
-                  <div className="text-white text-sm font-medium truncate">
+                  <div className={`text-sm font-medium truncate ${headingColor}`}>
                     {d.deviceLabel || 'Browser'}
                     {d.endpoint === push.endpoint && (
                       <span className="ml-2 text-xs text-blue-400">This device</span>
