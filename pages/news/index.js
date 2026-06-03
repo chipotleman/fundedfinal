@@ -103,9 +103,9 @@ export default function PiksNewsPage({ initialItems = [] }) {
       </Head>
       <TopNavbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-24">
-        {/* League filter pills */}
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-6 -mx-1 px-1 scrollbar-hide">
+      {/* League filter pills — full screen width */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4">
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-2 -mx-1 px-1 scrollbar-hide">
           {leagues.map((lg) => {
             const active = lg === activeLeague;
             const tint = LEAGUE_TINT[lg] || '#60a5fa';
@@ -126,7 +126,9 @@ export default function PiksNewsPage({ initialItems = [] }) {
             );
           })}
         </div>
+      </div>
 
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         {loading ? (
           <PiksLoader />
         ) : filtered.length === 0 ? (
@@ -227,12 +229,9 @@ export default function PiksNewsPage({ initialItems = [] }) {
                 ) : (
                   <div className="flex flex-col gap-3">
                     {markets.map((m) => (
-                      <a
+                      <div
                         key={m.id}
-                        href={m.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block rounded-xl p-3 transition-colors lg:hover:opacity-90"
+                        className="block rounded-xl p-3"
                         style={{ background: 'var(--sf-surface-muted)', border: '1px solid var(--sf-border)' }}
                       >
                         <p className="text-[13px] font-bold leading-snug line-clamp-2 mb-2">{m.question}</p>
@@ -249,7 +248,7 @@ export default function PiksNewsPage({ initialItems = [] }) {
                             </div>
                           ))}
                         </div>
-                      </a>
+                      </div>
                     ))}
                   </div>
                 )}
