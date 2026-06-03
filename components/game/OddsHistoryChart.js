@@ -191,6 +191,10 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   // Default is 1H — gives enough outlook to see both pre-game movement
   // and in-game swings.
   const rangeWindowMs = useMemo(() => {
+    // The in-card sparkline is a fixed, label-free 15-min window so it can
+    // stretch wide across the empty space in the game card without a range
+    // picker. The full chart keeps its selectable ranges.
+    if (mini) return 15 * 60_000;            // 15 min
     switch (range) {
       case 'LIVE': return 30 * 60_000;      // 30 min
       case '1H':   return 60 * 60_000;      // 1 h
@@ -199,7 +203,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
       case 'ALL':  return 7 * 24 * 60 * 60_000; // 7 d
       default:     return 60 * 60_000;
     }
-  }, [range]);
+  }, [range, mini]);
 
   // Resolve game start time (ms epoch). If the page didn't pass one,
   // assume the game just started (so the entire window is treated as
@@ -406,7 +410,15 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   // history points, prefer those + a synthesized tail; otherwise use
   // the synthesized history.
   const series = useMemo(() => {
-    const real = (data.points || []).filter(p => p.homeImplied != null && p.awayImplied != null);
+    let real = (data.points || []).filter(p => p.homeImplied != null && p.awayImplied != null);
+    // The in-card sparkline strictly shows only the last 15 min, so always
+    // clip the real history to that window. If too few real points survive
+    // the clip, the synthesized 15-min history (which snaps to the live
+    // anchor) is used instead — never older-than-15m real data.
+    if (mini && real.length) {
+      const cutoff = Date.now() - rangeWindowMs;
+      real = real.filter(p => p.t >= cutoff);
+    }
     if (real.length >= 5) {
       // Server has real data — drop synthesized history older than the
       // first real point and append synthesized tail only after the last
@@ -416,7 +428,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
       return [...real, ...tail];
     }
     return history;
-  }, [data.points, history]);
+  }, [data.points, history, mini, rangeWindowMs]);
 
   // Layout — use the *measured* container width as the viewBox width so
   // the SVG renders 1:1 with screen pixels and text doesn't get stretched
@@ -424,7 +436,9 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   // preserveAspectRatio="none", which made labels and badges look
   // squished/elongated on wider screens.) Height is fixed.
   const VB_H = mini ? 46 : (compact ? 120 : 184);
-  const VB_W = mini ? 132 : Math.max(320, Math.round(width));
+  // Mini stretches to fill its (flex) container — measured width, 1:1 with px
+  // so hover math stays accurate. Falls back to a sane min so it never collapses.
+  const VB_W = mini ? Math.max(120, Math.round(width)) : Math.max(320, Math.round(width));
   const PAD_L = mini ? 4 : 14;
   const PAD_R = mini ? 32 : 56;  // room for right-edge live labels
   const PAD_T = mini ? 7 : 16;
@@ -470,14 +484,53 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   // with a dashed 50% midline and small right-edge win-% badges.
   if (mini) {
     if (series.length < 2 || !last) {
-      return <div ref={wrapRef} style={{ width: VB_W, height: VB_H }} aria-hidden="true" />;
+      return <div ref={wrapRef} style={{ width: '100%', height: VB_H }} aria-hidden="true" />;
     }
+    // Desktop-only hover annotations (mini only renders on desktop). The
+    // viewBox is 1:1 with rendered px, so clientX − svg left maps straight to
+    // viewBox x. We show a guide line, dots, and a small value tooltip — no
+    // axis/time labels are drawn unless the user hovers.
+    const onMiniMove = (e) => {
+      if (!svgRef.current || series.length === 0) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const vbX = e.clientX - rect.left;
+      if (vbX < PAD_L - 6 || vbX > PAD_L + plotW + 6) { setHover(null); return; }
+      let best = 0, bestDx = Infinity;
+      for (let i = 0; i < series.length; i++) {
+        const dx = Math.abs(xOf(series[i].t) - vbX);
+        if (dx < bestDx) { bestDx = dx; best = i; }
+      }
+      setHover({ idx: best });
+    };
+    const mh = hover != null && series[hover.idx] ? series[hover.idx] : null;
+    const mhX = mh ? xOf(mh.t) : null;
+    const mhHomeY = mh ? yOf(mh.homeImplied) : null;
+    const mhAwayY = mh ? yOf(mh.awayImplied) : null;
+    // Center the tooltip over the hovered point but clamp it inside the chart
+    // width so the card's overflow-hidden never clips it.
+    const TIP_HALF = 50;
+    const tipMax = (width || VB_W);
+    const tipLeft = mhX != null ? Math.min(Math.max(mhX, TIP_HALF + 2), tipMax - TIP_HALF - 2) : 0;
     return (
-      <div ref={wrapRef} style={{ width: VB_W, height: VB_H }} aria-hidden="true">
-        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width={VB_W} height={VB_H} className="block overflow-visible select-none">
+      <div ref={wrapRef} className="relative" style={{ width: '100%', height: VB_H }}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${VB_W} ${VB_H}`}
+          style={{ width: '100%', height: VB_H }}
+          className="block overflow-visible select-none"
+          onPointerMove={onMiniMove}
+          onPointerLeave={() => setHover(null)}
+        >
           <line x1={PAD_L} x2={PAD_L + plotW} y1={yOf(0.5)} y2={yOf(0.5)} stroke={GRID_MID} strokeDasharray="3 3" strokeWidth="1" />
           <path d={awayPath} fill="none" stroke={AWAY_COLOR} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
           <path d={homePath} fill="none" stroke={HOME_COLOR} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          {mh && (
+            <g>
+              <line x1={mhX} x2={mhX} y1={PAD_T} y2={PAD_T + plotH} stroke={GRID_MID} strokeWidth="1" />
+              {mh.awayImplied != null && <circle cx={mhX} cy={mhAwayY} r="2.6" fill={AWAY_COLOR} stroke={PANEL_BG} strokeWidth="1.25" />}
+              {mh.homeImplied != null && <circle cx={mhX} cy={mhHomeY} r="2.6" fill={HOME_COLOR} stroke={PANEL_BG} strokeWidth="1.25" />}
+            </g>
+          )}
           {last.awayImplied != null && (
             <g>
               <rect x={PAD_L + plotW + 2} y={yOf(last.awayImplied) - 7} width="29" height="13" rx="3" fill={AWAY_COLOR} stroke="#0a0a0a" strokeWidth="1.25" />
@@ -491,6 +544,29 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
             </g>
           )}
         </svg>
+        {mh && (
+          <div
+            className="absolute pointer-events-none z-10 rounded-md px-2 py-1 whitespace-nowrap"
+            style={{
+              left: tipLeft,
+              top: -2,
+              transform: 'translate(-50%, -100%)',
+              backgroundColor: TOOLTIP_BG,
+              border: '1px solid #0a0a0a',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            }}
+          >
+            <div className="text-[9px] font-semibold" style={{ color: AXIS_TEXT }}>{fmtTime(mh.t, range)}</div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold" style={{ color: AWAY_COLOR }}>
+                <span className="w-2 h-2 rounded-sm" style={{ background: AWAY_COLOR }} />{fmtPct(mh.awayImplied)}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold" style={{ color: HOME_COLOR }}>
+                <span className="w-2 h-2 rounded-sm" style={{ background: HOME_COLOR }} />{fmtPct(mh.homeImplied)}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -1806,7 +1806,7 @@ export default function Dashboard() {
                         className="mb-3 cursor-pointer -mx-1.5 px-1.5 py-0.5 rounded-lg transition-colors flex items-center gap-3"
                         onClick={() => router.push(`/game/${game.id}`)}
                       >
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0" style={{ flex: showMiniChart ? '0 1 auto' : '1 1 0%' }}>
                           <div className="flex items-center gap-2 min-w-0 h-5 mb-1">
                             <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={20} />
                             <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.awayTeamFull || game.awayTeam}</span>
@@ -1818,7 +1818,7 @@ export default function Dashboard() {
                         </div>
 
                         {showMiniChart && (
-                          <div className="flex items-center flex-shrink-0">
+                          <div className="flex items-center flex-1 min-w-0">
                             <OddsHistoryChart
                               mini
                               gameId={game.id}
