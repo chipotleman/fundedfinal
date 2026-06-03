@@ -159,8 +159,8 @@ const STEPS = [
       <>
         We run a fresh beta <strong style={{ color: 'var(--hiw-strong)' }}>every week</strong> with a{' '}
         <strong style={{ color: 'var(--hiw-strong)' }}>$1,000 cash grand prize</strong> — the{' '}
-        <strong style={{ color: 'var(--hiw-strong)' }}>top capper of the week</strong> takes it home. And once the beta ends, your
-        Crowns <strong style={{ color: 'var(--hiw-strong)' }}>convert to real cash</strong> and you'll be able to play for real money.
+        <strong style={{ color: 'var(--hiw-strong)' }}>top capper of the week</strong> takes it home. And once the beta ends, Piks opens up so you'll be able to{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>deposit and play for real money</strong> — Crowns are a beta-only score and don't convert to cash.
       </>
     ),
     Visual: VisualBeta,

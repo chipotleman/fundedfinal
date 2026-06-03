@@ -23,8 +23,8 @@ function getMode(matchup) {
 // balance pills:
 //   • Crowns (type="cash")  → a single, premium "royal" explanation card. Gold
 //     treatment, crown motif. Explains that Crowns are the beta standing, the
-//     weekly $1,000 grand prize, and that Crowns convert to real cash once the
-//     beta ends.
+//     weekly $1,000 grand prize, and that real-money cash play opens up once the
+//     beta ends (Crowns themselves are a beta-only score and do not convert).
 //   • Clash Coins (type="coins") → a stepped, esports-style click-through
 //     walkthrough (orange/blue, progress dots, Back / Next) that explains how
 //     the in-battle currency works end to end.
@@ -187,9 +187,9 @@ function CrownsView({ isLight, cashBalance, onClose, onCta }) {
             <span className="text-sm font-black uppercase tracking-wide" style={{ color: isLight ? '#047857' : '#34d399' }}>Real Cash Is Coming</span>
           </div>
           <p className="text-[13px] leading-relaxed" style={{ color: s.body }}>
-            When the beta ends, your <span className="font-bold" style={{ color: s.strong }}>Crowns convert to real
-            cash</span> — and Piks opens up so you can deposit and play for real money. The Crowns you stack now are a
-            head start.
+            When the beta ends, Piks opens up so you can <span className="font-bold" style={{ color: s.strong }}>deposit
+            and play for real money</span>. Crowns are a beta-only score — they don't convert to cash — but topping the
+            leaderboard each week wins real cash prizes along the way.
           </p>
         </div>
 
