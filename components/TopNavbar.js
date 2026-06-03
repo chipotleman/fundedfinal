@@ -962,6 +962,7 @@ export default function TopNavbar({
                                 ['/dashboard', 'Battle'],
                                 ['/my-picks', 'My Piks'],
                                 ['/battle', 'Social'],
+                                ['/news', 'News'],
                                 ['/leaderboard', 'Leaderboard'],
                               ];
                               return navLinks.map(([href, label]) => {

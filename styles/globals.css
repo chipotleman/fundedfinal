@@ -1095,6 +1095,18 @@ html.light .sf-root {
   --sf-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
+/* Piks News pages (/news, /news/[slug]). The page background + base text flip
+   via this class (not useTheme inline styles) so the first paint is correct —
+   html.light/.dark are set pre-paint by _document.js, so no dark→light FOUC.
+   Inner surfaces/cards/text use the shared --sf-* tokens above. */
+.news-page {
+  background-color: #000000;
+  color: var(--sf-text-primary);
+}
+html.light .news-page {
+  background-color: #f5f1ea;
+}
+
 /* Battle History table (/bet-history) theme tokens. The table + its controls
    use inline styles with raw hex, so a plain light-mode class can't override
    them — these custom properties on .bht-root let the same markup render dark by

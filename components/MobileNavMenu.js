@@ -414,6 +414,18 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 )}
               </Link>
               <Link
+                href="/news"
+                onClick={handleNavigation('/news')}
+                aria-current={router.pathname?.startsWith('/news') ? 'page' : undefined}
+                className={`block text-base uppercase tracking-wider py-3 pl-3 -ml-3 border-l-[3px] ${
+                  router.pathname?.startsWith('/news')
+                    ? 'text-white font-bold border-l-[#3b82f6]'
+                    : 'text-gray-300 font-light border-l-transparent'
+                }`}
+              >
+                News
+              </Link>
+              <Link
                 href="/notifications"
                 onClick={handleNavigation('/notifications')}
                 aria-current={router.pathname === '/notifications' ? 'page' : undefined}
