@@ -1301,18 +1301,34 @@ export default function Dashboard() {
         className={`flex items-center overflow-x-auto scrollbar-hide ${isCondensed ? 'space-x-1 sm:space-x-2' : 'space-x-2 pb-1'}`}
         style={isCondensed ? { WebkitOverflowScrolling: 'touch' } : undefined}
       >
-        {isDemoMode && !isCondensed && (
-          <div
-            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border"
+        {!isCondensed && (
+          <button
+            type="button"
+            onClick={() => router.push('/battle')}
+            aria-label="Go to Social"
+            className="flex-shrink-0 flex items-center transition-transform lg:hover:-translate-y-0.5 active:scale-95"
             style={{
-              borderColor: isLightTheme ? 'rgba(14, 116, 144, 0.5)' : 'rgba(6, 182, 212, 0.3)',
-              backgroundColor: isLightTheme ? 'rgba(14, 116, 144, 0.12)' : 'rgba(6, 182, 212, 0.1)',
-              boxShadow: pillDepthShadow,
+              gap: '8px',
+              padding: pillPadding,
+              borderRadius: '9999px',
+              fontSize: pillFontSize,
+              fontWeight: '600',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: '#0e7490',
+              color: '#ffffff',
+              background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+              boxShadow: '0 3px 7px rgba(6,182,212,0.40), 0 7px 16px rgba(59,130,246,0.26), inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -2px 2px rgba(8,47,73,0.30)',
             }}
           >
-            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: isLightTheme ? '#0e7490' : '#22d3ee' }}></div>
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isLightTheme ? '#0e7490' : '#22d3ee' }}>Demo</span>
-          </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Social</span>
+          </button>
         )}
         <TapSurface
           onTap={() => handleSportClick('Live')}
