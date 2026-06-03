@@ -235,7 +235,7 @@ export default function MyPicksPage() {
     const hasOpponent = !!opponent;
     const fighter = (avatar, name, color, gradient, ringRgba, isMe) => (
       <div className="flex flex-col items-center gap-2 min-w-0">
-        <div className="rounded-full p-[3px]" style={{ background: gradient, boxShadow: `0 0 0 3px ${ringRgba}` }}>
+        <div className="rounded-full p-[3px]" style={{ background: p.softBorder }}>
           <UserAvatar avatar={avatar} username={name} size={56} />
         </div>
         <div className="text-[11px] font-black px-2.5 py-0.5 rounded-full truncate max-w-[104px] text-center"
@@ -385,18 +385,14 @@ export default function MyPicksPage() {
     const { gameId, homeTeam, awayTeam, isLive, isFinal, derivedLiveOdds } = getChartCtx(bet);
     const trackHomeColor = getTeamColor(homeTeam, bet.sport || bet.sportName) || '#2563eb';
     return (
-      <div className="space-y-4">
-        <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.3)' }}>
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22d3ee' }} />
-            <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#22d3ee' }}>Tracking your pick</span>
-          </div>
-          <div className="text-base font-black truncate" style={{ color: p.bodyText }}>{bet.selection || '—'}</div>
-          <div className="text-[11px] truncate" style={{ color: p.mutedText }}>{awayTeam} @ {homeTeam}</div>
+      <div className="space-y-2.5">
+        <div className="min-w-0">
+          <div className="text-sm font-black truncate" style={{ color: p.bodyText }}>{bet.selection || '—'}</div>
+          <div className="text-[10px] truncate" style={{ color: p.mutedText }}>{awayTeam} @ {homeTeam}</div>
         </div>
-        <OddsHistoryChart gameId={gameId} homeTeam={homeTeam} awayTeam={awayTeam} liveOdds={derivedLiveOdds} commenceTime={bet.placedAt} isLive={isLive} isFinal={isFinal} />
+        <OddsHistoryChart gameId={gameId} homeTeam={homeTeam} awayTeam={awayTeam} liveOdds={derivedLiveOdds} commenceTime={bet.placedAt} isLive={isLive} isFinal={isFinal} compact />
         {gameId ? (
-          <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch className="block w-full text-center px-3 py-3 rounded-xl text-sm font-black uppercase tracking-wider"
+          <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch className="block w-full text-center px-3 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider"
             style={{ background: trackHomeColor, color: inkFor(trackHomeColor), boxShadow: p.hardShadow }}>
             Open Game →
           </Link>
@@ -518,7 +514,7 @@ export default function MyPicksPage() {
         <div className="relative flex items-center justify-between gap-3 px-6 py-7 sm:px-10 sm:py-9">
           {/* YOU */}
           <div className="flex items-center gap-4 min-w-0">
-            <div className="rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', boxShadow: '0 0 0 4px rgba(59,130,246,0.18)' }}>
+            <div className="rounded-full p-[3px]" style={{ background: p.softBorder }}>
               <div className="rounded-full overflow-hidden" style={{ background: hero.avatarInner }}>
                 <UserAvatar avatar={myProfile?.avatar} username={myProfile?.username || 'You'} size={76} />
               </div>
@@ -550,7 +546,7 @@ export default function MyPicksPage() {
               <div className="text-3xl font-black inline-flex items-center gap-1.5 justify-end" style={{ color: hero.text }}><Coin color={hero.oppCoin} />{formatMoney(oppLive, 0)}</div>
               <div className="mt-0.5 flex justify-end">{sideChange(oppChange)}</div>
             </div>
-            <div className="rounded-full p-[3px]" style={{ background: hasOpponent ? 'linear-gradient(135deg,#fbbf24,#ea580c)' : 'rgba(148,163,184,0.4)', boxShadow: '0 0 0 4px rgba(251,146,60,0.16)' }}>
+            <div className="rounded-full p-[3px]" style={{ background: p.softBorder }}>
               <div className="rounded-full overflow-hidden" style={{ background: hero.avatarInner }}>
                 <UserAvatar avatar={opponent?.avatar} username={oppName} size={76} />
               </div>

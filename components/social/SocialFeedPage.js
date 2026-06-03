@@ -921,8 +921,6 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
   const u2Lead = u2Bal > u1Bal;
   const u1OnFire = parseFloat(u1.pnlPercent) > 10;
   const u2OnFire = parseFloat(u2.pnlPercent) > 10;
-  const u1Ring = u1Lead ? HH_LEAD : HH_BLUE;
-  const u2Ring = u2Lead ? HH_LEAD : HH_ORANGE;
 
   const [timeLeft, setTimeLeft] = useState(
     battle.endsAt ? new Date(battle.endsAt).getTime() - Date.now() : 0,
@@ -1037,7 +1035,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
               aria-label={`Open ${u1.username || 'Player 1'} profile`}
               className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
             >
-              <div className="rounded-full p-[1.5px]" style={{ background: u1Ring }}>
+              <div className="rounded-full p-[1.5px]" style={{ background: border }}>
                 <FramedAvatar avatar={u1.avatar} username={u1.username || 'P1'} frameId={u1.equippedFrame} size={28} bgColor="#1e40af" />
               </div>
               {u1OnFire && <span className="absolute -top-1 -right-1 text-[11px] hh-flame" aria-label="On fire">🔥</span>}
@@ -1076,7 +1074,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
                 aria-label={`Open ${u2.username || 'Player 2'} profile`}
                 className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
               >
-                <div className="rounded-full p-[1.5px]" style={{ background: u2Ring }}>
+                <div className="rounded-full p-[1.5px]" style={{ background: border }}>
                   <FramedAvatar avatar={u2.avatar} username={u2.username || 'P2'} frameId={u2.equippedFrame} size={28} bgColor="#7c2d12" />
                 </div>
                 {u2OnFire && <span className="absolute -top-1 -left-1 text-[11px] hh-flame" aria-label="On fire">🔥</span>}

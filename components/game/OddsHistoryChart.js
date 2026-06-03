@@ -55,7 +55,7 @@ function fmtTime(t, range) {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamFull, awayTeamFull, sport, liveOdds, commenceTime, isLive, isFinal }) {
+export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamFull, awayTeamFull, sport, liveOdds, commenceTime, isLive, isFinal, compact = false }) {
   // Home team draws in its brand color; fall back to the app blue when the
   // team isn't in the color map. Resolve the color from the FULL team name
   // (e.g. "Michigan Wolverines") — the short `homeTeam` label ("MICH") used
@@ -393,7 +393,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   // horizontally. (Previously we used a fixed 800-wide viewBox with
   // preserveAspectRatio="none", which made labels and badges look
   // squished/elongated on wider screens.) Height is fixed.
-  const VB_H = 184;
+  const VB_H = compact ? 120 : 184;
   const VB_W = Math.max(320, Math.round(width));
   const PAD_L = 14;
   const PAD_R = 56;  // room for right-edge live labels
@@ -507,7 +507,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   );
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center text-center" style={{ height: 184 }}>
+    <div className="flex flex-col items-center justify-center text-center" style={{ height: VB_H }}>
       <div className="text-3xl mb-1">📈</div>
       <div className="text-sm font-bold" style={{ color: EMPTY_TITLE }}>Tracking odds…</div>
       <div className="text-xs mt-1 max-w-[260px]" style={{ color: EMPTY_BODY }}>
@@ -529,7 +529,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
       {headerLabel}
 
       {loading && series.length === 0 ? (
-        <div className="flex items-center justify-center" style={{ height: 184 }}>
+        <div className="flex items-center justify-center" style={{ height: VB_H }}>
           <div className="w-7 h-7 border-2 border-gray-700 border-t-emerald-400 rounded-full animate-spin" />
         </div>
       ) : series.length === 0 ? (
