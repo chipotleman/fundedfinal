@@ -1306,22 +1306,22 @@ export default function Dashboard() {
             type="button"
             onClick={() => router.push('/battle')}
             aria-label="Go to Social"
-            className="flex-shrink-0 flex items-center transition-transform lg:hover:-translate-y-0.5 active:scale-95"
+            className="social-pill flex-shrink-0 flex items-center"
             style={{
               gap: '8px',
               padding: pillPadding,
               borderRadius: '9999px',
               fontSize: pillFontSize,
-              fontWeight: '600',
+              fontWeight: '700',
               borderWidth: '1px',
               borderStyle: 'solid',
-              borderColor: '#0e7490',
-              color: '#ffffff',
-              background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-              boxShadow: '0 3px 7px rgba(6,182,212,0.40), 0 7px 16px rgba(59,130,246,0.26), inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -2px 2px rgba(8,47,73,0.30)',
+              borderColor: '#ca8a04',
+              color: '#422006',
+              background: 'linear-gradient(135deg, #fde047 0%, #facc15 50%, #eab308 100%)',
+              boxShadow: '0 0 0 0 rgba(250,204,21,0.55), 0 3px 7px rgba(202,138,4,0.40), 0 7px 16px rgba(234,179,8,0.30), inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -2px 2px rgba(120,53,15,0.22)',
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
