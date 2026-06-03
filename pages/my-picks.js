@@ -135,15 +135,38 @@ export default function MyPicksPage() {
 
   const isLoggedIn = sessionStatus === 'authenticated';
 
+  const [sortMode, setSortMode] = useState('recent');
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortOptions = useMemo(() => ([
+    { id: 'recent', label: 'Recent' },
+    { id: 'oldest', label: 'Oldest' },
+    { id: 'payout', label: 'Potential payout' },
+    { id: 'stake', label: 'Amount picked' },
+    { id: 'odds', label: 'Odds' },
+  ]), []);
+  const sortLabel = sortOptions.find((o) => o.id === sortMode)?.label || 'Recent';
+
   const sortedBets = useMemo(() => {
     const arr = Array.isArray(myBets) ? myBets.slice() : [];
+    const time = (x) => (x?.placedAt ? new Date(x.placedAt).getTime() : 0);
+    const num = (x, k) => parseFloat(x?.[k] || 0) || 0;
+    const payout = (x) => {
+      const pp = parseFloat(x?.potentialPayout);
+      if (Number.isFinite(pp) && pp > 0) return pp;
+      return calculatePayout(x?.odds, x?.stake) || 0;
+    };
     arr.sort((a, b) => {
-      const ta = a?.placedAt ? new Date(a.placedAt).getTime() : 0;
-      const tb = b?.placedAt ? new Date(b.placedAt).getTime() : 0;
-      return tb - ta;
+      switch (sortMode) {
+        case 'oldest': return time(a) - time(b);
+        case 'payout': return payout(b) - payout(a);
+        case 'stake': return num(b, 'stake') - num(a, 'stake');
+        case 'odds': return num(b, 'odds') - num(a, 'odds');
+        case 'recent':
+        default: return time(b) - time(a);
+      }
     });
     return arr.map(normalizeBet);
-  }, [myBets]);
+  }, [myBets, sortMode]);
 
   // The selected pick drives the right-rail (and mobile inline) live-odds
   // tracker. Default to the most recent pick once data lands.
@@ -747,9 +770,40 @@ export default function MyPicksPage() {
                 <div className="text-base font-black" style={{ color: p.bodyText }}>
                   Your Active Picks <span style={{ color: p.faintText }}>({sortedBets.length})</span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg" style={{ color: p.mutedText, border: `1px solid ${p.softBorder}` }}>
-                  Sort by: Recent
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setSortOpen((v) => !v)}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                    style={{ color: p.mutedText, border: `1px solid ${p.softBorder}`, background: 'transparent' }}
+                  >
+                    Sort by: {sortLabel}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: sortOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}><path d="m6 9 6 6 6-6" /></svg>
+                  </button>
+                  {sortOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
+                      <div className="absolute right-0 mt-1.5 z-20 rounded-xl overflow-hidden py-1 min-w-[180px]" style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}`, boxShadow: '0 12px 28px rgba(0,0,0,0.22)' }}>
+                        {sortOptions.map((o) => {
+                          const active = o.id === sortMode;
+                          return (
+                            <button
+                              key={o.id}
+                              type="button"
+                              onClick={() => { setSortMode(o.id); setSortOpen(false); }}
+                              className="w-full text-left text-xs font-bold px-3 py-2 flex items-center justify-between transition-colors"
+                              style={{ color: active ? (isLight ? '#2563eb' : '#60a5fa') : p.bodyText, background: active ? (isLight ? 'rgba(37,99,235,0.08)' : 'rgba(96,165,250,0.12)') : 'transparent' }}
+                            >
+                              {o.label}
+                              {active && (
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="space-y-3">{sortedBets.map((bet) => renderDesktopPickRow(bet))}</div>
