@@ -159,20 +159,29 @@ export default function GameDetail() {
       return;
     }
 
-    console.log('[GameDetail] Not found in context, fetching from API...');
     const fetchGame = async () => {
       try {
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          console.log('[GameDetail] API returned', data.games?.length || 0, 'games');
           const foundGame = data.games?.find(g => String(g.id) === String(id));
           if (foundGame) {
-            console.log('[GameDetail] Found in API response');
-          } else {
-            console.log('[GameDetail] Not found in API response');
+            setGame(foundGame);
+            return;
           }
-          setGame(foundGame);
+        }
+
+        // Not in the live feed — the game has likely ended or aged out of the
+        // homepage window (common for games linked from My Piks). Resolve it
+        // directly by id so we can still show the summary (final score + odds
+        // chart) instead of a "Game not found" dead end.
+        const single = await fetch(`/api/games/${encodeURIComponent(id)}`);
+        if (single.ok) {
+          const data = await single.json();
+          if (data.game) {
+            setGame(data.game);
+            return;
+          }
         }
       } catch (error) {
         console.error('Error fetching game:', error);
@@ -236,18 +245,28 @@ export default function GameDetail() {
   if (loading) {
     return (
       <div className="game-detail-page min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+        <img
+          src="/pikslogotransparent.png"
+          alt="Piks"
+          className="w-32 h-auto opacity-90 animate-pulse"
+        />
       </div>
     );
   }
 
   if (!game) {
     return (
-      <div className="game-detail-page min-h-screen bg-black text-white flex flex-col items-center justify-center">
-        <p className="text-xl mb-4">Game not found</p>
-        <button 
+      <div className="game-detail-page min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 text-center">
+        <img
+          src="/pikslogotransparent.png"
+          alt="Piks"
+          className="w-28 h-auto opacity-90 mb-6"
+        />
+        <p className="text-lg font-semibold mb-1">This game has wrapped up</p>
+        <p className="text-sm text-gray-400 mb-6">Its details are no longer available.</p>
+        <button
           onClick={handleBack}
-          className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
+          className="bg-[var(--home-color,#3b82f6)] text-white px-6 py-3 rounded-lg font-semibold"
         >
           Go Back
         </button>
@@ -397,7 +416,7 @@ export default function GameDetail() {
             small jitter tick every 3 seconds so the line visibly moves
             like public money is shifting, then snaps back to the real
             odds whenever the server snapshot refreshes. */}
-        {hasLines && (
+        {(hasLines || isFinal) && (
           <div className="px-4 pt-4 md:hidden">
             <OddsHistoryChart
               gameId={game.id}
@@ -406,7 +425,7 @@ export default function GameDetail() {
               homeTeamFull={game.homeTeamFull || game.homeTeam}
               awayTeamFull={game.awayTeamFull || game.awayTeam}
               sport={game.sport}
-              liveOdds={{ home: moneyline.home, away: moneyline.away }}
+              liveOdds={hasLines ? { home: moneyline.home, away: moneyline.away } : null}
               commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
               isLive={isLive}
               isFinal={isFinal}
@@ -884,7 +903,7 @@ function DesktopGameDetail({
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
           {/* Main column */}
           <div className="min-w-0 space-y-4">
-            {hasLines && (
+            {(hasLines || isFinal) && (
               <OddsHistoryChart
                 gameId={game.id}
                 homeTeam={game.homeTeam || game.homeTeamFull}
@@ -892,7 +911,7 @@ function DesktopGameDetail({
                 homeTeamFull={game.homeTeamFull || game.homeTeam}
                 awayTeamFull={game.awayTeamFull || game.awayTeam}
                 sport={game.sport}
-                liveOdds={{ home: moneyline.home, away: moneyline.away }}
+                liveOdds={hasLines ? { home: moneyline.home, away: moneyline.away } : null}
                 commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
                 isLive={isLive}
                 isFinal={isFinal}

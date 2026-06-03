@@ -7,6 +7,7 @@ Piks is a Next.js sports betting platform enabling competitive 1v1 betting battl
 - No purple gradients — purple signals "vibe coding". Use blue, emerald, cyan, and orange for premium look.
 - No hover effects on mobile/iPad — use `@media (hover: none)` to disable hover states on touch devices.
 - High-end aesthetic — should look like a billion-dollar company is behind it. Clean, minimal, professional.
+- No green spinning pinwheel loaders anywhere — the user considers them an "absolute failure". Any loading state must use the Piks logo loader (`/pikslogotransparent.png`, pulsing). Prefer no loading at all (snappy/instant) where possible.
 - "Cancel Friend Request" not "Withdraw Request" for cancelling sent friend requests.
 - Navigation labels: `/dashboard` is labeled **"Battle"** (the place to start a battle, formerly "The Lab"); `/battle` is labeled **"Social"** (a feed/social view of live battles, no longer the entry point for starting a battle). Routes are unchanged — only labels.
 - Currency display: **Crowns** amounts are **yellow (`#facc15`)**, **Clash Coins** amounts are **white (`#ffffff`)**. Show them Polymarket-style — a small uppercase label stacked above the value, no pill/gradient container. Keep these colors consistent everywhere amounts appear (navbar, at-risk, bet slip, tickets). Semantic green (`#34d399`) for "To Win"/"Potential Payout" stays.

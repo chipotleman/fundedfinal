@@ -530,7 +530,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
 
       {loading && series.length === 0 ? (
         <div className="flex items-center justify-center" style={{ height: VB_H }}>
-          <div className="w-7 h-7 border-2 border-gray-700 border-t-emerald-400 rounded-full animate-spin" />
+          <img src="/pikslogotransparent.png" alt="Piks" className="h-7 w-auto opacity-80 animate-pulse" />
         </div>
       ) : series.length === 0 ? (
         emptyState
