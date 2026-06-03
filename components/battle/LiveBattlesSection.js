@@ -3608,21 +3608,20 @@ export default function LiveBattlesSection({
           </button>
         </div>
         {retryHint}
-        {/* items-start (instead of items-stretch) lets each card size to its
-            own content. We previously stretched the row to match the tallest
-            sibling so an "awaiting picks" card wouldn't look short next to a
-            fully-locked battle, but with per-card expansion that stretching
-            also forced collapsed peers to grow when one card was expanded —
-            which read as ghost empty space below the Hide button and made the
-            row feel broken. Letting cards grow naturally keeps the visual
-            simple: collapsed cards stay short, expanded cards extend down,
-            and the carousel stays horizontally scrollable either way. */}
+        {/* Equal-height cards in the resting state so an "awaiting picks"
+            card doesn't look short next to a fully-locked battle: when
+            nothing is expanded the row uses `items-stretch` and every card's
+            `h-full` makes it fill the tallest sibling. The moment a card is
+            expanded we flip to `items-start` so the inline expansion grows
+            only that card — `items-stretch` would otherwise force collapsed
+            peers to match the expanded height and leave ghost empty space
+            below their Hide button. */}
         {/* Edge-to-edge on mobile/tablet: negative margin cancels the
             dashboard's px-4/sm:px-6 wrapper so this row runs to the
             viewport edges. On lg+ the row is clipped to the main column
             (lg:mx-0 / lg:pl-0) and wrapped in DesktopScrollRow so it never
             bleeds under the right sidebar — and gets a gutter scroll arrow. */}
-        <DesktopScrollRow innerClassName="flex gap-3 items-start overflow-x-auto lg:overflow-x-visible pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
+        <DesktopScrollRow innerClassName={`flex gap-3 ${expandedKey === null ? 'items-stretch' : 'items-start'} overflow-x-auto lg:overflow-x-visible pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2`}>
           <div className="flex-shrink-0 w-[380px] flex lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[420px]">
             <YouVsCard
               youVsState={youVsState}
