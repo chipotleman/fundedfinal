@@ -866,8 +866,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                       border: '1px solid rgba(251,146,60,0.45)',
                     }}
                   >
-                    <span className="text-xs leading-none" style={{ color: '#ffffff' }}>⚔</span>
-                    <span className="text-xs font-bold" style={{ color: '#ffffff' }}>{formatMoney(bankroll, 0)}</span>
+                    <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                    <span className="text-xs font-bold" style={{ color: isLight ? '#0f172a' : '#ffffff' }}>{formatMoney(bankroll, 0)}</span>
                   </div>
                 )}
                 {/* Cartoon-themed pik count badge — chunky black border

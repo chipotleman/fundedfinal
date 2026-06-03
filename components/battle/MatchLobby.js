@@ -379,7 +379,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
         }
       `}</style>
 
-      <div data-allow-fixed-overlay="true" className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 overflow-y-auto`} style={{ background: '#050a15' }}>
+      <div data-allow-fixed-overlay="true" className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-4 overflow-y-auto`} style={{ background: '#050a15' }}>
         <div className="absolute inset-0" style={{
           background: `radial-gradient(ellipse at 25% 30%, rgba(${theme.rgb},0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 30%, rgba(251,146,60,0.08) 0%, transparent 50%)`,
           animation: 'bgPulse 3s ease-in-out infinite',
@@ -421,13 +421,13 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
           >
             1v1 MATCH
           </div>
-          <div className="lobby-label text-[11px] text-gray-400 font-bold uppercase mb-8" style={{ letterSpacing: '0.16em' }}>Get ready. The game is about to begin.</div>
+          <div className="lobby-label text-[11px] text-gray-400 font-bold uppercase mb-4" style={{ letterSpacing: '0.16em' }}>Get ready. The game is about to begin.</div>
 
-          <div className="flex items-stretch justify-center gap-0 mb-8 relative" style={{ minHeight: '200px' }}>
+          <div className="flex items-stretch justify-center gap-0 mb-5 relative" style={{ minHeight: '160px' }}>
             <div className={`text-center ${entered ? 'lobby-player-left' : 'opacity-0'}`} style={{ flex: '1 1 0%', minWidth: 0 }}>
               <div className="relative inline-block mb-3">
                 <div
-                  className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
+                  className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center overflow-hidden relative"
                   style={{
                     border: '4px solid #0a0a0a',
                     boxShadow: `0 4px 0 #0a0a0a, 0 0 30px rgba(${theme.rgb},0.45), inset 0 0 0 3px ${theme.color}`,
@@ -486,7 +486,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
             <div className={`text-center ${entered ? 'lobby-player-right' : 'opacity-0'}`} style={{ flex: '1 1 0%', minWidth: 0 }}>
               <div className="relative inline-block mb-3">
                 <div
-                  className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
+                  className="w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center overflow-hidden relative"
                   style={{
                     border: '4px solid #0a0a0a',
                     boxShadow: '0 4px 0 #0a0a0a, 0 0 30px rgba(251,146,60,0.45), inset 0 0 0 3px #fb923c',
@@ -514,7 +514,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
 
           <div className="lobby-prize">
             <div
-              className="inline-flex flex-col items-center rounded-2xl px-10 py-5 mb-6"
+              className="inline-flex flex-col items-center rounded-2xl px-8 py-4 mb-4"
               style={{
                 background: 'linear-gradient(180deg, #f59e0b 0%, #b45309 100%)',
                 border: '3px solid #0a0a0a',
@@ -523,7 +523,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
             >
               <span className="text-[11px] font-extrabold uppercase tracking-[0.28em] mb-1" style={{ color: '#0a0a0a' }}>Prize Pot</span>
               <span
-                className="text-5xl md:text-6xl font-black leading-none text-white"
+                className="text-4xl md:text-5xl font-black leading-none text-white"
                 style={{
                   textShadow: '0 3px 0 #0a0a0a, 0 0 24px rgba(255,255,255,0.18)',
                   letterSpacing: '-0.01em',
@@ -537,7 +537,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
 
           {!showBattle && explainer && (
             <div
-              className="lobby-prize mb-5 mx-auto text-left rounded-2xl px-4 py-3.5"
+              className="lobby-prize mb-3 mx-auto text-left rounded-2xl px-4 py-3"
               style={{
                 maxWidth: 420,
                 background: `linear-gradient(180deg, rgba(${theme.rgb},0.16) 0%, rgba(10,10,10,0.55) 100%)`,
@@ -600,11 +600,11 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
               <div className="text-gray-400 text-[11px] font-bold uppercase mb-2" style={{ letterSpacing: '0.16em' }}>Starting in</div>
               <div
                 key={countdown}
-                className="lobby-countdown text-5xl md:text-6xl font-black text-white inline-flex items-center justify-center"
+                className="lobby-countdown text-4xl md:text-5xl font-black text-white inline-flex items-center justify-center"
                 style={{
-                  width: 96,
-                  height: 96,
-                  borderRadius: 24,
+                  width: 80,
+                  height: 80,
+                  borderRadius: 22,
                   background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
                   border: '3px solid #0a0a0a',
                   boxShadow: `0 5px 0 #0a0a0a, 0 0 30px rgba(${theme.rgb},0.35)`,

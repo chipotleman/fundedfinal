@@ -709,9 +709,9 @@ export default function MyPicksPage() {
               <div className="text-[11px] truncate" style={{ color: p.mutedText }}>vs {homeTeam === (bet.selectionFull || bet.selection) ? awayTeam : homeTeam}</div>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
-              <SelectionLogos selection={awayTeam} bet={{ ...bet, selection: awayTeam }} size={26} sport={bet.sport || bet.sportName} />
+              <SelectionLogos selection={awayTeam} bet={{ ...bet, legs: undefined, selection: awayTeam, awayTeam, homeTeam, awayTeamFull: awayTeam, homeTeamFull: homeTeam }} size={26} sport={bet.sport || bet.sportName} />
               <span className="text-[10px] font-black" style={{ color: p.faintText }}>VS</span>
-              <SelectionLogos selection={homeTeam} bet={{ ...bet, selection: homeTeam }} size={26} sport={bet.sport || bet.sportName} />
+              <SelectionLogos selection={homeTeam} bet={{ ...bet, legs: undefined, selection: homeTeam, awayTeam, homeTeam, awayTeamFull: awayTeam, homeTeamFull: homeTeam }} size={26} sport={bet.sport || bet.sportName} />
             </div>
           </div>
         </div>

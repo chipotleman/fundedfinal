@@ -2359,7 +2359,7 @@ export default function Dashboard() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-white text-sm font-extrabold flex items-center gap-1.5"><span aria-hidden="true">{s.icon}</span>{s.title}</p>
-                          <p className="text-gray-300 text-[11px] mt-0.5 leading-snug">{s.desc}</p>
+                          <p className="text-[12px] mt-0.5 leading-snug font-medium" style={{ color: '#e2e8f0' }}>{s.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -2419,7 +2419,7 @@ export default function Dashboard() {
                         }} aria-hidden="true">{t.icon}</div>
                         <div className="min-w-0">
                           <p className="text-white text-sm font-extrabold">{t.title}</p>
-                          <p className="text-gray-300 text-[11px] mt-0.5 leading-snug">{t.desc}</p>
+                          <p className="text-[12px] mt-0.5 leading-snug font-medium" style={{ color: '#e2e8f0' }}>{t.desc}</p>
                         </div>
                       </div>
                     ))}

@@ -1,5 +1,6 @@
 - [Messenger dual-event dedup](messaging-dual-event-dedup.md) — `piks:message:new` fires from local send AND SSE echo; dedup must `String(id)`-compare or messages double-render.
 - [DB migration convention](db-migration-convention.md) — schema changes need BOTH drizzle db:push AND a hand-written migrations/*.sql file, or prod breaks.
+- [SelectionLogos parlay auto-detection](selection-logos-parlay.md) — renders split-circle parlay mark from bet.legs>1; single-team callers must pass legs:undefined or they get the parlay mark.
 - [Grep minified identifiers](grep-minified-identifiers.md) — rg/grep output sometimes renames symbols (PlayFriendModal→ln, props→n); it's a display artifact, read the file for real names.
 - [Light theme inline vs globals](light-theme-inline-vs-globals.md) — inline hex won't flip under html.light; globals.css `html.light .youvs-card`/`.bc-surface` !important rules can override your theme-aware inline fix.
 - [Battle card carousel expand](battle-card-carousel-expand.md) — active "Your Battle" taps must open the portal modal; inline-expand gets clipped by the Featured Battles carousel.

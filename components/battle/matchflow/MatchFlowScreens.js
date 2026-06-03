@@ -11,6 +11,7 @@
 // gold #facc15 = stake / coins. No purple. Hover styles are auto-gated to
 // pointer devices by the Tailwind config (hoverOnlyWhenSupported).
 
+import { useState, useEffect } from 'react';
 import UserAvatar from '../../UserAvatar';
 
 const BLUE = '#3b82f6';
@@ -148,7 +149,7 @@ function Fighter({ player, ring, crown, dimmed, size = 84, showRank = true }) {
 
 // Two fighters facing off across a VS burst. Used on found / confirmed /
 // play-again screens for a consistent head-to-head.
-export function VersusRow({ you, opp, size = 84, youCrown = true, dimOpp = false, dimYou = false, showRank = true, score }) {
+export function VersusRow({ you, opp, size = 84, youCrown = false, dimOpp = false, dimYou = false, showRank = true, score }) {
   return (
     <div className="flex items-end justify-center gap-3 sm:gap-5">
       <Fighter player={you} ring={BLUE} crown={youCrown && !dimYou} dimmed={dimYou} size={size} showRank={showRank} />
@@ -219,8 +220,20 @@ export function FlowButton({ children, onClick, color = 'gold', trailing, disabl
 /* ─────────────────────────── screens ─────────────────────────── */
 
 // 1 · FINDING OPPONENT
-export function FindingOpponent({ you, others = [], balance, balanceLabel, onCancel, subtitle = 'Scanning thousands of players…' }) {
+const FINDING_PHASES = [
+  { text: 'Searching potential opponents…', color: '#60a5fa' },
+  { text: 'Analyzing matchup…', color: '#fb923c' },
+];
+export function FindingOpponent({ you, others = [], balance, balanceLabel, onCancel }) {
   const ringColors = [BLUE, GREEN, ORANGE, GOLD, '#22d3ee', '#a3a3a3'];
+  // Cycle the status line through a couple of phases (with a color shift)
+  // so the search reads as active work rather than a single static label.
+  const [phaseIdx, setPhaseIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setPhaseIdx((i) => (i + 1) % FINDING_PHASES.length), 1600);
+    return () => clearInterval(id);
+  }, []);
+  const phase = FINDING_PHASES[phaseIdx];
   // Build up to 6 orbiting challengers from the live player pool. If the
   // pool is short, cycle through whoever we have so the orbit always reads
   // as a busy field of real players. With no pool yet, fall back to empty
@@ -237,7 +250,7 @@ export function FindingOpponent({ you, others = [], balance, balanceLabel, onCan
           <span style={{ color: '#fff' }}>Finding</span>{' '}
           <span style={{ color: BLUE }}>Opponent</span>
         </h2>
-        <p className="mt-2 text-[12px]" style={{ color: '#94a3b8' }}>{subtitle}</p>
+        <p className="mt-2 text-[12px] font-semibold" style={{ color: phase.color, transition: 'color 0.5s ease' }}>{phase.text}</p>
 
         {/* Orbit field — YOUR avatar at the center, real players revolving
             around it (their faces kept upright via counter-rotation). */}

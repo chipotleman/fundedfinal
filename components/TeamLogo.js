@@ -202,9 +202,68 @@ export default function TeamLogo({
 //   overlapped) for totals/game-level legs and any selection where the
 //   picked team cannot be resolved. This keeps the row alignment stable
 //   across all bet types.
+// Resolve the team a single parlay leg is "about" so we can render its
+// logo inside the combined parlay mark.
+function legPickName(leg) {
+  if (!leg) return null;
+  return (
+    getPickedTeamName(leg.selectionFull || leg.selection, leg) ||
+    leg.homeTeamFull || leg.awayTeamFull ||
+    leg.homeTeam || leg.awayTeam ||
+    leg.selectionFull || leg.selection ||
+    null
+  );
+}
+
+// Parlay mark — a single circle split into one cell per leg (each cell
+// holds that leg's team logo). Signals at a glance that a pick is a
+// multi-leg parlay rather than a single team bet.
+export function ParlayLogos({ legs, size = 20, sport }) {
+  const items = (Array.isArray(legs) ? legs.filter(Boolean) : []).slice(0, 4);
+  const n = items.length;
+  if (n === 0) {
+    return <div className="flex-shrink-0" style={{ width: size, height: size }} aria-hidden="true" />;
+  }
+  const half = n <= 2;
+  const cellW = '50%';
+  const cellH = half ? '100%' : '50%';
+  const logoSize = Math.round(size * (half ? 0.56 : 0.42));
+  return (
+    <div
+      className="flex-shrink-0 relative rounded-full overflow-hidden flex flex-wrap items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        background: 'rgba(148,163,184,0.10)',
+        border: '1.5px solid rgba(148,163,184,0.45)',
+      }}
+      title={`${n}-leg parlay`}
+    >
+      {items.map((leg, i) => (
+        <div
+          key={i}
+          className="flex items-center justify-center"
+          style={{ width: cellW, height: cellH, boxShadow: 'inset 0 0 0 0.5px rgba(148,163,184,0.4)' }}
+        >
+          <TeamLogo name={legPickName(leg)} sport={sport || leg?.sport || leg?.sportName} size={logoSize} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SelectionLogos({ selection, bet, size = 20, sport }) {
   const resolvedSport = sport || bet?.sport || bet?.sportName;
+  const legs = Array.isArray(bet?.legs) ? bet.legs.filter(Boolean) : [];
   const picked = getPickedTeamName(selection, bet);
+  // A parlay row can't resolve to a single team — render the combined
+  // split-circle mark instead. (The away/home rail calls pass a single
+  // clean team name as `selection`, which resolves via `picked`, so they
+  // keep their single logo and never hit this branch.)
+  const isParlay = legs.length > 1 && (!picked || String(selection || '').includes(','));
+  if (isParlay) {
+    return <ParlayLogos legs={legs} size={size} sport={resolvedSport} />;
+  }
   const slotStyle = { width: picked ? size : Math.round(size * 1.6), height: size };
   if (picked) {
     return (
