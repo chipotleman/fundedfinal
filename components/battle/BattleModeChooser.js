@@ -84,7 +84,7 @@ export default function BattleModeChooser({
           {/* QUICK MATCH */}
           <button type="button" className="bmc-card bmc-card-blue no-hover-effect" onClick={() => pick(onPickQuickMatch)}>
             <div className="bmc-art">
-              <img src="/images/battle-modes/quick-match.png?v=3" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
+              <img src="/images/battle-modes/quick-match.png?v=4" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
               <span className="bmc-art-fade" />
               <span className="bmc-icon-chip">
                 <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 20, height: 20 }} aria-hidden="true">
@@ -103,7 +103,7 @@ export default function BattleModeChooser({
           {/* CHALLENGE FRIEND */}
           <button type="button" className="bmc-card bmc-card-red no-hover-effect" onClick={() => pick(onPickChallengeFriend)}>
             <div className="bmc-art">
-              <img src="/images/battle-modes/challenge-friend.png?v=3" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
+              <img src="/images/battle-modes/challenge-friend.png?v=4" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
               <span className="bmc-art-fade" />
               <span className="bmc-icon-chip">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }} aria-hidden="true">
@@ -129,7 +129,7 @@ export default function BattleModeChooser({
           {/* PRIVATE MATCH */}
           <button type="button" className="bmc-card bmc-card-green no-hover-effect" onClick={() => pick(onPickPrivateMatch)}>
             <div className="bmc-art">
-              <img src="/images/battle-modes/private-match.png?v=3" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
+              <img src="/images/battle-modes/private-match.png?v=4" alt="" className="bmc-art-img" loading="lazy" draggable="false" />
               <span className="bmc-art-fade" />
               <span className="bmc-icon-chip">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }} aria-hidden="true">
@@ -146,15 +146,6 @@ export default function BattleModeChooser({
               <span className="bmc-action bmc-action-green">Create Room <Chevrons /></span>
             </div>
           </button>
-        </div>
-
-        <div className="bmc-reward">
-          <span className="bmc-reward-trophy" aria-hidden="true">🏆</span>
-          <div className="bmc-reward-text">
-            <span className="bmc-reward-title">Win. Climb. Repeat.</span>
-            <span className="bmc-reward-sub">Win battles, earn coins, and rise up the leaderboard.</span>
-          </div>
-          <span className="bmc-reward-coins" aria-hidden="true">🪙</span>
         </div>
 
         <div className="bmc-footer">
@@ -369,23 +360,6 @@ export default function BattleModeChooser({
         .bmc-action-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); box-shadow: 0 6px 0 #102a63, 0 8px 18px rgba(37, 99, 235, 0.4); }
         .bmc-action-red { background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 6px 0 #5e1212, 0 8px 18px rgba(220, 38, 38, 0.4); }
         .bmc-action-green { background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 6px 0 #064031, 0 8px 18px rgba(5, 150, 105, 0.4); }
-
-        .bmc-reward {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          margin-top: 20px;
-          padding: 14px 20px;
-          border-radius: 16px;
-          background: linear-gradient(135deg, rgba(20, 30, 52, 0.9), rgba(10, 16, 30, 0.92));
-          border: 1px solid rgba(251, 191, 36, 0.28);
-          box-shadow: 0 0 26px rgba(251, 191, 36, 0.12), 0 12px 28px rgba(0, 0, 0, 0.5);
-        }
-        .bmc-reward-trophy { font-size: 30px; line-height: 1; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5)); }
-        .bmc-reward-text { flex: 1; display: flex; flex-direction: column; gap: 2px; text-align: left; }
-        .bmc-reward-title { color: #fde68a; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: 0.04em; font-size: 15px; }
-        .bmc-reward-sub { color: rgba(203, 213, 225, 0.8); font-size: 12px; }
-        .bmc-reward-coins { font-size: 28px; line-height: 1; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5)); }
 
         .bmc-footer {
           display: flex;
