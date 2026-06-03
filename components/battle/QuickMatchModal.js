@@ -13,6 +13,7 @@ import { getBattleStreamClient } from '../../lib/battleStreamClient';
 import RushFlow from './rush/RushFlow';
 import { FindingOpponent, OpponentFound, MatchConfirmed } from './matchflow/MatchFlowScreens';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Rush in-popup flow constants. The modal carries the user all the way
 // from "MATCH FOUND" → live-game voting → ready check → 3-2-1 countdown →
@@ -212,6 +213,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   // and uninteractive, the buy-in row is hidden, and a beta notice is
   // shown in its place. Server enforces the same constraints.
   const isBeta = useBetaMode();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   useEffect(() => {
     if (isBeta) {
       setGameMode('original');
@@ -808,6 +811,38 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
   const selectedMode = GAME_MODE_OPTIONS.find(m => m.id === gameMode);
   const matchedAvatar = matchedOpponent?.avatar || currentAvatar || null;
 
+  // Cartoon, theme-aware tokens — mirrors BattleModeChooser's light/dark
+  // shell so the entire invite/matchmaking ritual flips with the app theme.
+  const qm = isLight
+    ? {
+        overlayBg: 'rgba(15,23,42,0.35)',
+        shellBg: '#fffdf7',
+        shellBorder: '3px solid #0a0a0a',
+        shellShadow: '7px 7px 0 #0a0a0a',
+        surface: '#ffffff',
+        surfaceBorder: '#0a0a0a',
+        text: '#0a0a0a',
+        sub: '#64748b',
+        eyebrow: '#2563eb',
+        tileBase: '#ffffff',
+        tileText: '#0a0a0a',
+        hardShadow: '#0a0a0a',
+      }
+    : {
+        overlayBg: 'rgba(3,7,18,0.6)',
+        shellBg: '#1b2230',
+        shellBorder: '3px solid #0a0a0a',
+        shellShadow: '7px 7px 0 #000000',
+        surface: '#2b3446',
+        surfaceBorder: '#0a0a0a',
+        text: '#f8fafc',
+        sub: '#94a3b8',
+        eyebrow: '#93c5fd',
+        tileBase: '#0a0a0a',
+        tileText: '#ffffff',
+        hardShadow: '#000000',
+      };
+
   const th = {
     overlay: 'bg-black/85',
     cardBg: '#0d0d0d',
@@ -1015,11 +1050,20 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
           60%  { transform: scale(1.25); opacity: 1; }
           100% { transform: scale(1); opacity: 1; }
         }
+        .qm-cta { transition: transform 120ms ease, box-shadow 120ms ease; }
+        .qm-cta:active { transform: translate(5px, 5px); box-shadow: 0 0 0 currentColor !important; }
+        .qm-corner-btn { transition: transform 120ms ease, box-shadow 120ms ease; }
+        .qm-corner-btn:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        @media (hover: hover) {
+          .qm-cta:hover { transform: translate(-2px, -2px); }
+          .qm-corner-btn:hover { transform: translate(-1px, -1px); }
+        }
         @media (prefers-reduced-motion: reduce) {
           .qm-amp, .qm-amp * { animation: none !important; }
+          .qm-cta, .qm-corner-btn { transition: none; }
         }
       `}</style>
-      <div data-allow-fixed-overlay="true" className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 overflow-y-auto`} onClick={() => {
+      <div data-allow-fixed-overlay="true" className="fixed inset-0 backdrop-blur-sm z-50 overflow-y-auto" style={{ background: qm.overlayBg }} onClick={() => {
         // 'found' is a hard pause — clicks outside don't dismiss it.
         // The new rush sub-steps are also non-dismissable on backdrop
         // click since the user is already in an active matchup; the
@@ -1076,15 +1120,28 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
         <div className="min-h-full flex items-center justify-center p-4">
         <div
           className={`qm-frame w-full overflow-hidden relative max-w-md`}
-          style={{
-            background:
-              'radial-gradient(ellipse 90% 55% at 50% 0%, rgba(59,130,246,0.12), transparent 60%),' +
-              'radial-gradient(ellipse 90% 55% at 50% 100%, rgba(251,146,60,0.07), transparent 60%),' +
-              'linear-gradient(180deg, #0b1020 0%, #070a14 100%)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 24,
-            boxShadow: '0 30px 90px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03)',
-          }}
+          style={
+            step === 'config'
+              ? {
+                  background: qm.shellBg,
+                  border: qm.shellBorder,
+                  borderRadius: 24,
+                  boxShadow: qm.shellShadow,
+                }
+              : {
+                  // searching / found / rush-active render the shared dark
+                  // FlowCard / RushFlow gameplay screens, which bring their
+                  // own dark "billion-dollar" backgrounds — keep the premium
+                  // dark frame here so the inner card stays consistent.
+                  background:
+                    'radial-gradient(ellipse 90% 55% at 50% 0%, rgba(59,130,246,0.12), transparent 60%),' +
+                    'radial-gradient(ellipse 90% 55% at 50% 100%, rgba(251,146,60,0.07), transparent 60%),' +
+                    'linear-gradient(180deg, #0b1020 0%, #070a14 100%)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 24,
+                  boxShadow: '0 30px 90px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03)',
+                }
+          }
           onClick={e => e.stopPropagation()}
         >
           {step === 'config' && (
@@ -1099,18 +1156,18 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                 <button
                   aria-label="Close"
                   onClick={requestClose}
-                  className="w-9 h-9 rounded-full flex items-center justify-center absolute transition-colors hover:bg-white/10"
-                  style={{ top: 16, right: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', zIndex: 5 }}
+                  className="qm-corner-btn no-hover-effect w-8 h-8 flex items-center justify-center absolute"
+                  style={{ top: 16, right: 16, background: qm.surface, color: qm.text, border: '2.5px solid #0a0a0a', borderRadius: 10, boxShadow: `2px 2px 0 ${qm.hardShadow}`, zIndex: 5 }}
                 >
-                  <svg className="w-4 h-4" style={{ color: '#cbd5e1' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
                 <button
                   aria-label="Back"
                   onClick={onBack || onClose}
-                  className="w-9 h-9 rounded-full flex items-center justify-center absolute transition-colors hover:bg-white/10"
-                  style={{ top: 16, left: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', zIndex: 5 }}
+                  className="qm-corner-btn no-hover-effect w-8 h-8 flex items-center justify-center absolute"
+                  style={{ top: 16, left: 16, background: qm.surface, color: qm.text, border: '2.5px solid #0a0a0a', borderRadius: 10, boxShadow: `2px 2px 0 ${qm.hardShadow}`, zIndex: 5 }}
                 >
-                  <svg className="w-4 h-4" style={{ color: '#cbd5e1' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 {/* Centered premium title — clean italic wordmark with a
                     muted brand-blue eyebrow, matching the Finding /
@@ -1122,8 +1179,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     style={{
                       fontSize: 'clamp(28px, 8vw, 42px)',
                       letterSpacing: '0.01em',
-                      color: '#fff',
-                      textShadow: '0 0 28px rgba(59,130,246,0.45)',
+                      color: qm.text,
+                      textShadow: isLight ? 'none' : '0 2px 0 rgba(0,0,0,0.4)',
                       margin: 0,
                     }}
                   >
@@ -1131,7 +1188,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                   </h2>
                   <p
                     className="mt-2 font-bold uppercase"
-                    style={{ color: '#93c5fd', fontSize: 11, letterSpacing: '0.22em', margin: 0 }}
+                    style={{ color: qm.eyebrow, fontSize: 11, letterSpacing: '0.22em', margin: 0 }}
                   >
                     Instant Matchmaking · Real Competition
                   </p>
@@ -1181,7 +1238,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                         Beta · Ranking Enabled
                       </span>
                     </div>
-                    <p className="text-[11px]" style={{ color: '#94a3b8', lineHeight: 1.4 }}>
+                    <p className="text-[11px]" style={{ color: qm.sub, lineHeight: 1.4 }}>
                       Climb the leaderboard. Prove you're the best.
                     </p>
                   </div>
@@ -1225,19 +1282,18 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     one mental model. */}
                 <div>
                   <div className="flex items-center justify-center gap-2 mb-3">
-                    <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(96,165,250,0.45))' }} />
+                    <span aria-hidden="true" style={{ flex: 1, height: 2, background: isLight ? 'rgba(10,10,10,0.12)' : 'rgba(255,255,255,0.12)' }} />
                     <span
                       className="font-black uppercase whitespace-nowrap"
                       style={{
-                        color: '#bfdbfe',
+                        color: qm.sub,
                         fontSize: 10,
                         letterSpacing: '0.28em',
-                        textShadow: '0 0 10px rgba(59,130,246,0.4)',
                       }}
                     >
                       Choose Your Game Mode
                     </span>
-                    <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'linear-gradient(270deg, transparent, rgba(96,165,250,0.45))' }} />
+                    <span aria-hidden="true" style={{ flex: 1, height: 2, background: isLight ? 'rgba(10,10,10,0.12)' : 'rgba(255,255,255,0.12)' }} />
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {GAME_MODE_OPTIONS.map(mode => {
@@ -1264,25 +1320,25 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           style={
                             betaLocked
                               ? {
-                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.06) 100%), #0a0a0a`,
-                                  border: `1px solid ${mode.color}55`,
-                                  boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 16px ${glow}`,
+                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.06) 100%), ${qm.tileBase}`,
+                                  border: `2.5px solid #0a0a0a`,
+                                  boxShadow: `3px 3px 0 ${qm.hardShadow}`,
                                   cursor: 'not-allowed',
                                   minHeight: 132,
                                 }
                               : selected
                               ? {
-                                  background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.08) 100%), #0a0a0a`,
-                                  border: `1.5px solid ${mode.color}`,
-                                  boxShadow: `0 8px 24px ${glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`,
+                                  background: `linear-gradient(180deg, rgba(${r},${g},${b},0.32) 0%, rgba(${r},${g},${b},0.10) 100%), ${qm.tileBase}`,
+                                  border: `2.5px solid ${mode.color}`,
+                                  boxShadow: `5px 5px 0 ${qm.hardShadow}`,
                                   opacity: locked ? 0.5 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
                                 }
                               : {
-                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), #0a0a0a`,
-                                  border: `1px solid ${mode.color}55`,
-                                  boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 16px ${glow}`,
+                                  background: `linear-gradient(180deg, ${tint} 0%, rgba(${r},${g},${b},0.05) 100%), ${qm.tileBase}`,
+                                  border: `2.5px solid #0a0a0a`,
+                                  boxShadow: `3px 3px 0 ${qm.hardShadow}`,
                                   opacity: locked ? 0.5 : 1,
                                   cursor: locked ? 'not-allowed' : 'pointer',
                                   minHeight: 132,
@@ -1420,20 +1476,20 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                           >
                             {mode.icon}
                           </span>
-                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: '#fff' }}>{mode.label}</span>
+                          <span className="font-black text-[13px] leading-tight uppercase tracking-wider relative" style={{ color: qm.tileText }}>{mode.label}</span>
                           {mode.tagline && (
                             <span
                               className="text-[8px] font-extrabold uppercase mt-1 leading-none relative"
-                              style={{ color: '#e2e8f0', letterSpacing: '0.16em', opacity: 0.9 }}
+                              style={{ color: qm.sub, letterSpacing: '0.16em', opacity: 0.95 }}
                             >
                               {mode.tagline}
                             </span>
                           )}
                           <span className="inline-flex items-center gap-1.5 mt-2 relative">
-                            <span className="font-black text-[15px] leading-none" style={{ color: '#fff', textShadow: '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
+                            <span className="font-black text-[15px] leading-none" style={{ color: qm.tileText, textShadow: isLight ? 'none' : '0 1px 0 #000' }}>{mode.coins.toLocaleString()}</span>
                             <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1, filter: 'drop-shadow(0 0 6px #fbbf24)' }}>🪙</span>
                           </span>
-                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: '#94a3b8' }}>Clash Coins</span>
+                          <span className="text-[8px] uppercase tracking-[0.18em] mt-0.5 leading-none font-bold relative" style={{ color: qm.sub }}>Clash Coins</span>
                           {selected && !betaLocked && (
                             <span
                               aria-hidden="true"
@@ -1443,8 +1499,8 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                                 width: 22,
                                 height: 22,
                                 background: 'linear-gradient(180deg,#60a5fa,#2563eb)',
-                                border: '2px solid #0b1020',
-                                boxShadow: '0 4px 12px rgba(59,130,246,0.6)',
+                                border: `2.5px solid ${qm.shellBg}`,
+                                boxShadow: `1.5px 1.5px 0 ${qm.hardShadow}`,
                                 zIndex: 3,
                               }}
                             >
@@ -1481,24 +1537,24 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     <p
                       aria-live="polite"
                       className="mt-3 text-center text-[10.5px] leading-snug"
-                      style={{ color: '#94a3b8', letterSpacing: '0.04em' }}
+                      style={{ color: qm.sub, letterSpacing: '0.04em' }}
                     >
-                      <span className="font-black uppercase" style={{ color: selectedMode.color, letterSpacing: '0.16em', textShadow: `0 0 8px ${selectedMode.color}66` }}>
+                      <span className="font-black uppercase" style={{ color: selectedMode.color, letterSpacing: '0.16em', textShadow: isLight ? 'none' : `0 0 8px ${selectedMode.color}66` }}>
                         {selectedMode.label}
                       </span>
-                      <span className="mx-1.5 text-gray-600">·</span>
-                      <span style={{ color: '#cbd5e1' }}>{selectedMode.description}</span>
+                      <span className="mx-1.5" style={{ color: qm.sub, opacity: 0.6 }}>·</span>
+                      <span style={{ color: qm.text }}>{selectedMode.description}</span>
                     </p>
                   )}
                 </div>
 
                 <button
                   onClick={startSearch}
-                  className="w-full text-white font-extrabold uppercase rounded-2xl flex flex-col items-center justify-center relative overflow-hidden transition-transform active:scale-[0.98]"
+                  className="qm-cta no-hover-effect w-full text-white font-extrabold uppercase rounded-2xl flex flex-col items-center justify-center relative overflow-hidden"
                   style={{
                     background: 'linear-gradient(180deg,#60a5fa,#2563eb)',
-                    border: '1px solid rgba(0,0,0,0.15)',
-                    boxShadow: '0 10px 30px rgba(59,130,246,0.45)',
+                    border: '3px solid #0a0a0a',
+                    boxShadow: `5px 5px 0 ${qm.hardShadow}`,
                     padding: '14px 20px 11px',
                   }}
                 >
