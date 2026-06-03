@@ -1874,7 +1874,7 @@ export default function BattlePage() {
         onClose={() => setShowHistory(false)}
       />
 
-      <div className={`pt-14 ${!isGuest ? 'pb-[calc(env(safe-area-inset-bottom,0px)+72px)] lg:pb-0' : ''}`}>
+      <div className={`pt-4 ${!isGuest ? 'pb-[calc(env(safe-area-inset-bottom,0px)+72px)] lg:pb-0' : ''}`}>
         <div className="max-w-5xl mx-auto px-4">
 
           {!isGuest && invites.received?.length > 0 && (

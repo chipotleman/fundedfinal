@@ -914,8 +914,6 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
   const u2 = battle.user2 || {};
   const u1Bal = parseFloat(u1.balance || 0);
   const u2Bal = parseFloat(u2.balance || 0);
-  const total = u1Bal + u2Bal;
-  const u1Pct = total > 0 ? Math.max(5, Math.min(95, (u1Bal / total) * 100)) : 50;
   const pot = parseFloat(battle.potSize) || 0;
   const u1Lead = u1Bal > u2Bal;
   const u2Lead = u2Bal > u1Bal;
@@ -942,6 +940,84 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
   const onlyU2Locked = u2Picks.length > 0 && u1Picks.length === 0;
   const u1PickPreview = u1Picks[0];
   const u2PickPreview = u2Picks[0];
+
+  // ---- Swipeable "fight card" carousel ----
+  // The embedded matchup is presented as three horizontally-swipeable pages
+  // (head-to-head face-off · tale of the tape · latest picks). We read the
+  // active page from the native scroll position so the dots can light up, and
+  // let the dots scroll the container programmatically.
+  const carouselRef = useRef(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const handleCarouselScroll = (e) => {
+    const el = e.currentTarget;
+    const w = el.clientWidth || 1;
+    const idx = Math.max(0, Math.min(2, Math.round(el.scrollLeft / w)));
+    setActiveSlide((prev) => (prev === idx ? prev : idx));
+  };
+  const goToSlide = (i, e) => {
+    e?.stopPropagation?.();
+    const el = carouselRef.current;
+    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
+  };
+
+  const tie = !u1Lead && !u2Lead;
+  const oddsColor = (o) =>
+    typeof o === 'string' && o.trim().startsWith('+') ? '#34d399' : textPrimary;
+  const fmtPnl = (v) => {
+    const n = parseFloat(v || 0);
+    return `${n > 0 ? '+' : ''}${n.toFixed(0)}%`;
+  };
+  const statusText = bothPicked
+    ? 'Both players locked in'
+    : onlyU1Locked
+      ? `${u1.username || 'P1'} locked · awaiting other`
+      : onlyU2Locked
+        ? `${u2.username || 'P2'} locked · awaiting other`
+        : 'Awaiting picks from both players';
+  const tapeRows = [
+    { label: 'Balance', l: `$${formatMoney(u1Bal, 0)}`, r: `$${formatMoney(u2Bal, 0)}`, lWin: u1Lead, rWin: u2Lead },
+    {
+      label: 'P&L',
+      l: fmtPnl(u1.pnlPercent),
+      r: fmtPnl(u2.pnlPercent),
+      lWin: parseFloat(u1.pnlPercent || 0) > parseFloat(u2.pnlPercent || 0),
+      rWin: parseFloat(u2.pnlPercent || 0) > parseFloat(u1.pnlPercent || 0),
+    },
+    { label: 'Picks', l: String(u1Picks.length), r: String(u2Picks.length), lWin: u1Picks.length > u2Picks.length, rWin: u2Picks.length > u1Picks.length },
+    { label: 'Form', l: u1OnFire ? '🔥 Hot' : '—', r: u2OnFire ? '🔥 Hot' : '—', lWin: u1OnFire && !u2OnFire, rWin: u2OnFire && !u1OnFire },
+  ];
+
+  // One fighter "corner" for the head-to-head page. Blue corner (left) vs
+  // orange corner (right); whoever's ahead gets an emerald glow + "Leading"
+  // tag + green balance so the winner reads at a glance — a boxing-style
+  // face-off rather than a progress bar.
+  const renderFighter = (u, { lead, onFire, ring, align }) => (
+    <div className={`relative z-10 flex flex-col items-center gap-1 flex-1 min-w-0 ${align === 'left' ? 'pr-1' : 'pl-1'}`}>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u, e); }}
+        aria-label={`Open ${u.username || 'Player'} profile`}
+        className="relative flex-shrink-0 lg:hover:opacity-90 transition-opacity"
+      >
+        <div className="rounded-full p-[2px]" style={{ background: ring, boxShadow: lead ? '0 0 14px rgba(16,185,129,0.55)' : 'none' }}>
+          <FramedAvatar avatar={u.avatar} username={u.username || 'P'} frameId={u.equippedFrame} size={42} bgColor={align === 'left' ? '#1e40af' : '#7c2d12'} />
+        </div>
+        {onFire && <span className="absolute -top-1 -right-1 text-[12px] hh-flame" aria-label="On fire">🔥</span>}
+      </button>
+      <div className="mt-0.5 text-[11px] font-bold truncate max-w-full text-center" style={{ color: textPrimary }}>{u.username || 'Player'}</div>
+      <div className="text-[14px] font-black tabular-nums leading-none" style={{ color: lead ? '#34d399' : textPrimary }}>
+        ${formatMoney(parseFloat(u.balance || 0), 0)}
+      </div>
+      <span
+        className="px-1.5 py-[1px] rounded-full text-[7px] font-black uppercase tracking-wider"
+        style={lead
+          ? { background: 'rgba(16,185,129,0.16)', color: '#34d399', border: '1px solid rgba(16,185,129,0.4)' }
+          : { background: track, color: textMuted, border: `1px solid ${border}` }}
+      >
+        {lead ? 'Leading' : tie ? 'Even' : 'Chasing'}
+      </span>
+    </div>
+  );
 
   // Clicking the card body (anywhere outside the avatar/username
   // profile links and the bottom action bar) routes to the full
@@ -1008,100 +1084,150 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
         </div>
       </div>
 
-      {/* Embedded match — a slim head-to-head chip (the post's "attachment").
-          Deliberately compact so the card reads as a social post ABOUT a 1v1,
-          not a full battle board: small avatars, one balance line each, a thin
-          momentum bar, and a single status/pot/spectate line. */}
+      {/* Embedded match — a swipeable "fight card". Instead of a progress bar
+          showing who's ahead, the matchup is framed like a head-to-head boxing
+          / esports VS screen. Users can swipe between three pages
+          (head-to-head · tale of the tape · picks) right inside the card — the
+          dots below track the active page — so they can size up the battle
+          without opening the full spectate view. Tapping a page still opens
+          spectate; the native horizontal scroll captures swipes so a drag
+          never fires the tap. */}
       <div className="px-4 pb-3">
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={handleCardClick}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleCardClick();
-            }
-          }}
-          aria-label={`Spectate ${u1.username || 'Player 1'} vs ${u2.username || 'Player 2'}`}
-          className="rounded-xl cursor-pointer transition-colors lg:hover:bg-white/[0.02] px-3 py-2.5"
-          style={{ background: surfaceMuted, border: `1px solid ${border}` }}
-        >
-          <div className="flex items-center gap-2">
-            {/* LEFT player */}
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
-              aria-label={`Open ${u1.username || 'Player 1'} profile`}
-              className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
+        <div className="rounded-xl overflow-hidden" style={{ background: surfaceMuted, border: `1px solid ${border}` }}>
+          <div
+            ref={carouselRef}
+            onScroll={handleCarouselScroll}
+            className="flex overflow-x-auto scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollSnapType: 'x mandatory' }}
+          >
+            {/* PAGE 1 — head-to-head face-off */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={handleCardClick}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(); } }}
+              aria-label={`Spectate ${u1.username || 'Player 1'} vs ${u2.username || 'Player 2'}`}
+              className="w-full flex-shrink-0 cursor-pointer"
+              style={{ scrollSnapAlign: 'center' }}
             >
-              <div className="rounded-full p-[1.5px]" style={{ background: border }}>
-                <FramedAvatar avatar={u1.avatar} username={u1.username || 'P1'} frameId={u1.equippedFrame} size={28} bgColor="#1e40af" />
-              </div>
-              {u1OnFire && <span className="absolute -top-1 -right-1 text-[11px] hh-flame" aria-label="On fire">🔥</span>}
-            </button>
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-bold truncate" style={{ color: textPrimary }}>{u1.username || 'Player 1'}</div>
-              <div className="text-[13px] font-black tabular-nums leading-tight" style={{ color: u1Lead ? '#34d399' : textPrimary }}>
-                ${formatMoney(u1Bal, 0)}
-              </div>
-            </div>
-
-            {/* Center VS + pot */}
-            <div className="flex flex-col items-center px-1 flex-shrink-0">
-              <span
-                className="text-[12px] font-black text-transparent bg-clip-text leading-none"
-                style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}
-              >
-                VS
-              </span>
-              <span className="text-[9px] font-bold tabular-nums mt-0.5" style={{ color: textMuted }}>
-                {isBeta ? `${formatMoney(pot, 0)}` : `$${formatMoney(pot, 0)}`}
-              </span>
-            </div>
-
-            {/* RIGHT player */}
-            <div className="min-w-0 flex-1 flex items-center gap-2 justify-end">
-              <div className="min-w-0 text-right">
-                <div className="text-[11px] font-bold truncate ml-auto" style={{ color: textPrimary }}>{u2.username || 'Player 2'}</div>
-                <div className="text-[13px] font-black tabular-nums leading-tight" style={{ color: u2Lead ? '#34d399' : textPrimary }}>
-                  ${formatMoney(u2Bal, 0)}
+              <div className="relative overflow-hidden px-3 py-3">
+                <div className="absolute inset-y-0 left-0 w-[58%] pointer-events-none" style={{ transform: 'skewX(-9deg)', transformOrigin: 'top left', background: `linear-gradient(90deg, rgba(59,130,246,0.18), transparent)` }} />
+                <div className="absolute inset-y-0 right-0 w-[58%] pointer-events-none" style={{ transform: 'skewX(-9deg)', transformOrigin: 'bottom right', background: `linear-gradient(270deg, rgba(251,146,60,0.18), transparent)` }} />
+                <div className="relative z-10 flex items-stretch justify-between gap-1">
+                  {renderFighter(u1, { lead: u1Lead, onFire: u1OnFire, ring: HH_BLUE, align: 'left' })}
+                  <div className="flex flex-col items-center justify-center flex-shrink-0 px-0.5">
+                    <div className="relative flex items-center justify-center w-10 h-10 rounded-full" style={{ background: elevated, border: `1.5px solid ${borderStrong}`, boxShadow: '0 2px 10px rgba(0,0,0,0.35)' }}>
+                      <span className="text-[12px] font-black text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}>VS</span>
+                    </div>
+                    <span className="mt-1 text-[8px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Pot</span>
+                    <span className="text-[10px] font-black tabular-nums leading-none" style={{ color: textSecondary }}>
+                      {isBeta ? `${formatMoney(pot, 0)}` : `$${formatMoney(pot, 0)}`}
+                    </span>
+                  </div>
+                  {renderFighter(u2, { lead: u2Lead, onFire: u2OnFire, ring: HH_ORANGE, align: 'right' })}
                 </div>
               </div>
+            </div>
+
+            {/* PAGE 2 — tale of the tape */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={handleCardClick}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(); } }}
+              aria-label="Battle stats"
+              className="w-full flex-shrink-0 cursor-pointer"
+              style={{ scrollSnapAlign: 'center' }}
+            >
+              <div className="px-3 py-2.5">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-black truncate text-right" style={{ color: HH_BLUE }}>{u1.username || 'Player 1'}</span>
+                  <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Tale of the tape</span>
+                  <span className="text-[10px] font-black truncate text-left" style={{ color: HH_ORANGE }}>{u2.username || 'Player 2'}</span>
+                </div>
+                <div className="space-y-0.5">
+                  {tapeRows.map((row) => (
+                    <div key={row.label} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                      <span className="text-[12px] font-bold tabular-nums text-right" style={{ color: row.lWin ? '#34d399' : textPrimary }}>{row.l}</span>
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-center" style={{ color: textMuted }}>{row.label}</span>
+                      <span className="text-[12px] font-bold tabular-nums text-left" style={{ color: row.rWin ? '#34d399' : textPrimary }}>{row.r}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* PAGE 3 — latest picks */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={handleCardClick}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(); } }}
+              aria-label="Battle picks"
+              className="w-full flex-shrink-0 cursor-pointer"
+              style={{ scrollSnapAlign: 'center' }}
+            >
+              <div className="px-3 py-3">
+                <div className="text-center text-[8px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: textMuted }}>Latest picks</div>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <div className="min-w-0 text-right">
+                    {u1PickPreview ? (
+                      <>
+                        <div className="text-[11px] font-bold truncate" style={{ color: textPrimary }}>{u1PickPreview.team || 'Pick'}</div>
+                        <div className="text-[12px] font-black tabular-nums leading-tight" style={{ color: oddsColor(u1PickPreview.odds) }}>{u1PickPreview.odds || '—'}</div>
+                        {u1Picks.length > 1 && <div className="text-[9px]" style={{ color: textMuted }}>+{u1Picks.length - 1} more</div>}
+                      </>
+                    ) : (
+                      <div className="text-[10px] italic" style={{ color: textMuted }}>No pick yet</div>
+                    )}
+                  </div>
+                  <span className="text-[9px] font-black text-transparent bg-clip-text px-1" style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}>VS</span>
+                  <div className="min-w-0 text-left">
+                    {u2PickPreview ? (
+                      <>
+                        <div className="text-[11px] font-bold truncate" style={{ color: textPrimary }}>{u2PickPreview.team || 'Pick'}</div>
+                        <div className="text-[12px] font-black tabular-nums leading-tight" style={{ color: oddsColor(u2PickPreview.odds) }}>{u2PickPreview.odds || '—'}</div>
+                        {u2Picks.length > 1 && <div className="text-[9px]" style={{ color: textMuted }}>+{u2Picks.length - 1} more</div>}
+                      </>
+                    ) : (
+                      <div className="text-[10px] italic" style={{ color: textMuted }}>No pick yet</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer: page dots + status + spectate hint (persist across pages) */}
+          <div className="px-3 py-2" style={{ borderTop: `1px solid ${border}` }}>
+            <div className="flex items-center justify-center gap-1.5 mb-1.5">
+              {[0, 1, 2].map((i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={(e) => goToSlide(i, e)}
+                  aria-label={`Go to page ${i + 1}`}
+                  aria-current={activeSlide === i}
+                  className="rounded-full transition-all duration-200"
+                  style={{
+                    width: activeSlide === i ? 16 : 6,
+                    height: 6,
+                    background: activeSlide === i ? `linear-gradient(90deg, ${HH_BLUE}, ${HH_ORANGE})` : track,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-medium truncate min-w-0" style={{ color: textSecondary }}>{statusText}</span>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
-                aria-label={`Open ${u2.username || 'Player 2'} profile`}
-                className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
+                onClick={(e) => { e.stopPropagation(); onSpectate?.(battle); }}
+                className="inline-flex items-center gap-1 text-[10px] font-semibold flex-shrink-0 lg:hover:opacity-80 transition-opacity"
+                style={{ color: textMuted }}
               >
-                <div className="rounded-full p-[1.5px]" style={{ background: border }}>
-                  <FramedAvatar avatar={u2.avatar} username={u2.username || 'P2'} frameId={u2.equippedFrame} size={28} bgColor="#7c2d12" />
-                </div>
-                {u2OnFire && <span className="absolute -top-1 -left-1 text-[11px] hh-flame" aria-label="On fire">🔥</span>}
+                <Icon.Eye size={11} /> Spectate
               </button>
             </div>
-          </div>
-
-          {/* Thin two-tone momentum bar */}
-          <div className="mt-2 h-1.5 rounded-full overflow-hidden flex" style={{ background: track, border: `1px solid ${border}` }}>
-            <div style={{ width: `${u1Pct}%`, background: u1Lead ? 'linear-gradient(90deg, #10b981, #22c55e)' : HH_BLUE, transition: 'width 700ms ease' }} />
-            <div style={{ width: `${100 - u1Pct}%`, background: u2Lead ? 'linear-gradient(90deg, #22c55e, #10b981)' : HH_ORANGE, transition: 'width 700ms ease' }} />
-          </div>
-
-          {/* Compact status + spectate hint */}
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <span className="text-[10px] font-medium truncate min-w-0" style={{ color: textSecondary }}>
-              {bothPicked
-                ? 'Both players locked in'
-                : onlyU1Locked
-                  ? `${u1.username || 'P1'} locked · awaiting other`
-                  : onlyU2Locked
-                    ? `${u2.username || 'P2'} locked · awaiting other`
-                    : 'Awaiting picks from both players'}
-            </span>
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold flex-shrink-0" style={{ color: textMuted }}>
-              <Icon.Eye size={11} /> Spectate
-            </span>
           </div>
         </div>
       </div>
