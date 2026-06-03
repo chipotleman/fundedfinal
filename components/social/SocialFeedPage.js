@@ -1961,8 +1961,8 @@ function RightSidebar({
                       disabled={done}
                       className="flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-colors"
                       style={{
-                        background: done ? 'transparent' : 'linear-gradient(135deg, #2563eb, #06b6d4)',
-                        color: done ? textMuted : '#ffffff',
+                        background: done ? 'transparent' : '#facc15',
+                        color: done ? textMuted : '#0a0a0a',
                         border: done ? `1px solid ${border}` : 'none',
                         cursor: done ? 'default' : 'pointer',
                       }}
