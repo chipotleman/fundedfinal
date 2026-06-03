@@ -629,6 +629,7 @@ export default function TopNavbar({
           color="#ffffff"
           glyph="⚔"
           glyphColor="#fb923c"
+          align="end"
         />
       )}
     </>
@@ -882,6 +883,7 @@ export default function TopNavbar({
                     color="#ffffff"
                     glyph="⚔"
                     glyphColor="#fb923c"
+                    align="end"
                     compact
                   />
                 </div>
@@ -1262,6 +1264,7 @@ export default function TopNavbar({
                 color="#ffffff"
                 glyph="⚔"
                 glyphColor="#fb923c"
+                align="end"
               />
             )}
             {isLoggedIn && (
