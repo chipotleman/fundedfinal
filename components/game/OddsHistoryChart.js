@@ -28,6 +28,16 @@ function americanToImplied(odds) {
   if (!Number.isFinite(n) || n === 0) return null;
   return n > 0 ? 100 / (n + 100) : -n / (-n + 100);
 }
+// Inverse of americanToImplied: turn a (with-vig) implied probability back
+// into an American moneyline. Used so every point on the chart carries the
+// odds that match where the LINE actually is at that moment — otherwise the
+// graph moves but the tooltip stays frozen on the opening number.
+function impliedToAmerican(prob) {
+  if (prob == null || !Number.isFinite(prob)) return null;
+  const p = Math.min(0.99, Math.max(0.01, prob));
+  const a = p >= 0.5 ? -((p / (1 - p)) * 100) : ((1 - p) / p) * 100;
+  return Math.round(a);
+}
 function devig(home, away) {
   const h = americanToImplied(home);
   const a = americanToImplied(away);
@@ -160,7 +170,14 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
     if (!liveOdds || liveOdds.home == null || liveOdds.away == null) return null;
     const probs = devig(liveOdds.home, liveOdds.away);
     if (probs.home == null) return null;
-    return { home: probs.home, away: probs.away, homeML: liveOdds.home, awayML: liveOdds.away };
+    // The book's overround (vig) = sum of the raw with-vig implied probs.
+    // We re-apply it to each point's de-vigged probability when deriving its
+    // per-point moneyline, so the right edge reproduces the exact live odds
+    // while earlier points show the odds implied by where the line was then.
+    const rawH = americanToImplied(liveOdds.home);
+    const rawA = americanToImplied(liveOdds.away);
+    const overround = (rawH != null && rawA != null && rawH + rawA > 0) ? rawH + rawA : 1;
+    return { home: probs.home, away: probs.away, homeML: liveOdds.home, awayML: liveOdds.away, overround };
   }, [liveOdds]);
 
   // Window length per range pill (how far back the chart should look).
@@ -206,6 +223,13 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
     const now = Date.now();
     const start = now - rangeWindowMs;
     const target = liveAnchor.home;
+    const overround = liveAnchor.overround || 1;
+    // Per-point moneylines derived from where the line is at that point, so
+    // the tooltip odds move with the graph (re-vigged via overround).
+    const mlFor = (homeImplied) => ({
+      homeML: impliedToAmerican(homeImplied * overround),
+      awayML: impliedToAmerican((1 - homeImplied) * overround),
+    });
 
     // Deterministic seed from gameId so reloads/range-changes don't
     // reshuffle the whole pre-game history.
@@ -257,8 +281,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
           t,
           homeImplied: v,
           awayImplied: 1 - v,
-          homeML: liveAnchor.homeML,
-          awayML: liveAnchor.awayML,
+          ...mlFor(v),
           isPreGame: true,
         });
       }
@@ -304,8 +327,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
           t,
           homeImplied: v,
           awayImplied: 1 - v,
-          homeML: liveAnchor.homeML,
-          awayML: liveAnchor.awayML,
+          ...mlFor(v),
         });
       }
     }
@@ -355,12 +377,13 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
         const pull = (target - last.homeImplied) * 0.12;
         let v = last.homeImplied + drift + pull;
         v = Math.min(0.985, Math.max(0.015, v));
+        const orr = liveAnchor.overround || 1;
         const next = {
           t: Date.now(),
           homeImplied: v,
           awayImplied: 1 - v,
-          homeML: liveAnchor.homeML,
-          awayML: liveAnchor.awayML,
+          homeML: impliedToAmerican(v * orr),
+          awayML: impliedToAmerican((1 - v) * orr),
           isLive: true,
           isSimulated: true,
         };
