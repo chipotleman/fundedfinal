@@ -463,7 +463,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
                 <span className="block text-[12px] font-semibold truncate" style={{ color: textPrimary }}>
                   {l.username}
                 </span>
-                <span className="block text-[10px]" style={{ color: textMuted }}>
+                <span className="block text-[10px] font-semibold" style={{ color: textPrimary }}>
                   {(parseInt(l.wins, 10) || 0)}W · {(parseInt(l.losses, 10) || 0)}L
                 </span>
               </span>
