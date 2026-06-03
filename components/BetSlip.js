@@ -862,12 +862,13 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
                     style={{
-                      background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
-                      border: '1px solid rgba(251,146,60,0.45)',
+                      background: 'linear-gradient(180deg, #fb923c 0%, #ea580c 100%)',
+                      border: '2px solid #0a0a0a',
+                      boxShadow: '0 2px 0 #0a0a0a',
                     }}
                   >
-                    <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                    <span className="text-xs font-bold" style={{ color: isLight ? '#0f172a' : '#ffffff' }}>{formatMoney(bankroll, 0)}</span>
+                    <span className="text-xs leading-none" style={{ color: '#ffffff' }}>⚔</span>
+                    <span className="text-xs font-bold" style={{ color: '#ffffff' }}>{formatMoney(bankroll, 0)}</span>
                   </div>
                 )}
                 {/* Cartoon-themed pik count badge — chunky black border
