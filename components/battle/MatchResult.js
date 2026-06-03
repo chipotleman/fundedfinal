@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import CoinRain from '../CoinRain';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
-import PiksBetCard from '../PiksBetCard';
-import { TicketCarousel } from '../BattleOverviewPopup';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
 import { MatchWin } from './matchflow/MatchFlowScreens';
 
@@ -179,16 +178,11 @@ export default function MatchResult({
   highlightRematch = false,
 }) {
   const isBeta = useBetaMode();
+  const router = useRouter();
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
-  const [summaryTab, setSummaryTab] = useState('mine');
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState(null);
-  const [summaryData, setSummaryData] = useState(null);
-  const summaryFetchRef = useRef(null);
   const [myReactions, setMyReactions] = useState([]);
   const [oppReactions, setOppReactions] = useState([]);
   const [customText, setCustomText] = useState('');
@@ -265,17 +259,6 @@ export default function MatchResult({
     ? (isUser1 ? rematchState.user2Rematch : rematchState.user1Rematch)
     : 'pending';
 
-  // Reset inline summary state when the matchup changes so a previous
-  // battle's piks never leak into a freshly opened result popup.
-  useEffect(() => {
-    setShowSummary(false);
-    setSummaryTab('mine');
-    setSummaryData(null);
-    setSummaryError(null);
-    setSummaryLoading(false);
-    summaryFetchRef.current = null;
-  }, [matchup?.id]);
-
   useEffect(() => {
     if (!isCompleted) return;
     setShowTitle(false);
@@ -298,25 +281,11 @@ export default function MatchResult({
       : `I just won $${formatMoney(prizeWon)} on Piks! 🏆🔥`;
     const id = matchup?.id;
 
-    // Pick a deep-linkable "moment" — the biggest winning pik on our side,
-    // if we have summary data loaded — so the shared link auto-opens the
-    // pivotal pick. Falls back to a plain battle deep link when no summary
-    // is available yet.
-    let momentId = null;
-    if (Array.isArray(summaryData?.myBets)) {
-      const winners = summaryData.myBets.filter((b) => Number(b?.pnl) > 0);
-      if (winners.length > 0) {
-        winners.sort((a, b) => Number(b.pnl) - Number(a.pnl));
-        momentId = winners[0].id || null;
-      }
-    }
-
     let url = null;
     if (id && typeof window !== 'undefined') {
       try {
         const u = new URL('/bet-history', window.location.origin);
         u.searchParams.set('battle', id);
-        if (momentId) u.searchParams.set('m', momentId);
         url = u.toString();
       } catch (_) {
         url = null;
@@ -338,7 +307,7 @@ export default function MatchResult({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (_) {}
-  }, [prizeWon, matchup?.id, summaryData]);
+  }, [prizeWon, matchup?.id]);
 
   // Per-reaction expiry timers. Each reaction owns its own timer so rapid-fire
   // reactions all expire independently and don't get cancelled when a newer
@@ -496,37 +465,6 @@ export default function MatchResult({
     }
   }, [customText, onSendReaction]);
 
-  const fetchSummary = useCallback(async () => {
-    const id = matchup?.id;
-    if (!id) return;
-    if (summaryFetchRef.current === id) return;
-    summaryFetchRef.current = id;
-    setSummaryLoading(true);
-    setSummaryError(null);
-    try {
-      const res = await fetch(`/api/matchups/${id}`);
-      if (!res.ok) throw new Error('failed');
-      const data = await res.json();
-      setSummaryData({
-        myBets: Array.isArray(data.myBets) ? data.myBets : [],
-        opponentBets: Array.isArray(data.opponentBets) ? data.opponentBets : [],
-      });
-    } catch (e) {
-      summaryFetchRef.current = null;
-      setSummaryError('Could not load piks');
-    } finally {
-      setSummaryLoading(false);
-    }
-  }, [matchup?.id]);
-
-  const handleToggleSummary = useCallback(() => {
-    setShowSummary((prev) => {
-      const next = !prev;
-      if (next && !summaryData && !summaryLoading) fetchSummary();
-      return next;
-    });
-  }, [fetchSummary, summaryData, summaryLoading]);
-
   const handleClose = useCallback(() => {
     // Treat closing without accepting as an implicit decline so the
     // opponent's view shows an X next to this user's name.
@@ -541,6 +479,14 @@ export default function MatchResult({
     }
     onClose?.();
   }, [isFakeOpponent, myRematchStatus, onRematchDecline, onClose]);
+
+  // Open the full, shareable Battle Summary page for this matchup. Falls back
+  // to simply closing the modal if we somehow don't have a matchup id.
+  const handleSummary = useCallback(() => {
+    const mid = matchup?.id;
+    if (!mid) { handleClose(); return; }
+    try { router.push(`/battle/summary/${encodeURIComponent(mid)}`); } catch (_e) {}
+  }, [matchup?.id, router, handleClose]);
 
   if (!isCompleted) return null;
 
@@ -709,17 +655,36 @@ export default function MatchResult({
               opp={oppPlayer}
               balance={myFinalBalance}
               prize={prizeWon}
-              onPrimary={isWinner ? handleShare : handleClose}
-              primaryLabel={isWinner ? (copied ? 'Copied!' : 'Share Win') : 'Back to Battle'}
+              onPrimary={isWinner ? handleShare : handleSummary}
+              primaryLabel={isWinner ? (copied ? 'Copied!' : 'Share Win') : 'Summary'}
               secondary={isWinner ? (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="py-2 rounded-lg text-sm font-bold text-gray-300 hover:text-white transition-colors"
+                    style={{ border: '1px solid #2a2a2a', background: 'rgba(255,255,255,0.03)' }}
+                  >
+                    Exit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSummary}
+                    className="py-2 rounded-lg text-sm font-bold text-white transition-colors"
+                    style={{ border: '1px solid rgba(34,211,238,0.45)', background: 'rgba(34,211,238,0.12)' }}
+                  >
+                    Summary
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
                   onClick={handleClose}
                   className="mt-3 w-full py-2 text-sm font-bold text-gray-300 hover:text-white transition-colors"
                 >
-                  Back to Battle
+                  Exit
                 </button>
-              ) : null}
+              )}
             />
           </div>
 
@@ -739,123 +704,6 @@ export default function MatchResult({
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Prize Won</span>
                   <span className="text-emerald-400 font-bold text-lg">${formatMoney(animatedPrize)}</span>
-                </div>
-              )}
-              <div className="pt-2" style={{ borderTop: '1px solid #1a1a1a' }}>
-                <button
-                  type="button"
-                  onClick={handleToggleSummary}
-                  aria-expanded={showSummary}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold text-white transition-colors hover:bg-white/5 active:bg-white/10"
-                  style={{ border: '1px solid #2a2a2a', background: 'rgba(255,255,255,0.03)' }}
-                >
-                  <span>{showSummary ? 'Hide summary' : 'Show summary'}</span>
-                  <svg
-                    className={`w-3.5 h-3.5 transition-transform ${showSummary ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              </div>
-              {showSummary && (
-                <div className="pt-3 text-left">
-                  {summaryLoading && !summaryData && (
-                    <div className="space-y-2">
-                      <div className="h-7 w-48 rounded-full bg-white/5 animate-pulse" />
-                      <div className="h-32 rounded-xl bg-white/5 animate-pulse" />
-                    </div>
-                  )}
-                  {summaryError && !summaryLoading && (
-                    <div className="text-xs text-red-400 text-center py-3">
-                      {summaryError}
-                      <button
-                        type="button"
-                        onClick={() => { summaryFetchRef.current = null; fetchSummary(); }}
-                        className="ml-2 underline text-cyan-300"
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  )}
-                  {summaryData && (() => {
-                    const myBets = summaryData.myBets || [];
-                    const oppBets = summaryData.opponentBets || [];
-                    const myCards = myBets.length > 0 ? myBets.map((bet) => (
-                      <PiksBetCard
-                        key={bet.id}
-                        bet={bet}
-                        compactHeader
-                        isBattleEnded={true}
-                      />
-                    )) : null;
-                    const oppCards = oppBets.length > 0 ? oppBets.map((bet) => (
-                      <PiksBetCard
-                        key={bet.id}
-                        bet={bet}
-                        compactHeader
-                        isBattleEnded={true}
-                        isOpponent
-                        opponentName={opponentName}
-                        opponentAvatar={opponentAvatar}
-                      />
-                    )) : null;
-                    const carouselTheme = {
-                      borderColor: 'rgba(255,255,255,0.12)',
-                      accentColor: '#06b6d4',
-                    };
-                    return (
-                      <div>
-                        <div
-                          className="inline-flex rounded-full p-1 mb-2"
-                          style={{
-                            background: 'rgba(255,255,255,0.04)',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => setSummaryTab('mine')}
-                            className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
-                            style={{
-                              background: summaryTab === 'mine' ? '#06b6d4' : 'transparent',
-                              color: summaryTab === 'mine' ? '#fff' : '#9ca3af',
-                            }}
-                          >
-                            Your Piks ({myBets.length})
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setSummaryTab('theirs')}
-                            className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
-                            style={{
-                              background: summaryTab === 'theirs' ? '#ef4444' : 'transparent',
-                              color: summaryTab === 'theirs' ? '#fff' : '#9ca3af',
-                            }}
-                          >
-                            {opponentName}'s Piks ({oppBets.length})
-                          </button>
-                        </div>
-                        {summaryTab === 'mine' ? (
-                          <TicketCarousel
-                            key="mine"
-                            cards={myCards}
-                            theme={carouselTheme}
-                            emptyMessage="You didn't place any piks in this battle."
-                          />
-                        ) : (
-                          <TicketCarousel
-                            key="theirs"
-                            cards={oppCards}
-                            theme={carouselTheme}
-                            emptyMessage={`${opponentName} didn't place any piks in this battle.`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })()}
                 </div>
               )}
               {totalPendingCount > 0 && (

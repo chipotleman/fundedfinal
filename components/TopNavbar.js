@@ -1429,11 +1429,13 @@ export default function TopNavbar({
 
             {/* Pik Slip — only right-side affordance in the condensed bar.
                 Shown on both mobile and desktop so the bar reads identically
-                across breakpoints. Sized compact to fit narrow widths.
-                Stays snug to the right edge: no hamburger to clear in the
-                condensed bar, so we deliberately do NOT apply the
-                `topnav-pikslip` shift here. */}
-            {effectiveBetSlipCount > 0 && (
+                across breakpoints. Always rendered (even with zero piks) so
+                the scrolling header never has an awkward empty slot in the
+                top-right — the count badge only appears once a pik is added.
+                Sized compact to fit narrow widths. Stays snug to the right
+                edge: no hamburger to clear in the condensed bar, so we
+                deliberately do NOT apply the `topnav-pikslip` shift here. */}
+            {isLoggedIn && (
               <button
                 onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
                 className="relative no-hover-effect flex-shrink-0"
@@ -1458,12 +1460,14 @@ export default function TopNavbar({
                   <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
                 <span style={{ color: '#ffffff' }}>Pik Slip</span>
-                <span
-                  className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center"
-                  style={{ color: '#ffffff' }}
-                >
-                  {effectiveBetSlipCount}
-                </span>
+                {effectiveBetSlipCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                    style={{ color: '#ffffff' }}
+                  >
+                    {effectiveBetSlipCount}
+                  </span>
+                )}
               </button>
             )}
           </div>

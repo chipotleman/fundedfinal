@@ -1,5 +1,6 @@
 - [Messenger dual-event dedup](messaging-dual-event-dedup.md) — `piks:message:new` fires from local send AND SSE echo; dedup must `String(id)`-compare or messages double-render.
 - [DB migration convention](db-migration-convention.md) — schema changes need BOTH drizzle db:push AND a hand-written migrations/*.sql file, or prod breaks.
+- [Public battle endpoint exposure](public-battle-endpoint-exposure.md) — /api/battles/public/[id] intentionally returns both sides' picks for active battles; bet-history depends on it, don't gate to completed-only.
 - [SelectionLogos parlay auto-detection](selection-logos-parlay.md) — renders split-circle parlay mark from bet.legs>1; single-team callers must pass legs:undefined or they get the parlay mark.
 - [Social comment threading](social-comment-threading.md) — replies nest via parent_id; notify replied-to user ('reply') + post owner ('comment') deduped; thread grouping must never drop a comment.
 - [Grep minified identifiers](grep-minified-identifiers.md) — rg/grep output sometimes renames symbols (PlayFriendModal→ln, props→n); it's a display artifact, read the file for real names.
