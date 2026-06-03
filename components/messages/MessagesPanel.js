@@ -165,7 +165,7 @@ function MessageActionsMenu({ mine, disabled, onUnsend, onDeleteForMe }) {
       {open && (
         <div
           role="menu"
-          className={`absolute z-50 mt-1 rounded-xl overflow-hidden ${mine ? 'left-0' : 'right-0'}`}
+          className="absolute right-0 z-50 mt-1 rounded-xl overflow-hidden"
           style={{
             top: '100%',
             minWidth: 168,
