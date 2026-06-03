@@ -841,7 +841,26 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
               shifted page that the user can now still see and interact
               with. Mobile keeps no backdrop because the slip already
               takes over the full viewport at <md. */}
-          
+
+          {/* Desktop focus blur — a light backdrop blur over the shifted
+              page so attention lands on the slip while the page stays
+              legible "through" the blur. Sits below the panel (z-[98] <
+              z-[99]) so the slip itself stays sharp, and pointer-events:
+              none keeps the still-visible shifted page interactive
+              (matching the intentional no-blocking-backdrop behavior on
+              desktop). Hidden on mobile where the slip is already
+              fullscreen. */}
+          <div
+            data-betslip="true"
+            className="hidden md:block fixed inset-0 z-[98]"
+            style={{
+              pointerEvents: 'none',
+              backdropFilter: 'blur(3px)',
+              WebkitBackdropFilter: 'blur(3px)',
+              backgroundColor: 'rgba(0,0,0,0.12)'
+            }}
+          />
+
           {/* Bet slip panel - uses overscroll-behavior to contain scroll within panel */}
           <div 
             data-betslip="true"
