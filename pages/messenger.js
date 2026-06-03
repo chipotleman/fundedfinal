@@ -105,7 +105,7 @@ export default function MessengerPage() {
 
   const { theme } = useTheme();
   const isLight = theme === 'light';
-  const bg = isLight ? '#f1f5f9' : '#000000';
+  const bg = isLight ? '#f5f1ea' : '#000000';
   const textPrimary = isLight ? '#0f172a' : '#ffffff';
   const textSecondary = isLight ? '#64748b' : '#9ca3af';
 
