@@ -22,6 +22,30 @@ function timeAgo(iso) {
   return `${d}d`;
 }
 
+// Detect an in-progress "@handle" the caret is currently sitting inside, so the
+// composer can pop an Instagram-style mention picker. Returns the partial
+// handle plus the [start,end) span of the "@handle" token (start points at the
+// "@"), or null when the caret isn't on a mention. The "@" must start the line
+// or follow whitespace so emails / mid-word "@" don't trigger it.
+function detectMention(value, caret) {
+  if (typeof value !== 'string') return null;
+  const upToCaret = value.slice(0, caret);
+  const m = upToCaret.match(/(?:^|\s)@([A-Za-z0-9_]{0,30})$/);
+  if (!m) return null;
+  const leftToken = m[1];
+  // The caret can sit in the MIDDLE of an existing handle, so extend the span
+  // right to the end of the token. `token` (left of caret) drives the search;
+  // [start,end) covers the whole "@handle" so replacement never leaves a
+  // trailing fragment behind (e.g. "@jo|hn" → "@picked", not "@picked hn").
+  const rightMatch = value.slice(caret).match(/^[A-Za-z0-9_]*/);
+  const right = rightMatch ? rightMatch[0] : '';
+  return {
+    token: leftToken,
+    start: caret - leftToken.length - 1,
+    end: caret + right.length,
+  };
+}
+
 // Local Avatar wrapper kept as a thin alias so older call sites continue to
 // work; under the hood it renders the new shared UserAvatar with deterministic
 // colored initials and optional profile linking.
@@ -1441,6 +1465,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
+  // Instagram-style @mention autocomplete for the composer. `mentionBox` is
+  // either null or { results, activeIndex } — the dropdown of users matching
+  // the handle the caret is currently typing. The abort ref cancels in-flight
+  // searches so a fast typist's earlier query can't clobber a newer one.
+  const [mentionBox, setMentionBox] = useState(null);
+  const mentionAbortRef = useRef(null);
   // Track which message IDs are mid-delete so we can disable the
   // delete affordance and gray the bubble while the request is in
   // flight (prevents double-deletes from impatient double-taps).
@@ -1775,6 +1805,26 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     setReply(v);
     if (sendError) setSendError(null);
     if (voiceError) setVoiceError(null);
+    // Drive the @mention picker off the caret position. Search needs ≥2 chars
+    // (matches the API's minimum); anything shorter just hides the dropdown.
+    const det = detectMention(v, e.target.selectionStart ?? v.length);
+    // Always cancel any in-flight search first so a slower earlier response
+    // can't repopulate the dropdown after the mention is gone/changed.
+    if (mentionAbortRef.current) { try { mentionAbortRef.current.abort(); } catch {} mentionAbortRef.current = null; }
+    if (!det || det.token.length < 2) {
+      setMentionBox(null);
+    } else {
+      const ctrl = new AbortController();
+      mentionAbortRef.current = ctrl;
+      fetch(`/api/users/search?q=${encodeURIComponent(det.token)}`, { signal: ctrl.signal, credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : { users: [] }))
+        .then((data) => {
+          if (ctrl.signal.aborted) return;
+          const results = Array.isArray(data?.users) ? data.users.slice(0, 6) : [];
+          setMentionBox(results.length ? { results, activeIndex: 0 } : null);
+        })
+        .catch(() => {});
+    }
     if (!friend?.id) return;
     // Clearing the input after typing — proactively tell the friend we
     // stopped so their indicator clears immediately rather than after TTL.
@@ -1794,6 +1844,16 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     lastTypingFriendRef.current = friend.id;
     ctx.notifyTyping?.(friend.id);
   };
+
+  // Switching conversations (or unmounting) must drop any open mention picker
+  // and cancel its in-flight search so stale suggestions can't leak into the
+  // newly opened thread.
+  useEffect(() => {
+    setMentionBox(null);
+    return () => {
+      if (mentionAbortRef.current) { try { mentionAbortRef.current.abort(); } catch {} mentionAbortRef.current = null; }
+    };
+  }, [friend?.id]);
 
   const sendMessagePayload = useCallback(async (payload) => {
     const res = await fetch('/api/messages', {
@@ -2801,6 +2861,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     e?.preventDefault?.();
     const text = reply.trim();
     if (!text || !friend?.id || sending) return;
+    setMentionBox(null);
     setSending(true);
     setSendError(null);
     try {
@@ -2883,6 +2944,108 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     const t = setTimeout(() => setInviteEndedNote(null), 6000);
     return () => clearTimeout(t);
   }, [inviteEndedNote]);
+
+  // Render a message body with @mentions turned into clickable links (IG-style)
+  // that navigate to the tagged player's profile. Own-bubble mentions use a
+  // light-blue so they read on the blue gradient; received ones use the brand
+  // blue. Unresolvable handles still render as links — the click just no-ops if
+  // no user matches.
+  const renderMessageContent = (text, mine) => {
+    if (!text) return text;
+    const parts = String(text).split(/(@[A-Za-z0-9_]+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@') && part.length > 1) {
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); resolveAndOpenMention(part.slice(1)); }}
+            className="hover:underline"
+            style={{
+              color: mine ? '#bfdbfe' : '#2563eb',
+              fontWeight: 700,
+              padding: 0,
+              margin: 0,
+              border: 0,
+              background: 'transparent',
+              fontSize: 'inherit',
+              fontFamily: 'inherit',
+              lineHeight: 'inherit',
+              cursor: 'pointer',
+              display: 'inline',
+              verticalAlign: 'baseline',
+            }}
+          >
+            {part}
+          </button>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  // Resolve an @handle to a real user and open their profile. The DM partner is
+  // matched locally (no round-trip); anyone else is looked up via the user
+  // search API (exact, case-insensitive). No match → no navigation.
+  const resolveAndOpenMention = async (handle) => {
+    const norm = (s) => (s || '').replace(/\s+/g, '').toLowerCase();
+    const target = norm(handle);
+    if (!target) return;
+    if (friend?.id && norm(friend.username) === target) {
+      try { router.push(`/profile/${friend.id}`); } catch {}
+      return;
+    }
+    try {
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(handle)}`, { credentials: 'include' });
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = Array.isArray(data?.users) ? data.users : [];
+      const match = list.find((u) => norm(u.username) === target);
+      if (match?.id) { try { router.push(`/profile/${match.id}`); } catch {} }
+    } catch {}
+  };
+
+  // Insert the picked user's "@username " into the composer, replacing the
+  // partial handle the caret is on. Caret span is recomputed from the live
+  // input so it stays correct even if the value changed since the search fired.
+  const applyMention = (user) => {
+    if (!user?.username) return;
+    const el = inputRef.current;
+    const caret = el ? (el.selectionStart ?? reply.length) : reply.length;
+    const det = detectMention(reply, caret);
+    const start = det ? det.start : reply.length;
+    const end = det ? det.end : reply.length;
+    const before = reply.slice(0, start);
+    const after = reply.slice(end);
+    const inserted = `@${user.username} `;
+    const next = `${before}${inserted}${after}`;
+    setReply(next);
+    setMentionBox(null);
+    const pos = (before + inserted).length;
+    requestAnimationFrame(() => {
+      try { el?.focus(); el?.setSelectionRange(pos, pos); } catch {}
+    });
+  };
+
+  // Keyboard nav for the mention dropdown. Enter picks (instead of sending),
+  // arrows move the highlight, Esc dismisses.
+  const handleMentionKeyDown = (e) => {
+    if (!mentionBox || !mentionBox.results.length) return;
+    const n = mentionBox.results.length;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setMentionBox((b) => (b ? { ...b, activeIndex: (b.activeIndex + 1) % n } : b));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setMentionBox((b) => (b ? { ...b, activeIndex: (b.activeIndex - 1 + n) % n } : b));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      applyMention(mentionBox.results[mentionBox.activeIndex]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setMentionBox(null);
+    }
+  };
 
   return (
     // CSS Grid (instead of flex column) for the conversation surface.
@@ -3110,7 +3273,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                     onNavigate={(href) => { try { router.push(href); } catch {} }}
                   />
                 ) : (
-                  m.content
+                  renderMessageContent(m.content, mine)
                 )}
               </div>
             </div>
@@ -3359,12 +3522,43 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             /* Cartoon-themed composer row — text input has chunky black
                border + soft inset shadow, mic + send have the same
                offset-shadow press behavior as the rest of the slip. */
-            <div className="flex gap-2">
+            <div className="relative">
+              {mentionBox && mentionBox.results.length > 0 && (
+                <div
+                  className="absolute left-0 right-0 bottom-full mb-2 rounded-2xl overflow-hidden z-30"
+                  style={{
+                    backgroundColor: isLight ? '#ffffff' : '#0f172a',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a',
+                  }}
+                >
+                  {mentionBox.results.map((u, i) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); applyMention(u); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
+                      style={{
+                        backgroundColor: i === mentionBox.activeIndex
+                          ? (isLight ? 'rgba(37,99,235,0.10)' : 'rgba(59,130,246,0.18)')
+                          : 'transparent',
+                      }}
+                    >
+                      <UserAvatar username={u.username} avatar={u.avatar} size={26} />
+                      <span className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
+                        @{u.username}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
               <input
                 ref={inputRef}
                 type="text"
                 value={reply}
                 onChange={handleReplyChange}
+                onKeyDown={handleMentionKeyDown}
                 placeholder="Write a message…"
                 className="flex-1 min-w-0 px-3.5 py-2.5 rounded-2xl focus:outline-none"
                 style={{
@@ -3414,6 +3608,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                   {sending ? '…' : 'Send'}
                 </button>
               )}
+              </div>
             </div>
           )}
           {(voiceError || sendError) && (
