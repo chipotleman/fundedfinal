@@ -954,6 +954,7 @@ export default function MyPicksPage() {
               style={{ background: p.disabledGameBg, color: p.disabledGameText, border: p.disabledGameBorder }}>Game Unavailable</div>
           )}
         </div>
+        {renderForfeitBar()}
       </div>
     );
   };
