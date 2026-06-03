@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
@@ -24,6 +24,12 @@ const PlayFriendModal = dynamic(() => import('../battle/PlayFriendModal'), { ssr
 // `.desktop-right-rail` scope, so the rail flips with the rest of the
 // app's light/dark theme without a hydration flash (the root `light`
 // class is applied pre-paint by the _document.js inline script).
+// Hydrate cached content before the browser paints so Friends / Top cappers
+// never flash empty on load. useLayoutEffect fires after the hydration render
+// but synchronously before paint; fall back to useEffect on the server to avoid
+// the "useLayoutEffect does nothing on the server" warning during SSR.
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 const surface = 'var(--rail-surface)';
 const border = 'var(--rail-border)';
 const textPrimary = 'var(--rail-text)';
@@ -76,18 +82,13 @@ export default function DesktopRightRail({ isLoggedIn }) {
 
   const userId = session?.user?.id;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    // Friends are per-user, so their cache key is scoped to the signed-in
-    // user id — that way switching accounts can never flash the previous
-    // user's friend list. The leaderboard is public, so it stays global.
+  // Hydrate from the last-known cache *before paint* so Friends and Top cappers
+  // render with content on the very first frame instead of flashing an empty
+  // container that "floods in" once the network resolves. Runs synchronously
+  // after the hydration render (client only); the network effect below refreshes
+  // this data and rewrites the cache in the background.
+  useIsoLayoutEffect(() => {
     const friendsKey = userId ? `piks:rail:friends:${userId}` : null;
-
-    // Hydrate instantly from the last-known cache so Friends and Top cappers
-    // render the moment the page paints instead of flashing empty/loading
-    // states while the network requests resolve. The fetches below refresh
-    // this data and rewrite the cache in the background.
     try {
       const cf = friendsKey ? JSON.parse(localStorage.getItem(friendsKey) || 'null') : null;
       if (isLoggedIn && Array.isArray(cf) && cf.length) setFriends(cf);
@@ -95,6 +96,15 @@ export default function DesktopRightRail({ isLoggedIn }) {
       const cl = JSON.parse(localStorage.getItem('piks:rail:leaders') || 'null');
       if (Array.isArray(cl) && cl.length) setLeaders(cl);
     } catch {}
+  }, [isLoggedIn, userId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Friends are per-user, so their cache key is scoped to the signed-in
+    // user id — that way switching accounts can never flash the previous
+    // user's friend list. The leaderboard is public, so it stays global.
+    const friendsKey = userId ? `piks:rail:friends:${userId}` : null;
 
     const loadFriends = async () => {
       if (!isLoggedIn) return;
