@@ -13,6 +13,7 @@ import MutualFriendsLine from '../social/MutualFriendsLine';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useUserPreview } from '../../contexts/UserPreviewContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import {
@@ -1305,6 +1306,7 @@ function YouVsCard({
 
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const { openMessage } = useUserPreview();
 
   const isActive = status === 'active';
   const isWaiting = status === 'waiting';
@@ -1620,10 +1622,20 @@ function YouVsCard({
   }, [matchup, refreshMatchup]);
 
   const handleOverviewMessage = useCallback((opp) => {
-    const peerId = (opp && opp.id) || opponent?.id;
-    if (peerId) router.push(`/messenger?chat=${peerId}`);
-    else router.push('/messenger');
-  }, [opponent, router]);
+    // Open the in-place DM popup overlay instead of navigating to the
+    // full /messenger page — staying on the current page keeps the user
+    // in the light/dark theme they were in and lets "Back" return them
+    // to the battle container they came from.
+    const peer = (opp && opp.id)
+      ? opp
+      : (opponent?.id ? opponent : null);
+    if (peer?.id) {
+      openMessage({ id: peer.id, username: peer.username, avatar: peer.avatar });
+    } else {
+      // Last-resort fallback so the button never silently no-ops.
+      router.push('/messenger');
+    }
+  }, [opponent, openMessage, router]);
 
   const handleOverviewViewUpdates = useCallback(() => {
     router.push('/notifications');

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
 import SlideToForfeit from './SlideToForfeit';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const MODE_META = {
   rush: {
@@ -69,12 +70,12 @@ function PnlPill({ pnl }) {
   );
 }
 
-function PlayerStat({ balance, pnl, isBeta, accent }) {
+function PlayerStat({ balance, pnl, isBeta, accent, textColor = '#fff' }) {
   const label = fmtBalance(balance, isBeta);
   if (label == null) return null;
   return (
     <div className="mt-1 flex flex-col items-center gap-0.5">
-      <span className="text-white text-[13px] font-black tabular-nums" style={{ textShadow: `0 0 8px ${accent}55` }}>
+      <span className="text-[13px] font-black tabular-nums" style={{ color: textColor, textShadow: `0 0 8px ${accent}55` }}>
         {label}
       </span>
       <PnlPill pnl={pnl} />
@@ -99,6 +100,8 @@ export default function MyBattleOverviewModal({
   isBeta = false,
 }) {
   useModalScrollLock(isOpen);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
@@ -137,6 +140,32 @@ export default function MyBattleOverviewModal({
     ? (isBeta ? `${compactCoins(pot)} pot` : `$${compactCoins(pot)} pot`)
     : '—';
 
+  // Theme tokens. The cartoon HUD keeps its chunky black borders + neon
+  // accents in both themes; only the dark panel/card/pill surfaces and the
+  // white text flip to light so the popup matches the rest of the app when
+  // light mode is on (it used to stay dark regardless of theme).
+  const t = isLight
+    ? {
+        panel: 'linear-gradient(180deg,#ffffff 0%,#f7f3ea 55%,#efe9dc 100%)',
+        panelShadow: '0 10px 0 #0a0a0a, 0 0 50px rgba(6,182,212,0.18), inset 0 0 0 1.5px rgba(6,182,212,0.35)',
+        card: 'linear-gradient(180deg,#ffffff,#f4efe4)',
+        pill: 'linear-gradient(180deg,#ffffff,#f1ecdf)',
+        textMain: '#0f172a',
+        closeIcon: '#475569',
+        durationText: '#a16207',
+        backdrop: 'rgba(15,23,42,0.45)',
+      }
+    : {
+        panel: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
+        panelShadow: '0 10px 0 #0a0a0a, 0 0 60px rgba(6,182,212,0.32), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
+        card: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+        pill: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+        textMain: '#ffffff',
+        closeIcon: '#d1d5db',
+        durationText: '#facc15',
+        backdrop: 'rgba(0,0,0,0.78)',
+      };
+
   const close = () => {
     if (closing) return;
     setClosing(true);
@@ -166,15 +195,15 @@ export default function MyBattleOverviewModal({
   return createPortal((
     <div
       className="fixed inset-0 z-[2000] flex items-center justify-center p-3 mbom-fade-in"
-      style={{ background: 'rgba(0,0,0,0.78)' }}
+      style={{ background: t.backdrop }}
       onClick={close}
     >
       <div
         className="relative w-full max-w-md rounded-3xl overflow-hidden mbom-pop-in"
         style={{
-          background: 'linear-gradient(180deg, #0b1830 0%, #061022 55%, #03070f 100%)',
+          background: t.panel,
           border: '2.5px solid #0a0a0a',
-          boxShadow: '0 10px 0 #0a0a0a, 0 0 60px rgba(6,182,212,0.32), inset 0 0 0 1.5px rgba(6,182,212,0.55)',
+          boxShadow: t.panelShadow,
         }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -240,7 +269,7 @@ export default function MyBattleOverviewModal({
               style={{ width: 9, height: 9, background: '#10b981', boxShadow: '0 0 10px #10b981, 0 0 0 2px #0a0a0a' }}
               aria-hidden="true"
             />
-            <span className="text-emerald-300 text-[9px] font-black uppercase" style={{ letterSpacing: '0.22em', textShadow: '0 1px 0 #0a0a0a' }}>
+            <span className="text-[9px] font-black uppercase" style={{ color: isLight ? '#059669' : '#6ee7b7', letterSpacing: '0.22em', textShadow: isLight ? 'none' : '0 1px 0 #0a0a0a' }}>
               Live
             </span>
           </div>
@@ -249,9 +278,9 @@ export default function MyBattleOverviewModal({
             aria-label="Close"
             onClick={close}
             className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)', border: '2.5px solid #0a0a0a', boxShadow: '0 2px 0 #0a0a0a' }}
+            style={{ background: t.pill, border: '2.5px solid #0a0a0a', boxShadow: '0 2px 0 #0a0a0a' }}
           >
-            <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" style={{ color: t.closeIcon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -289,8 +318,8 @@ export default function MyBattleOverviewModal({
           </div>
           <div className="flex items-center gap-2 mt-2">
             <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
-            <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: '#7dd3fc', fontSize: 10, letterSpacing: '0.2em', textShadow: '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}>
-              vs <span className="text-white">{opponent?.username || 'Opponent'}</span> · <span style={{ color: mode.color }}>{mode.label}</span>
+            <p className="font-black uppercase whitespace-nowrap text-center" style={{ color: isLight ? '#0e7490' : '#7dd3fc', fontSize: 10, letterSpacing: '0.2em', textShadow: isLight ? 'none' : '0 0 10px rgba(6,182,212,0.7)', margin: 0 }}>
+              vs <span style={{ color: t.textMain }}>{opponent?.username || 'Opponent'}</span> · <span style={{ color: mode.color }}>{mode.label}</span>
             </p>
             <span aria-hidden="true" style={{ flex: 1, height: 1.5, background: 'linear-gradient(270deg, transparent, #06b6d4)', boxShadow: '0 0 6px rgba(6,182,212,0.6)' }} />
           </div>
@@ -301,7 +330,7 @@ export default function MyBattleOverviewModal({
           <div
             className="rounded-2xl px-3 py-2.5 flex items-center gap-3"
             style={{
-              background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+              background: t.card,
               border: `2.5px solid ${mode.color}`,
               boxShadow: `0 4px 0 #0a0a0a, 0 0 16px ${mode.color}55`,
             }}
@@ -327,15 +356,15 @@ export default function MyBattleOverviewModal({
               >
                 {mode.label} MODE
               </div>
-              <div className="text-white text-xs font-bold mt-0.5 leading-snug">
+              <div className="text-xs font-bold mt-0.5 leading-snug" style={{ color: t.textMain }}>
                 {mode.tagline}
               </div>
             </div>
             <div
               className="flex-shrink-0 px-2 py-1 rounded-md text-[9px] font-black uppercase whitespace-nowrap"
               style={{
-                background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                color: '#facc15',
+                background: t.pill,
+                color: t.durationText,
                 border: '2px solid #0a0a0a',
                 boxShadow: '0 2px 0 #0a0a0a',
                 letterSpacing: '0.1em',
@@ -361,8 +390,9 @@ export default function MyBattleOverviewModal({
             >
               <UserAvatar user={myProfile} size={64} />
             </div>
-            <div className="mt-2 text-white text-[10px] font-black uppercase truncate w-full text-center px-2 py-1 rounded-lg" style={{
-              background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+            <div className="mt-2 text-[10px] font-black uppercase truncate w-full text-center px-2 py-1 rounded-lg" style={{
+              background: t.pill,
+              color: t.textMain,
               border: '2.5px solid #3b82f6',
               boxShadow: '0 2px 0 #0a0a0a, 0 0 8px rgba(59,130,246,0.4)',
               letterSpacing: '0.06em',
@@ -381,7 +411,7 @@ export default function MyBattleOverviewModal({
             >
               You
             </div>
-            <PlayerStat balance={myLiveBalance} pnl={myUnrealizedPnl} isBeta={isBeta} accent="#3b82f6" />
+            <PlayerStat balance={myLiveBalance} pnl={myUnrealizedPnl} isBeta={isBeta} accent="#3b82f6" textColor={t.textMain} />
           </div>
 
           <div className="flex flex-col items-center flex-shrink-0 self-center" style={{ minWidth: 48 }}>
@@ -410,8 +440,9 @@ export default function MyBattleOverviewModal({
                 size={64}
               />
             </div>
-            <div className="mt-2 text-white text-[10px] font-black uppercase truncate w-full text-center px-2 py-1 rounded-lg" style={{
-              background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
+            <div className="mt-2 text-[10px] font-black uppercase truncate w-full text-center px-2 py-1 rounded-lg" style={{
+              background: t.pill,
+              color: t.textMain,
               border: '2.5px solid #fb923c',
               boxShadow: '0 2px 0 #0a0a0a, 0 0 8px rgba(251,146,60,0.4)',
               letterSpacing: '0.06em',
@@ -430,7 +461,7 @@ export default function MyBattleOverviewModal({
             >
               Opp
             </div>
-            <PlayerStat balance={opponentLiveBalance} pnl={opponentUnrealizedPnl} isBeta={isBeta} accent="#fb923c" />
+            <PlayerStat balance={opponentLiveBalance} pnl={opponentUnrealizedPnl} isBeta={isBeta} accent="#fb923c" textColor={t.textMain} />
           </div>
         </div>
 
@@ -439,18 +470,18 @@ export default function MyBattleOverviewModal({
           <div
             className="mx-auto rounded-full px-3 py-2 flex items-center justify-center flex-wrap gap-x-2 gap-y-1"
             style={{
-              background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+              background: t.card,
               border: '2.5px solid #facc15',
               boxShadow: '0 4px 0 #0a0a0a, 0 0 16px rgba(250,204,21,0.45), inset 0 0 0 1px rgba(250,204,21,0.4)',
               maxWidth: 380,
             }}
           >
             <span style={{ fontSize: 16, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }} aria-hidden="true">🪙</span>
-            <span className="text-white font-black text-[12px] uppercase" style={{ letterSpacing: '0.06em', color: '#facc15' }}>
+            <span className="font-black text-[12px] uppercase" style={{ letterSpacing: '0.06em', color: t.durationText }}>
               {buyInLabel}
             </span>
             <span style={{ color: 'rgba(148,163,184,0.5)', fontSize: 12 }}>·</span>
-            <span className="text-white font-black text-[12px] uppercase" style={{ letterSpacing: '0.06em', color: '#facc15' }}>
+            <span className="font-black text-[12px] uppercase" style={{ letterSpacing: '0.06em', color: t.durationText }}>
               {potLabel}
             </span>
             <span style={{ fontSize: 16, filter: 'drop-shadow(0 1px 0 #0a0a0a)' }} aria-hidden="true">🏆</span>
@@ -467,7 +498,7 @@ export default function MyBattleOverviewModal({
               style={{
                 background: 'linear-gradient(180deg, rgba(34,211,238,0.12), rgba(8,145,178,0.12))',
                 border: '1px solid rgba(34,211,238,0.4)',
-                color: '#67e8f9',
+                color: isLight ? '#0891b2' : '#67e8f9',
                 letterSpacing: '0.04em',
               }}
             >
@@ -483,7 +514,7 @@ export default function MyBattleOverviewModal({
               style={{
                 background: 'linear-gradient(180deg, rgba(59,130,246,0.12), rgba(29,78,216,0.12))',
                 border: '1px solid rgba(59,130,246,0.4)',
-                color: '#93c5fd',
+                color: isLight ? '#2563eb' : '#93c5fd',
                 letterSpacing: '0.04em',
               }}
             >
@@ -530,9 +561,9 @@ export default function MyBattleOverviewModal({
               onClick={close}
               className="no-hover-effect w-full py-3 rounded-xl font-black text-xs uppercase"
               style={{
-                background: 'linear-gradient(180deg,#1a1a1a,#0d0d0d)',
-                border: '1px solid #1a2238',
-                color: '#9ca3af',
+                background: t.pill,
+                border: isLight ? '1px solid rgba(15,23,42,0.12)' : '1px solid #1a2238',
+                color: isLight ? '#475569' : '#9ca3af',
                 letterSpacing: '0.12em',
               }}
             >
