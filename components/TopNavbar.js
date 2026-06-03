@@ -1112,7 +1112,7 @@ export default function TopNavbar({
                       <button
                         onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
                         className="relative font-bold px-6 rounded-lg text-sm z-10 flex items-center h-full"
-                        style={{ backgroundColor: '#000000', color: '#ffffff' }}
+                        style={{ background: 'linear-gradient(135deg, #facc15, #eab308)', color: '#1a1505' }}
                       >
                         SIGN UP
                       </button>

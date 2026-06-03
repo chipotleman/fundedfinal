@@ -164,6 +164,48 @@ export default function DesktopRightRail({ isLoggedIn }) {
   const onlineFriends = friends.filter((f) => f.isOnline);
   const sortedFriends = [...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0)).slice(0, 6);
 
+  // Twitter-style "trending" topics for logged-out visitors. Logged-in users
+  // get the Friends card in this slot; guests have no friends list, so we fill
+  // the gap with real engagement signals (live battles + this week's top
+  // cappers) reframed as trends, falling back to evergreen platform topics when
+  // no live data is loaded yet. Each row nudges toward sign-up.
+  const openSignup = () =>
+    window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
+
+  const guestTrends = [];
+  // Only real live battles count as "trending" — the `battles` state is seeded
+  // with simulated placeholders (for the Live now card), which we must not pass
+  // off as real trends.
+  battles.filter((b) => !b.simulated).slice(0, 2).forEach((b) => {
+    guestTrends.push({
+      key: `b-${b.id}`,
+      category: 'Live battle',
+      title: `${b.user1?.username || 'Player 1'} vs ${b.user2?.username || 'Player 2'}`,
+      meta: `${(b.potSize || 0).toLocaleString()} coin pot`,
+      onClick: () => router.push(`/battle?battle=${b.id}`),
+    });
+  });
+  leaders.slice(0, 3).forEach((l, i) => {
+    guestTrends.push({
+      key: `l-${l.id || i}`,
+      category: 'Top capper',
+      title: `@${l.username}`,
+      meta:
+        typeof l.profit === 'number'
+          ? `${l.profit >= 0 ? '+' : ''}${l.profit.toLocaleString()} this week`
+          : 'On the leaderboard',
+      onClick: () => router.push('/leaderboard'),
+    });
+  });
+  if (guestTrends.length === 0) {
+    [
+      { category: 'Trending in Basketball', title: 'NBA tonight' },
+      { category: 'Trending in Football', title: 'NFL matchups' },
+      { category: 'Hot game mode', title: 'RUSH 1v1' },
+    ].forEach((t, i) => guestTrends.push({ key: `f-${i}`, ...t, onClick: openSignup }));
+  }
+  const trendsToShow = guestTrends.slice(0, 5);
+
   return (
     <div className="desktop-right-rail lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
       {/* Live now */}
@@ -288,6 +330,34 @@ export default function DesktopRightRail({ isLoggedIn }) {
               </div>
             ))
           )}
+        </Card>
+      )}
+
+      {/* Trending — logged-out only (fills the Friends slot for guests) */}
+      {!isLoggedIn && (
+        <Card title="Trending on Piks" action="Sign up" onAction={openSignup}>
+          {trendsToShow.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={t.onClick}
+              className="w-full flex flex-col items-start px-2 py-2 rounded-lg text-left lg:hover:bg-white/5 transition-colors"
+            >
+              <span className="text-[10px]" style={{ color: textMuted }}>{t.category}</span>
+              <span className="text-[13px] font-bold truncate max-w-full" style={{ color: textPrimary }}>{t.title}</span>
+              {t.meta && (
+                <span className="text-[10px]" style={{ color: textMuted }}>{t.meta}</span>
+              )}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={openSignup}
+            className="w-full mt-1 py-2 rounded-lg text-[12px] font-bold transition-transform active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #facc15, #eab308)', color: '#1a1505' }}
+          >
+            Join the action
+          </button>
         </Card>
       )}
 
