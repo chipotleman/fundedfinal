@@ -643,12 +643,26 @@ function buildCommentThreads(comments) {
 // on first expand) plus a comment composer. Comments support threaded replies:
 // each one has a "Reply" action that addresses that user with an @mention.
 // =============================================================================
+// Subtle, non-interactive footer shown to signed-out viewers in place of
+// the Like / Comment / Share action row so guests aren't given affordances
+// that look clickable but can't do anything.
+function GuestEngageRow() {
+  return (
+    <div
+      className="px-4 py-2.5 text-center text-[12px]"
+      style={{ borderTop: `1px solid ${border}`, color: textMuted }}
+    >
+      Sign up to like, comment &amp; share.
+    </div>
+  );
+}
+
 function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultOpen = false, scrollRef }) {
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likePending, setLikePending] = useState(false);
   const [commentCount, setCommentCount] = useState(post.commentCount || 0);
-  const [commentsOpen, setCommentsOpen] = useState(!!defaultOpen);
+  const [commentsOpen, setCommentsOpen] = useState(!isGuest && !!defaultOpen);
   const [comments, setComments] = useState([]);
   const [commentsLoaded, setCommentsLoaded] = useState(false);
   const [commentDraft, setCommentDraft] = useState('');
@@ -705,7 +719,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
 
   // Auto-load comments once when opened via deep-link (?post=<id>).
   useEffect(() => {
-    if (defaultOpen && !commentsLoaded) {
+    if (!isGuest && defaultOpen && !commentsLoaded) {
       (async () => {
         try {
           const res = await fetch(`/api/social/posts/${post.id}/comments`);
@@ -716,7 +730,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
         } catch {}
       })();
     }
-  }, [defaultOpen, commentsLoaded, post.id]);
+  }, [isGuest, defaultOpen, commentsLoaded, post.id]);
 
   const handleLike = async () => {
     if (isGuest || likePending) return;
@@ -803,6 +817,11 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
           <div className="mt-1 text-[15px] leading-snug whitespace-pre-wrap break-words" style={{ color: textPrimary }}>
             {post.body}
           </div>
+          {isGuest ? (
+            <div className="mt-2.5 text-[12px]" style={{ color: textMuted }}>
+              Sign up to like &amp; comment.
+            </div>
+          ) : (
           <div className="flex items-center gap-1 mt-2.5 -ml-2 max-w-[340px]">
             <button
               type="button"
@@ -852,9 +871,10 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
               </svg>
             </button>
           </div>
+          )}
         </div>
       </div>
-      {commentsOpen && (
+      {!isGuest && commentsOpen && (
         <div style={{ borderTop: `1px solid ${border}` }}>
           <div className="px-4 py-3 space-y-3">
             {!commentsLoaded ? (
@@ -1355,6 +1375,9 @@ function LiveBattlePost({ battle, onOpenProfile, currentUser, isGuest, onShare, 
       )}
 
       {/* Action row — lightweight post style shared with ResultPost */}
+      {isGuest ? (
+        <GuestEngageRow />
+      ) : (
       <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
         <button
           type="button"
@@ -1394,8 +1417,9 @@ function LiveBattlePost({ battle, onOpenProfile, currentUser, isGuest, onShare, 
           <span>Share</span>
         </button>
       </div>
+      )}
 
-      {chatOpen && (
+      {!isGuest && chatOpen && (
         <div onClick={(e) => e.stopPropagation()}>
           <BattleCommentThread
             matchupId={battle.id}
@@ -1514,6 +1538,9 @@ function ResultPost({ highlight, onOpenProfile, onReplay, currentUser, isGuest, 
           {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
         </div>
       )}
+      {isGuest ? (
+        <GuestEngageRow />
+      ) : (
       <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
         <button
           type="button"
@@ -1553,7 +1580,8 @@ function ResultPost({ highlight, onOpenProfile, onReplay, currentUser, isGuest, 
           <span>Share</span>
         </button>
       </div>
-      {commentsOpen && (
+      )}
+      {!isGuest && commentsOpen && (
         <BattleCommentThread
           matchupId={highlight.id}
           currentUser={currentUser}
@@ -2113,6 +2141,7 @@ function SportsNewsRail() {
 function RightSidebar({
   liveBattles,
   friends,
+  leaders,
   isGuest,
   onOpenBattle,
   onOpenProfile,
@@ -2121,6 +2150,7 @@ function RightSidebar({
   onPickPlayFriend,
   onPickPrivateMatch,
 }) {
+  const router = useRouter();
   const isBeta = useBetaMode();
   const [challenged, setChallenged] = useState({});
 
@@ -2280,8 +2310,69 @@ function RightSidebar({
         </SidebarCard>
       )}
 
+      {leaders && leaders.length > 0 && (
+        <SidebarCard title="Top cappers">
+          <div className="pb-2">
+            {leaders.map((l, i) => (
+              <button
+                key={l.id || i}
+                type="button"
+                onClick={() => l.id && router.push(`/profile/${l.id}`)}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-left transition-colors hover:bg-white/[0.03]"
+              >
+                <span className="flex-shrink-0 w-5 text-center text-[12px] font-black" style={{ color: textPrimary }}>
+                  {i === 0 ? (
+                    <span className="relative inline-flex items-center justify-center" aria-label="1st place" title="1st place">
+                      <span style={{ fontSize: 19, lineHeight: 1 }}>👑</span>
+                      <span
+                        className="absolute font-black"
+                        style={{ fontSize: 9, color: '#7c2d12', top: '58%', left: '50%', transform: 'translate(-50%,-50%)' }}
+                      >
+                        1
+                      </span>
+                    </span>
+                  ) : (
+                    l.rank || i + 1
+                  )}
+                </span>
+                <span className="flex-shrink-0">
+                  <FramedAvatar avatar={l.avatar} username={l.username || 'P'} frameId={l.equippedFrame} size={32} bgColor={avatarBg} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12px] font-semibold truncate" style={{ color: textPrimary }}>
+                    {l.username}
+                  </span>
+                  <span className="block text-[10px]" style={{ color: textMuted }}>
+                    {(parseInt(l.wins, 10) || 0)}W · {(parseInt(l.losses, 10) || 0)}L
+                  </span>
+                </span>
+                {typeof l.profit === 'number' && (
+                  isBeta ? (
+                    <span className="flex-shrink-0 text-right leading-tight">
+                      <span className="block text-[8px] font-semibold uppercase tracking-wider" style={{ color: textPrimary }}>
+                        Crowns
+                      </span>
+                      <span className="block text-[11px] font-bold" style={{ color: '#facc15' }}>
+                        {l.profit >= 0 ? '+' : ''}{l.profit.toLocaleString()}
+                      </span>
+                    </span>
+                  ) : (
+                    <span
+                      className="flex-shrink-0 text-[11px] font-bold"
+                      style={{ color: l.profit >= 0 ? '#10b981' : '#ef4444' }}
+                    >
+                      {l.profit >= 0 ? '+' : ''}{l.profit.toLocaleString()}
+                    </span>
+                  )
+                )}
+              </button>
+            ))}
+          </div>
+        </SidebarCard>
+      )}
+
       <div className="px-4 text-[11px] leading-relaxed" style={{ color: textMuted }}>
-        Piks · Bet smarter, battle harder. {isBeta ? 'Beta' : ''}
+        Piks · Prove Who's Better. {isBeta ? 'Beta' : ''}
       </div>
     </div>
   );
@@ -2331,7 +2422,27 @@ export default function SocialFeedPage({ data }) {
   // and Instagram-style post cards inline.
   const [liveBattles, setLiveBattles] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [leaders, setLeaders] = useState([]);
   const sseRef = useRef(null);
+
+  // Top cappers for the right rail. Fetched once on mount so the sidebar
+  // (especially for signed-out guests, whose rail is otherwise sparse) has
+  // social proof. Mirrors DesktopRightRail's leaderboard fetch shape.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/leaderboard?sortBy=profit&limit=5');
+        if (res.ok && !cancelled) {
+          const json = await res.json();
+          setLeaders(Array.isArray(json?.leaders) ? json.leaders.slice(0, 5) : []);
+        }
+      } catch {
+        /* leave leaders empty — the card simply doesn't render */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Track initial load so we can render a single matched skeleton until
   // both live battles and posts have resolved (avoids a two-stage flash
@@ -2617,6 +2728,7 @@ export default function SocialFeedPage({ data }) {
             <RightSidebar
               liveBattles={liveBattles}
               friends={friends}
+              leaders={leaders}
               isGuest={isGuest}
               onOpenBattle={handleOpenBattle}
               onOpenProfile={onOpenProfile}
