@@ -193,7 +193,7 @@ export default function Dashboard() {
   const isBeta = useBetaMode();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, hasFetchedOnce: gamesHasFetchedOnce, error: gamesError, lastUpdated, isDemoMode } = useGames();
-  const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup, myBalance: matchupMyBalance, opponentBalance: matchupOppBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl } = useMatchup();
+  const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup, myBalance: matchupMyBalance, opponentBalance: matchupOppBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl, loading: matchupLoading } = useMatchup();
   const { theme: uiTheme } = useTheme();
   const isLightTheme = uiTheme === 'light';
   const [selectedSport, setSelectedSport] = useState('Live');
@@ -1518,6 +1518,10 @@ export default function Dashboard() {
           currentUserId={user?.id}
           balance={bankroll}
           youVsState={{
+            // Lets YouVsCard distinguish "not in a battle" from "matchup
+            // not loaded yet" so it shows a skeleton instead of flashing
+            // PLAY NOW before snapping to an active battle on refresh.
+            hydrated: !matchupLoading,
             status: hasActiveMatchup
               ? 'active'
               : isWaiting

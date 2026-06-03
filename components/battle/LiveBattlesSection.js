@@ -285,21 +285,27 @@ function PlayerAvatar({ user, isWinning, size = 44, bgColor = '#1e40af', onClick
   );
 }
 
-function PnlBadge({ pnlPercent, size = 'normal' }) {
+function PnlBadge({ pnlPercent, size = 'normal', tone = 'green' }) {
   const val = parseFloat(pnlPercent);
   const isPos = val >= 0;
   const fontSize = size === 'small' ? '10px' : '11px';
   const padding = size === 'small' ? '1px 5px' : '2px 6px';
-  
+  // `tone="gold"` recolors the positive state to the same yellow as the
+  // active YouVsCard's outer glow so the in-card PnL chip matches the
+  // card frame instead of clashing green-on-gold. Negative stays red.
+  const posBg = tone === 'gold' ? 'rgba(250, 204, 21, 0.12)' : 'rgba(16, 185, 129, 0.12)';
+  const posColor = tone === 'gold' ? '#facc15' : '#10b981';
+  const posBorder = tone === 'gold' ? 'rgba(250, 204, 21, 0.25)' : 'rgba(16, 185, 129, 0.25)';
+
   return (
     <span style={{
       fontSize,
       fontWeight: 700,
       padding,
       borderRadius: '6px',
-      background: isPos ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-      color: isPos ? '#10b981' : '#ef4444',
-      border: `1px solid ${isPos ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
+      background: isPos ? posBg : 'rgba(239, 68, 68, 0.12)',
+      color: isPos ? posColor : '#ef4444',
+      border: `1px solid ${isPos ? posBorder : 'rgba(239, 68, 68, 0.25)'}`,
     }}>
       {isPos ? '+' : ''}{pnlPercent}%
     </span>
@@ -1191,6 +1197,11 @@ function YouVsCard({
   // matchmaking to original regardless of remembered prefs.
   const isBeta = useBetaMode();
   const status = youVsState?.status || 'idle';
+  // Whether the caller's matchup state has finished its initial load.
+  // The home page forwards `hydrated: !matchupLoading` from MatchupContext
+  // so we can tell "genuinely not in a battle" from "haven't fetched yet".
+  // Callers that don't pass it default to hydrated (unchanged behavior).
+  const hydrated = youVsState?.hydrated !== false;
   const myProfile = youVsState?.myProfile || null;
   const opponent = youVsState?.opponent || null;
   const matchup = youVsState?.matchup || null;
@@ -2539,20 +2550,20 @@ function YouVsCard({
                     if (bal != null) {
                       return (
                         <>
-                          <span className="text-[10px] font-bold uppercase tracking-wider sm:hidden" style={{ color: '#34d399' }}>
+                          <span className="text-[10px] font-bold uppercase tracking-wider sm:hidden" style={{ color: '#facc15' }}>
                             You
                           </span>
                           <div className="hidden sm:flex items-center gap-1.5 mt-0.5">
                             <span className="text-[11px] font-bold tabular-nums" style={{ color: '#fff' }}>
                               {isBeta ? formatMoney(bal, 0) : `$${formatMoney(bal, 0)}`}
                             </span>
-                            {pct != null && <PnlBadge pnlPercent={pct} size="small" />}
+                            {pct != null && <PnlBadge pnlPercent={pct} size="small" tone="gold" />}
                           </div>
                         </>
                       );
                     }
                     return (
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#34d399' }}>
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#facc15' }}>
                         You
                       </span>
                     );
@@ -2591,7 +2602,7 @@ function YouVsCard({
                             Opponent
                           </span>
                           <div className="hidden sm:flex items-center justify-end gap-1.5 mt-0.5">
-                            {pct != null && <PnlBadge pnlPercent={pct} size="small" />}
+                            {pct != null && <PnlBadge pnlPercent={pct} size="small" tone="gold" />}
                             <span className="text-[11px] font-bold tabular-nums" style={{ color: '#fff' }}>
                               {isBeta ? formatMoney(bal, 0) : `$${formatMoney(bal, 0)}`}
                             </span>
@@ -2722,6 +2733,24 @@ function YouVsCard({
               </div>
             </div>
           </>
+        ) : !hydrated ? (
+          // First-load placeholder. Until MatchupContext resolves we don't
+          // yet know whether the user is mid-battle, so render a neutral
+          // skeleton instead of the idle PLAY NOW treatment — otherwise a
+          // user already in a battle sees PLAY NOW flash on refresh and
+          // snap to their battle once the matchup data arrives.
+          <div className="flex flex-1 items-center gap-2.5 py-1 sm:py-2 select-none animate-pulse" aria-hidden="true">
+            <div className="w-10 h-10 rounded-full bg-white/10 flex-shrink-0" />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="h-3 w-24 max-w-full rounded bg-white/10" />
+              <div className="h-2.5 w-16 max-w-full rounded bg-white/5" />
+            </div>
+            <div className="w-8 h-5 rounded bg-white/10 flex-shrink-0" />
+            <div className="flex-1 min-w-0 flex flex-col items-end space-y-1.5">
+              <div className="h-3 w-24 max-w-full rounded bg-white/10" />
+              <div className="h-2.5 w-16 max-w-full rounded bg-white/5" />
+            </div>
+          </div>
         ) : isIdle ? (
           // Graffiti / cartoon PLAY NOW treatment — the sticker is the
           // focal point of the card. The buy-in / game-mode / pot
