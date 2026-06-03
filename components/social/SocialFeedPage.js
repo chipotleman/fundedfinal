@@ -357,18 +357,47 @@ function PostComposer({
 
 // =============================================================================
 // Render a comment body with @mentions highlighted (Instagram-style). The
-// leading "@username" tokens link visually (blue) so it's obvious who a reply
-// is addressed to. Pure display — no navigation.
-function renderCommentBody(body, mentionColor, baseColor) {
+// leading "@username" tokens are blue so it's obvious who a reply is addressed
+// to. When `resolveMention(handle)` can map the handle back to a known user
+// (post author or anyone in the thread), the mention becomes a button that
+// opens that player's profile preview via `onMentionClick(user, e)`. Handles
+// that can't be resolved fall back to non-clickable styled text.
+function renderCommentBody(body, mentionColor, baseColor, resolveMention, onMentionClick) {
   if (!body) return null;
   const parts = String(body).split(/(@[A-Za-z0-9_]+)/g);
-  return parts.map((part, i) =>
-    part.startsWith('@') && part.length > 1 ? (
-      <span key={i} style={{ color: mentionColor, fontWeight: 600 }}>{part}</span>
-    ) : (
-      <span key={i} style={{ color: baseColor }}>{part}</span>
-    )
-  );
+  return parts.map((part, i) => {
+    if (part.startsWith('@') && part.length > 1) {
+      const user = resolveMention ? resolveMention(part.slice(1).toLowerCase()) : null;
+      if (user?.id && onMentionClick) {
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMentionClick(user, e); }}
+            className="hover:underline"
+            style={{
+              color: mentionColor,
+              fontWeight: 600,
+              padding: 0,
+              margin: 0,
+              border: 0,
+              background: 'transparent',
+              fontSize: 'inherit',
+              fontFamily: 'inherit',
+              lineHeight: 'inherit',
+              cursor: 'pointer',
+              display: 'inline',
+              verticalAlign: 'baseline',
+            }}
+          >
+            {part}
+          </button>
+        );
+      }
+      return <span key={i} style={{ color: mentionColor, fontWeight: 600 }}>{part}</span>;
+    }
+    return <span key={i} style={{ color: baseColor }}>{part}</span>;
+  });
 }
 
 // Group a flat comment list into Instagram-style threads: top-level comments,
@@ -434,6 +463,25 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
   const commentInputRef = useRef(null);
 
   const author = post.author || {};
+
+  // Resolve an @handle back to a real user so a mention in a comment body can
+  // open that player's profile preview. We index everyone we already know in
+  // this thread — the post author, the viewer, and every comment author —
+  // keyed by their normalized handle (the same lowercase, space-stripped form
+  // `startReply` writes into the body), so clicking "@floydmayweather" finds
+  // the matching user object (with id) the popover needs to fetch a profile.
+  const mentionUsers = useMemo(() => {
+    const map = new Map();
+    const add = (u) => {
+      if (u?.id && u?.username) {
+        map.set(u.username.replace(/\s+/g, '').toLowerCase(), u);
+      }
+    };
+    add(author);
+    add(currentUser);
+    comments.forEach((c) => add(c.author));
+    return map;
+  }, [author, currentUser, comments]);
 
   // Begin a threaded reply to a specific comment: prefill the composer with the
   // target's @handle (Instagram-style) and remember the parent so the next
@@ -628,7 +676,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
                           <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
                             {ca.username || 'Player'}
                           </button>
-                          <div className="text-[13px] whitespace-pre-wrap break-words">{renderCommentBody(c.body, '#60a5fa', textPrimary)}</div>
+                          <div className="text-[13px] whitespace-pre-wrap break-words">{renderCommentBody(c.body, '#60a5fa', textPrimary, (h) => mentionUsers.get(h), onOpenProfile)}</div>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5 pl-1">
                           <span className="text-[10px]" style={{ color: textMuted }}>{timeAgo(c.createdAt)}</span>
