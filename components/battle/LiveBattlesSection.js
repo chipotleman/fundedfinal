@@ -1980,17 +1980,17 @@ function YouVsCard({
       aria-expanded={isIdle ? undefined : isExpanded}
       style={{
         background: isLight
-          ? 'linear-gradient(180deg, rgba(250,204,21,0.16) 0%, rgba(234,179,8,0.08) 45%, #ffffff 100%), #ffffff'
+          ? 'linear-gradient(180deg, rgba(249,115,22,0.16) 0%, rgba(234,88,12,0.08) 45%, #ffffff 100%), #ffffff'
           : 'linear-gradient(180deg, rgba(16,185,129,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
         border: isLight
           ? (isExpanded
-              ? '1.5px solid rgba(234, 179, 8, 0.9)'
-              : '1.5px solid rgba(234, 179, 8, 0.65)')
+              ? '1.5px solid rgba(234, 88, 12, 0.9)'
+              : '1.5px solid rgba(249, 115, 22, 0.65)')
           : (isExpanded
               ? '1.5px solid rgba(52, 211, 153, 0.85)'
               : '1.5px solid rgba(16, 185, 129, 0.6)'),
         boxShadow: isLight
-          ? '0 0 0 1px rgba(250,204,21,0.25) inset, 0 0 18px rgba(250,204,21,0.4), 0 0 32px rgba(234,179,8,0.2)'
+          ? '0 0 0 1px rgba(249,115,22,0.25) inset, 0 0 18px rgba(249,115,22,0.45), 0 0 32px rgba(234,88,12,0.25)'
           : '0 0 0 1px rgba(16,185,129,0.15) inset, 0 0 18px rgba(16,185,129,0.28), 0 0 32px rgba(6,182,212,0.12)',
         transition: 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease-out, border-color 180ms ease-out',
         outline: 'none',
@@ -2566,20 +2566,20 @@ function YouVsCard({
                     if (bal != null) {
                       return (
                         <>
-                          <span className="text-[10px] font-bold uppercase tracking-wider sm:hidden" style={{ color: '#facc15' }}>
+                          <span className="text-[10px] font-bold uppercase tracking-wider sm:hidden" style={{ color: '#fff' }}>
                             You
                           </span>
                           <div className="hidden sm:flex items-center gap-1.5 mt-0.5">
                             <span className="text-[11px] font-bold tabular-nums" style={{ color: '#fff' }}>
                               {isBeta ? formatMoney(bal, 0) : `$${formatMoney(bal, 0)}`}
                             </span>
-                            {pct != null && <PnlBadge pnlPercent={pct} size="small" tone="gold" />}
+                            {pct != null && <PnlBadge pnlPercent={pct} size="small" />}
                           </div>
                         </>
                       );
                     }
                     return (
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#facc15' }}>
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#fff' }}>
                         You
                       </span>
                     );
@@ -2618,7 +2618,7 @@ function YouVsCard({
                             Opponent
                           </span>
                           <div className="hidden sm:flex items-center justify-end gap-1.5 mt-0.5">
-                            {pct != null && <PnlBadge pnlPercent={pct} size="small" tone="gold" />}
+                            {pct != null && <PnlBadge pnlPercent={pct} size="small" />}
                             <span className="text-[11px] font-bold tabular-nums" style={{ color: '#fff' }}>
                               {isBeta ? formatMoney(bal, 0) : `$${formatMoney(bal, 0)}`}
                             </span>
