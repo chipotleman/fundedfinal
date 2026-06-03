@@ -3068,7 +3068,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                 className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-sm leading-snug break-words ${
                   mine
                     ? 'text-white rounded-br-sm'
-                    : 'text-white rounded-bl-sm'
+                    : `rounded-bl-sm ${isLight ? '' : 'text-white'}`
                 }`}
                 style={{
                   ...(mine
@@ -3077,6 +3077,13 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                         border: '2.5px solid #0a0a0a',
                         boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.35)',
                         textShadow: '0 1px 0 rgba(0,0,0,0.25)',
+                      }
+                    : isLight
+                    ? {
+                        background: 'linear-gradient(180deg,#ffffff,#f1f5f9)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a',
+                        color: '#0f172a',
                       }
                     : {
                         background: 'linear-gradient(180deg,#1f2937,#111827)',
@@ -3172,8 +3179,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                   aria-label="Re-record voice note"
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
                   style={{
-                    backgroundColor: '#1f1f1f',
-                    color: '#fca5a5',
+                    backgroundColor: isLight ? '#fef2f2' : '#1f1f1f',
+                    color: isLight ? '#dc2626' : '#fca5a5',
                     border: '1px solid rgba(239,68,68,0.4)',
                   }}
                 >
@@ -3188,8 +3195,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                     title="Add more to this recording"
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
                     style={{
-                      backgroundColor: '#0f1622',
-                      color: '#bfdbfe',
+                      backgroundColor: isLight ? '#eff6ff' : '#0f1622',
+                      color: isLight ? '#2563eb' : '#bfdbfe',
                       border: '1px solid rgba(59,130,246,0.45)',
                     }}
                   >
