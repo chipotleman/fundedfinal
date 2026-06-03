@@ -1132,6 +1132,38 @@ html.light .text-gray-300 { color: #475569; }
 html.light .text-gray-400 { color: #64748b; }
 html.light .text-gray-500 { color: #64748b; }
 
+/* User-menu row hover painted a dark #1a1a1a — the `lg:hover:bg-[#1a1a1a]`
+   variant isn't caught by the non-hover `.bg-[#1a1a1a]` override above, so in
+   light mode rows turned black-on-black on hover (unreadable). Repaint the
+   hover a pale yellow with dark text/icons so every label stays legible. The
+   red Sign-Out hover is intentionally left alone (it uses red, not #1a1a1a). */
+html.light [role="menu"] .lg\:hover\:bg-\[\#1a1a1a\]:hover {
+  background-color: #fdf3c4 !important;
+  color: #1f2937 !important;
+}
+html.light [role="menu"] .lg\:hover\:bg-\[\#1a1a1a\]:hover .lg\:hover\:text-blue-400,
+html.light [role="menu"] .lg\:hover\:text-blue-400:hover {
+  color: #1f2937 !important;
+}
+
+/* Notifications dropdown: the blue "View" action buttons + "View all" link read
+   as the dark-theme blue on the light surface. Rebrand them to the light-theme
+   gold so they match the Crowns palette; dark text for contrast on the gold. */
+html.light [data-notifications-dropdown] .bg-blue-500 {
+  background-color: #facc15 !important;
+  color: #1f2937 !important;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.40) !important;
+}
+html.light [data-notifications-dropdown] .bg-blue-500:hover {
+  background-color: #eab308 !important;
+}
+html.light [data-notifications-dropdown] .text-blue-300 {
+  color: #b8860b !important;
+}
+html.light [data-notifications-dropdown] .text-blue-300:hover {
+  color: #92710a !important;
+}
+
 /* ─── Inline-style black background overrides ────────────────────
    Many page roots (pages/index.js, pages/battle.js, my-picks, etc.)
    and the fixed z:-1 backdrop in pages/_app.js paint black via

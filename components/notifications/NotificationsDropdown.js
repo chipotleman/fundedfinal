@@ -116,6 +116,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
       ref={ref}
       role="dialog"
       aria-label="Notifications"
+      data-notifications-dropdown="true"
       className="fixed left-1/2 -translate-x-1/2 top-[var(--top-nav-height,70px)] sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 sm:top-full mt-2 w-[calc(100vw-16px)] max-w-sm sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#3b82f6]/30 rounded-xl shadow-2xl z-[70] overflow-hidden"
       style={{
         maxHeight: '70vh',
