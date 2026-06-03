@@ -942,6 +942,7 @@ export default function PublicProfile() {
                       online state textually. Showing both is just
                       visual noise per user feedback. */}
                   <UserAvatar
+                    user={{ id: profile.id || id, username: profile.username }}
                     avatar={profile.avatar}
                     username={profile.username}
                     frameId={profile.equippedFrame}
