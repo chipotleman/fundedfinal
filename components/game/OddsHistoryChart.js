@@ -255,7 +255,10 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
     // Opening line — a stable probability the book put up before the
     // game. Anchored loosely to the current anchor but pulled toward
     // 50/50, so a 70/30 current game might have opened ~58/42 etc.
-    const opening = Math.min(0.85, Math.max(0.15, 0.5 + (target - 0.5) * 0.4 + (rand() - 0.5) * 0.06));
+    // Opening sits most of the way toward the current line (not pinned near
+    // 50/50) so the favorite is visible across the whole window instead of the
+    // line looking flat-and-even until a dramatic fan-out at the right edge.
+    const opening = Math.min(0.88, Math.max(0.12, 0.5 + (target - 0.5) * 0.62 + (rand() - 0.5) * 0.06));
 
     // Effective game-start clamped to the visible window. If the game
     // hasn't actually started yet (scheduled), treat 'now' as the
@@ -331,7 +334,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
         // Per-tick jitter for the jagged look — bigger than pre-game. A lower
         // pull lets the line wander off the intent path between swings so it
         // reads as live movement rather than a smooth glide to the target.
-        const noise = (rand() - 0.5) * 0.065;
+        const noise = (rand() - 0.5) * 0.05;
         const pull = (intent - v) * 0.26;
         v = Math.min(0.98, Math.max(0.02, v + noise + pull));
 
@@ -384,10 +387,12 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
         if (prev.length === 0) return prev;
         const last = prev[prev.length - 1];
         const target = liveAnchor.home;
-        // Bigger drift than before (±1.5%) so movement is actually
-        // visible, with a moderate pull-back so it stays near the anchor.
-        const drift = (Math.random() - 0.5) * 0.03;
-        const pull = (target - last.homeImplied) * 0.12;
+        // Gentle drift (±0.6%) with a firmer pull-back so the right edge
+        // wanders just enough to feel live, without whipping toward the anchor
+        // every few seconds (which made every game's tail look like a big
+        // last-minute swing).
+        const drift = (Math.random() - 0.5) * 0.012;
+        const pull = (target - last.homeImplied) * 0.16;
         let v = last.homeImplied + drift + pull;
         v = Math.min(0.985, Math.max(0.015, v));
         const orr = liveAnchor.overround || 1;
