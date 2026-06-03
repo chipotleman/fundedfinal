@@ -510,159 +510,8 @@ export default function TopNavbar({
   }, []);
 
   const handleSignOut = async () => {
-    // Gather session data for summary popup BEFORE signing out
     if (typeof window !== 'undefined') {
-      const sessionStartTime = localStorage.getItem('session_start_time');
-      const duration = sessionStartTime ? Date.now() - parseInt(sessionStartTime) : 0;
-      
-      // Get session start stats for calculating bets placed THIS session
-      let sessionStartStats = { 
-        demoBets: 0, 
-        demoBetHistoryCount: 0, 
-        profileBets: 0,
-        profileWins: 0,
-        profileLosses: 0,
-        startingBalance: null,
-        challengeName: null
-      };
-      try {
-        const startStats = localStorage.getItem('session_start_stats');
-        if (startStats) {
-          sessionStartStats = JSON.parse(startStats);
-        }
-      } catch (e) {}
-      
-      // Get betting stats - prioritize real user data over demo data
-      let sessionBetsPlaced = 0;
-      let sessionWins = 0;
-      let sessionLosses = 0;
-      let sessionPending = 0;
-      let startingBalance = null;
-      let endingBalance = null;
-      let challengeName = null;
-      let challengePhase = null;
-      let isDemo = false;
-      
-      // Check real user profile stats FIRST (prioritize real data)
-      if (userProfile && (userProfile.total_bets > 0 || userProfile.wins > 0 || userProfile.losses > 0 || sessionStartStats.startingBalance)) {
-        // Calculate SESSION-specific bet counts
-        const currentTotalBets = userProfile.total_bets || 0;
-        const currentWins = userProfile.wins || 0;
-        const currentLosses = userProfile.losses || 0;
-        
-        sessionBetsPlaced = currentTotalBets - (sessionStartStats.profileBets || 0);
-        if (sessionBetsPlaced < 0) sessionBetsPlaced = 0;
-        
-        sessionWins = currentWins - (sessionStartStats.profileWins || 0);
-        if (sessionWins < 0) sessionWins = 0;
-        
-        sessionLosses = currentLosses - (sessionStartStats.profileLosses || 0);
-        if (sessionLosses < 0) sessionLosses = 0;
-        
-        sessionPending = sessionBetsPlaced - sessionWins - sessionLosses;
-        if (sessionPending < 0) sessionPending = 0;
-        
-        // Balance tracking (use nullish check so 0 balance is valid)
-        startingBalance = sessionStartStats.startingBalance;
-        endingBalance = userProfile?.bankroll !== undefined && userProfile?.bankroll !== null 
-          ? parseFloat(userProfile.bankroll) 
-          : startingBalance;
-        
-        // Get challenge info
-        challengePhase = userProfile.phase || null;
-        challengeName = sessionStartStats.challengeName;
-        isDemo = false;
-        
-        // If challengeName wasn't stored at session start, get it now
-        if (!challengeName) {
-          const storedChallenge = localStorage.getItem('purchased_challenge');
-          if (storedChallenge) {
-            try {
-              const challenge = JSON.parse(storedChallenge);
-              challengeName = challenge.name || null;
-            } catch (e) {}
-          }
-        }
-      } else {
-        // Only use demo data if no real user data exists
-        const demoState = localStorage.getItem('demo_state');
-        const demoBetHistory = localStorage.getItem('demo_bet_history');
-        const demoChallenge = localStorage.getItem('demo_challenge');
-        
-        if (demoState) {
-          try {
-            const state = JSON.parse(demoState);
-            const currentDemoBets = state.totalBets || 0;
-            sessionBetsPlaced = currentDemoBets - (sessionStartStats.demoBets || 0);
-            if (sessionBetsPlaced < 0) sessionBetsPlaced = currentDemoBets;
-            
-            sessionWins = state.wins || 0;
-            sessionLosses = state.losses || 0;
-            isDemo = true;
-          } catch (e) {}
-        }
-        
-        // Also check demo bet history for more accurate tracking
-        if (demoBetHistory) {
-          try {
-            const bets = JSON.parse(demoBetHistory);
-            const sessionBetsFromHistory = bets.length - (sessionStartStats.demoBetHistoryCount || 0);
-            
-            // Use the higher count between state and history
-            if (sessionBetsFromHistory > sessionBetsPlaced) {
-              sessionBetsPlaced = sessionBetsFromHistory;
-            }
-            
-            // Calculate wins/losses/pending from bet history
-            let historyWins = 0;
-            let historyLosses = 0;
-            let historyPending = 0;
-            
-            bets.forEach(bet => {
-              if (bet.status === 'won') {
-                historyWins++;
-              } else if (bet.status === 'lost') {
-                historyLosses++;
-              } else {
-                historyPending++;
-              }
-            });
-            
-            // Use history stats if they're more complete
-            if (bets.length > 0) {
-              sessionWins = historyWins;
-              sessionLosses = historyLosses;
-              sessionPending = historyPending;
-            }
-            
-            isDemo = true;
-          } catch (e) {}
-        }
-        
-        // Get demo challenge info
-        if (demoChallenge) {
-          try {
-            const challenge = JSON.parse(demoChallenge);
-            challengeName = 'Demo Trial';
-            challengePhase = challenge.name || 'Demo';
-          } catch (e) {}
-        }
-      }
-      
-      const sessionData = {
-        duration,
-        betsPlaced: sessionBetsPlaced,
-        wins: sessionWins,
-        losses: sessionLosses,
-        pending: sessionPending,
-        startingBalance,
-        endingBalance,
-        challengeName,
-        challengePhase,
-        isDemo
-      };
-      
-      // Clear local session data first
+      // Clear local session data
       localStorage.removeItem('demo_user');
       localStorage.removeItem('user_session');
       localStorage.removeItem('current_user');
@@ -670,10 +519,12 @@ export default function TopNavbar({
       localStorage.removeItem('session_start_time');
       localStorage.removeItem('session_start_stats');
       sessionStorage.clear();
-      
-      // Dispatch event to show summary popup first
-      window.dispatchEvent(new CustomEvent('openSessionSummary', { detail: sessionData }));
-      
+
+      // Reset app-level login state immediately (the _app session effect is
+      // keyed on the SSR `session` prop, which doesn't change on a
+      // non-redirecting client sign-out).
+      window.dispatchEvent(new CustomEvent('userLoggedOut'));
+
       // Sign out from NextAuth without triggering redirect
       signOut({ redirect: false, callbackUrl: '/' });
     }
