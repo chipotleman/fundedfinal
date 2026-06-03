@@ -356,6 +356,199 @@ function PostComposer({
   );
 }
 
+// Normalize an @handle / username to the canonical key we resolve mentions by
+// (lowercase, whitespace stripped) — the same form `startReply` writes.
+function normHandle(h) {
+  return String(h || '').replace(/\s+/g, '').toLowerCase();
+}
+
+// Client-side cache so a handle looked up once stays clickable across every
+// thread for the rest of the session (null = confirmed "no such user").
+const handleResolveCache = new Map(); // normHandle -> user | null
+const handleResolveInFlight = new Map(); // normHandle -> Promise<user|null>
+
+// Resolve an @handle to a real user via the shared user-search endpoint so a
+// mention typed for someone who isn't already in the thread still becomes a
+// clickable link. We only accept an exact (normalized) username match.
+async function resolveHandleRemote(handle) {
+  const key = normHandle(handle);
+  if (!key || key.length < 2) return null;
+  if (handleResolveCache.has(key)) return handleResolveCache.get(key);
+  if (handleResolveInFlight.has(key)) return handleResolveInFlight.get(key);
+  const p = (async () => {
+    try {
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(key)}`, { credentials: 'include' });
+      // Only cache a result from a confirmed 200 response. A transient
+      // 401/500/network error must NOT negative-cache the handle, or it would
+      // stay non-clickable for the whole session even after the server recovers.
+      if (!res.ok) return null;
+      const data = await res.json();
+      const users = Array.isArray(data?.users) ? data.users : [];
+      const match = users.find((u) => normHandle(u.username) === key) || null;
+      handleResolveCache.set(key, match);
+      return match;
+    } catch {
+      return null;
+    } finally {
+      handleResolveInFlight.delete(key);
+    }
+  })();
+  handleResolveInFlight.set(key, p);
+  return p;
+}
+
+// Detect the @mention the caret currently sits inside so the autocomplete can
+// search on the partial handle and replace the whole token on pick.
+function detectMention(value, caret) {
+  if (typeof value !== 'string') return null;
+  const upToCaret = value.slice(0, caret);
+  const m = upToCaret.match(/(?:^|\s)@([A-Za-z0-9_]{0,30})$/);
+  if (!m) return null;
+  const leftToken = m[1];
+  const rightMatch = value.slice(caret).match(/^[A-Za-z0-9_]*/);
+  const right = rightMatch ? rightMatch[0] : '';
+  return { token: leftToken, start: caret - leftToken.length - 1, end: caret + right.length };
+}
+
+// Build a resolver for @handles found in a set of comment/message bodies.
+// Seeds with users we already know (thread authors), then lazily resolves any
+// remaining handles via the search API so mentions stay clickable after reload.
+function useMentionResolver(bodiesKey, seedMap) {
+  const [extra, setExtra] = useState(() => new Map());
+  useEffect(() => {
+    const handles = new Set();
+    const re = /@([A-Za-z0-9_]+)/g;
+    let mt;
+    while ((mt = re.exec(bodiesKey || '')) !== null) handles.add(normHandle(mt[1]));
+    let cancelled = false;
+    handles.forEach((h) => {
+      if (!h || seedMap.has(h)) return;
+      if (handleResolveCache.has(h)) {
+        const u = handleResolveCache.get(h);
+        if (u) setExtra((prev) => (prev.has(h) ? prev : new Map(prev).set(h, u)));
+        return;
+      }
+      resolveHandleRemote(h).then((u) => {
+        if (cancelled || !u) return;
+        setExtra((prev) => (prev.has(h) ? prev : new Map(prev).set(h, u)));
+      });
+    });
+    return () => { cancelled = true; };
+  }, [bodiesKey, seedMap]);
+  return useCallback((h) => {
+    const k = normHandle(h);
+    return seedMap.get(k) || extra.get(k) || null;
+  }, [seedMap, extra]);
+}
+
+// Reusable comment composer with @mention autocomplete. Mirrors the messenger's
+// proven picker: search as you type "@", arrow/enter to pick, click to insert.
+function MentionComposer({ value, onChange, onSubmit, placeholder, submitting, sendLabel = 'Send', maxLength = 300, inputRef: externalRef }) {
+  const internalRef = useRef(null);
+  const inputRef = externalRef || internalRef;
+  const [mentionBox, setMentionBox] = useState(null);
+  const abortRef = useRef(null);
+
+  const runSearch = (v, caret) => {
+    const det = detectMention(v, caret);
+    if (abortRef.current) { try { abortRef.current.abort(); } catch {} abortRef.current = null; }
+    if (!det || det.token.length < 2) { setMentionBox(null); return; }
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    fetch(`/api/users/search?q=${encodeURIComponent(det.token)}`, { signal: ctrl.signal, credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : { users: [] }))
+      .then((data) => {
+        if (ctrl.signal.aborted) return;
+        const results = Array.isArray(data?.users) ? data.users.slice(0, 6) : [];
+        setMentionBox(results.length ? { results, activeIndex: 0 } : null);
+      })
+      .catch(() => {});
+  };
+
+  const handleChange = (e) => {
+    const v = e.target.value;
+    onChange(v);
+    runSearch(v, e.target.selectionStart ?? v.length);
+  };
+
+  const applyMention = (user) => {
+    if (!user?.username) return;
+    const el = inputRef.current;
+    const caret = el ? (el.selectionStart ?? value.length) : value.length;
+    const det = detectMention(value, caret);
+    const start = det ? det.start : value.length;
+    const end = det ? det.end : value.length;
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const inserted = `@${user.username} `;
+    onChange(`${before}${inserted}${after}`);
+    setMentionBox(null);
+    handleResolveCache.set(normHandle(user.username), user); // keep it clickable
+    const pos = (before + inserted).length;
+    requestAnimationFrame(() => { try { el?.focus(); el?.setSelectionRange(pos, pos); } catch {} });
+  };
+
+  const handleKeyDown = (e) => {
+    if (mentionBox && mentionBox.results.length) {
+      const n = mentionBox.results.length;
+      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionBox((b) => (b ? { ...b, activeIndex: (b.activeIndex + 1) % n } : b)); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setMentionBox((b) => (b ? { ...b, activeIndex: (b.activeIndex - 1 + n) % n } : b)); return; }
+      if (e.key === 'Enter') { e.preventDefault(); applyMention(mentionBox.results[mentionBox.activeIndex]); return; }
+      if (e.key === 'Escape') { e.preventDefault(); setMentionBox(null); return; }
+    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSubmit(); }
+  };
+
+  useEffect(() => () => { if (abortRef.current) { try { abortRef.current.abort(); } catch {} } }, []);
+
+  return (
+    <div className="flex-1 relative">
+      {mentionBox && mentionBox.results.length > 0 && (
+        <div className="absolute left-0 right-0 bottom-full mb-2 rounded-2xl overflow-hidden z-30" style={{ backgroundColor: surface, border: `1px solid ${borderStrong}`, boxShadow: '0 8px 24px rgba(0,0,0,0.35)' }}>
+          {mentionBox.results.map((u, i) => (
+            <button
+              key={u.id}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); applyMention(u); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
+              style={{ backgroundColor: i === mentionBox.activeIndex ? 'rgba(59,130,246,0.18)' : 'transparent' }}
+            >
+              <FramedAvatar avatar={u.avatar} username={u.username} size={24} bgColor={avatarBg} />
+              <span className="text-[13px] font-semibold truncate" style={{ color: textPrimary }}>@{u.username}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center gap-2">
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+          style={{ backgroundColor: elevated, border: `1px solid ${border}`, color: textPrimary }}
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!value.trim() || submitting}
+          className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
+          style={{
+            background: value.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
+            cursor: value.trim() && !submitting ? 'pointer' : 'not-allowed',
+            opacity: submitting ? 0.7 : 1,
+          }}
+        >
+          {submitting ? '…' : sendLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // =============================================================================
 // Render a comment body with @mentions highlighted (Instagram-style). The
 // leading "@username" tokens are blue so it's obvious who a reply is addressed
@@ -483,6 +676,11 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
     comments.forEach((c) => add(c.author));
     return map;
   }, [author, currentUser, comments]);
+
+  // Joined comment bodies (stable key) drive lazy resolution of any @handles
+  // that aren't already known in the thread, so mentions stay clickable.
+  const commentBodiesKey = useMemo(() => comments.map((c) => c.body).join('\n'), [comments]);
+  const resolveMention = useMentionResolver(commentBodiesKey, mentionUsers);
 
   // Begin a threaded reply to a specific comment: prefill the composer with the
   // target's @handle (Instagram-style) and remember the parent so the next
@@ -677,7 +875,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
                           <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
                             {ca.username || 'Player'}
                           </button>
-                          <div className="text-[13px] whitespace-pre-wrap break-words">{renderCommentBody(c.body, '#60a5fa', textPrimary, (h) => mentionUsers.get(h), onOpenProfile)}</div>
+                          <div className="text-[13px] whitespace-pre-wrap break-words">{renderCommentBody(c.body, '#60a5fa', textPrimary, resolveMention, onOpenProfile)}</div>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5 pl-1">
                           <span className="text-[10px]" style={{ color: textMuted }}>{timeAgo(c.createdAt)}</span>
@@ -714,37 +912,14 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
                 )}
                 <div className="flex items-start gap-2.5">
                   <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor={avatarBg} />
-                  <div className="flex-1 flex items-center gap-2">
-                    <input
-                      ref={commentInputRef}
-                      type="text"
-                      value={commentDraft}
-                      onChange={(e) => setCommentDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSubmitComment();
-                        }
-                      }}
-                      placeholder={replyTo ? `Reply to ${replyTo.username}…` : 'Post your reply…'}
-                      maxLength={300}
-                      className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      style={{ backgroundColor: elevated, border: `1px solid ${border}`, color: textPrimary }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSubmitComment}
-                      disabled={!commentDraft.trim() || commentSubmitting}
-                      className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
-                      style={{
-                        background: commentDraft.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
-                        cursor: commentDraft.trim() && !commentSubmitting ? 'pointer' : 'not-allowed',
-                        opacity: commentSubmitting ? 0.7 : 1,
-                      }}
-                    >
-                      {commentSubmitting ? '…' : 'Send'}
-                    </button>
-                  </div>
+                  <MentionComposer
+                    inputRef={commentInputRef}
+                    value={commentDraft}
+                    onChange={setCommentDraft}
+                    onSubmit={handleSubmitComment}
+                    submitting={commentSubmitting}
+                    placeholder={replyTo ? `Reply to ${replyTo.username}…` : 'Post your reply…'}
+                  />
                 </div>
               </div>
             )}
@@ -874,6 +1049,18 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
   const [error, setError] = useState('');
   const userId = currentUser?.id;
 
+  // Resolve @mentions in battle comments to clickable profile links — seed with
+  // everyone in the thread, then lazily resolve any other tagged handles.
+  const mentionSeed = useMemo(() => {
+    const map = new Map();
+    const add = (u) => { if (u?.id && u?.username) map.set(normHandle(u.username), u); };
+    add(currentUser);
+    messages.forEach((m) => add(m.author));
+    return map;
+  }, [currentUser, messages]);
+  const bodiesKey = useMemo(() => messages.map((m) => m.body).join('\n'), [messages]);
+  const resolveMention = useMentionResolver(bodiesKey, mentionSeed);
+
   // Lazy-load comments once when the thread mounts (PostCard pattern:
   // the thread only mounts when the user expands "Comment"). No
   // background polling — refresh-on-re-open is sufficient for the
@@ -952,7 +1139,7 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
                   <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
                     {ca.username || 'Spectator'}
                   </button>
-                  <div className="text-[13px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>{m.body}</div>
+                  <div className="text-[13px] whitespace-pre-wrap break-words">{renderCommentBody(m.body, '#60a5fa', textPrimary, resolveMention, onOpenProfile)}</div>
                   <div className="text-[10px] mt-0.5" style={{ color: textMuted }}>{timeAgo(m.createdAt)}</div>
                 </div>
               </div>
@@ -962,36 +1149,13 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
         {!isGuest && (
           <div className="flex items-start gap-2.5 pt-1">
             <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor={avatarBg} />
-            <div className="flex-1 flex items-center gap-2">
-              <input
-                type="text"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                placeholder="Write a comment…"
-                maxLength={300}
-                className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                style={{ backgroundColor: elevated, border: `1px solid ${border}`, color: textPrimary }}
-              />
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={!draft.trim() || submitting}
-                className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
-                style={{
-                  background: draft.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
-                  cursor: draft.trim() && !submitting ? 'pointer' : 'not-allowed',
-                  opacity: submitting ? 0.7 : 1,
-                }}
-              >
-                {submitting ? '…' : 'Send'}
-              </button>
-            </div>
+            <MentionComposer
+              value={draft}
+              onChange={setDraft}
+              onSubmit={handleSubmit}
+              submitting={submitting}
+              placeholder="Write a comment…"
+            />
           </div>
         )}
         {error && <div className="text-[10px] text-red-400">{error}</div>}
