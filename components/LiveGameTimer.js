@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function LiveGameTimer({ elapsedTime, period, sport, stateCode }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [displayTime, setDisplayTime] = useState('');
   const [periodLabel, setPeriodLabel] = useState('');
 
@@ -79,14 +82,17 @@ export default function LiveGameTimer({ elapsedTime, period, sport, stateCode })
         <span className="text-red-500 text-xs font-bold tracking-wide">LIVE</span>
       </div>
       {periodLabel && (
-        <span className="text-gray-400 text-xs font-medium">
+        <span
+          className="text-xs font-semibold"
+          style={{ color: isLight ? '#475569' : '#d1d5db' }}
+        >
           {periodLabel}
         </span>
       )}
       {displayTime && displayTime !== 'LIVE' && (
         <span 
           className="text-white text-xs font-mono font-bold px-1.5 py-0.5 rounded"
-          style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
+          style={{ backgroundColor: '#ef4444' }}
         >
           {displayTime}
         </span>
