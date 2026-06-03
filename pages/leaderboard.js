@@ -209,13 +209,9 @@ const Leaderboard = () => {
   const [bankroll, setBankroll] = useState(10000);
 
   const profileRequestRef = useRef(0);
-  const userRowRefs = useRef({});
 
-  // The top-of-page "Your rank" badge. We watch it with an IntersectionObserver
-  // so the floating "You're #N" pill only appears once that badge has scrolled
-  // out of view (i.e. you can no longer see your rank at the top).
+  // The top-of-page "Your rank" badge (desktop header summary).
   const yourRankRef = useRef(null);
-  const [showRankPill, setShowRankPill] = useState(false);
 
   // ── User's own bankroll for the navbar pill ─────────────────────
   useEffect(() => {
@@ -336,44 +332,6 @@ const Leaderboard = () => {
     if (myRank) return myRank;
     return leaders.find((l) => l.id === user.id) || null;
   }, [user, leaders, myRank]);
-
-  // Show the floating "You're #N" pill only when the top "Your rank" badge is
-  // out of view. On phone widths that badge is hidden (`display:none`), so the
-  // observer reports it as not visible and the pill stays available there.
-  useEffect(() => {
-    if (!userRank) { setShowRankPill(false); return undefined; }
-    const el = yourRankRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') {
-      // No anchor to track — fall back to always showing the pill.
-      setShowRankPill(true);
-      return undefined;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => setShowRankPill(!entry.isIntersecting),
-      { threshold: 0 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [userRank]);
-
-  const scrollToMyRank = () => {
-    if (!userRank) return;
-    const el = userRowRefs.current[userRank.id];
-    if (el?.scrollIntoView) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('lb-row-flash');
-      setTimeout(() => el.classList.remove('lb-row-flash'), 1500);
-      return;
-    }
-    // User is off the currently loaded page — load up to their rank so
-    // the row exists in the DOM, then a follow-up render will scroll.
-    if (userRank.rank > leaders.length) {
-      setOffset(0); // re-fetch from top; subsequent "Show more" walks down
-      // We can't auto-scroll synchronously here because the rows aren't
-      // mounted yet. The pill remains visible; user taps Show More until
-      // their row paints. Future: jump-load by computing the offset page.
-    }
-  };
 
   const hasMore = leaders.length < total;
   const activeSport = SPORTS.find((s) => s.id === sport) || SPORTS[0];
@@ -697,7 +655,6 @@ const Leaderboard = () => {
                     isMe={!!user?.id && leader.id === user.id}
                     onOpen={() => handleOpenLeader(leader)}
                     userToProps={userToProps}
-                    rowRef={(el) => { if (leader.id) userRowRefs.current[leader.id] = el; }}
                     p={p}
                   />
                 ))}
@@ -734,23 +691,6 @@ const Leaderboard = () => {
               )}
             </div>
 
-            {/* ── Sticky "You're #N" pill — only once the top rank badge
-                 has scrolled out of view ─────────────────────── */}
-            {userRank && showRankPill && (
-              <button
-                onClick={scrollToMyRank}
-                className="fixed bottom-20 right-4 z-30 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider transition-transform active:scale-95"
-                style={{
-                  background: '#3b82f6',
-                  color: '#fff',
-                  border: '2.5px solid #0d0d0d',
-                  boxShadow: '3px 3px 0 #0d0d0d',
-                }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                You&apos;re #{userRank.rank}
-              </button>
-            )}
           </>
         )}
 
@@ -822,12 +762,6 @@ const Leaderboard = () => {
         .lb-row { transition: background-color 160ms ease; }
         @media (hover: hover) {
           .lb-row:hover { background-color: ${p.rowHover}; }
-        }
-
-        .lb-row-flash { animation: lbFlash 1.4s ease-out; }
-        @keyframes lbFlash {
-          0%   { background-color: rgba(59,130,246,0.3); }
-          100% { background-color: rgba(59,130,246,0); }
         }
 
         /* Cartoon chip subtle bounce on tap (handled by active:scale-95). */
@@ -915,7 +849,7 @@ function TopThreeStrip({ leaders, sortBy, onOpen, userToProps }) {
    • Name + tier · bet count
    • Primary stat (driven by current sort) on the right, big & bold
    ───────────────────────────────────────────────────────────────────── */
-function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef, p }) {
+function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, p }) {
   const stat = primaryStatFor(leader, sortBy);
   const rankBg = leader.rank === 1
     ? '#fbbf24'
@@ -928,9 +862,11 @@ function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef, p }) {
 
   return (
     <div
-      ref={rowRef}
-      className={`lb-row flex items-center gap-2.5 px-3 py-2.5 ${isMe ? 'bg-blue-500/5' : ''}`}
-      style={{ borderBottom: `1px solid ${p.rowBorder}` }}
+      className={`lb-row flex items-center gap-2.5 px-3 py-2.5 ${isMe ? 'bg-blue-500/10' : ''}`}
+      style={{
+        borderBottom: `1px solid ${p.rowBorder}`,
+        ...(isMe ? { boxShadow: 'inset 3px 0 0 #3b82f6' } : null),
+      }}
     >
       <div
         className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 font-black tabular-nums text-sm"
