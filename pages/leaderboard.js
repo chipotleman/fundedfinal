@@ -6,6 +6,7 @@ import UserAvatar, { UserNameLink, useProfilePrefetchHandlers } from '../compone
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 /* ─────────────────────────────────────────────────────────────────────
    Cartoon-themed Leaderboard
@@ -52,6 +53,58 @@ const TIMEFRAMES = [
 ];
 
 const PAGE_SIZE = 25;
+
+/* Theme-aware palette. The page was authored dark-first with cartoon
+   colors (#0d0d0d surfaces / #1a1a1a borders / #000 page) baked into
+   inline styles, so light mode rendered all-black. Every neutral
+   surface/text/ink token flips through this palette; bright accent
+   colors (gold/cyan/orange/emerald/blue) stay the same in both themes. */
+function getPalette(isLight) {
+  if (isLight) {
+    return {
+      pageBg: '#f5f1ea',
+      heroBg: 'linear-gradient(135deg, #ffffff 0%, #eef2f7 100%)',
+      dotColor: '#0f172a',
+      surface: '#ffffff',
+      surfaceDeep: '#f0ebe1',
+      chipIdleBg: '#ffffff',
+      ink: '#0f172a',
+      shadowInk: 'rgba(15,23,42,0.16)',
+      borderSoft: 'rgba(15,23,42,0.12)',
+      shadowSoft: 'rgba(15,23,42,0.10)',
+      rowBorder: 'rgba(15,23,42,0.08)',
+      primaryText: '#0f172a',
+      mutedText: '#64748b',
+      faintText: '#cbd5e1',
+      heroSub: '#64748b',
+      neutralRankBg: '#e2e8f0',
+      invBg: '#0f172a',
+      invText: '#ffffff',
+      rowHover: 'rgba(15,23,42,0.04)',
+    };
+  }
+  return {
+    pageBg: '#000000',
+    heroBg: 'linear-gradient(135deg, #0d0d0d 0%, #111827 100%)',
+    dotColor: '#ffffff',
+    surface: '#0d0d0d',
+    surfaceDeep: '#0a0a0a',
+    chipIdleBg: '#0d0d0d',
+    ink: '#0d0d0d',
+    shadowInk: '#0d0d0d',
+    borderSoft: '#1a1a1a',
+    shadowSoft: '#1a1a1a',
+    rowBorder: '#111111',
+    primaryText: '#ffffff',
+    mutedText: '#9ca3af',
+    faintText: '#374151',
+    heroSub: '#9ca3af',
+    neutralRankBg: '#1a1a1a',
+    invBg: '#ffffff',
+    invText: '#0d0d0d',
+    rowHover: 'rgba(255,255,255,0.04)',
+  };
+}
 
 function ProfileLink({ user, extras, children, className = '', ...rest }) {
   const handlers = useProfilePrefetchHandlers(user, extras);
@@ -122,6 +175,9 @@ const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { selectedProfile, showProfileModal, setShowProfileModal, openProfile } = useUserProfiles();
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const p = getPalette(isLight);
 
   const [timeframe, setTimeframe] = useState('alltime');
   const [sortBy, setSortBy] = useState('profit');
@@ -284,7 +340,7 @@ const Leaderboard = () => {
   const activeSort = SORTS.find((s) => s.id === sortBy) || SORTS[0];
 
   return (
-    <div className="min-h-screen" style={{ background: '#000' }}>
+    <div className="min-h-screen" style={{ background: p.pageBg }}>
       <TopNavbar
         bankroll={user ? bankroll : null}
         pnl={0}
@@ -307,9 +363,9 @@ const Leaderboard = () => {
         <div
           className="relative mb-4 sm:mb-5 rounded-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #0d0d0d 0%, #111827 100%)',
-            border: '3px solid #0d0d0d',
-            boxShadow: '5px 5px 0 #0d0d0d',
+            background: p.heroBg,
+            border: `3px solid ${p.ink}`,
+            boxShadow: `5px 5px 0 ${p.shadowInk}`,
           }}
         >
           {/* Subtle dot grid for arcade feel */}
@@ -317,7 +373,7 @@ const Leaderboard = () => {
             aria-hidden
             className="absolute inset-0 opacity-[0.08]"
             style={{
-              backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+              backgroundImage: `radial-gradient(circle, ${p.dotColor} 1px, transparent 1px)`,
               backgroundSize: '14px 14px',
             }}
           />
@@ -326,15 +382,15 @@ const Leaderboard = () => {
               className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl text-2xl sm:text-3xl flex-shrink-0"
               style={{
                 background: '#fbbf24',
-                border: '3px solid #0d0d0d',
-                boxShadow: '3px 3px 0 #0d0d0d',
+                border: `3px solid ${p.ink}`,
+                boxShadow: `3px 3px 0 ${p.shadowInk}`,
               }}
             >
               🏆
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white truncate">
+                <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight truncate" style={{ color: p.primaryText }}>
                   Leaderboard
                 </h1>
                 <span
@@ -343,27 +399,27 @@ const Leaderboard = () => {
                     background: '#10b981',
                     color: '#0d0d0d',
                     border: '2px solid #0d0d0d',
-                    boxShadow: '2px 2px 0 #0d0d0d',
+                    boxShadow: `2px 2px 0 ${p.shadowInk}`,
                   }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0d0d0d] animate-pulse" />
                   Live
                 </span>
               </div>
-              <div className="text-[11px] sm:text-xs text-gray-400 font-bold mt-0.5">
+              <div className="text-[11px] sm:text-xs font-bold mt-0.5" style={{ color: p.heroSub }}>
                 Climb the ranks. Real bettors, real winnings, updated live.
               </div>
             </div>
             {userRank && (
               <div className="hidden sm:flex flex-col items-end">
-                <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Your rank</span>
+                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: p.mutedText }}>Your rank</span>
                 <span
                   className="mt-0.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-black"
                   style={{
                     background: '#3b82f6',
                     color: '#fff',
-                    border: '2.5px solid #0d0d0d',
-                    boxShadow: '2px 2px 0 #0d0d0d',
+                    border: `2.5px solid ${p.ink}`,
+                    boxShadow: `2px 2px 0 ${p.shadowInk}`,
                   }}
                 >
                   #{userRank.rank}
@@ -388,7 +444,7 @@ const Leaderboard = () => {
           >
             {/* Sport — vertical list on desktop, horizontal scroll on mobile */}
             <div>
-              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 px-1">Sport</div>
+              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest mb-2 px-1" style={{ color: p.mutedText }}>Sport</div>
               <div className="flex lg:flex-col gap-1.5 lg:gap-1 overflow-x-auto lg:overflow-visible scrollbar-hide -mx-1 px-1 lg:mx-0 lg:px-0">
                 {SPORTS.map((s) => {
                   const active = s.id === sport;
@@ -398,10 +454,10 @@ const Leaderboard = () => {
                       onClick={() => setSport(s.id)}
                       className="lb-chip flex-shrink-0 lg:w-full inline-flex items-center gap-1.5 lg:gap-2 px-3 py-2 lg:py-2 rounded-xl lg:rounded-lg font-black text-[12px] lg:text-[11px] uppercase tracking-wider transition-transform active:scale-95"
                       style={{
-                        background: active ? '#fbbf24' : '#0d0d0d',
-                        color: active ? '#0d0d0d' : '#9ca3af',
-                        border: '2px solid #0d0d0d',
-                        boxShadow: active ? '2px 2px 0 #0d0d0d' : '2px 2px 0 #1a1a1a',
+                        background: active ? '#fbbf24' : p.chipIdleBg,
+                        color: active ? '#0d0d0d' : p.mutedText,
+                        border: `2px solid ${p.ink}`,
+                        boxShadow: active ? `2px 2px 0 ${p.shadowInk}` : `2px 2px 0 ${p.shadowSoft}`,
                         justifyContent: 'flex-start',
                       }}
                     >
@@ -415,7 +471,7 @@ const Leaderboard = () => {
 
             {/* Sort metric */}
             <div>
-              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 px-1">Sort by</div>
+              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest mb-2 px-1" style={{ color: p.mutedText }}>Sort by</div>
               <div className="flex lg:grid lg:grid-cols-2 gap-1.5 overflow-x-auto lg:overflow-visible scrollbar-hide -mx-1 px-1 lg:mx-0 lg:px-0">
                 {SORTS.map((s) => {
                   const active = s.id === sortBy;
@@ -425,10 +481,10 @@ const Leaderboard = () => {
                       onClick={() => setSortBy(s.id)}
                       className="flex-shrink-0 lg:flex-shrink px-3 py-1.5 rounded-lg font-black text-[11px] uppercase tracking-wider transition-transform active:scale-95"
                       style={{
-                        background: active ? s.accent : '#0d0d0d',
-                        color: active ? '#0d0d0d' : '#9ca3af',
-                        border: `2px solid ${active ? '#0d0d0d' : '#1a1a1a'}`,
-                        boxShadow: active ? `2px 2px 0 #0d0d0d` : 'none',
+                        background: active ? s.accent : p.chipIdleBg,
+                        color: active ? '#0d0d0d' : p.mutedText,
+                        border: `2px solid ${active ? p.ink : p.borderSoft}`,
+                        boxShadow: active ? `2px 2px 0 ${p.shadowInk}` : 'none',
                       }}
                     >
                       {s.label}
@@ -440,7 +496,7 @@ const Leaderboard = () => {
 
             {/* Timeframe */}
             <div>
-              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 px-1">Window</div>
+              <div className="hidden lg:block text-[10px] font-black uppercase tracking-widest mb-2 px-1" style={{ color: p.mutedText }}>Window</div>
               <div className="flex lg:grid lg:grid-cols-3 gap-1 lg:gap-1.5">
                 {TIMEFRAMES.map((tf) => {
                   const active = tf.id === timeframe;
@@ -450,10 +506,10 @@ const Leaderboard = () => {
                       onClick={() => setTimeframe(tf.id)}
                       className="flex-1 lg:flex-initial px-2.5 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-transform active:scale-95"
                       style={{
-                        background: active ? '#fff' : '#0d0d0d',
-                        color: active ? '#0d0d0d' : '#9ca3af',
-                        border: `2px solid ${active ? '#0d0d0d' : '#1a1a1a'}`,
-                        boxShadow: active ? '2px 2px 0 #0d0d0d' : 'none',
+                        background: active ? p.invBg : p.chipIdleBg,
+                        color: active ? p.invText : p.mutedText,
+                        border: `2px solid ${active ? p.ink : p.borderSoft}`,
+                        boxShadow: active ? `2px 2px 0 ${p.shadowInk}` : 'none',
                       }}
                     >
                       {tf.label}
@@ -468,22 +524,22 @@ const Leaderboard = () => {
               <div
                 className="hidden lg:block rounded-xl p-3"
                 style={{
-                  background: '#0d0d0d',
-                  border: '2px solid #1a1a1a',
+                  background: p.surface,
+                  border: `2px solid ${p.borderSoft}`,
                 }}
               >
-                <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Community</div>
+                <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: p.mutedText }}>Community</div>
                 <div className="space-y-1.5 text-[11px]">
                   <div className="flex justify-between">
-                    <span className="text-gray-500 font-bold">Bettors</span>
+                    <span className="font-bold" style={{ color: p.mutedText }}>Bettors</span>
                     <span className="text-emerald-400 font-black tabular-nums">{communityStats.activeBettors.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500 font-bold">Avg win %</span>
+                    <span className="font-bold" style={{ color: p.mutedText }}>Avg win %</span>
                     <span className="text-cyan-400 font-black tabular-nums">{(communityStats.avgWinRate || 0).toFixed(1)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500 font-bold">Winnings</span>
+                    <span className="font-bold" style={{ color: p.mutedText }}>Winnings</span>
                     <span className="text-orange-400 font-black tabular-nums">{formatProfit(communityStats.totalProfits)}</span>
                   </div>
                 </div>
@@ -497,11 +553,12 @@ const Leaderboard = () => {
         {/* ── The list ─────────────────────────────────────────── */}
         {loading ? (
           <div
-            className="rounded-2xl p-8 text-center text-gray-400 text-sm font-bold"
+            className="rounded-2xl p-8 text-center text-sm font-bold"
             style={{
-              background: '#0d0d0d',
-              border: '2.5px solid #1a1a1a',
-              boxShadow: '3px 3px 0 #1a1a1a',
+              background: p.surface,
+              border: `2.5px solid ${p.borderSoft}`,
+              boxShadow: `3px 3px 0 ${p.shadowSoft}`,
+              color: p.mutedText,
             }}
           >
             Loading the board…
@@ -510,9 +567,9 @@ const Leaderboard = () => {
           <div
             className="rounded-2xl p-8 text-center text-red-400 text-sm font-bold"
             style={{
-              background: '#0d0d0d',
+              background: p.surface,
               border: '2.5px solid #ef4444',
-              boxShadow: '3px 3px 0 #0d0d0d',
+              boxShadow: `3px 3px 0 ${p.shadowInk}`,
             }}
           >
             {error}
@@ -521,15 +578,15 @@ const Leaderboard = () => {
           <div
             className="rounded-2xl p-8 text-center"
             style={{
-              background: '#0d0d0d',
-              border: '2.5px solid #1a1a1a',
-              boxShadow: '3px 3px 0 #1a1a1a',
+              background: p.surface,
+              border: `2.5px solid ${p.borderSoft}`,
+              boxShadow: `3px 3px 0 ${p.shadowSoft}`,
             }}
           >
             <div className="text-4xl mb-2">{activeSport.emoji}</div>
-            <div className="text-white font-black text-base mb-1">No bettors yet</div>
-            <div className="text-gray-500 text-xs">
-              No one has settled bets in <span className="text-white font-bold">{activeSport.label}</span> for this window. Try a different sport or timeframe.
+            <div className="font-black text-base mb-1" style={{ color: p.primaryText }}>No bettors yet</div>
+            <div className="text-xs" style={{ color: p.mutedText }}>
+              No one has settled bets in <span className="font-bold" style={{ color: p.primaryText }}>{activeSport.label}</span> for this window. Try a different sport or timeframe.
             </div>
           </div>
         ) : (
@@ -537,25 +594,25 @@ const Leaderboard = () => {
             <div
               className="rounded-2xl overflow-hidden"
               style={{
-                background: '#0a0a0a',
-                border: '2.5px solid #0d0d0d',
-                boxShadow: '4px 4px 0 #0d0d0d',
+                background: p.surfaceDeep,
+                border: `2.5px solid ${p.ink}`,
+                boxShadow: `4px 4px 0 ${p.shadowInk}`,
               }}
             >
               <div
                 className="flex items-center justify-between px-3 py-2"
-                style={{ background: '#0d0d0d', borderBottom: '2px solid #1a1a1a' }}
+                style={{ background: p.surface, borderBottom: `2px solid ${p.borderSoft}` }}
               >
                 <div className="flex items-center gap-2">
                   <span
                     className="w-1.5 h-1.5 rounded-full animate-pulse"
                     style={{ background: activeSort.accent, boxShadow: `0 0 8px ${activeSort.accent}` }}
                   />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: p.primaryText }}>
                     Ranked by {activeSort.label} · {activeSport.label}
                   </span>
                 </div>
-                <span className="text-[10px] text-gray-500 font-bold tabular-nums">
+                <span className="text-[10px] font-bold tabular-nums" style={{ color: p.mutedText }}>
                   {total.toLocaleString()} total
                 </span>
               </div>
@@ -570,13 +627,14 @@ const Leaderboard = () => {
                     onOpen={() => handleOpenLeader(leader)}
                     userToProps={userToProps}
                     rowRef={(el) => { if (leader.id) userRowRefs.current[leader.id] = el; }}
+                    p={p}
                   />
                 ))}
               </div>
 
               {/* ── Load more / cycle ─────────────────────────── */}
               {hasMore && (
-                <div className="p-3" style={{ borderTop: '2px solid #1a1a1a', background: '#0d0d0d' }}>
+                <div className="p-3" style={{ borderTop: `2px solid ${p.borderSoft}`, background: p.surface }}>
                   <button
                     onClick={() => setOffset(leaders.length)}
                     disabled={loadingMore}
@@ -584,21 +642,21 @@ const Leaderboard = () => {
                     style={{
                       background: '#fb923c',
                       color: '#0d0d0d',
-                      border: '2.5px solid #0d0d0d',
-                      boxShadow: '3px 3px 0 #0d0d0d',
+                      border: `2.5px solid ${p.ink}`,
+                      boxShadow: `3px 3px 0 ${p.shadowInk}`,
                     }}
                   >
                     {loadingMore ? 'Loading…' : `Show next ${Math.min(PAGE_SIZE, total - leaders.length)}`}
                   </button>
-                  <div className="text-center text-[10px] text-gray-500 font-bold mt-1.5 tabular-nums">
+                  <div className="text-center text-[10px] font-bold mt-1.5 tabular-nums" style={{ color: p.mutedText }}>
                     Showing 1–{leaders.length} of {total.toLocaleString()}
                   </div>
                 </div>
               )}
               {!hasMore && leaders.length > PAGE_SIZE && (
                 <div
-                  className="px-3 py-2.5 text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider"
-                  style={{ borderTop: '2px solid #1a1a1a', background: '#0d0d0d' }}
+                  className="px-3 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider"
+                  style={{ borderTop: `2px solid ${p.borderSoft}`, background: p.surface, color: p.mutedText }}
                 >
                   · End of board ·
                 </div>
@@ -691,7 +749,7 @@ const Leaderboard = () => {
 
         .lb-row { transition: background-color 160ms ease; }
         @media (hover: hover) {
-          .lb-row:hover { background-color: rgba(255,255,255,0.04); }
+          .lb-row:hover { background-color: ${p.rowHover}; }
         }
 
         .lb-row-flash { animation: lbFlash 1.4s ease-out; }
@@ -785,7 +843,7 @@ function TopThreeStrip({ leaders, sortBy, onOpen, userToProps }) {
    • Name + tier · bet count
    • Primary stat (driven by current sort) on the right, big & bold
    ───────────────────────────────────────────────────────────────────── */
-function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef }) {
+function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef, p }) {
   const stat = primaryStatFor(leader, sortBy);
   const rankBg = leader.rank === 1
     ? '#fbbf24'
@@ -793,22 +851,22 @@ function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef }) {
     ? '#06b6d4'
     : leader.rank === 3
     ? '#fb923c'
-    : '#1a1a1a';
-  const rankColor = leader.rank <= 3 ? '#0d0d0d' : '#9ca3af';
+    : p.neutralRankBg;
+  const rankColor = leader.rank <= 3 ? '#0d0d0d' : p.mutedText;
 
   return (
     <div
       ref={rowRef}
       className={`lb-row flex items-center gap-2.5 px-3 py-2.5 ${isMe ? 'bg-blue-500/5' : ''}`}
-      style={{ borderBottom: '1px solid #111' }}
+      style={{ borderBottom: `1px solid ${p.rowBorder}` }}
     >
       <div
         className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 font-black tabular-nums text-sm"
         style={{
           background: rankBg,
           color: rankColor,
-          border: '2px solid #0d0d0d',
-          boxShadow: leader.rank <= 3 ? '2px 2px 0 #0d0d0d' : 'none',
+          border: `2px solid ${p.ink}`,
+          boxShadow: leader.rank <= 3 ? `2px 2px 0 ${p.shadowInk}` : 'none',
         }}
       >
         {leader.rank}
@@ -824,7 +882,7 @@ function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef }) {
           user={userToProps(leader)}
           size={38}
           isOnline={!!leader.isOnline}
-          onlineDotBorderColor="#0a0a0a"
+          onlineDotBorderColor={p.surfaceDeep}
         />
       </ProfileLink>
 
@@ -832,7 +890,8 @@ function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef }) {
         <div className="flex items-center gap-1.5 min-w-0">
           <UserNameLink
             user={userToProps(leader)}
-            className="text-white font-black text-[13px] truncate"
+            className="font-black text-[13px] truncate"
+            style={{ color: p.primaryText }}
           />
           {isMe && (
             <span
@@ -847,13 +906,13 @@ function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef }) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500">
+        <div className="flex items-center gap-1.5 mt-0.5 text-[10px]" style={{ color: p.mutedText }}>
           <span className="font-bold">{leader.totalBets || 0} bets</span>
-          <span className="text-gray-700">·</span>
+          <span style={{ color: p.faintText }}>·</span>
           <span className="font-bold">{(leader.winRate || 0).toFixed(0)}% W</span>
           {leader.tier && (
             <>
-              <span className="text-gray-700">·</span>
+              <span style={{ color: p.faintText }}>·</span>
               <span
                 className="font-black uppercase tracking-wider"
                 style={{
@@ -862,7 +921,7 @@ function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef }) {
                       ? '#fbbf24'
                       : leader.tier === 'Pro'
                       ? '#06b6d4'
-                      : '#9ca3af',
+                      : p.mutedText,
                 }}
               >
                 {leader.tier}
@@ -876,12 +935,12 @@ function LeaderRow({ leader, sortBy, isMe, onOpen, userToProps, rowRef }) {
         onClick={onOpen}
         className="flex-shrink-0 flex flex-col items-end gap-0.5 px-2.5 py-1.5 rounded-lg transition-transform active:scale-95"
         style={{
-          background: '#0d0d0d',
+          background: p.surface,
           border: `2px solid ${stat.accent}`,
-          boxShadow: `2px 2px 0 #0d0d0d`,
+          boxShadow: `2px 2px 0 ${p.shadowInk}`,
         }}
       >
-        <span className="text-[8px] font-black uppercase tracking-wider text-gray-500 leading-none">
+        <span className="text-[8px] font-black uppercase tracking-wider leading-none" style={{ color: p.mutedText }}>
           {stat.label}
         </span>
         <span

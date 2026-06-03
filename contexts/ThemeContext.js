@@ -43,14 +43,26 @@ function readStoredTheme() {
 }
 
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState(DEFAULT_THEME);
+  // Initialize synchronously on the client from the class the `_document.js`
+  // inline script already applied before paint (falling back to localStorage).
+  // This way the very first React render uses the correct theme, so
+  // JS-derived inline styles (e.g. the search bar, leaderboard surfaces)
+  // don't flash dark before a post-paint effect corrects them.
+  const [theme, setThemeState] = useState(() => {
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      if (root.classList.contains('light')) return 'light';
+      if (root.classList.contains('dark')) return 'dark';
+      return readStoredTheme();
+    }
+    return DEFAULT_THEME;
+  });
 
-  // Hydrate from localStorage on mount. The `_document.js` inline
-  // script has already applied the right class, so this just brings
-  // React state in sync — no visible flicker.
+  // Keep state/class in sync after mount as a safety net (covers any edge
+  // where the lazy initializer couldn't read the DOM).
   useEffect(() => {
     const stored = readStoredTheme();
-    setThemeState(stored);
+    setThemeState((prev) => (prev === stored ? prev : stored));
     applyThemeClass(stored);
   }, []);
 
