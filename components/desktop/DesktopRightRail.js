@@ -247,7 +247,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
   const trendsToShow = guestTrends.slice(0, 5);
 
   return (
-    <div className="desktop-right-rail lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+    <div className="desktop-right-rail lg:pr-1">
       {/* Live now */}
       <Card title={`Live now${battles.length ? ` · ${battles.length}` : ''}`} action="View all" onAction={() => router.push('/battle')}>
         {battles.length === 0 ? (
