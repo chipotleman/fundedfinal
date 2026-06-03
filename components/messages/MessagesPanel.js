@@ -3635,6 +3635,8 @@ export default function MessagesPanel({
   minHeight = 520,
   onStartBattle,
 }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -3852,13 +3854,13 @@ export default function MessagesPanel({
     [conversations, selectedId]
   );
 
-  const cardBg = '#0a0a0a';
-  const cardBorder = 'rgba(59,130,246,0.22)';
-  const textPrimary = '#ffffff';
-  const textSecondary = '#9ca3af';
-  const inputBg = '#0a1220';
-  const rowHover = 'rgba(59,130,246,0.06)';
-  const rowSelected = 'rgba(59,130,246,0.18)';
+  const cardBg = isLight ? '#ffffff' : '#0a0a0a';
+  const cardBorder = isLight ? 'rgba(59,130,246,0.28)' : 'rgba(59,130,246,0.22)';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
+  const inputBg = isLight ? '#f1f5f9' : '#0a1220';
+  const rowHover = isLight ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.06)';
+  const rowSelected = isLight ? 'rgba(59,130,246,0.14)' : 'rgba(59,130,246,0.18)';
   // Cartoon panel chrome — chunky 2.5px black border + offset shadow
   // matches PikSlip / PlayFriendModal / PrivateMatchModal so the
   // Messenger feels part of the same family. Kept as a separate
@@ -3887,7 +3889,9 @@ export default function MessagesPanel({
           className="px-4 py-3 flex-shrink-0"
           style={{
             borderBottom: '2.5px solid #0a0a0a',
-            background: 'linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%)',
+            background: isLight
+              ? 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)'
+              : 'linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%)',
           }}
         >
           <div
