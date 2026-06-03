@@ -1108,15 +1108,13 @@ export default function TopNavbar({
                     >
                       SIGN IN
                     </button>
-                    <div className="snake-border-container relative" style={{ height: '48px' }}>
-                      <button
-                        onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
-                        className="relative font-bold px-6 rounded-lg text-sm z-10 flex items-center h-full"
-                        style={{ background: 'linear-gradient(135deg, #facc15, #eab308)', color: '#1a1505' }}
-                      >
-                        SIGN UP
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
+                      className="relative font-bold px-6 rounded-lg text-sm flex items-center"
+                      style={{ height: '48px', background: 'linear-gradient(135deg, #facc15, #eab308)', color: '#1a1505' }}
+                    >
+                      SIGN UP
+                    </button>
                   </>
                 )}
               </div>
@@ -1365,50 +1363,6 @@ export default function TopNavbar({
           100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
         }
 
-        .snake-border-container {
-          position: relative;
-          border-radius: 8px;
-          padding: 2px;
-          background: ${'#111111'};
-          overflow: hidden;
-        }
-        
-        .snake-border-container::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: conic-gradient(
-            from 0deg,
-            transparent 0deg,
-            transparent 60deg,
-            #2563eb 120deg,
-            #60a5fa 180deg,
-            transparent 240deg,
-            transparent 360deg
-          );
-          animation: snakeRotate 3s linear infinite;
-        }
-        
-        .snake-border-container::after {
-          content: '';
-          position: absolute;
-          inset: 2px;
-          background: ${'#000000'};
-          border-radius: 6px;
-        }
-        
-        .snake-border-container button {
-          position: relative;
-          z-index: 10;
-        }
-        
-        @keyframes snakeRotate {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
       `}</style>
       <MessagePopup
         isOpen={!!messageFriend}

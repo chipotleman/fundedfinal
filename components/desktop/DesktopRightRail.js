@@ -31,6 +31,20 @@ const PlayFriendModal = dynamic(() => import('../battle/PlayFriendModal'), { ssr
 // the "useLayoutEffect does nothing on the server" warning during SSR.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
+function newsTimeAgo(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(diff) || diff < 0) return 'now';
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) {
+    const m = Math.floor(diff / 60000);
+    return m < 1 ? 'now' : `${m}m ago`;
+  }
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
 const surface = 'var(--rail-surface)';
 const border = 'var(--rail-border)';
 const textPrimary = 'var(--rail-text)';
@@ -76,6 +90,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
     : null;
   const [friends, setFriends] = useState([]);
   const [leaders, setLeaders] = useState([]);
+  const [news, setNews] = useState([]);
   // Prefer real active battles from `/api/battles/live`; only fall back to the
   // shared simulated demo battles when the backend returns none (keeps the rail
   // from looking dead during quiet periods without fabricating fake activity
@@ -97,6 +112,8 @@ export default function DesktopRightRail({ isLoggedIn }) {
       else if (!isLoggedIn) setFriends([]);
       const cl = JSON.parse(localStorage.getItem('piks:rail:leaders') || 'null');
       if (Array.isArray(cl) && cl.length) setLeaders(cl);
+      const cn = JSON.parse(localStorage.getItem('piks:rail:news') || 'null');
+      if (Array.isArray(cn) && cn.length) setNews(cn);
     } catch {}
   }, [isLoggedIn, userId]);
 
@@ -154,9 +171,25 @@ export default function DesktopRightRail({ isLoggedIn }) {
     // left the Top Cappers card stuck on "Leaderboard loading…" until the
     // battles fetch resolved — even though the leaderboard endpoint itself
     // is fast.
+    const loadNews = async () => {
+      if (isLoggedIn) return; // card is guest-only
+      try {
+        const res = await fetch('/api/sports-news');
+        if (res.ok && !cancelled) {
+          const json = await res.json();
+          const next = Array.isArray(json?.items) ? json.items.slice(0, 6) : [];
+          if (next.length) {
+            setNews(next);
+            try { localStorage.setItem('piks:rail:news', JSON.stringify(next)); } catch {}
+          }
+        }
+      } catch {}
+    };
+
     loadFriends();
     loadBattles();
     loadLeaders();
+    loadNews();
 
     return () => {
       cancelled = true;
@@ -335,23 +368,45 @@ export default function DesktopRightRail({ isLoggedIn }) {
         </Card>
       )}
 
-      {/* Trending — logged-out only (fills the Friends slot for guests) */}
+      {/* Top sports news — logged-out only (fills the Friends slot for guests).
+          Real headlines from ESPN's public news feeds via /api/sports-news.
+          Falls back to the engagement "trends" rows while the feed loads or if
+          ESPN is unreachable, so the card is never empty. */}
       {!isLoggedIn && (
-        <Card title="Trending on Piks" action="Sign up" onAction={openSignup}>
-          {trendsToShow.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={t.onClick}
-              className="w-full flex flex-col items-start px-2 py-2 rounded-lg text-left lg:hover:bg-white/5 transition-colors"
-            >
-              <span className="text-[10px]" style={{ color: textMuted }}>{t.category}</span>
-              <span className="text-[13px] font-bold truncate max-w-full" style={{ color: textPrimary }}>{t.title}</span>
-              {t.meta && (
-                <span className="text-[10px]" style={{ color: textMuted }}>{t.meta}</span>
-              )}
-            </button>
-          ))}
+        <Card title="Top Sports News" action="ESPN" onAction={() => window.open('https://www.espn.com', '_blank', 'noopener,noreferrer')}>
+          {news.length > 0 ? (
+            news.map((n, i) => (
+              <a
+                key={n.href || i}
+                href={n.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex flex-col items-start px-2 py-2 rounded-lg text-left lg:hover:bg-white/5 transition-colors"
+              >
+                <span className="text-[10px] uppercase tracking-wide" style={{ color: textMuted }}>
+                  {n.source}{n.league ? ` · ${n.league}` : ''}{n.published ? ` · ${newsTimeAgo(n.published)}` : ''}
+                </span>
+                <span className="text-[13px] font-bold leading-snug line-clamp-2 max-w-full" style={{ color: textPrimary }}>
+                  {n.headline}
+                </span>
+              </a>
+            ))
+          ) : (
+            trendsToShow.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={t.onClick}
+                className="w-full flex flex-col items-start px-2 py-2 rounded-lg text-left lg:hover:bg-white/5 transition-colors"
+              >
+                <span className="text-[10px]" style={{ color: textMuted }}>{t.category}</span>
+                <span className="text-[13px] font-bold truncate max-w-full" style={{ color: textPrimary }}>{t.title}</span>
+                {t.meta && (
+                  <span className="text-[10px]" style={{ color: textMuted }}>{t.meta}</span>
+                )}
+              </button>
+            ))
+          )}
           <button
             type="button"
             onClick={openSignup}
