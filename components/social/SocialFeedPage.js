@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import FramedAvatar from '../UserAvatar';
 import { formatMoney } from '../../utils/formatMoney';
 import { formatLastSeen } from '../../utils/relativeTime';
@@ -1869,29 +1870,36 @@ function newsTimeAgo(iso) {
   return `${d}d ago`;
 }
 
-// Left desktop rail: real ESPN headlines from /api/sports-news (the same feed
-// the logged-out desktop right rail uses). Lives only on xl+ widths where
-// there's room for a third column; hidden below that so the feed stays
-// centered. Styled with the shared sf-* theme tokens so it flips light/dark
-// with the rest of the page.
+// Internal Piks News reader link for a feed item. Always stays on-site: items
+// without an id/slug fall back to the Piks News hub, never an external source.
+function piksNewsHref(a) {
+  if (a?.slug && a?.id) return `/news/${a.slug}?id=${encodeURIComponent(a.id)}`;
+  return '/news';
+}
+
+// Left desktop rail: Piks News headlines from /api/news/feed (the hosted hub
+// feed). Lives only on xl+ widths where there's room for a third column; hidden
+// below that so the feed stays centered. Styled with the shared sf-* theme
+// tokens so it flips light/dark with the rest of the page. Headlines open the
+// branded Piks News reader (/news/[slug]) instead of an external source.
 function SportsNewsRail() {
   const [news, setNews] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     // The rail is CSS-hidden below xl; skip the fetch entirely on smaller
-    // screens so we never hit /api/sports-news where the rail isn't shown.
+    // screens so we never hit /api/news/feed where the rail isn't shown.
     if (typeof window !== 'undefined'
       && window.matchMedia
       && !window.matchMedia('(min-width: 1280px)').matches) {
       return;
     }
     let cancelled = false;
-    fetch('/api/sports-news')
+    fetch('/api/news/feed')
       .then((r) => (r.ok ? r.json() : { items: [] }))
       .then((data) => {
         if (cancelled) return;
-        setNews(Array.isArray(data?.items) ? data.items : []);
+        setNews(Array.isArray(data?.items) ? data.items.slice(0, 8) : []);
         setLoaded(true);
       })
       .catch(() => { if (!cancelled) setLoaded(true); });
@@ -1902,17 +1910,15 @@ function SportsNewsRail() {
     <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-          Sports News
+          Piks News
         </span>
-        <a
-          href="https://www.espn.com"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/news"
           className="text-[11px] font-semibold lg:hover:underline"
-          style={{ color: '#60a5fa' }}
+          style={{ color: '#fb923c' }}
         >
-          ESPN
-        </a>
+          View all
+        </Link>
       </div>
       <div className="px-2 pb-2">
         {news.length === 0 ? (
@@ -1921,20 +1927,18 @@ function SportsNewsRail() {
           </div>
         ) : (
           news.map((n, i) => (
-            <a
-              key={n.href || i}
-              href={n.href}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              key={n.id || i}
+              href={piksNewsHref(n)}
               className="w-full flex flex-col items-start px-2 py-2 rounded-lg text-left transition-colors lg:hover:bg-white/[0.04]"
             >
               <span className="text-[10px] uppercase tracking-wide" style={{ color: textMuted }}>
-                {n.source}{n.league ? ` · ${n.league}` : ''}{n.published ? ` · ${newsTimeAgo(n.published)}` : ''}
+                {n.league ? `${n.league}` : 'Piks News'}{n.published ? ` · ${newsTimeAgo(n.published)}` : ''}
               </span>
               <span className="text-[13px] font-bold leading-snug line-clamp-2 max-w-full" style={{ color: textPrimary }}>
                 {n.headline}
               </span>
-            </a>
+            </Link>
           ))
         )}
       </div>

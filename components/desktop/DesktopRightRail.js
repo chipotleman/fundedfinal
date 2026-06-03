@@ -112,8 +112,13 @@ export default function DesktopRightRail({ isLoggedIn }) {
       else if (!isLoggedIn) setFriends([]);
       const cl = JSON.parse(localStorage.getItem('piks:rail:leaders') || 'null');
       if (Array.isArray(cl) && cl.length) setLeaders(cl);
+      // Only trust cached items from the hosted Piks News feed (they carry an
+      // id + slug). Legacy entries cached from the old external feed lack those
+      // and must be discarded so we never surface an off-site link.
       const cn = JSON.parse(localStorage.getItem('piks:rail:news') || 'null');
-      if (Array.isArray(cn) && cn.length) setNews(cn);
+      const cnClean = Array.isArray(cn) ? cn.filter((n) => n && n.id && n.slug) : [];
+      if (cnClean.length) setNews(cnClean);
+      else { try { localStorage.removeItem('piks:rail:news'); } catch {} }
     } catch {}
   }, [isLoggedIn, userId]);
 
@@ -174,7 +179,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
     const loadNews = async () => {
       if (isLoggedIn) return; // card is guest-only
       try {
-        const res = await fetch('/api/sports-news');
+        const res = await fetch('/api/news/feed');
         if (res.ok && !cancelled) {
           const json = await res.json();
           const next = Array.isArray(json?.items) ? json.items.slice(0, 6) : [];
@@ -368,23 +373,26 @@ export default function DesktopRightRail({ isLoggedIn }) {
         </Card>
       )}
 
-      {/* Top sports news — logged-out only (fills the Friends slot for guests).
-          Real headlines from ESPN's public news feeds via /api/sports-news.
-          Falls back to the engagement "trends" rows while the feed loads or if
-          ESPN is unreachable, so the card is never empty. */}
+      {/* Piks News — logged-out only (fills the Friends slot for guests).
+          Headlines from the hosted Piks News feed (/api/news/feed). Each item
+          opens the branded Piks News reader (/news/[slug]) instead of an
+          external source. Falls back to the engagement "trends" rows while the
+          feed loads, so the card is never empty. */}
       {!isLoggedIn && (
-        <Card title="Top Sports News" action="ESPN" onAction={() => window.open('https://www.espn.com', '_blank', 'noopener,noreferrer')}>
+        <Card title="Piks News" action="View all" onAction={() => router.push('/news')}>
           {news.length > 0 ? (
             news.map((n, i) => (
               <a
-                key={n.href || i}
-                href={n.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                key={n.id || i}
+                href={n.slug && n.id ? `/news/${n.slug}?id=${encodeURIComponent(n.id)}` : '/news'}
+                onClick={(e) => {
+                  e.preventDefault();
+                  router.push(n.slug && n.id ? `/news/${n.slug}?id=${encodeURIComponent(n.id)}` : '/news');
+                }}
                 className="w-full flex flex-col items-start px-2 py-2 rounded-lg text-left lg:hover:bg-white/5 transition-colors"
               >
                 <span className="text-[10px] uppercase tracking-wide" style={{ color: textMuted }}>
-                  {n.source}{n.league ? ` · ${n.league}` : ''}{n.published ? ` · ${newsTimeAgo(n.published)}` : ''}
+                  {n.league ? `${n.league}` : 'Piks News'}{n.published ? ` · ${newsTimeAgo(n.published)}` : ''}
                 </span>
                 <span className="text-[13px] font-bold leading-snug line-clamp-2 max-w-full" style={{ color: textPrimary }}>
                   {n.headline}
