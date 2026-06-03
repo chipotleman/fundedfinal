@@ -21,7 +21,7 @@ import HowItWorksModal from './desktop/HowItWorksModal';
 // Polymarket-style stacked balance readout: small uppercase label on top,
 // bold value below in the currency's signature color. No pill container.
 // Crowns = yellow (#facc15), Clash Coins = white (#ffffff).
-function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 'start', compact = false, glyph = null, glyphColor = null }) {
+function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 'start', compact = false, glyph = null, glyphColor = null, glyphAlign = 'start', glyphSize = null }) {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   // Clash Coins are white (#ffffff) in the dark theme — invisible on the light
@@ -32,6 +32,19 @@ function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 's
   const effColor = isLight
     ? (isWhite ? '#0f172a' : isCrownYellow ? '#D99A16' : color)
     : color;
+  // The glyph follows the same light-theme darkening so the crown's amber stays
+  // readable on the white surface instead of washing out to near-invisible.
+  const rawGlyphColor = glyphColor || effColor;
+  const effGlyphColor = isLight && (rawGlyphColor === '#facc15') ? '#D99A16' : rawGlyphColor;
+  const gSize = glyphSize != null ? glyphSize : (compact ? 13 : 16);
+  const glyphEl = glyph ? (
+    <span
+      aria-hidden="true"
+      style={{ color: effGlyphColor, fontSize: gSize, lineHeight: 1, display: 'inline-flex', alignItems: 'center' }}
+    >
+      {glyph}
+    </span>
+  ) : null;
   return (
     <button
       onClick={onClick}
@@ -75,15 +88,9 @@ function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 's
           whiteSpace: 'nowrap',
         }}
       >
-        {glyph && (
-          <span
-            aria-hidden="true"
-            style={{ color: glyphColor || effColor, fontSize: compact ? 13 : 16, lineHeight: 1 }}
-          >
-            {glyph}
-          </span>
-        )}
+        {glyphAlign !== 'end' && glyphEl}
         {value}
+        {glyphAlign === 'end' && glyphEl}
       </span>
     </button>
   );
@@ -603,6 +610,8 @@ export default function TopNavbar({
           color="#facc15"
           glyph={crownGlyph}
           glyphColor="#facc15"
+          glyphAlign="end"
+          glyphSize={13}
         />
       )}
       {isLoggedIn && (
@@ -1209,6 +1218,8 @@ export default function TopNavbar({
                 color="#facc15"
                 glyph={crownGlyph}
                 glyphColor="#facc15"
+                glyphAlign="end"
+                glyphSize={13}
               />
             )}
             {isLoggedIn && (
