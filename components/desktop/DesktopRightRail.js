@@ -440,9 +440,21 @@ export default function DesktopRightRail({ isLoggedIn }) {
             >
               <span
                 className="flex-shrink-0 w-5 text-center text-[12px] font-black"
-                style={{ color: i === 0 ? '#fbbf24' : i === 1 ? '#cbd5e1' : i === 2 ? '#f97316' : textMuted }}
+                style={{ color: textPrimary }}
               >
-                {l.rank || i + 1}
+                {i === 0 ? (
+                  <span className="relative inline-flex items-center justify-center" aria-label="1st place" title="1st place">
+                    <span style={{ fontSize: 19, lineHeight: 1 }}>👑</span>
+                    <span
+                      className="absolute font-black"
+                      style={{ fontSize: 9, color: '#7c2d12', top: '58%', left: '50%', transform: 'translate(-50%,-50%)' }}
+                    >
+                      1
+                    </span>
+                  </span>
+                ) : (
+                  l.rank || i + 1
+                )}
               </span>
               <span className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                 <UserAvatar user={{ id: l.id, username: l.username, avatar: l.avatar }} size={32} />
@@ -458,7 +470,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
               {typeof l.profit === 'number' && (
                 isBeta ? (
                   <span className="flex-shrink-0 text-right leading-tight">
-                    <span className="block text-[8px] font-semibold uppercase tracking-wider" style={{ color: '#facc15', opacity: 0.65 }}>
+                    <span className="block text-[8px] font-semibold uppercase tracking-wider" style={{ color: textPrimary }}>
                       Crowns
                     </span>
                     <span className="block text-[11px] font-bold" style={{ color: '#facc15' }}>
