@@ -417,7 +417,7 @@ export default function DesktopRightRail({ isLoggedIn }) {
           )}
           <button
             type="button"
-            onClick={openSignup}
+            onClick={() => router.push('/battle')}
             className="w-full mt-1 py-2 rounded-lg text-[12px] font-bold transition-transform active:scale-[0.98]"
             style={{ background: 'linear-gradient(135deg, #facc15, #eab308)', color: '#1a1505' }}
           >

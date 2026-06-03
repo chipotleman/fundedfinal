@@ -1,5 +1,6 @@
 - [Messenger dual-event dedup](messaging-dual-event-dedup.md) — `piks:message:new` fires from local send AND SSE echo; dedup must `String(id)`-compare or messages double-render.
 - [DB migration convention](db-migration-convention.md) — schema changes need BOTH drizzle db:push AND a hand-written migrations/*.sql file, or prod breaks.
+- [Dashboard SSR games warming](dashboard-ssr-warming.md) — SSR must initializeGoalservePolling()+await waitForScheduleCache; never block on inplay waitForCache (busy-waits full timeout when live empty).
 - [News aggregation copyright](news-aggregation-copyright.md) — Piks News surfaces headlines/summaries/links + our own AI analysis only; never republish article bodies.
 - [OddsHistoryChart mini autoscale](oddshistorychart-mini-autoscale.md) — in-card live win-% sparkline auto-scales Y to data range (mini only); full chart stays 0–1.
 - [Theme FOUC fix](theme-fouc-css-vars.md) — first-paint surfaces must theme via CSS vars under html.light/.dark, not useTheme() inline styles (SSR defaults dark → flash).

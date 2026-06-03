@@ -2622,21 +2622,45 @@ export default function Dashboard() {
   );
 }
 
-// Server-side rendering for ZERO delay game loading
-// Serve cached data instantly - never block on cache warming
+// Server-side rendering for ZERO delay game loading. Serves the warm
+// in-memory cache instantly; on a cold start it briefly warms + waits so the
+// first render still ships real games instead of skeletons.
 export async function getServerSideProps() {
   try {
     const { getInplayService } = require('../lib/goalserve-inplay');
-    const { getScheduledGamesForSSR } = require('../lib/goalserve-autostart');
-    
+    const {
+      getScheduledGamesForSSR,
+      initializeGoalservePolling,
+      waitForScheduleCache,
+    } = require('../lib/goalserve-autostart');
+
+    // Make sure the live + scheduled pollers are actually running. This is
+    // idempotent: on a warm server it's a no-op and the cache is already
+    // populated, so the reads below return instantly. Previously SSR read
+    // the cache but never started warming it, so the very first visitor
+    // after a server start always saw an empty page → skeletons → a slow
+    // client-side /api/games fetch. Kicking warming off here fixes that.
+    initializeGoalservePolling();
+
     const service = getInplayService();
-    
-    // Get whatever is cached RIGHT NOW - no waiting
+
+    // Block briefly for the SCHEDULED-games cache only. waitForScheduleCache
+    // returns the moment the first fetch settles (success OR failure) because
+    // it awaits the shared initialFetchPromise — so on a warm server, and even
+    // during an upstream outage once that first attempt is done, it's instant.
+    // It only truly blocks (bounded to 3s) on a genuine cold start while the
+    // first fetch is still in flight, which is exactly when we'd otherwise
+    // ship an empty skeleton page. We deliberately do NOT block on live
+    // (inplay) events: those are legitimately empty most of the time and
+    // stream in over SSE within ~1s, so waiting on them would add latency to
+    // every request for no benefit.
+    await waitForScheduleCache(3000);
+
     const events = service.getEventsForSSR();
     const scheduledGames = getScheduledGamesForSSR();
-    
-    console.log(`[Dashboard SSR] Serving ${events.length} live + ${scheduledGames.length} scheduled (instant)`);
-    
+
+    console.log(`[Dashboard SSR] Serving ${events.length} live + ${scheduledGames.length} scheduled`);
+
     return {
       props: {
         initialInplayEvents: events,
