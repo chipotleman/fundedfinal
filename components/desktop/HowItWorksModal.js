@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // =============================================================================
 // HowItWorksModal — desktop "How it works" walkthrough, Polymarket-style: one
@@ -23,7 +24,7 @@ function VisualBattle() {
   const tile = (label, color, emoji) => (
     <div
       className="flex flex-col items-center justify-center rounded-2xl w-24 h-24"
-      style={{ backgroundColor: '#101010', border: `2px solid ${color}`, boxShadow: `0 0 22px ${color}40` }}
+      style={{ backgroundColor: 'var(--hiw-tile-bg)', border: `2px solid ${color}`, boxShadow: `0 0 22px ${color}40` }}
     >
       <span className="text-3xl leading-none mb-1">{emoji}</span>
       <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color }}>{label}</span>
@@ -42,11 +43,11 @@ function VisualModes() {
   const row = (name, coins, color) => (
     <div
       className="flex items-center justify-between w-full rounded-xl px-3 py-2"
-      style={{ backgroundColor: '#101010', border: '1px solid rgba(255,255,255,0.08)' }}
+      style={{ backgroundColor: 'var(--hiw-tile-bg)', border: '1px solid var(--hiw-tile-border)' }}
     >
       <span className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-        <span className="text-[13px] font-bold" style={{ color: '#e5e7eb' }}>{name}</span>
+        <span className="text-[13px] font-bold" style={{ color: 'var(--hiw-strong)' }}>{name}</span>
       </span>
       <span className="text-[12px] font-bold" style={{ color: C.orange }}>⚔ {coins}</span>
     </div>
@@ -65,7 +66,7 @@ function VisualWin() {
     <div className="flex flex-col items-center justify-center">
       <div
         className="flex items-center justify-center w-24 h-24 rounded-full"
-        style={{ background: `radial-gradient(circle at 50% 35%, ${C.emerald}33, #101010 70%)`, border: `2px solid ${C.emerald}` }}
+        style={{ background: `radial-gradient(circle at 50% 35%, ${C.emerald}33, var(--hiw-tile-bg) 70%)`, border: `2px solid ${C.emerald}` }}
       >
         <span className="text-4xl">🏆</span>
       </div>
@@ -97,7 +98,7 @@ function VisualBeyond() {
           <span
             key={c}
             className="flex items-center justify-center w-12 h-12 rounded-full text-lg"
-            style={{ backgroundColor: '#101010', border: `2px solid ${c}`, zIndex: 10 - i }}
+            style={{ backgroundColor: 'var(--hiw-tile-bg)', border: `2px solid ${c}`, zIndex: 10 - i }}
           >
             {['🔥', '⚡', '💎', '🏆'][i]}
           </span>
@@ -116,9 +117,9 @@ const STEPS = [
     body: (
       <>
         Go head-to-head in real-time sports betting battles. Jump into a{' '}
-        <strong style={{ color: '#e5e7eb' }}>Quick Match</strong> against a random opponent,{' '}
-        <strong style={{ color: '#e5e7eb' }}>Play a Friend</strong>, or set up a{' '}
-        <strong style={{ color: '#e5e7eb' }}>Private Match</strong> with your own invite.
+        <strong style={{ color: 'var(--hiw-strong)' }}>Quick Match</strong> against a random opponent,{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>Play a Friend</strong>, or set up a{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>Private Match</strong> with your own invite.
       </>
     ),
     Visual: VisualBattle,
@@ -129,10 +130,10 @@ const STEPS = [
     title: 'Choose a mode',
     body: (
       <>
-        You start every battle with a stack of <strong style={{ color: '#e5e7eb' }}>Clash Coins</strong>.{' '}
-        <strong style={{ color: '#e5e7eb' }}>Rush</strong> — 6 fast live-game props, race the clock.{' '}
-        <strong style={{ color: '#e5e7eb' }}>Original</strong> — full slate of the day, most Clash Coins wins.{' '}
-        <strong style={{ color: '#e5e7eb' }}>Tournament</strong> — a 3-day battle for the big pot.
+        You start every battle with a stack of <strong style={{ color: 'var(--hiw-strong)' }}>Clash Coins</strong>.{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>Rush</strong> — 6 fast live-game props, race the clock.{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>Original</strong> — full slate of the day, most Clash Coins wins.{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>Tournament</strong> — a 3-day battle for the big pot.
       </>
     ),
     Visual: VisualModes,
@@ -143,9 +144,9 @@ const STEPS = [
     title: 'Win the Crowns',
     body: (
       <>
-        The winner banks the combined <strong style={{ color: '#e5e7eb' }}>Crowns</strong> pot, minus a small{' '}
-        <strong style={{ color: '#e5e7eb' }}>5% rake</strong>. Crowns are the currency of the beta — whoever holds the{' '}
-        <strong style={{ color: '#e5e7eb' }}>most Crowns wins the beta</strong>.
+        The winner banks the combined <strong style={{ color: 'var(--hiw-strong)' }}>Crowns</strong> pot, minus a small{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>5% rake</strong>. Crowns are the currency of the beta — whoever holds the{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>most Crowns wins the beta</strong>.
       </>
     ),
     Visual: VisualWin,
@@ -156,10 +157,10 @@ const STEPS = [
     title: 'Weekly beta · $1,000 prize',
     body: (
       <>
-        We run a fresh beta <strong style={{ color: '#e5e7eb' }}>every week</strong> with a{' '}
-        <strong style={{ color: '#e5e7eb' }}>$1,000 cash grand prize</strong> — the{' '}
-        <strong style={{ color: '#e5e7eb' }}>top capper of the week</strong> takes it home. And once the beta ends, your
-        Crowns <strong style={{ color: '#e5e7eb' }}>convert to real cash</strong> and you'll be able to play for real money.
+        We run a fresh beta <strong style={{ color: 'var(--hiw-strong)' }}>every week</strong> with a{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>$1,000 cash grand prize</strong> — the{' '}
+        <strong style={{ color: 'var(--hiw-strong)' }}>top capper of the week</strong> takes it home. And once the beta ends, your
+        Crowns <strong style={{ color: 'var(--hiw-strong)' }}>convert to real cash</strong> and you'll be able to play for real money.
       </>
     ),
     Visual: VisualBeta,
@@ -170,8 +171,8 @@ const STEPS = [
     title: 'Build your name',
     body: (
       <>
-        Every battle you win builds your <strong style={{ color: '#e5e7eb' }}>reputation</strong>. Stack wins,
-        climb the leaderboard, and make a <strong style={{ color: '#e5e7eb' }}>name for yourself</strong> across
+        Every battle you win builds your <strong style={{ color: 'var(--hiw-strong)' }}>reputation</strong>. Stack wins,
+        climb the leaderboard, and make a <strong style={{ color: 'var(--hiw-strong)' }}>name for yourself</strong> across
         the league.
       </>
     ),
@@ -181,6 +182,41 @@ const STEPS = [
 
 export default function HowItWorksModal({ open, onClose }) {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const t = isLight
+    ? {
+        backdrop: 'rgba(15,23,42,0.45)',
+        modalBg: '#ffffff',
+        modalBorder: '1px solid #e7e0d3',
+        modalShadow: '0 24px 70px rgba(15,23,42,0.22)',
+        panelBorder: '1px solid rgba(15,23,42,0.08)',
+        closeIcon: '#475569',
+        title: '#0f172a',
+        body: '#475569',
+        dotTrack: 'rgba(15,23,42,0.18)',
+        backText: '#475569',
+        backBorder: '1px solid rgba(15,23,42,0.15)',
+        strong: '#0f172a',
+        tileBg: '#f5f1ea',
+        tileBorder: 'rgba(15,23,42,0.1)',
+      }
+    : {
+        backdrop: 'rgba(0,0,0,0.78)',
+        modalBg: '#0a0a0a',
+        modalBorder: '1px solid rgba(255,255,255,0.1)',
+        modalShadow: '0 24px 70px rgba(0,0,0,0.7)',
+        panelBorder: '1px solid rgba(255,255,255,0.06)',
+        closeIcon: '#9ca3af',
+        title: '#ffffff',
+        body: '#9ca3af',
+        dotTrack: 'rgba(255,255,255,0.18)',
+        backText: '#9ca3af',
+        backBorder: '1px solid rgba(255,255,255,0.12)',
+        strong: '#e5e7eb',
+        tileBg: '#101010',
+        tileBorder: 'rgba(255,255,255,0.08)',
+      };
   const [step, setStep] = useState(0);
 
   // Reset to the first slide only when the modal transitions open. This must
@@ -231,7 +267,7 @@ export default function HowItWorksModal({ open, onClose }) {
   return createPortal((
     <div
       className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(4px)' }}
+      style={{ backgroundColor: t.backdrop, backdropFilter: 'blur(4px)' }}
       onClick={onClose}
       data-allow-fixed-overlay="true"
       role="dialog"
@@ -240,7 +276,14 @@ export default function HowItWorksModal({ open, onClose }) {
     >
       <div
         className="w-full max-w-[460px] overflow-hidden rounded-3xl"
-        style={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 70px rgba(0,0,0,0.7)' }}
+        style={{
+          backgroundColor: t.modalBg,
+          border: t.modalBorder,
+          boxShadow: t.modalShadow,
+          '--hiw-strong': t.strong,
+          '--hiw-tile-bg': t.tileBg,
+          '--hiw-tile-border': t.tileBorder,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Visual panel */}
@@ -249,7 +292,7 @@ export default function HowItWorksModal({ open, onClose }) {
           style={{
             height: 188,
             background: `linear-gradient(160deg, ${current.accent}24 0%, ${current.accent}0d 55%, rgba(0,0,0,0) 100%)`,
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            borderBottom: t.panelBorder,
           }}
         >
           <button
@@ -257,7 +300,7 @@ export default function HowItWorksModal({ open, onClose }) {
             onClick={onClose}
             className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full lg:hover:bg-white/10 transition-colors"
             aria-label="Close"
-            style={{ color: '#9ca3af' }}
+            style={{ color: t.closeIcon }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
@@ -271,10 +314,10 @@ export default function HowItWorksModal({ open, onClose }) {
           <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: current.accent }}>
             {current.eyebrow}
           </p>
-          <h2 className="text-xl font-black mb-2" style={{ color: '#ffffff' }}>
+          <h2 className="text-xl font-black mb-2" style={{ color: t.title }}>
             {step + 1}. {current.title}
           </h2>
-          <p className="text-[13.5px] leading-relaxed min-h-[66px]" style={{ color: '#9ca3af' }}>
+          <p className="text-[13.5px] leading-relaxed min-h-[66px]" style={{ color: t.body }}>
             {current.body}
           </p>
         </div>
@@ -292,7 +335,7 @@ export default function HowItWorksModal({ open, onClose }) {
                 style={{
                   width: i === step ? 22 : 7,
                   height: 7,
-                  backgroundColor: i === step ? current.accent : 'rgba(255,255,255,0.18)',
+                  backgroundColor: i === step ? current.accent : t.dotTrack,
                 }}
               />
             ))}
@@ -303,8 +346,8 @@ export default function HowItWorksModal({ open, onClose }) {
               <button
                 type="button"
                 onClick={back}
-                className="px-4 py-3 rounded-xl font-bold text-[14px] transition-colors lg:hover:bg-white/5"
-                style={{ color: '#9ca3af', border: '1px solid rgba(255,255,255,0.12)' }}
+                className="px-4 py-3 rounded-xl font-bold text-[14px] transition-colors"
+                style={{ color: t.backText, border: t.backBorder }}
               >
                 Back
               </button>
