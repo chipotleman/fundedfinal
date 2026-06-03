@@ -2018,17 +2018,17 @@ function YouVsCard({
       style={{
         background: isLight
           ? 'linear-gradient(180deg, rgba(249,115,22,0.16) 0%, rgba(234,88,12,0.08) 45%, #ffffff 100%), #ffffff'
-          : 'linear-gradient(180deg, rgba(16,185,129,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
+          : 'linear-gradient(180deg, rgba(249,115,22,0.16) 0%, rgba(234,88,12,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
         border: isLight
           ? (isExpanded
               ? '1.5px solid rgba(234, 88, 12, 0.9)'
               : '1.5px solid rgba(249, 115, 22, 0.65)')
           : (isExpanded
-              ? '1.5px solid rgba(52, 211, 153, 0.85)'
-              : '1.5px solid rgba(16, 185, 129, 0.6)'),
+              ? '1.5px solid rgba(234, 88, 12, 0.9)'
+              : '1.5px solid rgba(249, 115, 22, 0.65)'),
         boxShadow: isLight
           ? '0 0 0 1px rgba(249,115,22,0.25) inset, 0 0 18px rgba(249,115,22,0.45), 0 0 32px rgba(234,88,12,0.25)'
-          : '0 0 0 1px rgba(16,185,129,0.15) inset, 0 0 18px rgba(16,185,129,0.28), 0 0 32px rgba(6,182,212,0.12)',
+          : '0 0 0 1px rgba(249,115,22,0.18) inset, 0 0 18px rgba(249,115,22,0.32), 0 0 32px rgba(234,88,12,0.18)',
         transition: 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease-out, border-color 180ms ease-out',
         outline: 'none',
         willChange: 'transform',
@@ -2167,8 +2167,8 @@ function YouVsCard({
           animation: heroRingPulse 2s ease-out infinite;
         }
         :global(.hero-ring-you) {
-          border-color: rgba(52,211,153,0.75);
-          box-shadow: 0 0 12px rgba(16,185,129,0.55);
+          border-color: rgba(249,115,22,0.75);
+          box-shadow: 0 0 12px rgba(234,88,12,0.55);
         }
         :global(.hero-ring-opp) {
           border-color: rgba(248,113,113,0.75);
@@ -2300,21 +2300,21 @@ function YouVsCard({
           :global(.hero-ring) { opacity: 0.4; }
         }
         .youvs-card:focus-visible {
-          border-color: rgba(52, 211, 153, 0.95) !important;
+          border-color: rgba(249, 115, 22, 0.95) !important;
           box-shadow:
-            0 0 0 3px rgba(16, 185, 129, 0.55),
-            0 0 0 5px rgba(6, 182, 212, 0.45),
-            0 0 24px rgba(16, 185, 129, 0.45),
-            0 0 40px rgba(6, 182, 212, 0.28) !important;
+            0 0 0 3px rgba(249, 115, 22, 0.55),
+            0 0 0 5px rgba(234, 88, 12, 0.45),
+            0 0 24px rgba(249, 115, 22, 0.45),
+            0 0 40px rgba(234, 88, 12, 0.28) !important;
         }
         @media (hover: hover) {
           .youvs-card:hover {
             transform: translateY(-3px);
-            border-color: rgba(52, 211, 153, 0.95) !important;
+            border-color: rgba(249, 115, 22, 0.95) !important;
             box-shadow:
-              0 0 0 1px rgba(16, 185, 129, 0.3) inset,
-              0 0 28px rgba(16, 185, 129, 0.55),
-              0 0 48px rgba(6, 182, 212, 0.32),
+              0 0 0 1px rgba(249, 115, 22, 0.3) inset,
+              0 0 28px rgba(249, 115, 22, 0.55),
+              0 0 48px rgba(234, 88, 12, 0.32),
               0 10px 28px rgba(0, 0, 0, 0.45) !important;
           }
           .youvs-card:hover:active {
@@ -2325,11 +2325,11 @@ function YouVsCard({
         @media (hover: none) {
           .youvs-card:active {
             transform: scale(0.97);
-            border-color: rgba(52, 211, 153, 0.95) !important;
+            border-color: rgba(249, 115, 22, 0.95) !important;
             box-shadow:
-              0 0 0 1px rgba(16, 185, 129, 0.3) inset,
-              0 0 24px rgba(16, 185, 129, 0.5),
-              0 0 40px rgba(6, 182, 212, 0.28) !important;
+              0 0 0 1px rgba(249, 115, 22, 0.3) inset,
+              0 0 24px rgba(249, 115, 22, 0.5),
+              0 0 40px rgba(234, 88, 12, 0.28) !important;
             transition-duration: 80ms;
           }
         }
@@ -2351,12 +2351,12 @@ function YouVsCard({
               style={{
                 background: isLight
                   ? 'linear-gradient(135deg, #facc15, #eab308)'
-                  : 'linear-gradient(135deg, #34d399, #10b981)',
-                color: isLight ? '#1a1505' : '#022c1f',
+                  : 'linear-gradient(135deg, #fb923c, #f97316)',
+                color: isLight ? '#1a1505' : '#1a1505',
                 border: '1.5px solid #0d0d0d',
                 boxShadow: isLight
                   ? '0 2px 0 rgba(0,0,0,0.45), 0 0 10px rgba(234,179,8,0.45)'
-                  : '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(16,185,129,0.45)',
+                  : '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(234,88,12,0.45)',
               }}
             >
               <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">

@@ -474,7 +474,6 @@ export default function MyPicksPage() {
   // ===================== Live-odds tracker body (mobile inline) =====================
   const renderTrackingBody = (bet) => {
     const { gameId, homeTeam, awayTeam, isLive, isFinal, derivedLiveOdds } = getChartCtx(bet);
-    const trackHomeColor = getTeamColor(homeTeam, bet.sport || bet.sportName) || '#2563eb';
     return (
       <div className="space-y-2.5">
         <div className="min-w-0">
@@ -482,17 +481,6 @@ export default function MyPicksPage() {
           <div className="text-[10px] truncate" style={{ color: p.mutedText }}>{awayTeam} @ {homeTeam}</div>
         </div>
         <OddsHistoryChart gameId={gameId} homeTeam={homeTeam} awayTeam={awayTeam} liveOdds={derivedLiveOdds} commenceTime={bet.placedAt} isLive={isLive} isFinal={isFinal} compact />
-        {gameId ? (
-          <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch className="block w-full text-center px-3 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider"
-            style={{ background: trackHomeColor, color: inkFor(trackHomeColor), boxShadow: p.hardShadow }}>
-            Open Game →
-          </Link>
-        ) : (
-          <div className="block w-full text-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider cursor-not-allowed select-none"
-            style={{ background: p.disabledGameBg, color: p.disabledGameText, border: p.disabledGameBorder }} title="Game summary not available for this pick">
-            Game Unavailable
-          </div>
-        )}
       </div>
     );
   };
@@ -802,16 +790,6 @@ export default function MyPicksPage() {
             </div>
           </div>
 
-          {gameId && (
-            <div className="max-w-md mx-auto mt-3">
-              <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch
-                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-black uppercase tracking-wider"
-                style={{ background: '#22d3ee', color: '#06222a', boxShadow: p.hardShadow }}>
-                Open Game
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-              </Link>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -914,7 +892,6 @@ export default function MyPicksPage() {
       );
     }
     const { gameId, homeTeam, awayTeam, isLive, isFinal, derivedLiveOdds } = getChartCtx(bet);
-    const railHomeColor = getTeamColor(homeTeam, bet.sport || bet.sportName) || '#2563eb';
     return (
       <div className="rounded-2xl overflow-hidden" style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}`, boxShadow: p.hardShadow }}>
         {sectionTitle}
@@ -958,18 +935,6 @@ export default function MyPicksPage() {
           </div>
         </div>
 
-        <div className="px-5 pb-5">
-          {gameId ? (
-            <Link href={`/game/${encodeURIComponent(gameId)}?from=${encodeURIComponent('/my-picks')}`} prefetch className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider"
-              style={{ background: railHomeColor, color: inkFor(railHomeColor), boxShadow: `0 8px 20px ${railHomeColor}59` }}>
-              Open Game
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-            </Link>
-          ) : (
-            <div className="w-full text-center px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider cursor-not-allowed"
-              style={{ background: p.disabledGameBg, color: p.disabledGameText, border: p.disabledGameBorder }}>Game Unavailable</div>
-          )}
-        </div>
         {renderForfeitBar()}
       </div>
     );

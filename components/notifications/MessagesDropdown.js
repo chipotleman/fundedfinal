@@ -181,7 +181,7 @@ export default function MessagesDropdown({ open, onClose, anchorRef, onSelectCon
       className="fixed left-1/2 -translate-x-1/2 top-[var(--top-nav-height,70px)] sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 sm:top-full mt-2 w-[calc(100vw-16px)] max-w-sm sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#f97316]/30 rounded-xl shadow-2xl z-[70] overflow-hidden"
       style={{
         maxHeight: '70vh',
-        boxShadow: '0 0 0 1px rgba(249,115,22,0.10), 0 18px 48px -12px rgba(249,115,22,0.35)',
+        boxShadow: '0 0 0 1px rgba(249,115,22,0.25), 0 10px 30px -16px rgba(0,0,0,0.6)',
       }}
     >
       <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between gap-2">
