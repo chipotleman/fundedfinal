@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useMatchup } from '../../contexts/MatchupContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 
 // Cartoon-themed "you're already in a battle" blocker. Originally lived
@@ -13,8 +14,43 @@ import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 export default function ActiveBattleBlocker({ onClose }) {
   const router = useRouter();
   const { matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   if (typeof document === 'undefined') return null;
+
+  // Cartoon hard borders/shadows (#0a0a0a) stay in both themes — only the
+  // panel/card surfaces, text and muted accents flip so the blocker matches
+  // the rest of the app in light mode (it used to stay dark regardless).
+  const t = isLight
+    ? {
+        backdrop: 'rgba(15,23,42,0.45)',
+        modalBg: '#ffffff',
+        card: '#f4efe4',
+        cardText: '#334155',
+        title: '#0f172a',
+        titleShadow: 'none',
+        label: '#2563eb',
+        body: '#475569',
+        bodyStrong: '#0f172a',
+        forfeit: '#ea580c',
+        secondaryBg: '#f1ece0',
+        secondaryText: '#475569',
+      }
+    : {
+        backdrop: 'rgba(0,0,0,0.80)',
+        modalBg: '#0d0d0d',
+        card: '#111',
+        cardText: '#e5e7eb',
+        title: '#ffffff',
+        titleShadow: '0 2px 0 #000',
+        label: '#60a5fa',
+        body: '#9ca3af',
+        bodyStrong: '#ffffff',
+        forfeit: '#fb923c',
+        secondaryBg: '#111',
+        secondaryText: '#9ca3af',
+      };
 
   const opponentName = activeOpponent?.username || 'your opponent';
   const goToBattle = () => {
@@ -29,7 +65,8 @@ export default function ActiveBattleBlocker({ onClose }) {
   const blocker = (
     <div
       data-allow-fixed-overlay="true"
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      style={{ backgroundColor: t.backdrop }}
       onClick={onClose}
       onKeyDown={(e) => { if (e.key === 'Escape') onClose?.(); }}
     >
@@ -62,7 +99,7 @@ export default function ActiveBattleBlocker({ onClose }) {
         aria-labelledby="abb-blocker-title"
         className="abb-blocker rounded-3xl max-w-sm w-full overflow-hidden my-auto"
         style={{
-          backgroundColor: '#0d0d0d',
+          backgroundColor: t.modalBg,
           border: '2.5px solid #0a0a0a',
           boxShadow: '0 8px 0 #0a0a0a, 0 22px 44px rgba(0,0,0,0.55)',
         }}
@@ -81,7 +118,7 @@ export default function ActiveBattleBlocker({ onClose }) {
           </div>
           <div
             className="text-[11px] font-extrabold uppercase mb-1"
-            style={{ color: '#60a5fa', letterSpacing: '0.22em' }}
+            style={{ color: t.label, letterSpacing: '0.22em' }}
           >
             You're In A Battle
           </div>
@@ -89,17 +126,17 @@ export default function ActiveBattleBlocker({ onClose }) {
             id="abb-blocker-title"
             className="font-black uppercase"
             style={{
-              color: '#fff',
+              color: t.title,
               fontSize: '22px',
               letterSpacing: '0.04em',
-              textShadow: '0 2px 0 #000',
+              textShadow: t.titleShadow,
             }}
           >
             Finish your fight first
           </h2>
-          <p className="text-sm mt-3" style={{ color: '#9ca3af', lineHeight: 1.5 }}>
+          <p className="text-sm mt-3" style={{ color: t.body, lineHeight: 1.5 }}>
             You can't start a new battle while you're already
-            matched up with <span style={{ color: '#fff', fontWeight: 700 }}>{opponentName}</span>.
+            matched up with <span style={{ color: t.bodyStrong, fontWeight: 700 }}>{opponentName}</span>.
           </p>
         </div>
 
@@ -107,28 +144,28 @@ export default function ActiveBattleBlocker({ onClose }) {
           <div
             className="flex items-start gap-3 rounded-2xl px-4 py-3"
             style={{
-              backgroundColor: '#111',
+              backgroundColor: t.card,
               border: '2.5px solid #0a0a0a',
               boxShadow: '0 3px 0 #0a0a0a',
             }}
           >
             <span className="text-lg leading-none mt-0.5">🎯</span>
-            <p className="text-xs font-semibold" style={{ color: '#e5e7eb', lineHeight: 1.5 }}>
+            <p className="text-xs font-semibold" style={{ color: t.cardText, lineHeight: 1.5 }}>
               Head back to your battle and play it out — winner takes the pot.
             </p>
           </div>
           <div
             className="flex items-start gap-3 rounded-2xl px-4 py-3"
             style={{
-              backgroundColor: '#111',
+              backgroundColor: t.card,
               border: '2.5px solid #0a0a0a',
               boxShadow: '0 3px 0 #0a0a0a',
             }}
           >
             <span className="text-lg leading-none mt-0.5">🏳️</span>
-            <p className="text-xs font-semibold" style={{ color: '#e5e7eb', lineHeight: 1.5 }}>
+            <p className="text-xs font-semibold" style={{ color: t.cardText, lineHeight: 1.5 }}>
               Or tap{' '}
-              <span style={{ color: '#fb923c', fontWeight: 800 }}>Forfeit</span>
+              <span style={{ color: t.forfeit, fontWeight: 800 }}>Forfeit</span>
               {' '}on your battle to surrender — then you'll be free to start anything.
             </p>
           </div>
@@ -154,8 +191,8 @@ export default function ActiveBattleBlocker({ onClose }) {
             onClick={onClose}
             className="abb-blk-secondary w-full py-3 rounded-2xl text-sm uppercase"
             style={{
-              background: '#111',
-              color: '#9ca3af',
+              background: t.secondaryBg,
+              color: t.secondaryText,
               fontWeight: 800,
               letterSpacing: '0.08em',
               border: '2.5px solid #0a0a0a',
