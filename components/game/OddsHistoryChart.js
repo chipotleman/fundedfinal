@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getTeamColor, inkFor } from '../../utils/teamColors';
+import { getTeamColor, inkFor, readableLineColor } from '../../utils/teamColors';
 import { useTheme } from '../../contexts/ThemeContext';
 
 // Kalshi-style live odds chart. Plots de-vigged implied win probability for
@@ -70,10 +70,17 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   // team isn't in the color map. Resolve the color from the FULL team name
   // (e.g. "Michigan Wolverines") — the short `homeTeam` label ("MICH") used
   // for the legend won't match the color map and would fall back to blue.
-  const HOME_COLOR = getTeamColor(homeTeamFull || homeTeam, sport) || '#3b82f6';
-  const HOME_INK = inkFor(HOME_COLOR);
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  // Resolve the brand color, then guard it for the light theme: a near-white
+  // team color (e.g. UCLA on a white panel) would draw an invisible white
+  // line + legend label, so readableLineColor darkens it to a visible shade
+  // of the same hue. Dark theme keeps the true brand color.
+  const HOME_COLOR = readableLineColor(
+    getTeamColor(homeTeamFull || homeTeam, sport) || '#3b82f6',
+    isLight
+  );
+  const HOME_INK = inkFor(HOME_COLOR);
   // Away team = the theme-neutral line: near-black on the light panel, white on
   // the dark panel. AWAY_INK is the contrasting ink for content on the away chip.
   const AWAY_COLOR = isLight ? '#0a0a0a' : '#ffffff';

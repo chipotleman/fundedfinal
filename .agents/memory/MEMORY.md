@@ -1,6 +1,7 @@
 - [Messenger dual-event dedup](messaging-dual-event-dedup.md) — `piks:message:new` fires from local send AND SSE echo; dedup must `String(id)`-compare or messages double-render.
 - [DB migration convention](db-migration-convention.md) — schema changes need BOTH drizzle db:push AND a hand-written migrations/*.sql file, or prod breaks.
 - [SSR + localStorage instant render](ssr-localstorage-instant-render.md) — don't lazy-init useState from localStorage on SSR pages; flip in an isomorphic layout effect (pre-paint, no mismatch).
+- [Light theme team colors](light-theme-team-colors.md) — never render a team brand color as white on light theme; wrap getTeamColor() in readableLineColor(hex, isLight).
 - [iOS haptics user-activation](ios-haptics-user-activation.md) — the iOS switch-haptic `label.click()` must fire synchronously in the tap handler; any rAF/setTimeout/await defer silently kills it.
 - [Public battle endpoint exposure](public-battle-endpoint-exposure.md) — /api/battles/public/[id] intentionally returns both sides' picks for active battles; bet-history depends on it, don't gate to completed-only.
 - [SelectionLogos parlay auto-detection](selection-logos-parlay.md) — renders split-circle parlay mark from bet.legs>1; single-team callers must pass legs:undefined or they get the parlay mark.

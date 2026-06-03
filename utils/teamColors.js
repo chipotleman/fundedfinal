@@ -313,6 +313,28 @@ export function getTeamColor(name /*, sport */) {
   return null;
 }
 
+// Returns a team brand color that stays visible on the current theme's panel.
+// On the LIGHT theme a near-white brand color (teams whose primary is white,
+// e.g. some college/hockey clubs) would draw an invisible white line/label on
+// the white panel. When that happens we darken the color while preserving its
+// hue so it reads as a different, visible shade of the team's own color rather
+// than disappearing. The dark theme is left untouched — white reads fine there.
+export function readableLineColor(hex, isLight) {
+  const h = String(hex || '').replace('#', '');
+  if (h.length !== 6 || !isLight) return hex;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const brightness = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  if (brightness <= 0.72) return hex; // already dark enough to be visible
+  const s = 0.34 / brightness; // scale toward a comfortably readable darkness
+  const adj = (v) =>
+    Math.max(0, Math.min(255, Math.round(v * s)))
+      .toString(16)
+      .padStart(2, '0');
+  return `#${adj(r)}${adj(g)}${adj(b)}`;
+}
+
 // Picks a readable text/ink color (#0a0a0a or #ffffff) for content placed on
 // top of the given background hex, based on relative luminance.
 export function inkFor(hex) {
