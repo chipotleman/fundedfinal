@@ -17,12 +17,34 @@ const useIsomorphicLayoutEffect =
 // can skip that skeleton for the common idle case while still keeping it
 // for users who were mid-battle (so they never flash "PLAY NOW" on refresh).
 const MATCHUP_STATUS_CACHE_KEY = 'piks:lastMatchupStatus';
+// Full last-known matchup payload. Caching only the *status* lets us skip the
+// skeleton for idle users, but a user mid-battle still flashed skeleton →
+// battle card because the card had no data to render until the
+// /api/matchups/current round-trip resolved. Persisting the resolved payload
+// lets the isomorphic layout effect paint the real "YOUR BATTLE" card on the
+// very first frame; the background fetch then reconciles it to fresh data.
+const MATCHUP_DATA_CACHE_KEY = 'piks:lastMatchupData';
 const BATTLE_STATUSES = ['active', 'matched', 'waiting', 'queued'];
 
 function readCachedMatchupStatus() {
   if (typeof window === 'undefined') return null;
   try {
     return window.localStorage.getItem(MATCHUP_STATUS_CACHE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+function readCachedMatchupData() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(MATCHUP_DATA_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Only trust a cached payload that still describes an in-battle state —
+    // anything else falls back to the skeleton/fetch path.
+    if (parsed && BATTLE_STATUSES.includes(parsed.status)) return parsed;
+    return null;
   } catch {
     return null;
   }
@@ -92,7 +114,18 @@ export function MatchupProvider({ children }) {
     if (appliedStatusHintRef.current) return;
     appliedStatusHintRef.current = true;
     const hint = readCachedMatchupStatus();
-    if (hint && !BATTLE_STATUSES.includes(hint)) {
+    if (!hint) return;
+    if (!BATTLE_STATUSES.includes(hint)) {
+      // Was idle last time — skip straight to the "PLAY NOW" card.
+      setLoading(false);
+      return;
+    }
+    // Was mid-battle — paint the real "YOUR BATTLE" card from the cached
+    // payload on the first frame so it doesn't flash a skeleton. The
+    // background fetch below reconciles it to fresh data moments later.
+    const cached = readCachedMatchupData();
+    if (cached) {
+      setMatchupData(cached);
       setLoading(false);
     }
   }, []);
@@ -117,13 +150,27 @@ export function MatchupProvider({ children }) {
     try {
       if (status === 'authenticated') {
         if (!loading) {
-          window.localStorage.setItem(
-            MATCHUP_STATUS_CACHE_KEY,
-            matchupData?.status || 'none'
-          );
+          const nextStatus = matchupData?.status || 'none';
+          window.localStorage.setItem(MATCHUP_STATUS_CACHE_KEY, nextStatus);
+          // Mirror the full payload so the next reload can paint the real
+          // battle card pre-paint. Only persist in-battle states; idle/none
+          // clears it so a finished battle doesn't get restored next time.
+          if (BATTLE_STATUSES.includes(nextStatus)) {
+            try {
+              window.localStorage.setItem(
+                MATCHUP_DATA_CACHE_KEY,
+                JSON.stringify(matchupData)
+              );
+            } catch {
+              /* payload too large / quota — non-fatal, skeleton fallback */
+            }
+          } else {
+            window.localStorage.removeItem(MATCHUP_DATA_CACHE_KEY);
+          }
         }
       } else if (status === 'unauthenticated') {
         window.localStorage.removeItem(MATCHUP_STATUS_CACHE_KEY);
+        window.localStorage.removeItem(MATCHUP_DATA_CACHE_KEY);
       }
     } catch {
       /* localStorage unavailable (private mode / quota) — non-fatal */
