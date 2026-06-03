@@ -559,9 +559,12 @@ export default function MyPicksPage() {
       let h = 0; for (let i = 0; i < raw.length; i++) { h = (h * 31 + raw.charCodeAt(i)) >>> 0; }
       return String(100000000 + (h % 900000000));
     })();
-    const ticketBg = isLight ? '#ffffff' : '#0b1119';
-    const divider = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.12)';
+    const ticketBg = isLight ? '#ffffff' : '#06090f';
+    const divider = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.14)';
     const coinColor = isLight ? '#0f172a' : '#ffffff';
+    // Colour of the gap behind the inner ticket — used for the punched
+    // perforation notches so they read as bites cut out of the stub edge.
+    const notchBg = isLight ? '#e8ebf3' : '#070a10';
     const scoreRow = (team, score) => (
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
@@ -573,7 +576,7 @@ export default function MyPicksPage() {
     );
     return (
       <div className="relative rounded-3xl overflow-hidden mb-4"
-        style={{ border: `1px solid ${p.softBorder}`, background: isLight ? 'linear-gradient(180deg,#eef1f7,#e2e7f0)' : 'linear-gradient(180deg,#10141d,#0a0d13)', boxShadow: p.hardShadow }}>
+        style={{ border: `1px solid ${p.softBorder}`, background: isLight ? 'linear-gradient(180deg,#eef1f7,#e2e7f0)' : 'linear-gradient(180deg,#0b0e15,#04060a)', boxShadow: p.hardShadow }}>
         <div className="flex items-center justify-between px-5 pt-4">
           <span className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: p.mutedText }}>Your Ticket</span>
         </div>
@@ -582,7 +585,7 @@ export default function MyPicksPage() {
             <div className="px-5 pt-4 pb-4">
               {/* Header: logo + status */}
               <div className="flex items-center justify-between mb-1">
-                <img src="/pikslogotransparent.png" alt="Piks" className="h-16 object-contain" style={{ filter: isLight ? 'brightness(0)' : 'none' }} />
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-16 object-contain" style={{ filter: isLight ? 'brightness(0)' : 'none', marginLeft: '-10px' }} />
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
                   style={{ color: statusMeta.color, background: `${statusMeta.color}1f`, border: `1px solid ${statusMeta.color}59` }}>
                   <span className={`w-1.5 h-1.5 rounded-full ${status === 'open' ? 'animate-pulse' : ''}`} style={{ background: statusMeta.color }} />
@@ -650,10 +653,17 @@ export default function MyPicksPage() {
                 </div>
               </div>
 
-              {/* Meta */}
-              <div className="mt-2 pt-2 flex items-center justify-between" style={{ borderTop: `1px solid ${divider}` }}>
-                <span className="text-[10px] font-mono" style={{ color: p.faintText }}>PIK ID: {pikId}</span>
-                {placedStr && <span className="text-[10px]" style={{ color: p.faintText }}>PLACED: {placedStr}</span>}
+              {/* Perforated tear-off line (sportsbook stub) */}
+              <div className="relative -mx-5 mt-3 mb-1" style={{ height: 14 }}>
+                <div className="absolute left-3 right-3 top-1/2" style={{ borderTop: `1.5px dashed ${divider}`, transform: 'translateY(-50%)' }} />
+                <span className="absolute rounded-full" style={{ width: 13, height: 13, left: -6, top: '50%', transform: 'translateY(-50%)', background: notchBg }} />
+                <span className="absolute rounded-full" style={{ width: 13, height: 13, right: -6, top: '50%', transform: 'translateY(-50%)', background: notchBg }} />
+              </div>
+
+              {/* Meta (stub) */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono tracking-wider" style={{ color: p.faintText }}>PIK ID: {pikId}</span>
+                {placedStr && <span className="text-[10px] font-mono" style={{ color: p.faintText }}>PLACED: {placedStr}</span>}
               </div>
             </div>
           </div>
@@ -902,8 +912,8 @@ export default function MyPicksPage() {
           ) : (
             <>
               <div className="flex gap-5 items-start mb-1">
-                <div className="flex-1 min-w-0">{renderMatchUpdates()}</div>
-                <div className="w-[390px] flex-shrink-0">{selectedBet ? renderTicket(selectedBet) : null}</div>
+                <div className="w-[310px] flex-shrink-0">{renderMatchUpdates()}</div>
+                <div className="flex-1 min-w-0">{selectedBet ? renderTicket(selectedBet) : null}</div>
               </div>
               <div className="flex items-center justify-between mb-3 mt-5">
                 <div className="text-base font-black" style={{ color: p.bodyText }}>
