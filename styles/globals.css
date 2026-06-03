@@ -1640,3 +1640,18 @@ html.light .game-detail-page [class*="hover:bg-[#111]"]:hover { background-color
   --sbf-text-dim: #a1a1aa;
   --sbf-text-mute: #6b7280;
 }
+
+/* Prevent iOS Safari from auto-zooming when a text field is focused.
+   Mobile Safari force-zooms whenever a focused input/select/textarea has a
+   font-size below 16px. Several inputs across the app use 14px, which caused
+   the viewport to zoom in (e.g. switching to the "Find Players" tab, whose
+   search field is autofocused). Forcing >=16px on coarse-pointer (touch)
+   devices stops the hijack while leaving the user's own pinch-zoom intact.
+   !important is required to override inline font-size styles. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
