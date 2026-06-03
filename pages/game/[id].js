@@ -379,7 +379,7 @@ export default function GameDetail() {
                     <TeamLogoBadge name={game.homeTeamFull || game.homeTeam} sport={game.sport} accent="blue" size={28} />
                     <span className="text-lg font-bold truncate text-white">{game.homeTeamFull || game.homeTeam}</span>
                   </div>
-                  <span className="text-2xl font-black tabular-nums" style={{ color: '#ffffff' }}>
+                  <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>
                     {isLive || isFinal ? (possession?.homeScore ?? game.scores?.home?.total ?? game.homeScore ?? 0) : '—'}
                   </span>
                 </div>
@@ -830,7 +830,7 @@ function DesktopGameDetail({
               <div className="flex items-center justify-center gap-5">
                 <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>{awayScore}</div>
                 <div className="text-3xl font-bold text-gray-700">—</div>
-                <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: '#ffffff' }}>{homeScore}</div>
+                <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>{homeScore}</div>
               </div>
               <div className="mt-2 flex items-center justify-center gap-2">
                 {isFinal ? (
