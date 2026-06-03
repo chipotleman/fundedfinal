@@ -65,7 +65,7 @@ function fmtTime(t, range) {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamFull, awayTeamFull, sport, liveOdds, commenceTime, isLive, isFinal, compact = false }) {
+export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamFull, awayTeamFull, sport, liveOdds, commenceTime, isLive, isFinal, compact = false, mini = false }) {
   // Home team draws in its brand color; fall back to the app blue when the
   // team isn't in the color map. Resolve the color from the FULL team name
   // (e.g. "Michigan Wolverines") — the short `homeTeam` label ("MICH") used
@@ -416,12 +416,12 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   // horizontally. (Previously we used a fixed 800-wide viewBox with
   // preserveAspectRatio="none", which made labels and badges look
   // squished/elongated on wider screens.) Height is fixed.
-  const VB_H = compact ? 120 : 184;
-  const VB_W = Math.max(320, Math.round(width));
-  const PAD_L = 14;
-  const PAD_R = 56;  // room for right-edge live labels
-  const PAD_T = 16;
-  const PAD_B = 26;
+  const VB_H = mini ? 46 : (compact ? 120 : 184);
+  const VB_W = mini ? 132 : Math.max(320, Math.round(width));
+  const PAD_L = mini ? 4 : 14;
+  const PAD_R = mini ? 32 : 56;  // room for right-edge live labels
+  const PAD_T = mini ? 7 : 16;
+  const PAD_B = mini ? 7 : 26;
   const plotW = VB_W - PAD_L - PAD_R;
   const plotH = VB_H - PAD_T - PAD_B;
 
@@ -456,6 +456,37 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamF
   const homePath = useMemo(() => pathFor('homeImplied'), [pathFor]);
   const awayPath = useMemo(() => pathFor('awayImplied'), [pathFor]);
   const last = series[series.length - 1] || null;
+
+  // Mini mode — a tiny in-card sparkline (no header, axes, pills, tooltip).
+  // Reuses all the same series/synth/live-tail data machinery as the full
+  // chart so the line stays consistent; just renders a compact two-line SVG
+  // with a dashed 50% midline and small right-edge win-% badges.
+  if (mini) {
+    if (series.length < 2 || !last) {
+      return <div ref={wrapRef} style={{ width: VB_W, height: VB_H }} aria-hidden="true" />;
+    }
+    return (
+      <div ref={wrapRef} style={{ width: VB_W, height: VB_H }} aria-hidden="true">
+        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width={VB_W} height={VB_H} className="block overflow-visible select-none">
+          <line x1={PAD_L} x2={PAD_L + plotW} y1={yOf(0.5)} y2={yOf(0.5)} stroke={GRID_MID} strokeDasharray="3 3" strokeWidth="1" />
+          <path d={awayPath} fill="none" stroke={AWAY_COLOR} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <path d={homePath} fill="none" stroke={HOME_COLOR} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          {last.awayImplied != null && (
+            <g>
+              <rect x={PAD_L + plotW + 2} y={yOf(last.awayImplied) - 7} width="29" height="13" rx="3" fill={AWAY_COLOR} stroke="#0a0a0a" strokeWidth="1.25" />
+              <text x={PAD_L + plotW + 16.5} y={yOf(last.awayImplied) + 2.5} fontSize="8.5" fontWeight="800" fill={AWAY_INK} textAnchor="middle">{fmtPct(last.awayImplied)}</text>
+            </g>
+          )}
+          {last.homeImplied != null && (
+            <g>
+              <rect x={PAD_L + plotW + 2} y={yOf(last.homeImplied) - 7} width="29" height="13" rx="3" fill={HOME_COLOR} stroke="#0a0a0a" strokeWidth="1.25" />
+              <text x={PAD_L + plotW + 16.5} y={yOf(last.homeImplied) + 2.5} fontSize="8.5" fontWeight="800" fill={HOME_INK} textAnchor="middle">{fmtPct(last.homeImplied)}</text>
+            </g>
+          )}
+        </svg>
+      </div>
+    );
+  }
 
   // Pointer interaction — find nearest point by x. Works for both mouse
   // and touch via pointer events. viewBox is now sized to live width so

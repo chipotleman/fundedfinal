@@ -5,6 +5,7 @@ import TapSurface from '../components/TapSurface';
 import { useTheme } from '../contexts/ThemeContext';
 import TeamLogo from '../components/TeamLogo';
 import LiveGameTimer from '../components/LiveGameTimer';
+import OddsHistoryChart from '../components/game/OddsHistoryChart';
 import DepositMatchContainer from '../components/DepositMatchContainer';
 import TrendingBetContainer from '../components/TrendingBetContainer';
 import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
@@ -394,6 +395,17 @@ export default function Dashboard() {
   // gets username/avatar/equipped frame without an extra fetch.
   const [profileSnapshot, setProfileSnapshot] = useState(null);
   const [expandedGames, setExpandedGames] = useState({});
+  // Desktop gate for the in-card odds sparkline — render (and therefore
+  // mount/fetch) only at lg+ so mobile never spins up per-card polling.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const apply = () => setIsDesktop(mq.matches);
+    apply();
+    mq.addEventListener ? mq.addEventListener('change', apply) : mq.addListener(apply);
+    return () => { mq.removeEventListener ? mq.removeEventListener('change', apply) : mq.removeListener(apply); };
+  }, []);
   const scrollPositionRef = useRef(0);
   const isFrozenRef = useRef(false);
 
@@ -1750,6 +1762,10 @@ export default function Dashboard() {
                 const isFinal = game.isCompleted || game.status === 'FINAL';
                 const hasAnyLines = game.lines && (game.lines.moneyline || game.lines.spread || game.lines.total);
                 const linesLocked = game.linesLocked || isFinal || !hasAnyLines;
+                const mlHome = game.lines?.moneyline?.home;
+                const mlAway = game.lines?.moneyline?.away;
+                const liveOdds = (mlHome != null && mlAway != null) ? { home: mlHome, away: mlAway } : null;
+                const showMiniChart = isDesktop && isLive && !linesLocked && liveOdds;
                 
                 return (
                   <div 
@@ -1787,30 +1803,53 @@ export default function Dashboard() {
                       </div>
                       
                       <div 
-                        className="mb-3 cursor-pointer -mx-1.5 px-1.5 py-0.5 rounded-lg transition-colors"
+                        className="mb-3 cursor-pointer -mx-1.5 px-1.5 py-0.5 rounded-lg transition-colors flex items-center gap-3"
                         onClick={() => router.push(`/game/${game.id}`)}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: 'calc(100% - 40px)' }}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0 h-5 mb-1">
                             <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={20} />
                             <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.awayTeamFull || game.awayTeam}</span>
                           </div>
-                          {(isLive || isFinal) ? (
-                            <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>
-                          ) : (
-                            <span className="text-gray-600 text-sm flex-shrink-0 ml-2">-</span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: 'calc(100% - 40px)' }}>
+                          <div className="flex items-center gap-2 min-w-0 h-5">
                             <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={20} />
                             <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.homeTeamFull || game.homeTeam}</span>
                           </div>
-                          {(isLive || isFinal) ? (
-                            <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>
-                          ) : (
-                            <span className="text-gray-600 text-sm flex-shrink-0 ml-2">-</span>
-                          )}
+                        </div>
+
+                        {showMiniChart && (
+                          <div className="flex items-center flex-shrink-0">
+                            <OddsHistoryChart
+                              mini
+                              gameId={game.id}
+                              homeTeam={game.homeTeam}
+                              awayTeam={game.awayTeam}
+                              homeTeamFull={game.homeTeamFull}
+                              awayTeamFull={game.awayTeamFull}
+                              sport={game.sport || sport}
+                              liveOdds={liveOdds}
+                              commenceTime={game.time}
+                              isLive={isLive}
+                              isFinal={isFinal}
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex-shrink-0 text-right">
+                          <div className="flex items-center justify-end h-5 mb-1">
+                            {(isLive || isFinal) ? (
+                              <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>
+                            ) : (
+                              <span className="text-gray-600 text-sm">-</span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-end h-5">
+                            {(isLive || isFinal) ? (
+                              <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>
+                            ) : (
+                              <span className="text-gray-600 text-sm">-</span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
