@@ -1306,13 +1306,50 @@ function YouVsCard({
 
   const { theme } = useTheme();
   const isLight = theme === 'light';
-  const { openMessage } = useUserPreview();
+  const { openMessage, openPreview } = useUserPreview();
 
   const isActive = status === 'active';
   const isWaiting = status === 'waiting';
   const isQueued = status === 'queued';
   const showOpponent = !!opponent && (isActive || isWaiting || isQueued);
   const isIdle = !isActive && !isWaiting && !isQueued;
+
+  // Clicking the opponent's portrait/name in the active/waiting hero
+  // surfaces the site-wide profile popover (anchored to the click)
+  // instead of triggering the card's "open battle" tap. stopPropagation
+  // keeps the outer card from also handling the click.
+  const opponentPreviewable = showOpponent && !!opponent?.id;
+  const openOpponentPreview = (anchorEl) => {
+    if (!opponentPreviewable) return;
+    openPreview(
+      { id: opponent.id, username: opponent.username, avatar: opponent.avatar },
+      anchorEl,
+    );
+  };
+  const handleOpponentClick = (e) => {
+    if (!opponentPreviewable) return;
+    e.stopPropagation();
+    openOpponentPreview(e.currentTarget);
+  };
+  const handleOpponentKeyDown = (e) => {
+    if (!opponentPreviewable) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      openOpponentPreview(e.currentTarget);
+    }
+  };
+  const opponentClickProps = opponentPreviewable
+    ? {
+        onClick: handleOpponentClick,
+        onKeyDown: handleOpponentKeyDown,
+        role: 'button',
+        tabIndex: 0,
+        title: `View ${opponent.username || 'opponent'}'s profile`,
+        'aria-label': `View ${opponent.username || 'opponent'}'s profile`,
+        style: { cursor: 'pointer' },
+      }
+    : {};
 
   // In-card matchmaking state. Drives the new "finding battle" animation
   // that plays inside the card before the standard match-found popup
@@ -2595,7 +2632,7 @@ function YouVsCard({
                 </span>
                 <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
               </div>
-              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end" {...opponentClickProps}>
                 <div className="min-w-0 text-right">
                   <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
                     {showOpponent ? (opponent?.username || 'Opponent') : 'Opponent'}
@@ -2643,6 +2680,7 @@ function YouVsCard({
                     isWinning={false}
                     size={40}
                     bgColor="#7c2d12"
+                    onClick={opponentPreviewable ? handleOpponentClick : undefined}
                   />
                 ) : (
                   <SilhouetteAvatar
@@ -2893,7 +2931,7 @@ function YouVsCard({
                 <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
               </div>
 
-              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end" {...opponentClickProps}>
                 <div className="min-w-0 text-right">
                   {showOpponent ? (
                     <>
@@ -2921,6 +2959,7 @@ function YouVsCard({
                     isWinning={false}
                     size={40}
                     bgColor="#065f46"
+                    onClick={opponentPreviewable ? handleOpponentClick : undefined}
                   />
                 ) : (
                   <div
