@@ -70,7 +70,7 @@ const Icon = {
 // Instagram stories. Each "story" is a stacked pair of avatars under a single
 // circular live ring; tapping spectates that battle.
 // =============================================================================
-function StoriesRail({ battles, onSpectate, onOpenStory, onStartBattle, currentUser, isGuest }) {
+function StoriesRail({ battles, onOpenStory, onStartBattle, currentUser, isGuest }) {
   if (!battles?.length) {
     return (
       <div className="rounded-2xl mb-4 px-3 py-3" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
@@ -125,7 +125,7 @@ function StoriesRail({ battles, onSpectate, onOpenStory, onStartBattle, currentU
               <button
                 key={b.id}
                 type="button"
-                onClick={() => (onOpenStory ? onOpenStory(idx) : onSpectate(b))}
+                onClick={() => onOpenStory?.(idx)}
                 className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[78px] focus:outline-none"
               >
                 <div
@@ -836,7 +836,7 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
   );
 }
 
-function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGuest, onShare, defaultChatOpen = false }) {
+function LiveBattlePost({ battle, onOpenProfile, currentUser, isGuest, onShare, defaultChatOpen = false }) {
   const isBeta = useBetaMode();
   // Inline chat lives directly inside the card so spectators can drop
   // a quick reaction without navigating to /battle/spectate/[id].
@@ -938,35 +938,8 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
   const bothPicked = u1Picks.length > 0 && u2Picks.length > 0;
   const onlyU1Locked = u1Picks.length > 0 && u2Picks.length === 0;
   const onlyU2Locked = u2Picks.length > 0 && u1Picks.length === 0;
-  const u1PickPreview = u1Picks[0];
-  const u2PickPreview = u2Picks[0];
-
-  // ---- Swipeable "fight card" carousel ----
-  // The embedded matchup is presented as three horizontally-swipeable pages
-  // (head-to-head face-off · tale of the tape · latest picks). We read the
-  // active page from the native scroll position so the dots can light up, and
-  // let the dots scroll the container programmatically.
-  const carouselRef = useRef(null);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const handleCarouselScroll = (e) => {
-    const el = e.currentTarget;
-    const w = el.clientWidth || 1;
-    const idx = Math.max(0, Math.min(2, Math.round(el.scrollLeft / w)));
-    setActiveSlide((prev) => (prev === idx ? prev : idx));
-  };
-  const goToSlide = (i, e) => {
-    e?.stopPropagation?.();
-    const el = carouselRef.current;
-    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
-  };
-
   const tie = !u1Lead && !u2Lead;
-  const oddsColor = (o) =>
-    typeof o === 'string' && o.trim().startsWith('+') ? '#34d399' : textPrimary;
-  const fmtPnl = (v) => {
-    const n = parseFloat(v || 0);
-    return `${n > 0 ? '+' : ''}${n.toFixed(0)}%`;
-  };
+  const leaderName = tie ? null : (u1Lead ? (u1.username || 'Player 1') : (u2.username || 'Player 2'));
   const statusText = bothPicked
     ? 'Both players locked in'
     : onlyU1Locked
@@ -974,59 +947,6 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
       : onlyU2Locked
         ? `${u2.username || 'P2'} locked · awaiting other`
         : 'Awaiting picks from both players';
-  const tapeRows = [
-    { label: 'Balance', l: `$${formatMoney(u1Bal, 0)}`, r: `$${formatMoney(u2Bal, 0)}`, lWin: u1Lead, rWin: u2Lead },
-    {
-      label: 'P&L',
-      l: fmtPnl(u1.pnlPercent),
-      r: fmtPnl(u2.pnlPercent),
-      lWin: parseFloat(u1.pnlPercent || 0) > parseFloat(u2.pnlPercent || 0),
-      rWin: parseFloat(u2.pnlPercent || 0) > parseFloat(u1.pnlPercent || 0),
-    },
-    { label: 'Picks', l: String(u1Picks.length), r: String(u2Picks.length), lWin: u1Picks.length > u2Picks.length, rWin: u2Picks.length > u1Picks.length },
-    { label: 'Form', l: u1OnFire ? '🔥 Hot' : '—', r: u2OnFire ? '🔥 Hot' : '—', lWin: u1OnFire && !u2OnFire, rWin: u2OnFire && !u1OnFire },
-  ];
-
-  // One fighter "corner" for the head-to-head page. Blue corner (left) vs
-  // orange corner (right); whoever's ahead gets an emerald glow + "Leading"
-  // tag + green balance so the winner reads at a glance — a boxing-style
-  // face-off rather than a progress bar.
-  const renderFighter = (u, { lead, onFire, ring, align }) => (
-    <div className={`relative z-10 flex flex-col items-center gap-1 flex-1 min-w-0 ${align === 'left' ? 'pr-1' : 'pl-1'}`}>
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u, e); }}
-        aria-label={`Open ${u.username || 'Player'} profile`}
-        className="relative flex-shrink-0 lg:hover:opacity-90 transition-opacity"
-      >
-        <div className="rounded-full p-[2px]" style={{ background: ring, boxShadow: lead ? '0 0 14px rgba(16,185,129,0.55)' : 'none' }}>
-          <FramedAvatar avatar={u.avatar} username={u.username || 'P'} frameId={u.equippedFrame} size={42} bgColor={align === 'left' ? '#1e40af' : '#7c2d12'} />
-        </div>
-        {onFire && <span className="absolute -top-1 -right-1 text-[12px] hh-flame" aria-label="On fire">🔥</span>}
-      </button>
-      <div className="mt-0.5 text-[11px] font-bold truncate max-w-full text-center" style={{ color: textPrimary }}>{u.username || 'Player'}</div>
-      <div className="text-[14px] font-black tabular-nums leading-none" style={{ color: lead ? '#34d399' : textPrimary }}>
-        ${formatMoney(parseFloat(u.balance || 0), 0)}
-      </div>
-      <span
-        className="px-1.5 py-[1px] rounded-full text-[7px] font-black uppercase tracking-wider"
-        style={lead
-          ? { background: 'rgba(16,185,129,0.16)', color: '#34d399', border: '1px solid rgba(16,185,129,0.4)' }
-          : { background: track, color: textMuted, border: `1px solid ${border}` }}
-      >
-        {lead ? 'Leading' : tie ? 'Even' : 'Chasing'}
-      </span>
-    </div>
-  );
-
-  // Clicking the card body (anywhere outside the avatar/username
-  // profile links and the bottom action bar) routes to the full
-  // spectate view. The avatar and the username text are the only
-  // explicit "open profile" affordances — everything else in the
-  // card is treated as "watch this match". Interactive children
-  // (profile links, Spectate/Chat buttons, inline chat panel) stop
-  // propagation so they don't double-fire onSpectate.
-  const handleCardClick = () => onSpectate?.(battle);
   const posterHandle = `@${(u1.username || 'player').replace(/\s+/g, '').toLowerCase()}`;
 
   return (
@@ -1084,151 +1004,17 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
         </div>
       </div>
 
-      {/* Embedded match — a swipeable "fight card". Instead of a progress bar
-          showing who's ahead, the matchup is framed like a head-to-head boxing
-          / esports VS screen. Users can swipe between three pages
-          (head-to-head · tale of the tape · picks) right inside the card — the
-          dots below track the active page — so they can size up the battle
-          without opening the full spectate view. Tapping a page still opens
-          spectate; the native horizontal scroll captures swipes so a drag
-          never fires the tap. */}
-      <div className="px-4 pb-3">
-        <div className="rounded-xl overflow-hidden" style={{ background: surfaceMuted, border: `1px solid ${border}` }}>
-          <div
-            ref={carouselRef}
-            onScroll={handleCarouselScroll}
-            className="flex overflow-x-auto scrollbar-hide"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollSnapType: 'x mandatory' }}
-          >
-            {/* PAGE 1 — head-to-head face-off */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={handleCardClick}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(); } }}
-              aria-label={`Spectate ${u1.username || 'Player 1'} vs ${u2.username || 'Player 2'}`}
-              className="w-full flex-shrink-0 cursor-pointer"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div className="relative overflow-hidden px-3 py-3">
-                <div className="absolute inset-y-0 left-0 w-[58%] pointer-events-none" style={{ transform: 'skewX(-9deg)', transformOrigin: 'top left', background: `linear-gradient(90deg, rgba(59,130,246,0.18), transparent)` }} />
-                <div className="absolute inset-y-0 right-0 w-[58%] pointer-events-none" style={{ transform: 'skewX(-9deg)', transformOrigin: 'bottom right', background: `linear-gradient(270deg, rgba(251,146,60,0.18), transparent)` }} />
-                <div className="relative z-10 flex items-stretch justify-between gap-1">
-                  {renderFighter(u1, { lead: u1Lead, onFire: u1OnFire, ring: HH_BLUE, align: 'left' })}
-                  <div className="flex flex-col items-center justify-center flex-shrink-0 px-0.5">
-                    <div className="relative flex items-center justify-center w-10 h-10 rounded-full" style={{ background: elevated, border: `1.5px solid ${borderStrong}`, boxShadow: '0 2px 10px rgba(0,0,0,0.35)' }}>
-                      <span className="text-[12px] font-black text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}>VS</span>
-                    </div>
-                    <span className="mt-1 text-[8px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Pot</span>
-                    <span className="text-[10px] font-black tabular-nums leading-none" style={{ color: textSecondary }}>
-                      {isBeta ? `${formatMoney(pot, 0)}` : `$${formatMoney(pot, 0)}`}
-                    </span>
-                  </div>
-                  {renderFighter(u2, { lead: u2Lead, onFire: u2OnFire, ring: HH_ORANGE, align: 'right' })}
-                </div>
-              </div>
-            </div>
-
-            {/* PAGE 2 — tale of the tape */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={handleCardClick}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(); } }}
-              aria-label="Battle stats"
-              className="w-full flex-shrink-0 cursor-pointer"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div className="px-3 py-2.5">
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-black truncate text-right" style={{ color: HH_BLUE }}>{u1.username || 'Player 1'}</span>
-                  <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Tale of the tape</span>
-                  <span className="text-[10px] font-black truncate text-left" style={{ color: HH_ORANGE }}>{u2.username || 'Player 2'}</span>
-                </div>
-                <div className="space-y-0.5">
-                  {tapeRows.map((row) => (
-                    <div key={row.label} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                      <span className="text-[12px] font-bold tabular-nums text-right" style={{ color: row.lWin ? '#34d399' : textPrimary }}>{row.l}</span>
-                      <span className="text-[8px] font-bold uppercase tracking-wider text-center" style={{ color: textMuted }}>{row.label}</span>
-                      <span className="text-[12px] font-bold tabular-nums text-left" style={{ color: row.rWin ? '#34d399' : textPrimary }}>{row.r}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* PAGE 3 — latest picks */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={handleCardClick}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(); } }}
-              aria-label="Battle picks"
-              className="w-full flex-shrink-0 cursor-pointer"
-              style={{ scrollSnapAlign: 'center' }}
-            >
-              <div className="px-3 py-3">
-                <div className="text-center text-[8px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: textMuted }}>Latest picks</div>
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <div className="min-w-0 text-right">
-                    {u1PickPreview ? (
-                      <>
-                        <div className="text-[11px] font-bold truncate" style={{ color: textPrimary }}>{u1PickPreview.team || 'Pick'}</div>
-                        <div className="text-[12px] font-black tabular-nums leading-tight" style={{ color: oddsColor(u1PickPreview.odds) }}>{u1PickPreview.odds || '—'}</div>
-                        {u1Picks.length > 1 && <div className="text-[9px]" style={{ color: textMuted }}>+{u1Picks.length - 1} more</div>}
-                      </>
-                    ) : (
-                      <div className="text-[10px] italic" style={{ color: textMuted }}>No pick yet</div>
-                    )}
-                  </div>
-                  <span className="text-[9px] font-black text-transparent bg-clip-text px-1" style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}>VS</span>
-                  <div className="min-w-0 text-left">
-                    {u2PickPreview ? (
-                      <>
-                        <div className="text-[11px] font-bold truncate" style={{ color: textPrimary }}>{u2PickPreview.team || 'Pick'}</div>
-                        <div className="text-[12px] font-black tabular-nums leading-tight" style={{ color: oddsColor(u2PickPreview.odds) }}>{u2PickPreview.odds || '—'}</div>
-                        {u2Picks.length > 1 && <div className="text-[9px]" style={{ color: textMuted }}>+{u2Picks.length - 1} more</div>}
-                      </>
-                    ) : (
-                      <div className="text-[10px] italic" style={{ color: textMuted }}>No pick yet</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer: page dots + status + spectate hint (persist across pages) */}
-          <div className="px-3 py-2" style={{ borderTop: `1px solid ${border}` }}>
-            <div className="flex items-center justify-center gap-1.5 mb-1.5">
-              {[0, 1, 2].map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={(e) => goToSlide(i, e)}
-                  aria-label={`Go to page ${i + 1}`}
-                  aria-current={activeSlide === i}
-                  className="rounded-full transition-all duration-200"
-                  style={{
-                    width: activeSlide === i ? 16 : 6,
-                    height: 6,
-                    background: activeSlide === i ? `linear-gradient(90deg, ${HH_BLUE}, ${HH_ORANGE})` : track,
-                  }}
-                />
-              ))}
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-medium truncate min-w-0" style={{ color: textSecondary }}>{statusText}</span>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onSpectate?.(battle); }}
-                className="inline-flex items-center gap-1 text-[10px] font-semibold flex-shrink-0 lg:hover:opacity-80 transition-opacity"
-                style={{ color: textMuted }}
-              >
-                <Icon.Eye size={11} /> Spectate
-              </button>
-            </div>
-          </div>
+      {/* Compact text summary — keeps the live battle as a lightweight
+          social post (Twitter/Facebook style) rather than a big VS card. */}
+      <div className="px-4 pb-3 -mt-0.5">
+        <div className="text-[15px] leading-snug" style={{ color: textPrimary }}>
+          {tie
+            ? `It's all square — ${u1.username || 'Player 1'} and ${u2.username || 'Player 2'} are dead even right now.`
+            : `${leaderName} is out in front.`}
+        </div>
+        <div className="mt-1 text-[13px]" style={{ color: textMuted }}>
+          {statusText}
+          {pot > 0 ? ` · ${isBeta ? `${formatMoney(pot, 0)} coin pot` : `$${formatMoney(pot, 0)} pot`}` : ''}
         </div>
       </div>
 
@@ -1241,16 +1027,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
       )}
 
       {/* Action row — lightweight post style shared with ResultPost */}
-      <div className="grid grid-cols-4 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onSpectate?.(battle); }}
-          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
-          style={{ color: textPrimary }}
-        >
-          <Icon.Eye size={16} />
-          <span className="hidden sm:inline">Spectate</span>
-        </button>
+      <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
         <button
           type="button"
           onClick={handleLike}
@@ -1272,7 +1049,7 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
           style={{ color: chatOpen ? '#60a5fa' : textPrimary }}
         >
           <Icon.Chat size={16} />
-          <span>{chatOpen ? 'Hide' : 'Chat'}</span>
+          <span>{chatOpen ? 'Hide' : 'Comment'}</span>
         </button>
         <button
           type="button"
@@ -1919,7 +1696,7 @@ function RightSidebar({
   liveBattles,
   friends,
   isGuest,
-  onSpectate,
+  onOpenBattle,
   onOpenProfile,
   onChallengeFriend,
   onPickQuickMatch,
@@ -2023,7 +1800,7 @@ function RightSidebar({
                 <button
                   key={b.id}
                   type="button"
-                  onClick={() => onSpectate?.(b)}
+                  onClick={() => onOpenBattle?.(b)}
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
                 >
                   <span className="relative flex-shrink-0 flex -space-x-2">
@@ -2039,7 +1816,6 @@ function RightSidebar({
                       {(u1.username || 'P1')} vs {(u2.username || 'P2')}
                     </span>
                   </span>
-                  <Icon.Eye size={15} className="flex-shrink-0" style={{ color: textMuted }} />
                 </button>
               );
             })}
@@ -2070,8 +1846,8 @@ function RightSidebar({
                       disabled={done}
                       className="flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-colors"
                       style={{
-                        background: done ? 'transparent' : textPrimary,
-                        color: done ? textMuted : '#000',
+                        background: done ? 'transparent' : 'linear-gradient(135deg, #2563eb, #06b6d4)',
+                        color: done ? textMuted : '#ffffff',
                         border: done ? `1px solid ${border}` : 'none',
                         cursor: done ? 'default' : 'pointer',
                       }}
@@ -2228,9 +2004,12 @@ export default function SocialFeedPage({ data }) {
   }, [isGuest]);
   const handleCloseShare = useCallback(() => setShareTarget(null), []);
 
-  const handleSpectate = useCallback((battle) => {
-    if (!battle?.id) return;
-    router.push(`/battle/spectate/${battle.id}`);
+  const handleOpenBattle = useCallback((battle) => {
+    const id = battle?.id;
+    if (!id) return;
+    const el = typeof document !== 'undefined' ? document.getElementById(`battle-${id}`) : null;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else router.push(`/battle?battle=${id}`);
   }, [router]);
 
   // Story viewer — opens an Instagram-style highlight reel for a live
@@ -2319,7 +2098,6 @@ export default function SocialFeedPage({ data }) {
         <SharedByPill />
         <StoriesRail
           battles={liveBattles}
-          onSpectate={handleSpectate}
           onOpenStory={handleOpenStory}
           onStartBattle={onStartBattle}
           currentUser={currentUser}
@@ -2330,7 +2108,6 @@ export default function SocialFeedPage({ data }) {
             battles={liveBattles}
             startIndex={storyOpenIdx}
             onClose={handleCloseStory}
-            onSpectate={(b) => { handleCloseStory(); handleSpectate(b); }}
           />
         )}
         <PostComposer
@@ -2367,7 +2144,6 @@ export default function SocialFeedPage({ data }) {
                 <div key={item.key} id={`battle-${item.data.id}`}>
                   <LiveBattlePost
                     battle={item.data}
-                    onSpectate={handleSpectate}
                     onOpenProfile={onOpenProfile}
                     currentUser={currentUser}
                     isGuest={isGuest}
@@ -2416,7 +2192,7 @@ export default function SocialFeedPage({ data }) {
               liveBattles={liveBattles}
               friends={friends}
               isGuest={isGuest}
-              onSpectate={handleSpectate}
+              onOpenBattle={handleOpenBattle}
               onOpenProfile={onOpenProfile}
               onChallengeFriend={onChallengeFriend}
               onPickQuickMatch={onPickQuickMatch}

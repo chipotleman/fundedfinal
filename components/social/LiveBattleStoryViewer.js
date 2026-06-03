@@ -282,7 +282,7 @@ function PicksSlide({ s }) {
   );
 }
 
-function LeaderSlide({ s, onSpectate, timeLeft }) {
+function LeaderSlide({ s, timeLeft }) {
   const leader = s.tied ? null : s.u1Lead ? s.u1 : s.u2;
   const leaderBal = s.tied ? null : s.u1Lead ? s.u1Bal : s.u2Bal;
   const leaderPnl = s.tied ? null : s.u1Lead ? s.u1Pnl : s.u2Pnl;
@@ -327,26 +327,12 @@ function LeaderSlide({ s, onSpectate, timeLeft }) {
           <div className="text-3xl font-black text-yellow-300">⚖️ Even Match</div>
         )}
         <div className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{formatTimeLeft(timeLeft)}</div>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onSpectate(); }}
-          className="mt-3 w-full py-3 rounded-2xl font-black uppercase text-sm"
-          style={{
-            background: 'linear-gradient(180deg,#fde047,#facc15,#ca8a04)',
-            border: '2.5px solid #0a0a0a',
-            boxShadow: '0 4px 0 #0a0a0a, 0 0 24px rgba(250,204,21,0.4)',
-            color: '#0a0a0a',
-            letterSpacing: '0.1em',
-          }}
-        >
-          Spectate Full Match →
-        </button>
       </div>
     </div>
   );
 }
 
-export default function LiveBattleStoryViewer({ battles, startIndex = 0, onClose, onSpectate }) {
+export default function LiveBattleStoryViewer({ battles, startIndex = 0, onClose }) {
   // Track the battle by ID so external refreshes (SSE/poll) that
   // reorder or shrink `battles` don't snap us to the wrong matchup.
   const [activeBattleId, setActiveBattleId] = useState(() => battles?.[startIndex]?.id || null);
@@ -528,7 +514,7 @@ export default function LiveBattleStoryViewer({ battles, startIndex = 0, onClose
           {currentSlide?.kind === 'stakes' && <StakesSlide s={currentSlide} timeLeft={timeLeft} />}
           {currentSlide?.kind === 'picks' && <PicksSlide s={currentSlide} />}
           {currentSlide?.kind === 'leader' && (
-            <LeaderSlide s={currentSlide} timeLeft={timeLeft} onSpectate={() => onSpectate?.(battle)} />
+            <LeaderSlide s={currentSlide} timeLeft={timeLeft} />
           )}
         </div>
 
@@ -560,18 +546,6 @@ export default function LiveBattleStoryViewer({ battles, startIndex = 0, onClose
           onTouchEnd={handlePauseUp}
           onTouchCancel={handlePauseUp}
         />
-
-        {/* Bottom spectate strip — quick CTA always visible */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5 pt-3" style={{ background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.85))' }}>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onSpectate?.(battle); }}
-            className="w-full py-2.5 rounded-xl text-[12px] font-extrabold uppercase tracking-widest text-white"
-            style={{ background: 'rgba(255,255,255,0.12)', border: '1.5px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(6px)' }}
-          >
-            Open Full Spectate View →
-          </button>
-        </div>
       </div>
     </div>
   );
