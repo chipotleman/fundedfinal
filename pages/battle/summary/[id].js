@@ -249,7 +249,7 @@ function PlayerHeader({ player, balance, outcomeLabel, outcomeColor, isWinner, p
   );
 }
 
-function StatusMessage({ title, message, p }) {
+function StatusMessage({ title, message, p, onBack }) {
   return (
     <div className="min-h-screen" style={{ background: p.pageBg }}>
       <TopNavbar />
@@ -257,9 +257,15 @@ function StatusMessage({ title, message, p }) {
         <div className="rounded-xl p-6" style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}` }}>
           <h1 className="text-lg font-bold mb-2" style={{ color: p.bodyText }}>{title}</h1>
           <p className="text-sm mb-4" style={{ color: p.mutedText }}>{message}</p>
-          <Link href="/battle" className="inline-block px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: p.bodyText, color: p.pageBg }}>
-            Back to battles
-          </Link>
+          {onBack ? (
+            <button type="button" onClick={onBack} className="inline-block px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: p.bodyText, color: p.pageBg, border: 'none', cursor: 'pointer' }}>
+              Back
+            </button>
+          ) : (
+            <Link href="/battle" className="inline-block px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: p.bodyText, color: p.pageBg }}>
+              Back to battles
+            </Link>
+          )}
         </div>
       </div>
     </div>
@@ -339,6 +345,16 @@ export default function BattleSummaryPage({ battlePreview }) {
     window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
   };
 
+  // Return to wherever the user came from (e.g. battle history) when there's
+  // in-app history; otherwise fall back to the battles feed.
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/battle');
+    }
+  };
+
   useEffect(() => {
     if (!router.isReady || !id) return;
     let cancelled = false;
@@ -413,16 +429,16 @@ export default function BattleSummaryPage({ battlePreview }) {
   }
 
   if (error === 'not_found') {
-    return <>{meta}<StatusMessage title="Battle not found" message="This battle doesn't exist or is no longer available." p={p} /></>;
+    return <>{meta}<StatusMessage title="Battle not found" message="This battle doesn't exist or is no longer available." p={p} onBack={handleBack} /></>;
   }
   if (error || !battle) {
-    return <>{meta}<StatusMessage title="Couldn't load battle" message="Something went wrong loading this battle. Please try again in a moment." p={p} /></>;
+    return <>{meta}<StatusMessage title="Couldn't load battle" message="Something went wrong loading this battle. Please try again in a moment." p={p} onBack={handleBack} /></>;
   }
   if (battle.status === 'cancelled') {
-    return <>{meta}<StatusMessage title="Battle cancelled" message="This matchup was cancelled before it finished, so there's nothing to show." p={p} /></>;
+    return <>{meta}<StatusMessage title="Battle cancelled" message="This matchup was cancelled before it finished, so there's nothing to show." p={p} onBack={handleBack} /></>;
   }
   if (battle.status !== 'completed') {
-    return <>{meta}<StatusMessage title="Battle still in progress" message="Summaries only become available after a battle ends." p={p} /></>;
+    return <>{meta}<StatusMessage title="Battle still in progress" message="Summaries only become available after a battle ends." p={p} onBack={handleBack} /></>;
   }
 
   const { player, opponent, myBalance, oppBalance, myBets = [], opponentBets = [], potSize, winnerPayout, outcome, endsAt } = battle;
@@ -467,12 +483,12 @@ export default function BattleSummaryPage({ battlePreview }) {
       <TopNavbar />
       <div className="max-w-5xl mx-auto px-4 py-5">
         <div className="mb-3 flex items-center justify-between">
-          <Link href="/battle" className="text-[12px] font-semibold inline-flex items-center gap-1 hover:underline" style={{ color: p.mutedText }}>
+          <button type="button" onClick={handleBack} className="text-[12px] font-semibold inline-flex items-center gap-1 hover:underline" style={{ color: p.mutedText, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to battles
-          </Link>
+            Back
+          </button>
           {endsAt && <span className="text-[11px]" style={{ color: p.mutedText }}>{formatLastSeen(endsAt)}</span>}
         </div>
 

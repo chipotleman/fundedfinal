@@ -97,14 +97,11 @@ export default function BetHistory() {
 
   const handleBattleOpenChange = (matchupId, open) => {
     if (open) {
-      setOpenBattleId(matchupId);
-      if (router.query.battle !== matchupId) {
-        router.replace(
-          { pathname: router.pathname, query: { ...router.query, battle: matchupId } },
-          undefined,
-          { shallow: true }
-        );
-      }
+      // Open the dedicated, branded battle summary page instead of the in-page
+      // popup so users land on the full /battle/summary/[id] view (and can use
+      // the browser back button to return here).
+      if (!matchupId) return;
+      router.push(`/battle/summary/${encodeURIComponent(matchupId)}`);
     } else {
       setOpenBattleId(prev => (prev === matchupId ? null : prev));
       if (router.query.battle) {
