@@ -9,6 +9,7 @@ import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { saveLastBuyIn } from '../../utils/lastBattleBuyIn';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
+import ActiveBattleBlocker from './ActiveBattleBlocker';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ConnectingToFriend, FlowCard, FlowButton } from './matchflow/MatchFlowScreens';
@@ -106,49 +107,6 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
   const textSecondary = '#9ca3af';
   const textMuted = '#6b7280';
   const elevatedBg = '#111';
-
-  // Theme tokens for the "Finish your fight first" blocker (the rest of this
-  // modal is dark-only by design). In light mode the cartoon shadows/borders
-  // flip to slate and the primary CTA becomes Crown-yellow, not blue.
-  const blk = isLight
-    ? {
-        modalBg: '#ffffff',
-        hardBorder: '#0f172a',
-        shadowInk: 'rgba(15,23,42,0.9)',
-        cardBg: '#f5f1ea',
-        title: '#0f172a',
-        titleShadow: 'rgba(15,23,42,0.18)',
-        eyebrow: '#2563eb',
-        body: '#475569',
-        bodyStrong: '#0f172a',
-        infoText: '#1f2937',
-        primaryBg: 'linear-gradient(180deg, #facc15 0%, #eab308 100%)',
-        primaryText: '#3f2d00',
-        primaryGlow: 'rgba(234,179,8,0.5)',
-        primaryGlowHover: 'rgba(234,179,8,0.6)',
-        primaryTextShadow: 'rgba(255,255,255,0.45)',
-        secondaryBg: '#f1ece1',
-        secondaryText: '#475569',
-      }
-    : {
-        modalBg: '#0d0d0d',
-        hardBorder: '#0a0a0a',
-        shadowInk: '#0a0a0a',
-        cardBg: '#111',
-        title: '#fff',
-        titleShadow: '#000',
-        eyebrow: '#60a5fa',
-        body: '#9ca3af',
-        bodyStrong: '#fff',
-        infoText: '#e5e7eb',
-        primaryBg: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
-        primaryText: '#fff',
-        primaryGlow: 'rgba(59,130,246,0.4)',
-        primaryGlowHover: 'rgba(59,130,246,0.55)',
-        primaryTextShadow: 'rgba(0,0,0,0.35)',
-        secondaryBg: '#111',
-        secondaryText: '#9ca3af',
-      };
 
   useEffect(() => {
     if (!isOpen) {
@@ -580,166 +538,13 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
   if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
 
-  // Active-battle blocker: if the user is already in a live matchup,
-  // replace the entire invite flow with a friendly cartoon-themed notice
-  // that explains the situation and routes them to the current battle (or
-  // shows how to forfeit). Sending an invite mid-battle is what allows
-  // the recipient's accept to silently create a SECOND matchup that
-  // surfaces the moment the first one ends — by blocking the entry point
-  // visually we close the door at the UI layer too.
+  // Active-battle blocker: the user is already in a live matchup, so we
+  // replace the entire invite flow with the shared, theme-aware blocker
+  // (the same one Quick Match shows). `invite` tweaks the copy for the
+  // friend flow. Sending an invite mid-battle is what lets the recipient's
+  // accept silently create a SECOND matchup, so we close the door here too.
   if (hasActiveMatchup) {
-    const opponentName = activeOpponent?.username || 'your opponent';
-    const goToBattle = () => {
-      onClose();
-      if (activeMatchup?.id) {
-        navigateToBattleStart(router, activeMatchup);
-      } else {
-        router.push('/battle');
-      }
-    };
-    const blocker = (
-      <div
-        data-allow-fixed-overlay="true"
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
-        onClick={onClose}
-        onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
-      >
-        <style jsx>{`
-          @keyframes pfmBlockerIn {
-            0% { opacity: 0; transform: scale(0.85) translateY(20px); }
-            60% { opacity: 1; transform: scale(1.03) translateY(-2px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-          }
-          @keyframes pfmSwordSwing {
-            0%, 100% { transform: rotate(-8deg); }
-            50% { transform: rotate(8deg); }
-          }
-          .pfm-blocker { animation: pfmBlockerIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); }
-          .pfm-sword { display: inline-block; animation: pfmSwordSwing 1.6s ease-in-out infinite; }
-          .pfm-blk-primary { transition: transform 0.12s ease, box-shadow 0.12s ease; }
-          @media (hover: hover) {
-            .pfm-blk-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 0 ${blk.shadowInk}, 0 0 22px ${blk.primaryGlowHover}; }
-          }
-          .pfm-blk-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 ${blk.shadowInk}; }
-          .pfm-blk-secondary { transition: transform 0.12s ease, box-shadow 0.12s ease; }
-          @media (hover: hover) {
-            .pfm-blk-secondary:hover { transform: translateY(-2px); box-shadow: 0 6px 0 ${blk.shadowInk}; }
-          }
-          .pfm-blk-secondary:active { transform: translateY(2px); box-shadow: 0 2px 0 ${blk.shadowInk}; }
-        `}</style>
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="pfm-blocker-title"
-          className="pfm-blocker rounded-3xl max-w-sm w-full overflow-hidden my-auto"
-          style={{
-            backgroundColor: blk.modalBg,
-            border: `2.5px solid ${blk.hardBorder}`,
-            boxShadow: `0 8px 0 ${blk.shadowInk}, 0 22px 44px rgba(0,0,0,${isLight ? 0.4 : 0.55})`,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="px-6 pt-6 pb-2 text-center">
-            <div
-              className="w-20 h-20 mx-auto mb-3 rounded-2xl flex items-center justify-center"
-              style={{
-                background: blk.primaryBg,
-                border: `2.5px solid ${blk.hardBorder}`,
-                boxShadow: `0 4px 0 ${blk.shadowInk}, 0 0 18px ${blk.primaryGlow}`,
-              }}
-            >
-              <span className="text-4xl pfm-sword">⚔️</span>
-            </div>
-            <div
-              className="text-[11px] font-extrabold uppercase mb-1"
-              style={{ color: blk.eyebrow, letterSpacing: '0.22em' }}
-            >
-              You're In A Battle
-            </div>
-            <h2
-              id="pfm-blocker-title"
-              className="font-black uppercase"
-              style={{
-                color: blk.title,
-                fontSize: '22px',
-                letterSpacing: '0.04em',
-                textShadow: `0 2px 0 ${blk.titleShadow}`,
-              }}
-            >
-              Finish your fight first
-            </h2>
-            <p className="text-sm mt-3" style={{ color: blk.body, lineHeight: 1.5 }}>
-              You can't send a new battle invite while you're already
-              matched up with <span style={{ color: blk.bodyStrong, fontWeight: 700 }}>{opponentName}</span>.
-            </p>
-          </div>
-
-          <div className="px-5 py-4 space-y-2">
-            <div
-              className="flex items-start gap-3 rounded-2xl px-4 py-3"
-              style={{
-                backgroundColor: blk.cardBg,
-                border: `2.5px solid ${blk.hardBorder}`,
-                boxShadow: `0 3px 0 ${blk.shadowInk}`,
-              }}
-            >
-              <span className="text-lg leading-none mt-0.5">🎯</span>
-              <p className="text-xs font-semibold" style={{ color: blk.infoText, lineHeight: 1.5 }}>
-                Head back to your battle and play it out — winner takes the Crowns.
-              </p>
-            </div>
-            <div
-              className="flex items-start gap-3 rounded-2xl px-4 py-3"
-              style={{
-                backgroundColor: blk.cardBg,
-                border: `2.5px solid ${blk.hardBorder}`,
-                boxShadow: `0 3px 0 ${blk.shadowInk}`,
-              }}
-            >
-              <span className="text-lg leading-none mt-0.5">🏳️</span>
-              <p className="text-xs font-semibold" style={{ color: blk.infoText, lineHeight: 1.5 }}>
-                Or tap{' '}
-                <span style={{ color: '#fb923c', fontWeight: 800 }}>Forfeit</span>
-                {' '}on your battle to surrender — then you'll be free to invite anyone.
-              </p>
-            </div>
-          </div>
-
-          <div className="px-5 pb-5 pt-1 flex flex-col gap-3">
-            <button
-              onClick={goToBattle}
-              className="pfm-blk-primary w-full py-3.5 rounded-2xl text-sm uppercase"
-              style={{
-                background: blk.primaryBg,
-                color: blk.primaryText,
-                fontWeight: 900,
-                letterSpacing: '0.08em',
-                border: `2.5px solid ${blk.hardBorder}`,
-                boxShadow: `0 4px 0 ${blk.shadowInk}, 0 0 18px ${blk.primaryGlow}`,
-                textShadow: `0 1px 0 ${blk.primaryTextShadow}`,
-              }}
-            >
-              Go to my battle
-            </button>
-            <button
-              onClick={onClose}
-              className="pfm-blk-secondary w-full py-3 rounded-2xl text-sm uppercase"
-              style={{
-                background: blk.secondaryBg,
-                color: blk.secondaryText,
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                border: `2.5px solid ${blk.hardBorder}`,
-                boxShadow: `0 4px 0 ${blk.shadowInk}`,
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-    return ReactDOM.createPortal(blocker, document.body);
+    return <ActiveBattleBlocker invite onClose={onClose} />;
   }
 
   const filteredFriends = friends.filter(f =>

@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import { formatMoney } from '../../utils/formatMoney';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
   const [isForfeiting, setIsForfeiting] = useState(false);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   useModalScrollLock(isOpen, { restoreScroll: true });
 
   if (!isOpen) return null;
+
+  // Cartoon hard borders/shadows (#0a0a0a) stay in both themes — only the
+  // panel/card surfaces and text flip so the modal matches the light page
+  // (My Piks) instead of dropping a dark modal onto a beige background.
+  const c = isLight
+    ? { modalBg: '#ffffff', cardBg: '#f5f1ea', title: '#0f172a', titleShadow: 'none', sub: '#64748b', cardText: '#334155' }
+    : { modalBg: '#0d0d0d', cardBg: '#111', title: '#fff', titleShadow: '0 2px 0 #000', sub: '#9ca3af', cardText: '#e5e7eb' };
 
   const potSize = parseFloat(matchup?.potSize || matchup?.winnerPayout || 0);
   const buyIn = parseFloat(matchup?.startingBalance || matchup?.buyIn || 0);
@@ -66,7 +76,7 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
         <div
           className="ff-modal w-full max-w-sm rounded-3xl overflow-hidden my-auto"
           style={{
-            background: '#0d0d0d',
+            background: c.modalBg,
             border: '2.5px solid #0a0a0a',
             boxShadow: '0 8px 0 #0a0a0a, 0 22px 44px rgba(0,0,0,0.6)',
             maxHeight: 'calc(100dvh - max(2rem, env(safe-area-inset-top) + env(safe-area-inset-bottom)))',
@@ -93,15 +103,15 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
             <h2
               className="font-black uppercase"
               style={{
-                color: '#fff',
+                color: c.title,
                 fontSize: '24px',
                 letterSpacing: '0.04em',
-                textShadow: '0 2px 0 #000',
+                textShadow: c.titleShadow,
               }}
             >
               Forfeit Battle
             </h2>
-            <p className="text-xs mt-2" style={{ color: '#9ca3af' }}>
+            <p className="text-xs mt-2" style={{ color: c.sub }}>
               This action cannot be undone
             </p>
           </div>
@@ -110,26 +120,26 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
             <div
               className="flex items-center gap-3 rounded-2xl px-4 py-3"
               style={{
-                backgroundColor: '#111',
+                backgroundColor: c.cardBg,
                 border: '2.5px solid #0a0a0a',
                 boxShadow: '0 3px 0 #0a0a0a',
               }}
             >
               <span className="text-lg">⚠️</span>
-              <p className="text-sm font-semibold" style={{ color: '#e5e7eb' }}>
+              <p className="text-sm font-semibold" style={{ color: c.cardText }}>
                 Your opponent will win
               </p>
             </div>
             <div
               className="flex items-center gap-3 rounded-2xl px-4 py-3"
               style={{
-                backgroundColor: '#111',
+                backgroundColor: c.cardBg,
                 border: '2.5px solid #0a0a0a',
                 boxShadow: '0 3px 0 #0a0a0a',
               }}
             >
               <span className="text-lg">💸</span>
-              <p className="text-sm font-semibold" style={{ color: '#e5e7eb' }}>
+              <p className="text-sm font-semibold" style={{ color: c.cardText }}>
                 You'll lose your buy-in
                 {buyIn > 0 ? <span style={{ color: '#fb923c' }}> (${formatMoney(buyIn, 0)})</span> : ''}
               </p>
@@ -138,13 +148,13 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
               <div
                 className="flex items-center gap-3 rounded-2xl px-4 py-3"
                 style={{
-                  backgroundColor: '#111',
+                  backgroundColor: c.cardBg,
                   border: '2.5px solid #0a0a0a',
                   boxShadow: '0 3px 0 #0a0a0a',
                 }}
               >
                 <span className="text-lg">🏆</span>
-                <p className="text-sm font-semibold" style={{ color: '#e5e7eb' }}>
+                <p className="text-sm font-semibold" style={{ color: c.cardText }}>
                   Pot size:{' '}
                   <span style={{ color: '#10b981', fontWeight: 800 }}>
                     ${formatMoney(potSize, 0)}

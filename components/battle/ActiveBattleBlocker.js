@@ -2,7 +2,6 @@ import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 
 // Cartoon-themed "you're already in a battle" blocker. Originally lived
 // inline in PlayFriendModal; extracted here so Quick Match and Private
@@ -11,7 +10,7 @@ import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 // straight from MatchupContext so it's race-proof — it never relies on a
 // stale page-level snapshot. Render it only when you've already confirmed
 // `hasActiveMatchup` (each modal early-returns this in place of its body).
-export default function ActiveBattleBlocker({ onClose }) {
+export default function ActiveBattleBlocker({ onClose, invite = false }) {
   const router = useRouter();
   const { matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
   const { theme } = useTheme();
@@ -53,12 +52,16 @@ export default function ActiveBattleBlocker({ onClose }) {
       };
 
   const opponentName = activeOpponent?.username || 'your opponent';
+  // RUSH has its own dedicated gameshow lobby; every other mode is played out
+  // on the My Piks page (where the active battle's picks live). We route there
+  // directly instead of the dashboard's "YOU'RE MATCHED!" celebration, which
+  // shouldn't replay when revisiting a battle you're already in.
   const goToBattle = () => {
     onClose?.();
-    if (activeMatchup?.id) {
-      navigateToBattleStart(router, activeMatchup);
+    if (activeMatchup?.durationType === 'rush' && activeMatchup?.id) {
+      router.push(`/battle/rush/${activeMatchup.id}`);
     } else {
-      router.push('/battle');
+      router.push('/my-picks');
     }
   };
 
@@ -135,7 +138,7 @@ export default function ActiveBattleBlocker({ onClose }) {
             Finish your fight first
           </h2>
           <p className="text-sm mt-3" style={{ color: t.body, lineHeight: 1.5 }}>
-            You can't start a new battle while you're already
+            You can't {invite ? 'send a new battle invite' : 'start a new battle'} while you're already
             matched up with <span style={{ color: t.bodyStrong, fontWeight: 700 }}>{opponentName}</span>.
           </p>
         </div>
@@ -166,7 +169,7 @@ export default function ActiveBattleBlocker({ onClose }) {
             <p className="text-xs font-semibold" style={{ color: t.cardText, lineHeight: 1.5 }}>
               Or tap{' '}
               <span style={{ color: t.forfeit, fontWeight: 800 }}>Forfeit</span>
-              {' '}on your battle to surrender — then you'll be free to start anything.
+              {' '}on your battle to surrender — then you'll be free to {invite ? 'invite anyone' : 'start anything'}.
             </p>
           </div>
         </div>

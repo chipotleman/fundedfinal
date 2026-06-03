@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
 import PiksBetCard from '../components/PiksBetCard';
+import ForfeitModal from '../components/battle/ForfeitModal';
 import UserAvatar from '../components/UserAvatar';
 import OddsHistoryChart from '../components/game/OddsHistoryChart';
 import { getTeamColor, inkFor } from '../utils/teamColors';
@@ -125,6 +126,7 @@ export default function MyPicksPage() {
     timeRemaining,
     hasActiveMatchup,
     loading,
+    refresh: refreshMatchup,
   } = useMatchup();
 
   const { betSlip, setShowBetSlip } = useBetSlip();
@@ -213,6 +215,45 @@ export default function MyPicksPage() {
   }, [matchup, myBalance, myLiveBalance, opponentBalance, opponentLiveBalance]);
 
   const openBetSlip = () => { try { setShowBetSlip(true); } catch (_e) {} };
+
+  // ---- Forfeit (surrender the active battle) ----
+  const [showForfeit, setShowForfeit] = useState(false);
+  const handleForfeit = async () => {
+    try {
+      const res = await fetch('/api/battles/forfeit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchupId: matchup?.id }),
+      });
+      if (res.ok) {
+        setShowForfeit(false);
+        try { await refreshMatchup?.(); } catch (_e) {}
+      }
+    } catch (_e) {}
+  };
+
+  // Understated, theme-aware forfeit control. Lives inside the active-battle
+  // hero/banner so it reads as a battle action without competing with the
+  // primary "place picks" flow. Opens the double-confirm ForfeitModal.
+  const renderForfeitBar = () => {
+    if (!matchup || !hasActiveMatchup) return null;
+    return (
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5"
+        style={{ borderTop: `1px solid ${p.softBorder}`, background: isLight ? 'rgba(15,23,42,0.025)' : 'rgba(0,0,0,0.25)' }}>
+        <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: p.faintText }}>Done battling?</span>
+        <button type="button" onClick={() => setShowForfeit(true)}
+          className="no-hover-effect inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider"
+          style={{
+            color: isLight ? '#dc2626' : '#f87171',
+            background: isLight ? 'rgba(220,38,38,0.07)' : 'rgba(248,113,113,0.10)',
+            border: `1px solid ${isLight ? 'rgba(220,38,38,0.28)' : 'rgba(248,113,113,0.30)'}`,
+            cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none',
+          }}>
+          <span aria-hidden="true">🏳️</span> Forfeit
+        </button>
+      </div>
+    );
+  };
 
   // ---- Shared chart context (used by mobile tracker + desktop insights) ----
   const getChartCtx = (bet) => {
@@ -356,6 +397,7 @@ export default function MyPicksPage() {
           {renderVsRow()}
           <div className="pt-3" style={{ borderTop: `1px solid ${p.softBorder}` }}>{renderBalanceDuel()}</div>
         </div>
+        {renderForfeitBar()}
       </div>
     );
   };
@@ -593,6 +635,8 @@ export default function MyPicksPage() {
             </div>
           ))}
         </div>
+
+        {renderForfeitBar()}
       </div>
     );
   };
@@ -841,6 +885,13 @@ export default function MyPicksPage() {
         <TopNavbar />
         <main className="max-w-7xl mx-auto px-6 xl:px-8 py-6">{renderDesktopMain()}</main>
       </div>
+
+      <ForfeitModal
+        isOpen={showForfeit && !!matchup}
+        matchup={matchup}
+        onCancel={() => setShowForfeit(false)}
+        onConfirm={handleForfeit}
+      />
     </>
   );
 }
