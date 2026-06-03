@@ -601,7 +601,7 @@ export default function GameDetail() {
         {betSlip.length > 0 && (
           <div className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-[#1a1a1a] p-4 z-40 md:hidden">
             <button
-              onClick={() => router.push(demo ? '/demo-dashboard' : '/dashboard')}
+              onClick={() => setShowBetSlip(true)}
               className="w-full bg-[var(--home-color)] text-[var(--home-ink)] font-bold py-4 rounded-xl flex items-center justify-center gap-2"
             >
               <span>View Bet Slip</span>
