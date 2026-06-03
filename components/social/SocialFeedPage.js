@@ -1518,7 +1518,7 @@ function ResultPost({ highlight, onOpenProfile, onReplay, currentUser, isGuest, 
           </div>
         </div>
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-          style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', color: '#86efac' }}>
+          style={{ background: 'rgba(22,163,74,0.16)', border: '1px solid rgba(22,163,74,0.55)', color: '#16a34a' }}>
           <Icon.Trophy size={11} />
           Win
         </span>
