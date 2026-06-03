@@ -752,7 +752,10 @@ export default function TopNavbar({
                   rendered centered inside the top-bar gap instead, so this copy
                   hides at lg to avoid showing twice. */}
               {showNavBalances && (
-                <div className="hidden sm:flex lg:hidden items-center gap-5">
+                <div
+                  className="hidden sm:flex lg:hidden items-center gap-5"
+                  style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
+                >
                   {navBalancesInner}
                 </div>
               )}
