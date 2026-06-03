@@ -84,7 +84,7 @@ export default function NewsArticlePage() {
       <TopNavbar />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-3 sm:pt-4 pb-24">
-        <Link href="/news" className="inline-flex items-center gap-1.5 text-sm font-semibold mb-5" style={{ color: '#fb923c' }}>
+        <Link href="/news" className="inline-flex items-center gap-1.5 text-sm font-semibold mb-5" style={{ color: 'var(--sf-text-primary)' }}>
           ← Piks News
         </Link>
 
