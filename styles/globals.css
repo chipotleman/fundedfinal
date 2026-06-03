@@ -1604,6 +1604,16 @@ html.light .team-logo-img {
   filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.28));
 }
 
+/* Ticket logos: drop the heavy white-glow halo (which reads as blur on small
+   marks) for a single crisp shadow, and hint the browser to render sharply. */
+.mp-ticket-logos .team-logo-img {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+  image-rendering: -webkit-optimize-contrast;
+}
+html.light .mp-ticket-logos .team-logo-img {
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.3));
+}
+
 /* --- Horizontal scroll rows: fade colour + arrow-button palette --- */
 .desktop-scroll-row {
   --scroll-fade: #000000;

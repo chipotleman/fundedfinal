@@ -186,15 +186,10 @@ export default function MyPicksPage() {
     [sortedBets, selectedBetId],
   );
 
-  // When a pick is opened, the big hero container switches to show that pick's
-  // ticket/receipt (so users can flip through their tickets and screenshot
-  // them). `ticketBetId` is null when the hero shows the live battle info.
-  const [ticketBetId, setTicketBetId] = useState(null);
-  const ticketBet = useMemo(
-    () => (ticketBetId == null ? null : sortedBets.find((b) => b.id === ticketBetId) || null),
-    [sortedBets, ticketBetId],
-  );
-  const openTicket = (id) => { setSelectedBetId(id); setTicketBetId(id); };
+  // The desktop ticket column always shows the currently-selected pick (the
+  // first pick by default). Clicking a pick row just changes which ticket is
+  // shown — it no longer swaps the whole hero out for the ticket.
+  const openTicket = (id) => { setSelectedBetId(id); };
 
   const counts = useMemo(() => {
     let open = 0, won = 0, lost = 0, cashedOut = 0;
@@ -534,129 +529,8 @@ export default function MyPicksPage() {
   else mobileBody = renderMobilePicksList();
 
 
-  const renderHero = () => {
-    if (!matchup || !hasActiveMatchup) return null;
-    const { myLive, oppLive, startingBalance } = battleBalances;
-    const oppName = opponent?.username || 'Opponent';
-    const hasOpponent = !!opponent;
-    const myChange = myLive - startingBalance;
-    const oppChange = oppLive - startingBalance;
-    const sideChange = (d) => (
-      <div className="text-xs font-black" style={{ color: d < 0 ? (isLight ? '#dc2626' : '#f87171') : d > 0 ? p.posGreen : (isLight ? '#64748b' : '#9ca3af') }}>
-        {d > 0 ? '+' : ''}{formatMoney(d, 0)} <span className="text-[9px] font-bold tracking-wider" style={{ color: isLight ? '#94a3b8' : '#64748b' }}>CHANGE</span>
-      </div>
-    );
-    // Theme-aware hero tokens. The backdrop is deliberately restrained — a
-    // single base gradient plus one soft top glow and two faint side tints
-    // (echoing the blue "you" / amber "opponent" sides) instead of a stack of
-    // saturated color blobs — so it reads as a considered, production design.
-    const hero = isLight
-      ? {
-          base: 'linear-gradient(180deg,#ffffff 0%,#eef1f7 100%)',
-          topGlow: 'radial-gradient(120% 90% at 50% 0%, rgba(37,99,235,0.07), transparent 62%)',
-          leftTint: 'linear-gradient(90deg, rgba(37,99,235,0.06), transparent 70%)',
-          rightTint: 'linear-gradient(270deg, rgba(234,88,12,0.06), transparent 70%)',
-          text: '#0f172a',
-          faint: '#64748b',
-          avatarInner: '#ffffff',
-          vsShadow: 'none',
-          border: 'rgba(15,23,42,0.10)',
-          statBg: 'rgba(15,23,42,0.025)',
-          statBorder: 'rgba(15,23,42,0.08)',
-          youCoin: '#2563eb',
-          oppCoin: '#0f172a',
-        }
-      : {
-          base: 'linear-gradient(180deg,#10141d 0%,#0a0d13 100%)',
-          topGlow: 'radial-gradient(120% 90% at 50% 0%, rgba(59,130,246,0.12), transparent 60%)',
-          leftTint: 'linear-gradient(90deg, rgba(37,99,235,0.10), transparent 70%)',
-          rightTint: 'linear-gradient(270deg, rgba(234,88,12,0.10), transparent 70%)',
-          text: '#ffffff',
-          faint: '#64748b',
-          avatarInner: '#0a0f1c',
-          vsShadow: '0 4px 20px rgba(0,0,0,0.6)',
-          border: '#1a1a1a',
-          statBg: 'rgba(0,0,0,0.35)',
-          statBorder: 'rgba(255,255,255,0.06)',
-          youCoin: '#60a5fa',
-          oppCoin: '#ffffff',
-        };
-    return (
-      <div className="relative rounded-3xl overflow-hidden mb-4"
-        style={{ border: `1px solid ${hero.border}`, boxShadow: p.hardShadow }}>
-        {/* Restrained battle backdrop */}
-        <div className="absolute inset-0" style={{ background: hero.base }} />
-        <div className="absolute inset-0" style={{ background: hero.topGlow }} />
-        <div className="absolute left-0 inset-y-0 w-1/2" style={{ background: hero.leftTint }} />
-        <div className="absolute right-0 inset-y-0 w-1/2" style={{ background: hero.rightTint }} />
-
-        <div className="relative flex items-center justify-between gap-3 px-6 py-7 sm:px-10 sm:py-9">
-          {/* YOU */}
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="rounded-full p-[3px]" style={{ background: p.softBorder }}>
-              <div className="rounded-full overflow-hidden" style={{ background: hero.avatarInner }}>
-                <UserAvatar avatar={myProfile?.avatar} username={myProfile?.username || 'You'} size={76} />
-              </div>
-            </div>
-            <div className="min-w-0">
-              <div className="text-2xl font-black truncate" style={{ color: hero.text }}>YOU</div>
-              <div className="text-3xl font-black inline-flex items-center gap-1.5" style={{ color: hero.text }}><Coin color={hero.youCoin} />{formatMoney(myLive, 0)}</div>
-              <div className="mt-0.5">{sideChange(myChange)}</div>
-              <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black" style={{ background: 'rgba(59,130,246,0.16)', color: isLight ? '#2563eb' : '#93c5fd', border: '1px solid rgba(59,130,246,0.45)' }}>YOU</div>
-            </div>
-          </div>
-
-          {/* CENTER */}
-          <div className="flex flex-col items-center gap-1.5 flex-shrink-0 px-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-black" style={{ background: 'rgba(239,68,68,0.14)', color: isLight ? '#dc2626' : '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' }}>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#ef4444' }} />Live Battle
-            </div>
-            <div className="text-5xl font-black tracking-tight" style={{ color: hero.text, textShadow: hero.vsShadow }}>VS</div>
-            <div className="text-center">
-              <div className="text-[9px] uppercase tracking-widest font-bold" style={{ color: hero.faint }}>Time Left</div>
-              <div className="text-xl font-black" style={{ color: hero.text }}>{formatTimeRemaining(timeRemaining)}</div>
-            </div>
-          </div>
-
-          {/* OPPONENT */}
-          <div className="flex items-center gap-4 min-w-0 justify-end text-right">
-            <div className="min-w-0">
-              <div className="text-2xl font-black truncate" style={{ color: hero.text }}>{oppName}</div>
-              <div className="text-3xl font-black inline-flex items-center gap-1.5 justify-end" style={{ color: hero.text }}><Coin color={hero.oppCoin} />{formatMoney(oppLive, 0)}</div>
-              <div className="mt-0.5 flex justify-end">{sideChange(oppChange)}</div>
-            </div>
-            <div className="rounded-full p-[3px]" style={{ background: p.softBorder }}>
-              <div className="rounded-full overflow-hidden" style={{ background: hero.avatarInner }}>
-                <UserAvatar avatar={opponent?.avatar} username={oppName} size={76} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stat row */}
-        <div className="relative grid grid-cols-6 px-2" style={{ background: hero.statBg, borderTop: `1px solid ${hero.statBorder}` }}>
-          {[
-            { label: 'Open', node: <span style={{ color: isLight ? '#2563eb' : '#60a5fa' }}>{counts.open}</span> },
-            { label: 'Won', node: <span style={{ color: p.posGreen }}>{counts.won}</span> },
-            { label: 'Lost', node: <span style={{ color: isLight ? '#dc2626' : '#f87171' }}>{counts.lost}</span> },
-            { label: 'At Risk', node: <span className="inline-flex items-center gap-1" style={{ color: hero.text }}><Coin color={hero.oppCoin} />{formatMoney(counts.totalStake, 0)}</span> },
-            { label: 'To Win', node: <span className="inline-flex items-center gap-1" style={{ color: p.posGreen }}><Coin color={p.posGreen} />{formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}</span> },
-            { label: 'Streak', node: <span style={{ color: hero.faint }}>—</span> },
-          ].map((s, i) => (
-            <div key={s.label} className="text-center py-3.5" style={i > 0 ? { borderLeft: `1px solid ${hero.statBorder}` } : undefined}>
-              <div className="text-lg font-black leading-none">{s.node}</div>
-              <div className="text-[9px] uppercase tracking-widest font-bold mt-1.5" style={{ color: hero.faint }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {renderForfeitBar()}
-      </div>
-    );
-  };
-
-  // Inline ticket/receipt shown inside the big hero container when a pick is
-  // opened. Premium, theme-aware, screenshot-friendly (mirrors the share card).
+  // Always-on ticket/receipt for the selected pick, shown in its own desktop
+  // column. Premium, theme-aware, screenshot-friendly (mirrors the share card).
   const renderTicket = (bet) => {
     const { gameId, homeTeam, awayTeam, isLive: ctxLive } = getChartCtx(bet);
     const status = bet.status || 'open';
@@ -691,7 +565,7 @@ export default function MyPicksPage() {
     const scoreRow = (team, score) => (
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          <TeamLogo name={team} sport={bet.sport || bet.sportName} size={20} />
+          <TeamLogo name={team} sport={bet.sport || bet.sportName} size={26} />
           <span className="text-sm font-semibold truncate" style={{ color: p.bodyText }}>{team}</span>
         </div>
         <span className="text-sm font-black flex-shrink-0 ml-2" style={{ color: p.bodyText }}>{score}</span>
@@ -702,19 +576,13 @@ export default function MyPicksPage() {
         style={{ border: `1px solid ${p.softBorder}`, background: isLight ? 'linear-gradient(180deg,#eef1f7,#e2e7f0)' : 'linear-gradient(180deg,#10141d,#0a0d13)', boxShadow: p.hardShadow }}>
         <div className="flex items-center justify-between px-5 pt-4">
           <span className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: p.mutedText }}>Your Ticket</span>
-          <button type="button" onClick={() => setTicketBetId(null)}
-            className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg"
-            style={{ color: '#22d3ee', background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.4)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 19l-7-7 7-7" /></svg>
-            Back to Battle
-          </button>
         </div>
-        <div className="px-5 pb-6 pt-3">
-          <div className="max-w-md mx-auto rounded-2xl overflow-hidden" style={{ background: ticketBg, border: `1px solid ${p.softBorder}`, boxShadow: p.hardShadow }}>
-            <div className="px-5 pt-3 pb-4">
+        <div className="px-5 pb-6 pt-3 mp-ticket-logos">
+          <div className="rounded-2xl overflow-hidden" style={{ background: ticketBg, border: `1px solid ${p.softBorder}`, boxShadow: p.hardShadow }}>
+            <div className="px-5 pt-4 pb-4">
               {/* Header: logo + status */}
               <div className="flex items-center justify-between mb-1">
-                <img src="/pikslogotransparent.png" alt="Piks" className="h-11 object-contain" style={{ filter: isLight ? 'brightness(0)' : 'none' }} />
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-16 object-contain" style={{ filter: isLight ? 'brightness(0)' : 'none' }} />
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
                   style={{ color: statusMeta.color, background: `${statusMeta.color}1f`, border: `1px solid ${statusMeta.color}59` }}>
                   <span className={`w-1.5 h-1.5 rounded-full ${status === 'open' ? 'animate-pulse' : ''}`} style={{ background: statusMeta.color }} />
@@ -725,7 +593,7 @@ export default function MyPicksPage() {
               {/* Selection + odds */}
               <div className="flex items-start justify-between gap-3 pt-1">
                 <div className="flex items-start gap-2 min-w-0">
-                  <div className="mt-0.5"><SelectionLogos selection={bet.selectionFull || bet.selection} bet={bet} size={22} sport={bet.sport || bet.sportName} /></div>
+                  <div className="mt-0.5"><SelectionLogos selection={bet.selectionFull || bet.selection} bet={bet} size={30} sport={bet.sport || bet.sportName} /></div>
                   <div className="min-w-0">
                     <div className="text-base font-black truncate" style={{ color: p.bodyText }}>{isParlay ? `${bet.legs.length} Leg Parlay` : (bet.selectionFull || bet.selection || '—')}</div>
                     <div className="text-[11px] uppercase tracking-wide" style={{ color: p.mutedText }}>{isParlay ? 'Parlay' : (bet.betType || 'Moneyline')}</div>
@@ -940,6 +808,83 @@ export default function MyPicksPage() {
     );
   };
 
+  // Compact battle-status panel ("Match Updates") shown on desktop in its own
+  // column to the LEFT of the always-on ticket. A vertical, narrow-column
+  // friendly version of the wide hero — YOU vs OPP balances, time left and a
+  // condensed stat strip — so the ticket gets dedicated space beside it.
+  const renderMatchUpdates = () => {
+    if (!matchup || !hasActiveMatchup) return null;
+    const { myLive, oppLive, startingBalance } = battleBalances;
+    const oppName = opponent?.username || 'Opponent';
+    const myChange = myLive - startingBalance;
+    const oppChange = oppLive - startingBalance;
+    const text = isLight ? '#0f172a' : '#ffffff';
+    const faint = isLight ? '#64748b' : '#94a3b8';
+    const youCoin = isLight ? '#2563eb' : '#60a5fa';
+    const oppCoin = isLight ? '#0f172a' : '#ffffff';
+    const surface = isLight ? 'linear-gradient(180deg,#ffffff,#eef1f7)' : 'linear-gradient(180deg,#10141d,#0a0d13)';
+    const rowBg = isLight ? 'rgba(15,23,42,0.03)' : 'rgba(255,255,255,0.03)';
+    const changeColor = (d) => (d < 0 ? (isLight ? '#dc2626' : '#f87171') : d > 0 ? p.posGreen : faint);
+    const sideRow = ({ name, balance, change, coin, avatar, isYou }) => (
+      <div className="flex items-center justify-between gap-3 px-3.5 py-3 rounded-2xl" style={{ background: rowBg, border: `1px solid ${p.softBorder}` }}>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="rounded-full p-[2px] flex-shrink-0" style={{ background: p.softBorder }}>
+            <div className="rounded-full overflow-hidden" style={{ background: isLight ? '#ffffff' : '#0a0f1c' }}>
+              <UserAvatar avatar={avatar} username={name} size={46} />
+            </div>
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-black truncate" style={{ color: text }}>{name}</div>
+            {isYou && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black mt-0.5" style={{ background: 'rgba(59,130,246,0.16)', color: youCoin, border: '1px solid rgba(59,130,246,0.45)' }}>YOU</span>
+            )}
+          </div>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className="text-lg font-black inline-flex items-center gap-1 justify-end" style={{ color: text }}><Coin color={coin} />{formatMoney(balance, 0)}</div>
+          <div className="text-[10px] font-black" style={{ color: changeColor(change) }}>{change > 0 ? '+' : ''}{formatMoney(change, 0)} <span className="text-[8px] font-bold tracking-wider" style={{ color: faint }}>CHG</span></div>
+        </div>
+      </div>
+    );
+    return (
+      <div className="relative rounded-3xl overflow-hidden" style={{ border: `1px solid ${p.softBorder}`, background: surface, boxShadow: p.hardShadow }}>
+        <div className="flex items-center justify-between px-5 pt-4 pb-1">
+          <span className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: p.mutedText }}>Match Updates</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-black" style={{ background: 'rgba(239,68,68,0.14)', color: isLight ? '#dc2626' : '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#ef4444' }} />Live Battle
+          </span>
+        </div>
+        <div className="px-4 pb-4 pt-2 space-y-2.5">
+          {sideRow({ name: 'YOU', balance: myLive, change: myChange, coin: youCoin, avatar: myProfile?.avatar, isYou: true })}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px" style={{ background: p.softBorder }} />
+            <div className="flex flex-col items-center leading-none">
+              <span className="text-base font-black" style={{ color: text }}>VS</span>
+              <span className="text-[8px] uppercase tracking-widest font-bold mt-1" style={{ color: faint }}>{formatTimeRemaining(timeRemaining)} left</span>
+            </div>
+            <div className="flex-1 h-px" style={{ background: p.softBorder }} />
+          </div>
+          {sideRow({ name: oppName, balance: oppLive, change: oppChange, coin: oppCoin, avatar: opponent?.avatar })}
+        </div>
+        <div className="grid grid-cols-5" style={{ background: isLight ? 'rgba(15,23,42,0.025)' : 'rgba(0,0,0,0.35)', borderTop: `1px solid ${p.softBorder}` }}>
+          {[
+            { label: 'Open', node: <span style={{ color: youCoin }}>{counts.open}</span> },
+            { label: 'Won', node: <span style={{ color: p.posGreen }}>{counts.won}</span> },
+            { label: 'Lost', node: <span style={{ color: isLight ? '#dc2626' : '#f87171' }}>{counts.lost}</span> },
+            { label: 'At Risk', node: <span className="inline-flex items-center gap-0.5" style={{ color: text }}><Coin color={oppCoin} />{formatMoney(counts.totalStake, 0)}</span> },
+            { label: 'To Win', node: <span className="inline-flex items-center gap-0.5" style={{ color: p.posGreen }}><Coin color={p.posGreen} />{formatMoney(Math.max(0, counts.potentialPayout - counts.totalStake), 0)}</span> },
+          ].map((s, i) => (
+            <div key={s.label} className="text-center py-3 px-0.5" style={i > 0 ? { borderLeft: `1px solid ${p.softBorder}` } : undefined}>
+              <div className="text-sm font-black leading-none">{s.node}</div>
+              <div className="text-[8px] uppercase tracking-wider font-bold mt-1.5" style={{ color: faint }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        {renderForfeitBar()}
+      </div>
+    );
+  };
+
   const renderDesktopMain = () => {
     if (sessionStatus === 'loading' || (isLoggedIn && loading && !matchup && sortedBets.length === 0)) {
       return <div className="space-y-4">{[0, 1, 2].map((i) => <div key={i} className="h-44 rounded-2xl animate-pulse" style={{ background: p.skeletonSurface, border: `1px solid ${p.softBorder}` }} />)}</div>;
@@ -949,9 +894,17 @@ export default function MyPicksPage() {
     return (
       <div className="flex gap-6 items-start">
         <div className="flex-1 min-w-0">
-          {ticketBet ? renderTicket(ticketBet) : renderHero()}
-          {sortedBets.length === 0 ? renderEmptyNoPicks() : (
+          {sortedBets.length === 0 ? (
             <>
+              {renderMatchUpdates()}
+              <div className="mt-5">{renderEmptyNoPicks()}</div>
+            </>
+          ) : (
+            <>
+              <div className="flex gap-5 items-start mb-1">
+                <div className="flex-1 min-w-0">{renderMatchUpdates()}</div>
+                <div className="w-[390px] flex-shrink-0">{selectedBet ? renderTicket(selectedBet) : null}</div>
+              </div>
               <div className="flex items-center justify-between mb-3 mt-5">
                 <div className="text-base font-black" style={{ color: p.bodyText }}>
                   Your Active Piks <span style={{ color: p.faintText }}>({sortedBets.length})</span>
