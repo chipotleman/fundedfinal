@@ -1253,15 +1253,16 @@ export default function Dashboard() {
     const pillFontSize = '14px';
     const iconSize = '16px';
 
-    // A whisper of depth so the pills read as slightly raised chips rather
-    // than flat outlines: a soft drop shadow below + a faint highlight along
-    // the top edge (inset). Kept deliberately subtle per request.
+    // Pronounced 3D depth so the pills read as physically raised chips: a
+    // layered drop shadow (tight + soft) lifts them off the surface, a bright
+    // top-edge highlight (inset) bevels the upper rim, and a darker bottom-edge
+    // inset rounds the lower lip — together they sell a tactile, embossed look.
     const pillDepthShadow = isLightTheme
-      ? '0 1px 2px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.7)'
-      : '0 1px 2px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)';
+      ? '0 1px 2px rgba(15,23,42,0.12), 0 3px 7px rgba(15,23,42,0.12), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 1px rgba(15,23,42,0.08)'
+      : '0 2px 4px rgba(0,0,0,0.5), 0 5px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 2px rgba(0,0,0,0.45)';
     const pillActiveShadow = isLightTheme
-      ? '0 2px 5px rgba(234,179,8,0.30), inset 0 1px 0 rgba(255,255,255,0.55)'
-      : '0 2px 6px rgba(59,130,246,0.35), inset 0 1px 0 rgba(255,255,255,0.06)';
+      ? '0 3px 7px rgba(234,179,8,0.38), 0 7px 16px rgba(234,179,8,0.22), inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 2px rgba(120,53,15,0.18)'
+      : '0 3px 7px rgba(59,130,246,0.42), 0 7px 18px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -2px 2px rgba(0,0,0,0.5)';
 
     // Build the per-variant list of pill sources. For the inline row
     // each league is its own pill; for the condensed bar we collapse
@@ -1333,7 +1334,7 @@ export default function Dashboard() {
             borderStyle: 'solid',
             borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937'),
             boxShadow: selectedSport === 'Live'
-              ? (isLightTheme ? '0 2px 5px rgba(220,38,38,0.30), inset 0 1px 0 rgba(255,255,255,0.25)' : '0 2px 6px rgba(220,38,38,0.40), inset 0 1px 0 rgba(255,255,255,0.10)')
+              ? (isLightTheme ? '0 3px 7px rgba(220,38,38,0.38), 0 7px 16px rgba(220,38,38,0.24), inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -2px 2px rgba(127,29,29,0.30)' : '0 3px 7px rgba(220,38,38,0.45), 0 7px 18px rgba(220,38,38,0.30), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -2px 2px rgba(0,0,0,0.5)')
               : pillDepthShadow,
           }}
         >
