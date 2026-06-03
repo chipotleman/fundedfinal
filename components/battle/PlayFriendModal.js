@@ -865,7 +865,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
           )}
         </div>
 
-          <div className="flex-1 overflow-y-auto px-5 pb-5">
+          <div className="flex-1 overflow-y-auto px-5 pb-5" style={{ minHeight: 360 }}>
             {/* Cartoon-themed non-sent error box — same red gradient +
                 chunky black border + offset shadow as the sent state,
                 so failures read consistently across both branches. */}
