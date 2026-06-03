@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function Footer() {
@@ -20,36 +19,6 @@ export default function Footer() {
       }}
     >
       <div className="max-w-4xl mx-auto text-center">
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-4">
-          <Link href="/rules" className="text-sm underline" style={{ color: link }}>
-            House Rules
-          </Link>
-          <span style={{ color: sep }}>·</span>
-          <Link href="/responsible-pikking" className="text-sm underline" style={{ color: link }}>
-            Responsible Pikking
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-4">
-          <Link href="/privacy" className="text-sm underline" style={{ color: link }}>
-            Privacy Policy
-          </Link>
-          <span style={{ color: sep }}>·</span>
-          <Link href="/terms" className="text-sm underline" style={{ color: link }}>
-            Terms of Use
-          </Link>
-          <span style={{ color: sep }}>·</span>
-          <Link href="/data-privacy" className="text-sm underline" style={{ color: link }}>
-            Data Privacy Request
-          </Link>
-        </div>
-
-        <div className="mb-6">
-          <Link href="/pikking-101" className="text-sm underline" style={{ color: link }}>
-            Pikking 101
-          </Link>
-        </div>
-
         <p className="text-sm mb-6" style={{ color: link }}>
           © Piks, {currentYear}
         </p>
