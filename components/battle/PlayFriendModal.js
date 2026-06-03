@@ -77,6 +77,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
   const [sent, setSent] = useState(false);
   const [sentInviteId, setSentInviteId] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [error, setError] = useState('');
   const [inviteCountdown, setInviteCountdown] = useState(0);
   const [activeTab, setActiveTab] = useState('friends');
@@ -110,6 +111,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
       setSent(false);
       setSentInviteId(null);
       setCancelling(false);
+      setShowCancelConfirm(false);
       setError('');
       setInviteCountdown(0);
       setActiveTab('friends');
@@ -342,6 +344,7 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
     dispatchInviteEnded(reason);
     setSent(false);
     setSentInviteId(null);
+    setShowCancelConfirm(false);
     setInviteCountdown(0);
     navigatedToBattleRef.current = false;
     if (lockedFriend) {
@@ -353,8 +356,8 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
     if (onInviteCancelled) onInviteCancelled();
   };
 
-  const cancelInvite = async () => {
-    if (!sentInviteId || cancelling) return;
+  const cancelInvite = async ({ closeAfter = false } = {}) => {
+    if (!sentInviteId || cancelling) return false;
     setCancelling(true);
     setError('');
     try {
@@ -366,13 +369,30 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError(data.error || 'Failed to cancel invite');
-        return;
+        return false;
       }
+      // finishWaiting already calls onClose() for the lockedFriend flow,
+      // so only close here for the non-locked case to avoid a double-close.
       finishWaiting('cancelled');
+      if (closeAfter && !lockedFriend) onClose();
+      return true;
     } catch {
       setError('Network error. Please try again.');
+      return false;
     } finally {
       setCancelling(false);
+    }
+  };
+
+  // Closing the waiting screen must never silently leave a pending invite
+  // dangling on the server (the bug: user clicks out, thinks nothing was
+  // sent, then can't re-invite because one is still pending). Intercept
+  // the dismiss and ask first — only an explicit confirm cancels + closes.
+  const requestCloseWaiting = () => {
+    if (sentInviteId && inviteCountdown > 0) {
+      setShowCancelConfirm(true);
+    } else {
+      onClose();
     }
   };
 
@@ -703,13 +723,13 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
       <div
         data-allow-fixed-overlay="true"
         className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
-        onClick={onClose}
-        onKeyDown={e => { if (e.key === 'Escape') onClose(); }}
+        onClick={requestCloseWaiting}
+        onKeyDown={e => { if (e.key === 'Escape') requestCloseWaiting(); }}
       >
         <div
           role="dialog"
           aria-modal="true"
-          className="max-w-md w-full my-auto rounded-[22px] overflow-hidden"
+          className="max-w-md w-full my-auto rounded-[22px] overflow-hidden relative"
           style={{
             backgroundColor: '#070a14',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -745,10 +765,43 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
           {error && (
             <div className="px-6 pb-5">
               <div
-                className="rounded-xl px-3 py-2.5 text-xs font-semibold text-center"
-                style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
+                className="flex items-center gap-2.5 rounded-2xl px-3.5 py-3 text-[13px] font-extrabold"
+                style={{ background: '#fee2e2', border: '2.5px solid #000', boxShadow: '4px 4px 0 #000', color: '#7f1d1d' }}
               >
-                {error}
+                <span aria-hidden="true" style={{ fontSize: 17 }}>⚠️</span>
+                <span className="text-left leading-snug">{error}</span>
+              </div>
+            </div>
+          )}
+          {showCancelConfirm && (
+            <div
+              className="absolute inset-0 z-[60] flex items-center justify-center p-5"
+              style={{ background: 'rgba(2,6,15,0.85)', backdropFilter: 'blur(2px)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div
+                className="w-full max-w-[300px] text-center"
+                style={{ background: '#0b1020', border: '2.5px solid #000', borderRadius: 20, boxShadow: '5px 5px 0 #000', padding: '24px 20px' }}
+              >
+                <div aria-hidden="true" style={{ fontSize: 30 }}>⚔️</div>
+                <h3 className="mt-1 font-black italic uppercase leading-[0.95]" style={{ fontSize: 22, color: '#fff' }}>
+                  Cancel invite?
+                </h3>
+                <p className="mt-2 text-[12.5px]" style={{ color: '#94a3b8' }}>
+                  Your challenge to {friendName} will be withdrawn. You can send a new one after.
+                </p>
+                <div className="mt-5 space-y-2.5">
+                  <FlowButton color="blue" onClick={() => setShowCancelConfirm(false)}>Keep Waiting</FlowButton>
+                  <button
+                    type="button"
+                    disabled={cancelling}
+                    onClick={async () => { const ok = await cancelInvite({ closeAfter: true }); if (!ok) setShowCancelConfirm(false); }}
+                    className="w-full rounded-2xl py-3 font-extrabold uppercase tracking-wider text-sm disabled:opacity-60"
+                    style={{ background: '#ef4444', border: '2.5px solid #000', boxShadow: '0 4px 0 #7f1d1d', color: '#fff' }}
+                  >
+                    {cancelling ? 'Cancelling…' : 'Yes, Cancel Invite'}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -871,14 +924,16 @@ export default function PlayFriendModal({ isOpen, onClose, onBack, friends = [],
                 so failures read consistently across both branches. */}
             {error && (
               <div
-                className="rounded-xl px-3 py-2.5 text-sm font-semibold mb-4 pfm-fade-in"
+                className="flex items-center gap-2.5 rounded-2xl px-3.5 py-3 text-sm font-extrabold mb-4 pfm-fade-in"
                 style={{
-                  background: 'rgba(239,68,68,0.10)',
-                  border: '1px solid rgba(239,68,68,0.35)',
-                  color: '#fca5a5',
+                  background: '#fee2e2',
+                  border: '2.5px solid #000',
+                  boxShadow: '4px 4px 0 #000',
+                  color: '#7f1d1d',
                 }}
               >
-                {error}
+                <span aria-hidden="true" style={{ fontSize: 18 }}>⚠️</span>
+                <span className="leading-snug">{error}</span>
               </div>
             )}
 

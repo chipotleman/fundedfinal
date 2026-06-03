@@ -200,6 +200,7 @@ function MatchFoundContent({
 export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMatchFound, presetMatch = null }) {
   useModalScrollLock(isOpen);
   const [step, setStep] = useState('config');
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
   // Real-player avatars that orbit the user's avatar on the "Finding
@@ -335,6 +336,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
       cancelledRef.current = true;
       cleanupAllTimers();
       setStep('config');
+      setShowCancelConfirm(false);
       setSearchTime(0);
       setError('');
       setAvatarFlip(false);
@@ -641,6 +643,25 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
       router.push(`/battle/rush/${matchedMatchup.id}`);
       return;
     }
+    onClose();
+  };
+
+  // Dismiss intent from the backdrop / header close button. 'found' and the
+  // rush flow are hard pauses (handled elsewhere). While actively searching
+  // we never silently abandon the queue in the background — ask first, and
+  // only an explicit confirm tears down the search.
+  const requestClose = () => {
+    if (step === 'found' || isInRushFlow) return;
+    if (step === 'searching') {
+      setShowCancelConfirm(true);
+      return;
+    }
+    onClose();
+  };
+
+  const confirmStopSearching = async () => {
+    setShowCancelConfirm(false);
+    await cancelSearch();
     onClose();
   };
 
@@ -1004,9 +1025,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
         // click since the user is already in an active matchup; the
         // explicit close button (which routes to /battle/rush/[id])
         // remains the only way out.
-        if (step === 'found' || isInRushFlow) return;
-        if (step === 'searching') { cancelSearch(); }
-        onClose();
+        requestClose();
       }}>
         {/* Inner wrapper handles centering. We use min-h-full + flex so that
             when the modal is shorter than the viewport it stays vertically
@@ -1016,6 +1035,44 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
             outer overlay scrolls naturally. Without this split the classic
             `items-center` flexbox bug clips the top of the modal and makes
             the header unreachable on small viewports. */}
+        {showCancelConfirm && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center p-5"
+            style={{ background: 'rgba(2,6,15,0.85)', backdropFilter: 'blur(2px)' }}
+            onClick={e => { e.stopPropagation(); }}
+          >
+            <div
+              className="w-full max-w-[300px] text-center"
+              style={{ background: '#0b1020', border: '2.5px solid #000', borderRadius: 20, boxShadow: '5px 5px 0 #000', padding: '24px 20px' }}
+            >
+              <div aria-hidden="true" style={{ fontSize: 30 }}>🔎</div>
+              <h3 className="mt-1 font-black italic uppercase leading-[0.95]" style={{ fontSize: 22, color: '#fff' }}>
+                Stop searching?
+              </h3>
+              <p className="mt-2 text-[12.5px]" style={{ color: '#94a3b8' }}>
+                You'll leave the queue. We won't keep searching in the background — start again whenever you're ready.
+              </p>
+              <div className="mt-5 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="w-full rounded-2xl py-3 font-extrabold uppercase tracking-wider text-sm text-white"
+                  style={{ background: 'linear-gradient(180deg,#3b82f6,#2563eb)', border: '2.5px solid #000', boxShadow: '0 4px 0 #1e3a8a' }}
+                >
+                  Keep Searching
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmStopSearching}
+                  className="w-full rounded-2xl py-3 font-extrabold uppercase tracking-wider text-sm text-white"
+                  style={{ background: '#ef4444', border: '2.5px solid #000', boxShadow: '0 4px 0 #7f1d1d' }}
+                >
+                  Stop Searching
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="min-h-full flex items-center justify-center p-4">
         <div
           className={`qm-frame w-full overflow-hidden relative max-w-md`}
@@ -1041,7 +1098,7 @@ export default function QuickMatchModal({ isOpen, onClose, onBack, userId, onMat
                     corner instead of competing with the centered title. */}
                 <button
                   aria-label="Close"
-                  onClick={onClose}
+                  onClick={requestClose}
                   className="w-9 h-9 rounded-full flex items-center justify-center absolute transition-colors hover:bg-white/10"
                   style={{ top: 16, right: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', zIndex: 5 }}
                 >
