@@ -1807,6 +1807,93 @@ function SidebarCard({ title, children, footer }) {
   );
 }
 
+function newsTimeAgo(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(diff) || diff < 0) return 'now';
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) {
+    const m = Math.floor(diff / 60000);
+    return m < 1 ? 'now' : `${m}m ago`;
+  }
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
+// Left desktop rail: real ESPN headlines from /api/sports-news (the same feed
+// the logged-out desktop right rail uses). Lives only on xl+ widths where
+// there's room for a third column; hidden below that so the feed stays
+// centered. Styled with the shared sf-* theme tokens so it flips light/dark
+// with the rest of the page.
+function SportsNewsRail() {
+  const [news, setNews] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    // The rail is CSS-hidden below xl; skip the fetch entirely on smaller
+    // screens so we never hit /api/sports-news where the rail isn't shown.
+    if (typeof window !== 'undefined'
+      && window.matchMedia
+      && !window.matchMedia('(min-width: 1280px)').matches) {
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/sports-news')
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((data) => {
+        if (cancelled) return;
+        setNews(Array.isArray(data?.items) ? data.items : []);
+        setLoaded(true);
+      })
+      .catch(() => { if (!cancelled) setLoaded(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
+      <div className="flex items-center justify-between px-4 pt-3 pb-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
+          Sports News
+        </span>
+        <a
+          href="https://www.espn.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] font-semibold lg:hover:underline"
+          style={{ color: '#60a5fa' }}
+        >
+          ESPN
+        </a>
+      </div>
+      <div className="px-2 pb-2">
+        {news.length === 0 ? (
+          <div className="px-2 py-3 text-xs" style={{ color: textMuted }}>
+            {loaded ? 'No headlines right now' : 'Loading headlines…'}
+          </div>
+        ) : (
+          news.map((n, i) => (
+            <a
+              key={n.href || i}
+              href={n.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex flex-col items-start px-2 py-2 rounded-lg text-left transition-colors lg:hover:bg-white/[0.04]"
+            >
+              <span className="text-[10px] uppercase tracking-wide" style={{ color: textMuted }}>
+                {n.source}{n.league ? ` · ${n.league}` : ''}{n.published ? ` · ${newsTimeAgo(n.published)}` : ''}
+              </span>
+              <span className="text-[13px] font-bold leading-snug line-clamp-2 max-w-full" style={{ color: textPrimary }}>
+                {n.headline}
+              </span>
+            </a>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RightSidebar({
   liveBattles,
   friends,
@@ -2204,11 +2291,19 @@ export default function SocialFeedPage({ data }) {
 
   return (
     <div className="sf-root pb-8 w-full">
-      {/* Twitter-style centered layout: a constrained feed column (≤600px)
-          plus a sticky right rail on desktop. The feed no longer spans the
-          whole page — it reads like a focused timeline with breathing room.
-          On phones/tablets the rail is hidden and the feed centers. */}
+      {/* Three-column desktop layout that fills the wide desktop screen: a
+          sticky Sports News rail on the left (xl+ only), the constrained feed
+          column (≤600px) in the middle, and the sticky engagement rail on the
+          right (lg+). Below xl the left rail drops and the remaining two
+          columns center; on phones/tablets both rails hide and the feed
+          centers. */}
       <div className="flex justify-center gap-6 lg:gap-7">
+      {/* Left rail — Sports News, widest desktop only */}
+      <aside className="hidden xl:block w-[300px] flex-shrink-0">
+        <div className="sticky top-[78px]">
+          <SportsNewsRail />
+        </div>
+      </aside>
       <div className="w-full max-w-[600px] min-w-0">
         <SharedByPill />
         <StoriesRail
