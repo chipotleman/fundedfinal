@@ -5,6 +5,7 @@ import { formatSeenAgo } from '../../utils/relativeTime';
 import ActiveStatus, { isUserOnline } from '../ActiveStatus';
 import UserAvatar, { UserNameLink, useProfilePrefetchHandlers } from '../UserAvatar';
 import { useMatchup } from '../../contexts/MatchupContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
@@ -1429,10 +1430,14 @@ function ProfileHeaderLink({ friend, textPrimary, textSecondary }) {
 
 export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack }) {
   const { hasActiveMatchup } = useMatchup();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const router = useRouter();
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [notFriends, setNotFriends] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
@@ -1646,15 +1651,20 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     let timer = null;
 
     const fetchThread = async ({ initial }) => {
-      if (initial) { setLoading(true); setLoadError(null); }
+      if (initial) { setLoading(true); setLoadError(null); setNotFriends(false); }
       try {
         const res = await fetch(`/api/messages?friendId=${friend.id}`, { credentials: 'include' });
         if (!res.ok) {
           if (!cancelled && initial) {
-            setLoadError(res.status === 403 ? 'You can only message friends.' : 'Could not load messages.');
+            if (res.status === 403) {
+              setNotFriends(true);
+            } else {
+              setLoadError('Could not load messages.');
+            }
           }
           return;
         }
+        if (!cancelled) setNotFriends(false);
         const data = await res.json();
         if (cancelled) return;
         const next = data.messages || [];
@@ -1686,7 +1696,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
       if (timer) clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [friend?.id]);
+  }, [friend?.id, reloadKey]);
 
   useEffect(() => {
     if (!friend?.id || typeof window === 'undefined') return undefined;
@@ -2837,10 +2847,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     }
   };
 
-  const cardBorder = 'rgba(59,130,246,0.18)';
-  const textPrimary = '#ffffff';
-  const textSecondary = '#9ca3af';
-  const inputBg = '#0a1220';
+  const cardBorder = isLight ? 'rgba(59,130,246,0.22)' : 'rgba(59,130,246,0.18)';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
+  const inputBg = isLight ? '#f1f5f9' : '#0a1220';
 
   let lastOutgoingIdx = -1;
   for (let i = thread.length - 1; i >= 0; i--) {
@@ -3009,15 +3019,24 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
         {loading && (
           <div className="text-center text-xs py-6" style={{ color: textSecondary }}>Loading…</div>
         )}
-        {!loading && loadError && (
+        {!loading && notFriends && (
+          <div className="flex items-center justify-center py-6">
+            <NotFriendsNotice
+              userId={friend?.id}
+              username={friend?.username}
+              onFriendAdded={() => { setNotFriends(false); setLoadError(null); setReloadKey((k) => k + 1); }}
+            />
+          </div>
+        )}
+        {!loading && !notFriends && loadError && (
           <div className="text-center text-xs py-6 text-red-400">{loadError}</div>
         )}
-        {!loading && !loadError && thread.length === 0 && (
+        {!loading && !notFriends && !loadError && thread.length === 0 && (
           <div className="text-center text-xs py-6" style={{ color: textSecondary }}>
             No messages yet. Say hi!
           </div>
         )}
-        {!loading && !loadError && thread.map((m, idx) => {
+        {!loading && !notFriends && !loadError && thread.map((m, idx) => {
           const mine = m.senderId === myId;
           const isDeleting = deletingIds.has(m.id);
           return (
@@ -3117,7 +3136,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
         )}
       </div>
 
-      {!loadError && (
+      {!loadError && !notFriends && (
         <form
           onSubmit={handleSend}
           className="p-3 flex-shrink-0"
@@ -3399,38 +3418,17 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
   );
 }
 
-function NotFriendsCard({ userId, onFriendAdded, onBack }) {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+function NotFriendsNotice({ userId, username, onFriendAdded }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
   const [requestStatus, setRequestStatus] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setLoadError(null);
-    setProfile(null);
-    setRequestStatus(null);
-    setSendError(null);
-    (async () => {
-      try {
-        const res = await fetch(`/api/profiles/${userId}`, { credentials: 'include' });
-        if (!res.ok) {
-          if (!cancelled) setLoadError(res.status === 404 ? 'User not found.' : 'Could not load user.');
-          return;
-        }
-        const data = await res.json();
-        if (!cancelled) setProfile(data);
-      } catch {
-        if (!cancelled) setLoadError('Could not load user.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [userId]);
+  const cardBorder = isLight ? 'rgba(59,130,246,0.22)' : 'rgba(59,130,246,0.18)';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
+  const innerBg = isLight ? '#f1f5f9' : '#0a1220';
 
   const handleAdd = async () => {
     if (sending) return;
@@ -3462,11 +3460,76 @@ function NotFriendsCard({ userId, onFriendAdded, onBack }) {
     }
   };
 
-  const cardBorder = 'rgba(59,130,246,0.18)';
-  const textPrimary = '#ffffff';
-  const textSecondary = '#9ca3af';
-  const cardBg = '#0a0a0a';
-  const innerBg = '#0a1220';
+  return (
+    <div
+      className="w-full max-w-sm rounded-xl p-5 text-center"
+      style={{ backgroundColor: innerBg, border: `1px solid ${cardBorder}` }}
+    >
+      <div className="text-sm font-semibold mb-1" style={{ color: textPrimary }}>
+        You're not friends yet
+      </div>
+      <p className="text-xs mb-4" style={{ color: textSecondary }}>
+        You can only message friends — send {username || 'this player'} a friend request first.
+      </p>
+      {requestStatus === 'pending' && (
+        <div className="text-xs mb-3" style={{ color: textSecondary }}>
+          Friend request sent. You'll be able to message them once they accept.
+        </div>
+      )}
+      {requestStatus === 'accepted' && (
+        <div className="text-xs mb-3 text-blue-400">You're now friends!</div>
+      )}
+      {!requestStatus && (
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={sending}
+          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg"
+        >
+          {sending ? 'Sending…' : 'Add friend'}
+        </button>
+      )}
+      {sendError && (
+        <div className="text-red-400 text-[11px] mt-2">{sendError}</div>
+      )}
+    </div>
+  );
+}
+
+function NotFriendsCard({ userId, onFriendAdded, onBack }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    setProfile(null);
+    (async () => {
+      try {
+        const res = await fetch(`/api/profiles/${userId}`, { credentials: 'include' });
+        if (!res.ok) {
+          if (!cancelled) setLoadError(res.status === 404 ? 'User not found.' : 'Could not load user.');
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) setProfile(data);
+      } catch {
+        if (!cancelled) setLoadError('Could not load user.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const cardBorder = isLight ? 'rgba(59,130,246,0.22)' : 'rgba(59,130,246,0.18)';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
+  const cardBg = isLight ? '#ffffff' : '#0a0a0a';
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -3512,38 +3575,11 @@ function NotFriendsCard({ userId, onFriendAdded, onBack }) {
         ) : loadError ? (
           <div className="text-xs text-red-400 text-center">{loadError}</div>
         ) : (
-          <div
-            className="w-full max-w-sm rounded-xl p-5 text-center"
-            style={{ backgroundColor: innerBg, border: `1px solid ${cardBorder}` }}
-          >
-            <div className="text-sm font-semibold mb-1" style={{ color: textPrimary }}>
-              You're not friends yet
-            </div>
-            <p className="text-xs mb-4" style={{ color: textSecondary }}>
-              You can only message friends — send {profile?.username || 'this player'} a friend request first.
-            </p>
-            {requestStatus === 'pending' && (
-              <div className="text-xs mb-3" style={{ color: textSecondary }}>
-                Friend request sent. You'll be able to message them once they accept.
-              </div>
-            )}
-            {requestStatus === 'accepted' && (
-              <div className="text-xs mb-3 text-blue-400">You're now friends!</div>
-            )}
-            {!requestStatus && (
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={sending}
-                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg"
-              >
-                {sending ? 'Sending…' : 'Add friend'}
-              </button>
-            )}
-            {sendError && (
-              <div className="text-red-400 text-[11px] mt-2">{sendError}</div>
-            )}
-          </div>
+          <NotFriendsNotice
+            userId={userId}
+            username={profile?.username}
+            onFriendAdded={onFriendAdded}
+          />
         )}
       </div>
     </div>
