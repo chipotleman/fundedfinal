@@ -38,13 +38,17 @@ export default function DesktopGlobalSearch() {
   const sessionUser = session?.user || null;
   const { openMessage } = useUserPreview();
   const { theme } = useTheme();
+  // `isLight` only drives the dropdown's per-result accent buttons, which never
+  // render at first paint (the panel opens after the user types). The always-
+  // visible bar surface/text are driven by CSS variables (see `.piks-global-search`
+  // in globals.css) so they resolve from the html.light/.dark class applied
+  // before paint — no FOUC, no hydration flash on refresh or navigation.
   const isLight = theme === 'light';
-  // Theme-aware surface/text so the bar isn't a black box on the light page.
-  const BAR_BG = isLight ? '#f1f5f9' : '#0d0d0d';
-  const BAR_BORDER = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.08)';
-  const PANEL_BG = isLight ? '#ffffff' : '#0a0a0a';
-  const PANEL_BORDER = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.1)';
-  const TXT = isLight ? '#0f172a' : '#f5f5f5';
+  const BAR_BG = 'var(--search-bar-bg)';
+  const BAR_BORDER = 'var(--search-bar-border)';
+  const PANEL_BG = 'var(--search-panel-bg)';
+  const PANEL_BORDER = 'var(--search-panel-border)';
+  const TXT = 'var(--search-text)';
   const containerRef = useRef(null);
   const inputRef = useRef(null);
   const gamesCacheRef = useRef(null);
@@ -226,7 +230,7 @@ export default function DesktopGlobalSearch() {
   const showDropdown = open && query.trim().length >= 2;
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-[680px]">
+    <div ref={containerRef} className="piks-global-search relative w-full max-w-[680px]">
       <div
         className="flex items-center gap-2 rounded-full px-4 h-10 transition-colors"
         style={{
@@ -279,7 +283,7 @@ export default function DesktopGlobalSearch() {
           style={{
             backgroundColor: PANEL_BG,
             border: `1px solid ${PANEL_BORDER}`,
-            boxShadow: isLight ? '0 12px 40px rgba(15,23,42,0.18)' : '0 12px 40px rgba(0,0,0,0.6)',
+            boxShadow: 'var(--search-panel-shadow)',
             maxHeight: '70vh',
             overflowY: 'auto',
           }}
@@ -409,7 +413,7 @@ export default function DesktopGlobalSearch() {
           )}
 
           {games.length > 0 && (
-            <div className="py-1" style={{ borderTop: players.length > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+            <div className="py-1" style={{ borderTop: players.length > 0 ? '1px solid var(--search-divider)' : 'none' }}>
               <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: '#6b7280' }}>
                 Games
               </div>

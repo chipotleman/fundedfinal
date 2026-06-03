@@ -1,5 +1,6 @@
 - [Messenger dual-event dedup](messaging-dual-event-dedup.md) — `piks:message:new` fires from local send AND SSE echo; dedup must `String(id)`-compare or messages double-render.
 - [DB migration convention](db-migration-convention.md) — schema changes need BOTH drizzle db:push AND a hand-written migrations/*.sql file, or prod breaks.
+- [Theme FOUC fix](theme-fouc-css-vars.md) — first-paint surfaces must theme via CSS vars under html.light/.dark, not useTheme() inline styles (SSR defaults dark → flash).
 - [SSR + localStorage instant render](ssr-localstorage-instant-render.md) — don't lazy-init useState from localStorage on SSR pages; flip in an isomorphic layout effect (pre-paint, no mismatch).
 - [Light theme team colors](light-theme-team-colors.md) — never render a team brand color as white on light theme; wrap getTeamColor() in readableLineColor(hex, isLight).
 - [iOS haptics user-activation](ios-haptics-user-activation.md) — the iOS switch-haptic `label.click()` must fire synchronously in the tap handler; any rAF/setTimeout/await defer silently kills it.
