@@ -47,7 +47,7 @@ function modeDisplay(m) {
 // existing references pick up the themed values automatically.
 function getPalette(isLight) {
   return {
-    pageBg: isLight ? '#f1f5f9' : '#000000',
+    pageBg: isLight ? '#f5f1ea' : '#000000',
     cardBg: isLight ? '#ffffff' : '#0a0a0a',
     cardBorder: isLight ? 'rgba(59,130,246,0.28)' : 'rgba(59,130,246,0.22)',
     textPrimary: isLight ? '#0f172a' : '#ffffff',
