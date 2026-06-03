@@ -685,7 +685,7 @@ export default function TopNavbar({
                   style={{
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    color: '#fb923c',
+                    color: '#facc15',
                     fontSize: '15px',
                     letterSpacing: '0.02em',
                   }}

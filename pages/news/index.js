@@ -216,9 +216,6 @@ export default function PiksNewsPage({ initialItems = [] }) {
               <div className="rounded-2xl p-5 lg:sticky lg:top-24" style={card}>
                 <div className="flex items-center justify-between mb-1">
                   <h2 className="text-sm font-black uppercase tracking-wider">Market Movers</h2>
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#fb923c' }}>
-                    Polymarket
-                  </span>
                 </div>
                 <p className="text-[11px] mb-4" style={{ color: 'var(--sf-text-secondary)' }}>
                   What the market thinks right now.
