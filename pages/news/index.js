@@ -47,10 +47,10 @@ function PiksLoader({ label = 'Loading Piks News' }) {
   );
 }
 
-export default function PiksNewsPage() {
-  const [items, setItems] = useState([]);
+export default function PiksNewsPage({ initialItems = [] }) {
+  const [items, setItems] = useState(initialItems);
   const [markets, setMarkets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialItems.length === 0);
   const [activeLeague, setActiveLeague] = useState('All');
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function PiksNewsPage() {
       .then((r) => r.json())
       .then((d) => {
         if (!alive) return;
-        setItems(Array.isArray(d.items) ? d.items : []);
+        if (Array.isArray(d.items) && d.items.length) setItems(d.items);
         setLoading(false);
       })
       .catch(() => alive && setLoading(false));
@@ -103,26 +103,7 @@ export default function PiksNewsPage() {
       </Head>
       <TopNavbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
-        {/* Masthead */}
-        <div className="flex items-end justify-between gap-4 mb-5">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight flex items-center gap-2">
-              Piks <span style={{ color: '#fb923c' }}>News</span>
-            </h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--sf-text-secondary)' }}>
-              Sports headlines, summarized with the betting angle.
-            </p>
-          </div>
-          <span
-            className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
-            style={{ color: '#34d399', border: '1px solid rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.08)' }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#34d399' }} />
-            Live feed
-          </span>
-        </div>
-
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-24">
         {/* League filter pills */}
         <div className="flex gap-2 overflow-x-auto pb-3 mb-6 -mx-1 px-1 scrollbar-hide">
           {leagues.map((lg) => {
@@ -282,4 +263,17 @@ export default function PiksNewsPage() {
       </main>
     </div>
   );
+}
+
+export async function getStaticProps() {
+  try {
+    const { getFeed } = await import('../../lib/news');
+    const items = await getFeed();
+    return {
+      props: { initialItems: Array.isArray(items) ? items : [] },
+      revalidate: 300,
+    };
+  } catch (e) {
+    return { props: { initialItems: [] }, revalidate: 60 };
+  }
 }

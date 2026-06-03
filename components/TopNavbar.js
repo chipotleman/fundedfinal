@@ -166,6 +166,7 @@ export default function TopNavbar({
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const navRef = useRef(null);
   const router = useRouter();
+  const isNewsRoute = router.pathname === '/news' || router.pathname.startsWith('/news/');
   const { data: session, status } = useSession();
   const { hasActiveMatchup, myBalance: matchupBalance, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
   const notificationsCtx = useNotifications();
@@ -677,6 +678,21 @@ export default function TopNavbar({
                   Piks
                 </span>
               </a>
+              {isNewsRoute && (
+                <span
+                  aria-hidden="true"
+                  className="absolute pointer-events-none select-none font-black lowercase left-[68px] sm:left-[166px]"
+                  style={{
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#fb923c',
+                    fontSize: '15px',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  news
+                </span>
+              )}
             </div>
 
             {/* Desktop top-bar tools (lg+ only) — Polymarket-style: a prominent
