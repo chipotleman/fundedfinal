@@ -3291,30 +3291,24 @@ export default function LiveBattlesSection({
   // (`expandedKey === null`) and Hide reliably closes the one card you
   // clicked. BattleCard forwards the desired next value to onToggle, so we
   // set/clear the shared key explicitly rather than blindly inverting.
-  // The row uses items-stretch so all peer cards grow to match the
-  // tallest sibling's height. Previously only the clicked card revealed
-  // its pick preview, which left the other (force-stretched) peers
-  // showing empty space below their footer. Treat any `peer:*` key as
-  // "all peers expanded" so every card in the row reveals its preview
-  // in lockstep. We still record which card was clicked in `expandedKey`
-  // so Hide on any peer collapses the row back down cleanly.
-  const anyPeerExpanded = typeof expandedKey === 'string' && expandedKey.startsWith('peer:');
-  // When the user's own active battle card (`youvs`) is expanded, the peer
-  // cards in the row get force-stretched (items-stretch) to its taller
-  // height. Rather than leave empty space below their footers, expand their
-  // pick previews in lockstep — the user shouldn't have to click "Preview"
-  // on each neighbor when their own card is already open. The row expands
-  // and collapses as one unit.
-  const youVsExpanded = expandedKey === 'youvs';
-  const peerExpandedFor = useCallback((_battleId) => anyPeerExpanded || youVsExpanded, [anyPeerExpanded, youVsExpanded]);
+  // Per-card expansion: each card reveals its own preview independently and
+  // only the card you clicked grows. The row uses items-start (not stretch)
+  // so an expanded card extends downward without dragging its neighbors to
+  // the same height. An earlier revision expanded the whole row in lockstep
+  // (any `peer:*` OR `youvs` key expanded every card) to avoid empty space
+  // under force-stretched siblings — but the YOUR BATTLE (youvs) card has no
+  // pick preview to show, so previewing a neighbor stretched it into a blank
+  // empty container. items-start removes the stretch, so lockstep is no
+  // longer needed and each card only expands when it is the active key.
+  const peerExpandedFor = useCallback(
+    (battleId) => expandedKey === `peer:${battleId}`,
+    [expandedKey],
+  );
   const setPeerExpanded = useCallback((battleId) => (next) => {
+    const key = `peer:${battleId}`;
     setExpandedKey((prev) => {
-      if (next) return `peer:${battleId}`;
-      // Hide on any peer collapses the whole row (since the row expanded
-      // together, it should collapse together too) — including the case
-      // where the row was opened by expanding the youvs card.
-      if (prev === 'youvs' || (typeof prev === 'string' && prev.startsWith('peer:'))) return null;
-      return prev;
+      if (next) return key;
+      return prev === key ? null : prev;
     });
   }, []);
 
@@ -3589,7 +3583,7 @@ export default function LiveBattlesSection({
             viewport edges. On lg+ the row is clipped to the main column
             (lg:mx-0 / lg:pl-0) and wrapped in DesktopScrollRow so it never
             bleeds under the right sidebar — and gets a gutter scroll arrow. */}
-        <DesktopScrollRow innerClassName="flex gap-3 items-stretch overflow-x-auto lg:overflow-x-visible pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
+        <DesktopScrollRow innerClassName="flex gap-3 items-start overflow-x-auto lg:overflow-x-visible pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
           <div className="flex-shrink-0 w-[380px] flex lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[420px]">
             <YouVsCard
               youVsState={youVsState}
