@@ -228,6 +228,11 @@ export default function MyPicksPage() {
 
   // ---- Forfeit (surrender the active battle) ----
   const [showForfeit, setShowForfeit] = useState(false);
+  // Mobile "match progress" flip card — collapsed by default so the picks list
+  // leads. flipNonce re-triggers the flip animation on each toggle.
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [flipNonce, setFlipNonce] = useState(0);
+  const toggleProgress = () => { setProgressOpen((o) => !o); setFlipNonce((n) => n + 1); };
   const handleForfeit = async () => {
     try {
       const res = await fetch('/api/battles/forfeit', {
@@ -330,7 +335,7 @@ export default function MyPicksPage() {
     );
   };
 
-  const renderBalanceDuel = () => {
+  const renderBalanceDuel = ({ showBar = true } = {}) => {
     if (!matchup || !hasActiveMatchup) return null;
     const { startingBalance, myLive, oppLive } = battleBalances;
     const oppName = opponent?.username || 'Opponent';
@@ -355,59 +360,70 @@ export default function MyPicksPage() {
             <div className="text-right">{delta(oppLive - startingBalance)}</div>
           </div>
         </div>
-        <div className="relative h-3 rounded-full overflow-hidden" style={{ background: 'rgba(251,146,60,0.3)', border: `1px solid ${p.softBorder}` }}>
-          <div className="absolute inset-y-0 left-0 transition-all duration-500" style={{ width: `${myPct}%`, background: 'linear-gradient(90deg,#2563eb,#60a5fa)' }} />
-        </div>
+        {showBar && (
+          <div className="relative h-3 rounded-full overflow-hidden" style={{ background: 'rgba(251,146,60,0.3)', border: `1px solid ${p.softBorder}` }}>
+            <div className="absolute inset-y-0 left-0 transition-all duration-500" style={{ width: `${myPct}%`, background: 'linear-gradient(90deg,#2563eb,#60a5fa)' }} />
+          </div>
+        )}
         <div className="mt-1 text-[9px] uppercase tracking-wider font-bold text-center" style={{ color: p.faintText }}>Clash Coins · this battle</div>
       </div>
     );
   };
 
-  const renderStatTilesMobile = () => {
-    if (sortedBets.length === 0) return null;
-    const tile = (label, value, color) => (
-      <div className="rounded-xl px-2 py-2.5 text-center" style={{ background: `${color}1f`, border: `1px solid ${color}59` }}>
-        <div className="text-lg font-black leading-none" style={{ color }}>{value}</div>
-        <div className="text-[9px] uppercase tracking-wider font-bold mt-1" style={{ color: p.mutedText }}>{label}</div>
-      </div>
-    );
-    const money = (label, value, color) => (
-      <div className="rounded-xl px-3 py-2.5" style={{ background: p.innerSurface, border: `1px solid ${p.softBorder}` }}>
-        <div className="text-[9px] uppercase tracking-wider font-bold" style={{ color: p.mutedText }}>{label}</div>
-        <div className="text-base font-black inline-flex items-center gap-1" style={{ color }}><Coin color={color} />{formatMoney(value, 0)}</div>
-      </div>
-    );
-    return (
-      <div>
-        <div className="grid grid-cols-4 gap-2">
-          {tile('Open', counts.open, '#3b82f6')}
-          {tile('Won', counts.won, p.posGreen)}
-          {tile('Lost', counts.lost, '#f87171')}
-          {tile('Cashed', counts.cashedOut, '#fb923c')}
-        </div>
-        <div className="grid grid-cols-2 gap-2 mt-2">
-          {money('At Risk', counts.totalStake, isLight ? '#0f172a' : '#ffffff')}
-          {money('To Win', Math.max(0, counts.potentialPayout - counts.totalStake), p.posGreen)}
-        </div>
-      </div>
-    );
-  };
-
-  const renderInlineBanner = () => {
+  // Mobile active-battle card. Collapsed it's a slim "Active Battle · time"
+  // strip with a "Show match progress" button; tapping flips it to a clean
+  // progress view (VS + live balances, no progress bar) with an Apple-styled
+  // forfeit button. Replaces the old always-on hero + stat-tiles grid.
+  const renderMobileBattleCard = () => {
     if (!matchup || !hasActiveMatchup) return null;
     return (
-      <div className="rounded-2xl overflow-hidden mb-5" style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}`, boxShadow: p.hardShadow }}>
-        <div className="flex items-center justify-between px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(59,130,246,0.18), rgba(251,146,60,0.12))', borderBottom: `1px solid ${p.softBorder}` }}>
-          <span className="text-[11px] uppercase tracking-wider font-black" style={{ color: p.bodyText }}>Active Battle</span>
-          <span className="inline-flex items-center gap-1.5 text-lg font-black" style={{ color: p.bodyText }}>
-            <span className="text-sm" aria-hidden="true">⏱️</span>{formatTimeRemaining(timeRemaining)}
-          </span>
+      <div className="mb-5" style={{ perspective: '1400px' }}>
+        <div
+          key={flipNonce}
+          className="mp-flip rounded-2xl overflow-hidden"
+          style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}`, boxShadow: p.hardShadow }}
+        >
+          {progressOpen ? (
+            <>
+              <div className="flex items-center justify-between px-4 py-2.5" style={{ background: 'linear-gradient(90deg, rgba(59,130,246,0.18), rgba(251,146,60,0.12))', borderBottom: `1px solid ${p.softBorder}` }}>
+                <span className="inline-flex items-center gap-1.5 text-[13px] font-black" style={{ color: p.bodyText }}>
+                  <span className="text-sm" aria-hidden="true">⏱️</span>{formatTimeRemaining(timeRemaining)}
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: p.faintText }}>left</span>
+                </span>
+                <button type="button" onClick={toggleProgress}
+                  className="no-hover-effect inline-flex items-center gap-1 text-[12px] font-semibold rounded-full px-3 py-1.5"
+                  style={{ color: p.mutedText, background: isLight ? 'rgba(15,23,42,0.05)' : 'rgba(255,255,255,0.07)', letterSpacing: '-0.01em', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer' }}>
+                  Hide
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
+                </button>
+              </div>
+              <div className="p-4 flex flex-col gap-4">
+                {renderVsRow()}
+                <div className="pt-3" style={{ borderTop: `1px solid ${p.softBorder}` }}>{renderBalanceDuel({ showBar: false })}</div>
+                <button type="button" onClick={() => setShowForfeit(true)}
+                  className="no-hover-effect w-full inline-flex items-center justify-center gap-2 rounded-2xl py-3.5 text-[15px] font-semibold transition-transform active:scale-[0.98]"
+                  style={{ color: '#ff453a', background: isLight ? 'rgba(255,69,58,0.10)' : 'rgba(255,69,58,0.16)', letterSpacing: '-0.01em', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer' }}>
+                  Forfeit Battle
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: p.mutedText }}>Active Battle</div>
+                <div className="inline-flex items-center gap-1.5 text-lg font-black" style={{ color: p.bodyText }}>
+                  <span className="text-sm" aria-hidden="true">⏱️</span>{formatTimeRemaining(timeRemaining)}
+                </div>
+              </div>
+              <button type="button" onClick={toggleProgress}
+                className="no-hover-effect inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold flex-shrink-0 transition-transform active:scale-[0.97]"
+                style={{ color: '#fff', background: 'linear-gradient(135deg,#3b82f6,#2563eb)', letterSpacing: '-0.01em', boxShadow: '0 4px 14px rgba(37,99,235,0.35)', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer' }}>
+                Show match progress
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+              </button>
+            </div>
+          )}
         </div>
-        <div className="p-4 flex flex-col gap-4">
-          {renderVsRow()}
-          <div className="pt-3" style={{ borderTop: `1px solid ${p.softBorder}` }}>{renderBalanceDuel()}</div>
-        </div>
-        {renderForfeitBar()}
       </div>
     );
   };
@@ -1030,13 +1046,14 @@ export default function MyPicksPage() {
       <div className="lg:hidden min-h-screen" style={{ backgroundColor: p.pageBg }}>
         <TopNavbar />
         <div className="pt-3 sm:pt-4 px-4 sm:px-6 pb-24">
-          {renderInlineBanner()}
-          {sortedBets.length > 0 && (
-            <div className="rounded-2xl p-4 mb-5" style={{ background: p.cardSurface, border: `1px solid ${p.softBorder}`, boxShadow: p.hardShadow }}>
-              <div className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: p.mutedText }}>This Battle</div>
-              {renderStatTilesMobile()}
-            </div>
-          )}
+          <style>{`
+            @keyframes mpFlip {
+              from { transform: rotateY(-90deg); opacity: 0; }
+              to   { transform: rotateY(0deg); opacity: 1; }
+            }
+            .mp-flip { animation: mpFlip 0.4s cubic-bezier(0.22,1,0.36,1); transform-origin: center; backface-visibility: hidden; }
+          `}</style>
+          {renderMobileBattleCard()}
           {mobileBody}
         </div>
       </div>
