@@ -13,6 +13,7 @@
 
 import { useState, useEffect } from 'react';
 import UserAvatar from '../../UserAvatar';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 const BLUE = '#3b82f6';
 const ORANGE = '#fb923c';
@@ -22,6 +23,10 @@ const CARD_BG =
   'radial-gradient(ellipse 90% 60% at 50% 0%, rgba(59,130,246,0.10), transparent 60%),' +
   'radial-gradient(ellipse 90% 60% at 50% 100%, rgba(251,146,60,0.07), transparent 60%),' +
   'linear-gradient(180deg, #0b1020 0%, #070a14 100%)';
+const CARD_BG_LIGHT =
+  'radial-gradient(ellipse 90% 60% at 50% 0%, rgba(59,130,246,0.08), transparent 60%),' +
+  'radial-gradient(ellipse 90% 60% at 50% 100%, rgba(251,146,60,0.06), transparent 60%),' +
+  'linear-gradient(180deg, #ffffff 0%, #f4f6fb 100%)';
 
 export function rankFromWins(wins) {
   const w = Number(wins) || 0;
@@ -35,13 +40,14 @@ const fmt = (n) => Number(n || 0).toLocaleString();
 
 /* ─────────────────────────── primitives ─────────────────────────── */
 
-function CoinChip({ amount, label }) {
+function CoinChip({ amount, label, light = false }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold text-white"
+      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold"
       style={{
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.10)',
+        color: light ? '#0a0a0a' : '#fff',
+        background: light ? 'rgba(10,10,10,0.04)' : 'rgba(255,255,255,0.05)',
+        border: light ? '1px solid rgba(10,10,10,0.12)' : '1px solid rgba(255,255,255,0.10)',
       }}
     >
       <span
@@ -62,28 +68,29 @@ function CoinChip({ amount, label }) {
   );
 }
 
-function PiksMark() {
+function PiksMark({ light = false }) {
   return (
     <span
       className="font-extrabold lowercase tracking-tight"
-      style={{ fontSize: 18, color: '#fff', letterSpacing: '-0.02em' }}
+      style={{ fontSize: 18, color: light ? '#0a0a0a' : '#fff', letterSpacing: '-0.02em' }}
     >
       piks
     </span>
   );
 }
 
-// Dark premium card frame with a header row (piks logo · coin balance).
-export function FlowCard({ balance, balanceLabel, children, header = true }) {
+// Premium card frame with a header row (piks logo · coin balance). Dark by
+// default; pass `light` for the light-theme result splash.
+export function FlowCard({ balance, balanceLabel, children, header = true, light = false }) {
   return (
     <div
-      className="relative overflow-hidden text-white"
-      style={{ background: CARD_BG }}
+      className={`relative overflow-hidden ${light ? 'text-slate-900' : 'text-white'}`}
+      style={{ background: light ? CARD_BG_LIGHT : CARD_BG }}
     >
       {header && (
         <div className="flex items-center justify-between px-5 pt-5 pb-1">
-          <PiksMark />
-          <CoinChip amount={balance} label={balanceLabel} />
+          <PiksMark light={light} />
+          <CoinChip amount={balance} label={balanceLabel} light={light} />
         </div>
       )}
       <div className="relative z-10">{children}</div>
@@ -109,7 +116,7 @@ function RankBadge({ rank }) {
   );
 }
 
-function Fighter({ player, ring, crown, dimmed, size = 84, showRank = true }) {
+function Fighter({ player, ring, crown, dimmed, size = 84, showRank = true, light = false }) {
   const rank = showRank ? rankFromWins(player?.battleWins) : null;
   return (
     <div className="flex flex-col items-center gap-2 min-w-0" style={{ maxWidth: 140 }}>
@@ -139,7 +146,7 @@ function Fighter({ player, ring, crown, dimmed, size = 84, showRank = true }) {
           />
         </div>
       </div>
-      <span className="text-[11px] font-bold uppercase tracking-wide truncate max-w-[130px] text-center" style={{ color: '#e2e8f0' }}>
+      <span className="text-[11px] font-bold uppercase tracking-wide truncate max-w-[130px] text-center" style={{ color: light ? '#1e293b' : '#e2e8f0' }}>
         {player?.name || player?.username || 'Player'}
       </span>
       {rank && <RankBadge rank={rank} />}
@@ -193,6 +200,7 @@ export function FlowButton({ children, onClick, color = 'gold', trailing, disabl
     green: { bg: 'linear-gradient(180deg,#34d399,#059669)', fg: '#04140d', glow: 'rgba(16,185,129,0.45)' },
     blue: { bg: 'linear-gradient(180deg,#60a5fa,#2563eb)', fg: '#fff', glow: 'rgba(59,130,246,0.45)' },
     dark: { bg: 'rgba(255,255,255,0.06)', fg: '#e2e8f0', glow: 'transparent' },
+    slate: { bg: 'linear-gradient(180deg,#334155,#1e293b)', fg: '#fff', glow: 'rgba(30,41,59,0.30)' },
   };
   const p = palettes[color] || palettes.gold;
   return (
@@ -489,12 +497,18 @@ export function MatchWin({
   outcome = 'win', you, opp, balance, balanceLabel, prize,
   onPrimary, primaryLabel = 'View Results', secondary,
 }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const isWin = outcome === 'win';
   const isTie = outcome === 'tie';
   const headline = isWin ? 'You Win!' : isTie ? 'Draw' : 'You Lose';
-  const headColor = isWin ? GOLD : isTie ? '#cbd5e1' : '#f87171';
+  const headColor = isWin
+    ? (isLight ? '#b45309' : GOLD)
+    : isTie
+      ? (isLight ? '#475569' : '#cbd5e1')
+      : (isLight ? '#dc2626' : '#f87171');
   return (
-    <FlowCard balance={balance} balanceLabel={balanceLabel}>
+    <FlowCard balance={balance} balanceLabel={balanceLabel} light={isLight}>
       {isWin && (
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 overflow-hidden">
           {Array.from({ length: 16 }).map((_, i) => (
@@ -525,23 +539,28 @@ export function MatchWin({
             crown={isWin}
             size={96}
             showRank={false}
+            light={isLight}
           />
         </div>
 
         {isWin && (
           <div
             className="mx-auto mt-6 rounded-2xl px-5 py-4"
-            style={{ background: `${GREEN}14`, border: `1px solid ${GREEN}55`, maxWidth: 320 }}
+            style={{
+              background: isLight ? `${GREEN}12` : `${GREEN}14`,
+              border: `1px solid ${GREEN}${isLight ? '40' : '55'}`,
+              maxWidth: 320,
+            }}
           >
-            <div className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: GREEN }}>You Won</div>
-            <div className="mt-1 flex items-center justify-center gap-2 text-[26px] font-extrabold text-white">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: isLight ? '#047857' : GREEN }}>You Won</div>
+            <div className={`mt-1 flex items-center justify-center gap-2 text-[26px] font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
               {fmt(prize)} <span aria-hidden="true" style={{ fontSize: 18 }}>👑</span>
             </div>
           </div>
         )}
 
         <div className="mt-7 max-w-[320px] mx-auto">
-          <FlowButton color={isWin ? 'gold' : 'dark'} onClick={onPrimary}>{primaryLabel}</FlowButton>
+          <FlowButton color={isWin ? 'gold' : (isLight ? 'slate' : 'dark')} onClick={onPrimary}>{primaryLabel}</FlowButton>
           {secondary}
         </div>
       </div>

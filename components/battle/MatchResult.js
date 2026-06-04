@@ -4,6 +4,7 @@ import CoinRain from '../CoinRain';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { MatchWin } from './matchflow/MatchFlowScreens';
 
 function useCountUp(target, duration = 1000, shouldStart = false) {
@@ -159,8 +160,6 @@ function PlayerBlock({
   );
 }
 
-const REACTION_EMOJIS = ['👍', '🔥', '😂', '🎯', '👏'];
-const REACTION_TEXTS = ['GG', 'Nice!', 'Close one', 'WP'];
 const REACTION_TTL_MS = 1800;
 
 export default function MatchResult({
@@ -178,6 +177,8 @@ export default function MatchResult({
   highlightRematch = false,
 }) {
   const isBeta = useBetaMode();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const router = useRouter();
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
@@ -185,9 +186,6 @@ export default function MatchResult({
   const [copied, setCopied] = useState(false);
   const [myReactions, setMyReactions] = useState([]);
   const [oppReactions, setOppReactions] = useState([]);
-  const [customText, setCustomText] = useState('');
-  const [customSending, setCustomSending] = useState(false);
-  const [customError, setCustomError] = useState('');
   // Brief, non-blocking hint shown near the reaction strip when a canned tap
   // can't be sent (e.g., 429 burst limit, network/server error). Auto-clears.
   const [reactionHint, setReactionHint] = useState('');
@@ -199,7 +197,6 @@ export default function MatchResult({
   const tokenBucketRef = useRef({ tokens: 6, last: 0 });
   const TOKEN_CAPACITY = 6;
   const TOKEN_REFILL_MS = 350;
-  const lastCustomSendRef = useRef(0);
   const declineFiredRef = useRef(false);
 
   const isCompleted = matchup && matchup.status === 'completed';
@@ -439,31 +436,6 @@ export default function MatchResult({
     }
   }, [onSendReaction, scheduleReactionExpiry, showReactionHint]);
 
-  const sendCustomMessage = useCallback(async () => {
-    const trimmed = customText.replace(/\s+/g, ' ').trim();
-    if (!trimmed) return;
-    const now = Date.now();
-    if (now - lastCustomSendRef.current < 2500) {
-      setCustomError('Slow down a moment.');
-      return;
-    }
-    lastCustomSendRef.current = now;
-    setCustomSending(true);
-    setCustomError('');
-    try {
-      const r = await onSendReaction?.({ customText: trimmed });
-      if (r && r.error) {
-        // Preserve the draft so the user can edit/retry.
-        setCustomError(typeof r.error === 'string' ? r.error : 'Could not send');
-      } else {
-        setCustomText('');
-      }
-    } catch {
-      setCustomError('Could not send');
-    } finally {
-      setCustomSending(false);
-    }
-  }, [customText, onSendReaction]);
 
   const handleClose = useCallback(() => {
     // Treat closing without accepting as an implicit decline so the
@@ -639,7 +611,7 @@ export default function MatchResult({
       <div
         data-allow-fixed-overlay="true"
         className={`fixed inset-0 backdrop-blur-md z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto ${!isWinner && !isTie ? 'mr-shake' : ''}`}
-        style={{ background: 'rgba(0,0,0,0.9)', overscrollBehavior: 'contain' }}
+        style={{ background: isLight ? 'rgba(15,23,42,0.45)' : 'rgba(0,0,0,0.9)', overscrollBehavior: 'contain' }}
         onClick={handleClose}
       >
         <div
@@ -648,7 +620,7 @@ export default function MatchResult({
         >
 
           {/* Win / lose / draw outcome splash — premium match-flow screen */}
-          <div className="mb-5 rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="mb-5 rounded-2xl overflow-hidden" style={{ border: `1px solid ${isLight ? 'rgba(10,10,10,0.12)' : 'rgba(255,255,255,0.08)'}` }}>
             <MatchWin
               outcome={outcome}
               you={youPlayer}
@@ -662,16 +634,19 @@ export default function MatchResult({
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="py-2 rounded-lg text-sm font-bold text-gray-300 hover:text-white transition-colors"
-                    style={{ border: '1px solid #2a2a2a', background: 'rgba(255,255,255,0.03)' }}
+                    className={`py-2 rounded-lg text-sm font-bold transition-colors ${isLight ? 'text-slate-600 hover:text-slate-900' : 'text-gray-300 hover:text-white'}`}
+                    style={{
+                      border: `1px solid ${isLight ? 'rgba(10,10,10,0.12)' : '#2a2a2a'}`,
+                      background: isLight ? 'rgba(10,10,10,0.03)' : 'rgba(255,255,255,0.03)',
+                    }}
                   >
                     Exit
                   </button>
                   <button
                     type="button"
                     onClick={handleSummary}
-                    className="py-2 rounded-lg text-sm font-bold text-white transition-colors"
-                    style={{ border: '1px solid rgba(34,211,238,0.45)', background: 'rgba(34,211,238,0.12)' }}
+                    className={`py-2 rounded-lg text-sm font-bold transition-colors ${isLight ? 'text-cyan-700' : 'text-white'}`}
+                    style={{ border: '1px solid rgba(34,211,238,0.45)', background: isLight ? 'rgba(34,211,238,0.10)' : 'rgba(34,211,238,0.12)' }}
                   >
                     Summary
                   </button>
@@ -680,7 +655,7 @@ export default function MatchResult({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="mt-3 w-full py-2 text-sm font-bold text-gray-300 hover:text-white transition-colors"
+                  className={`mt-3 w-full py-2 text-sm font-bold transition-colors ${isLight ? 'text-slate-500 hover:text-slate-900' : 'text-gray-300 hover:text-white'}`}
                 >
                   Exit
                 </button>
@@ -692,18 +667,18 @@ export default function MatchResult({
             <div
               className={`mr-stats-card rounded-xl p-4 mb-5 space-y-3 ${highlight ? 'mr-result-highlight' : ''}`}
               style={{
-                background: '#0d0d0d',
-                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : '#1a1a1a'}`,
+                background: isLight ? '#ffffff' : '#0d0d0d',
+                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : (isLight ? 'rgba(10,10,10,0.12)' : '#1a1a1a')}`,
               }}
             >
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Buy-in</span>
-                <span className="font-medium text-white">${formatMoney(cashBuyIn)}</span>
+                <span className={`text-sm ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Buy-in</span>
+                <span className={`font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>${formatMoney(cashBuyIn)}</span>
               </div>
               {isWinner && prizeWon > 0 && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-400">Prize Won</span>
-                  <span className="text-emerald-400 font-bold text-lg">${formatMoney(animatedPrize)}</span>
+                  <span className={`text-sm ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Prize Won</span>
+                  <span className={`font-bold text-lg ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>${formatMoney(animatedPrize)}</span>
                 </div>
               )}
               {totalPendingCount > 0 && (
@@ -719,7 +694,7 @@ export default function MatchResult({
                     <div className="text-yellow-400 text-[11px] font-bold uppercase tracking-wide leading-tight">
                       {totalPendingCount} {totalPendingCount === 1 ? 'pik' : 'piks'} did not grade in time
                     </div>
-                    <div className="text-[11px] mt-0.5 leading-snug text-gray-300">
+                    <div className={`text-[11px] mt-0.5 leading-snug ${isLight ? 'text-slate-600' : 'text-gray-300'}`}>
                       {(() => {
                         const parts = [];
                         if (myPendingCount > 0) parts.push(`${myPendingCount} of yours`);
@@ -734,79 +709,6 @@ export default function MatchResult({
             </div>
           )}
 
-          {showStats && !isFakeOpponent && (
-            <div
-              className="mr-stats-card mb-3 rounded-xl px-3 py-2"
-              style={{ background: '#0d0d0d', border: '1px solid #1a1a1a' }}
-            >
-              <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                {REACTION_EMOJIS.map((e) => (
-                  <button
-                    key={e}
-                    type="button"
-                    onClick={() => sendReaction({ emoji: e })}
-                    className="mr-chip text-xl leading-none px-2 py-1.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
-                    aria-label={`Send ${e} reaction`}
-                  >
-                    {e}
-                  </button>
-                ))}
-                <div className="w-px h-6 bg-white/10 mx-1" />
-                {REACTION_TEXTS.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => sendReaction({ text: t })}
-                    className="mr-chip text-xs font-bold text-gray-200 px-2.5 py-1.5 rounded-full hover:bg-white/5 active:bg-white/10 transition-colors"
-                    style={{ border: '1px solid #2a2a2a' }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              {reactionHint && (
-                <div
-                  className="mt-1 text-[11px] text-amber-300/90 text-center select-none"
-                  role="status"
-                  aria-live="polite"
-                >
-                  {reactionHint}
-                </div>
-              )}
-              <form
-                className="mt-2 flex items-center gap-2"
-                onSubmit={(e) => { e.preventDefault(); sendCustomMessage(); }}
-              >
-                <input
-                  type="text"
-                  value={customText}
-                  onChange={(e) => { setCustomText(e.target.value); if (customError) setCustomError(''); }}
-                  maxLength={60}
-                  placeholder="Say something…"
-                  aria-label="Send a custom message"
-                  className="flex-1 min-w-0 text-sm text-white placeholder-gray-500 bg-black/40 rounded-full px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                  style={{ border: '1px solid #2a2a2a' }}
-                />
-                <span className="text-[10px] tabular-nums text-gray-500 select-none w-8 text-right">
-                  {Math.max(0, 60 - customText.length)}
-                </span>
-                <button
-                  type="submit"
-                  disabled={customSending || !customText.trim()}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${
-                    customSending || !customText.trim()
-                      ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                      : 'bg-cyan-500 text-black hover:bg-cyan-400'
-                  }`}
-                >
-                  Send
-                </button>
-              </form>
-              {customError && (
-                <div className="mt-1 text-[11px] text-red-400 text-left px-1">{customError}</div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </>

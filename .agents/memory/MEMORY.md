@@ -16,3 +16,4 @@
 - [Light-theme inline color trap](light-theme-inline-color.md) — hardcoded hex in inline style{} won't flip under html.light; use CSS vars or useTheme-computed color.
 - [Light theme overrides](light-theme-overrides.md) — light mode = class-based html.light rules in globals.css; inline styles & other dark hex classes (e.g. bg-[#0f1d3a]) stay dark unless explicitly matched.
 - [Currency rebrand](currency-rebrand.md) — Clash Coins (⚔) = in-matchup; Crowns (👑) = account/prize; rebrand only beta branch of isBeta ternaries, leave real-money $ flows alone.
+- [Match-flow primitives stay dark](matchflow-primitives-stay-dark.md) — shared FlowCard/Fighter/etc. never read global theme; gameplay flow stays dark, opt-in `light` prop only for result splash.
