@@ -47,11 +47,16 @@ The authentication flow covers beta access, NextAuth.js, JWT sessions, user prof
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM
 - **Payment Processing**: Stripe
-- **Sports Data**: Goalserve API (primary source)
-    - **Goalserve REST API**: Main data source for games and odds with caching.
-    - **Goalserve WebSocket**: Real-time scores and in-play odds.
+- **Betting Odds**: SharpSports betPrices API (`lib/sharpsports.js`)
+    - **Primary odds source.** Replaced Goalserve for moneyline/spread/total prices. Base `https://api.sharpsports.io/v1`, auth header `Authorization: Token <SHARPSPORTS_API_KEY>`.
+    - **Overlay architecture**: `/api/games` still builds the game list (IDs, teams, scores) from Goalserve, then `applySharpSportsOdds()` overlays SharpSports prices onto each game. SharpSports `/prices` returns only an `eventId` + markets, so `/events` is fetched to map `eventId → teams`, and each Goalserve game is fuzzy-matched to a SharpSports event by team names + start time (orientation-aware, so home/away never flip). On any miss the game keeps its existing Goalserve odds as fallback, so the board never goes blank.
+    - **Normalization**: only full-game `Moneyline`/`Spread`/`Total` markets are used (props, quarter/half, futures excluded); `main:true` prices preferred over alternate lines. Output matches the existing `lines` + `allBookmakerOdds` schema, so no frontend/schema changes. Per-league odds cached ~8s and de-duped across concurrent requests.
+    - **No scores**: SharpSports betPrices is odds-only (confirmed against the live API — no score/clock/status fields). Scores/schedule/possession stay on Goalserve.
+- **Sports Data**: Goalserve API (schedule + live scores)
+    - **Goalserve REST API**: Source of the game schedule, game IDs, and scores (no longer used for odds).
+    - **Goalserve WebSocket**: Real-time scores and in-play data.
     - **Goalserve Inplay HTTP Feeds**: Alternative real-time data.
-    - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL, Soccer, Euro Basketball, Int'l Hockey.
+    - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL, Soccer, Euro Basketball, Int'l Hockey. SharpSports odds overlay covers NBA/NFL/NCAAB/NCAAF/MLB/NHL.
     - **Zero-Delay SSR Architecture**: Instant rendering of live and scheduled games via SSR and continuous cache warming.
     - **Real-Time Possession Polling**: Dedicated service polls and broadcasts possession changes via SSE.
 - **Simulated Games Fallback**: `lib/simulated-games.js` generates demo games when Goalserve data is unavailable.
