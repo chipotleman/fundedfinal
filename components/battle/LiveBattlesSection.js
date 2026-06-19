@@ -3258,6 +3258,106 @@ function YouVsCard({
   );
 }
 
+// Your-stats card that sits beside the PLAY NOW card in the dashboard's
+// "Start a Battle" row. Replaces the old "other people's live battles"
+// peers — the row is now about YOUR battle: start one (PLAY NOW) and see
+// how you're doing (your record + win rate). Battle-only metrics so the
+// numbers are accurate (battleWins/battleLosses). Uses the same
+// `bc-surface` class as BattleCard so globals.css handles light theme
+// automatically (inline `color:#fff` → dark text, `background:#111` →
+// light tile in `html.light`).
+function YourStatsCard({ stats, currentUser, currentUserId, onViewProfile }) {
+  const wins = parseInt(stats?.battleWins, 10) || 0;
+  const losses = parseInt(stats?.battleLosses, 10) || 0;
+  const total = wins + losses;
+  const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+
+  const tiles = [
+    { label: 'Wins', value: wins, color: '#34d399' },
+    { label: 'Losses', value: losses, color: '#f87171' },
+    { label: 'Battles', value: total, color: '#fff' },
+  ];
+
+  return (
+    <div
+      className="bc-surface w-full h-full rounded-xl cursor-pointer flex flex-col"
+      onClick={onViewProfile}
+      style={{
+        backgroundColor: '#0d0d0d',
+        border: '1px solid rgba(16, 185, 129, 0.22)',
+        overflow: 'hidden',
+        transition: 'border-color 200ms ease',
+      }}
+    >
+      <div className="p-2.5 sm:p-3 flex flex-col flex-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <UserAvatar
+              user={{ id: currentUserId, username: currentUser?.username, avatar: currentUser?.avatar }}
+              size={34}
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 leading-tight">Your Stats</p>
+              <p className="text-sm font-bold truncate leading-tight" style={{ color: '#fff' }}>
+                {currentUser?.username || 'You'}
+              </p>
+            </div>
+          </div>
+          <span className="flex items-center gap-0.5 text-[11px] font-semibold text-emerald-400 flex-shrink-0">
+            Profile
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+
+        <div className="mb-2.5">
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Battle Win Rate</span>
+            <span className="text-2xl font-black tabular-nums" style={{ color: total > 0 ? '#34d399' : '#64748b' }}>
+              {winRate}%
+            </span>
+          </div>
+          <div className="w-full rounded-full overflow-hidden" style={{ height: 6, background: '#111' }}>
+            <div
+              style={{
+                width: `${winRate}%`,
+                height: '100%',
+                borderRadius: 999,
+                background: 'linear-gradient(90deg,#10b981,#34d399)',
+                transition: 'width 400ms ease',
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5 mt-auto">
+          {tiles.map((t) => (
+            <div
+              key={t.label}
+              className="rounded-lg flex flex-col items-center justify-center py-1.5"
+              style={{ background: '#111' }}
+            >
+              <span className="text-lg font-black tabular-nums leading-none" style={{ color: t.color }}>
+                {t.value}
+              </span>
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-500 mt-1">{t.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-2 text-center">
+          <span className="text-[10px] text-gray-500 font-medium">
+            {total > 0
+              ? `${total} ${total === 1 ? 'battle' : 'battles'} played`
+              : 'Play your first battle to start tracking'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LiveBattlesSection({
   compact = false,
   focusBattleId = null,
@@ -3272,6 +3372,7 @@ export default function LiveBattlesSection({
   friends = null,
   lastBuyIn = null,
   currentUser = null,
+  currentUserStats = null,
   onPlayFriendInviteSent = null,
   onPlayFriendInviteCancelled = null,
   onPrivateMatchJoined = null,
@@ -3389,6 +3490,12 @@ export default function LiveBattlesSection({
   // SSE is doing its job. Mirrors the recent-winners strip in pages/battle.js.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // The compact dashboard row ("Start a Battle") no longer renders other
+    // people's live battles — it shows the PLAY NOW card + the user's own
+    // stats card. So skip the live-battles fetch / SSE / fallback poll
+    // entirely in compact mode; this avoids needless background traffic and
+    // the now-irrelevant "Couldn't load this" retry hint surfacing there.
+    if (compact) return;
     let cancelled = false;
     let debounce = null;
     let fallback = null;
@@ -3577,16 +3684,6 @@ export default function LiveBattlesSection({
     : battles;
 
   if (compact) {
-    const ownMatchupId = youVsState?.matchup?.id || null;
-    const compactBattles = sortedBattles.filter(b => {
-      if (ownMatchupId && b.id === ownMatchupId) return false;
-      if (currentUserId) {
-        if (b.user1?.id && b.user1.id === currentUserId) return false;
-        if (b.user2?.id && b.user2.id === currentUserId) return false;
-      }
-      return true;
-    });
-    const featuredCount = compactBattles.length + (youVsState && youVsState.status !== 'idle' ? 1 : 0);
     return (
       <div className="mb-4">
         {/* Global keyframes / classes for the shared cartoon info chip
@@ -3598,16 +3695,15 @@ export default function LiveBattlesSection({
         <CartoonChipStyles />
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Featured Battles</span>
-            {featuredCount > 0 && (
-              <span className="text-green-400 text-[10px] font-semibold">{featuredCount}</span>
-            )}
+            <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Start a Battle</span>
           </div>
-          <button onClick={() => router.push('/battle')} className="text-blue-400 text-xs">
-            See All
+          <button
+            onClick={() => router.push(currentUserId ? `/profile/${currentUserId}` : '/battle')}
+            className="text-blue-400 text-xs"
+          >
+            {currentUserId ? 'View Profile' : 'See All'}
           </button>
         </div>
-        {retryHint}
         {/* Equal-height cards in the resting state so an "awaiting picks"
             card doesn't look short next to a fully-locked battle: when
             nothing is expanded the row uses `items-stretch` and every card's
@@ -3639,16 +3735,16 @@ export default function LiveBattlesSection({
               onPrivateMatchJoined={onPrivateMatchJoined}
             />
           </div>
-          {compactBattles.slice(0, 2).map(battle => (
-            <div key={battle.id} className="flex-shrink-0 w-[380px] flex lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[420px]">
-              <BattleCard
-                battle={battle}
-                compact
-                isExpanded={peerExpandedFor(battle.id)}
-                onToggle={setPeerExpanded(battle.id)}
+          {currentUserId && (
+            <div className="flex-shrink-0 w-[380px] flex lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[420px]">
+              <YourStatsCard
+                stats={currentUserStats}
+                currentUser={currentUser}
+                currentUserId={currentUserId}
+                onViewProfile={() => router.push(`/profile/${currentUserId}`)}
               />
             </div>
-          ))}
+          )}
         </DesktopScrollRow>
         <QuickMatchModal
           isOpen={!!matchFoundData}

@@ -394,6 +394,9 @@ export default function Dashboard() {
   // response that already powers the bankroll display so the modal
   // gets username/avatar/equipped frame without an extra fetch.
   const [profileSnapshot, setProfileSnapshot] = useState(null);
+  // Battle stats for the dashboard's "Start a Battle" row stats card.
+  // Sourced from the same /api/profiles fetch that powers the bankroll.
+  const [statsSnapshot, setStatsSnapshot] = useState(null);
   const [expandedGames, setExpandedGames] = useState({});
   // Desktop gate for the in-card odds sparkline — render (and therefore
   // mount/fetch) only at lg+ so mobile never spins up per-card polling.
@@ -536,6 +539,13 @@ export default function Dashboard() {
                 frameId: p.equippedFrame || null,
               });
             }
+            // Battle stats for the "Start a Battle" row's stats card. The
+            // profile API spreads the row at the top level, so battle
+            // win/loss counts live on `profile`, not the wrapped `p`.
+            setStatsSnapshot({
+              battleWins: parseInt(profile.battleWins, 10) || 0,
+              battleLosses: parseInt(profile.battleLosses, 10) || 0,
+            });
           }
         } catch (error) {
           console.error('Error fetching profile:', error);
@@ -1592,6 +1602,7 @@ export default function Dashboard() {
           friends={friendsList}
           lastBuyIn={lastBuyIn}
           currentUser={profileSnapshot || (user ? { id: user.id, username: user.username || user.name, avatar: user.avatar } : null)}
+          currentUserStats={statsSnapshot}
           onPlayFriendInviteSent={() => {
             // Refresh both: the friends list (its activeMatchupId
             // markers may have changed) and the remembered buy-in
