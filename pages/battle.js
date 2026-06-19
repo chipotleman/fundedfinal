@@ -98,6 +98,23 @@ export default function BattlePage() {
   }, [profileCache, router]);
 
   const [profile, setProfile] = useState(null);
+  // Cached NextAuth user from localStorage (`current_user`). The TopNavbar
+  // writes the session here for instant rendering and treats its presence as
+  // "logged in"; we mirror that so the feed's guest gating stays consistent
+  // with the nav — otherwise a logged-in user (nav shows their avatar) gets
+  // the "Sign up to share" guest state while `useSession()` is still
+  // loading / slow to resolve. Starts null on SSR + first client render to
+  // avoid a hydration mismatch, then hydrates in the effect below.
+  const [storedUser, setStoredUser] = useState(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('current_user');
+      setStoredUser(raw ? JSON.parse(raw) : null);
+    } catch {
+      setStoredUser(null);
+    }
+  }, [status]);
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState([]);
   const [invites, setInvites] = useState({ received: [], sent: [] });
@@ -166,8 +183,10 @@ export default function BattlePage() {
     setMessageFriend(friend);
   }, []);
   const closeMessagePopup = useCallback(() => setMessageFriend(null), []);
-  const isGuest = status !== 'authenticated';
-  const userId = session?.user?.id;
+  // Treat a cached `current_user` as logged-in too (matches TopNavbar), so the
+  // social feed never shows guest CTAs to a signed-in user mid session-load.
+  const isGuest = status !== 'authenticated' && !storedUser;
+  const userId = session?.user?.id || storedUser?.id || null;
   const debounceRef = useRef(null);
 
   useEffect(() => {
@@ -2067,11 +2086,11 @@ export default function BattlePage() {
               renderer and the page keeps owning data + side effects. */}
           <SocialFeedPage
             data={{
-              currentUser: profile ? {
+              currentUser: (profile || storedUser) ? {
                 id: userId,
-                username: profile.username || session?.user?.name,
-                avatar: profile.avatar,
-                frameId: profile.equippedFrame,
+                username: profile?.username || storedUser?.username || session?.user?.name || storedUser?.name,
+                avatar: profile?.avatar ?? storedUser?.avatar ?? storedUser?.image ?? null,
+                frameId: profile?.equippedFrame ?? storedUser?.equippedFrame,
               } : null,
               isGuest,
               activeMatchup,
