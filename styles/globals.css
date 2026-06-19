@@ -1077,6 +1077,7 @@ html.light .mobile-menu-drawer svg {
   --sf-text-primary: #f5f5f5;
   --sf-text-secondary: #9ca3af;
   --sf-text-muted: #6b7280;
+  --sf-crown-amount: #facc15;
   --sf-card-shadow: 0 1px 0 rgba(255, 255, 255, 0.02), 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 html.light .sf-root {
@@ -1090,6 +1091,7 @@ html.light .sf-root {
   --sf-text-primary: #0f172a;
   --sf-text-secondary: #475569;
   --sf-text-muted: #94a3b8;
+  --sf-crown-amount: #111111;
   --sf-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
@@ -1543,6 +1545,7 @@ html.light .piks-game-card svg[stroke="#4b5563"] {
   --rail-text: #f5f5f5;
   --rail-text-2: #9ca3af;
   --rail-text-3: #6b7280;
+  --rail-crown-amount: #facc15;
   /* Friend quick-action icon accents (Battle = orange, Message = cyan).
      Light theme uses deeper shades so the icons stay legible on white. */
   --rail-battle-bg: rgba(251, 146, 60, 0.14);
@@ -1558,6 +1561,7 @@ html.light .desktop-right-rail {
   --rail-text: #0f172a;
   --rail-text-2: #475569;
   --rail-text-3: #64748b;
+  --rail-crown-amount: #111111;
   --rail-battle-bg: rgba(234, 88, 12, 0.12);
   --rail-battle-border: rgba(234, 88, 12, 0.45);
   --rail-battle-icon: #c2410c;

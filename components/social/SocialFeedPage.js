@@ -2390,7 +2390,7 @@ function RightSidebar({
                       <span className="block text-[8px] font-semibold uppercase tracking-wider" style={{ color: textPrimary }}>
                         Crowns
                       </span>
-                      <span className="block text-[11px] font-bold" style={{ color: '#facc15' }}>
+                      <span className="block text-[11px] font-bold" style={{ color: 'var(--sf-crown-amount)' }}>
                         {l.profit >= 0 ? '+' : ''}{l.profit.toLocaleString()}
                       </span>
                     </span>
