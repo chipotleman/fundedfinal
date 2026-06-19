@@ -1270,9 +1270,11 @@ export default function Dashboard() {
     const pillDepthShadow = isLightTheme
       ? '0 1px 2px rgba(15,23,42,0.12), 0 3px 7px rgba(15,23,42,0.12), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 1px rgba(15,23,42,0.08)'
       : '0 2px 4px rgba(0,0,0,0.5), 0 5px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 2px rgba(0,0,0,0.45)';
-    const pillActiveShadow = isLightTheme
-      ? '0 3px 7px rgba(234,179,8,0.38), 0 7px 16px rgba(234,179,8,0.22), inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 2px rgba(120,53,15,0.18)'
-      : '0 3px 7px rgba(59,130,246,0.42), 0 7px 18px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -2px 2px rgba(0,0,0,0.5)';
+    // Active pills are indicated by the colored border alone — no colored
+    // drop-shadow "glow" (user feedback: the glow under clicked buttons looks
+    // bad). Reuse the neutral depth shadow so active vs. inactive pills share
+    // the same tactile depth and only the border color changes.
+    const pillActiveShadow = pillDepthShadow;
 
     // Build the per-variant list of pill sources. For the inline row
     // each league is its own pill; for the condensed bar we collapse
@@ -1355,9 +1357,7 @@ export default function Dashboard() {
             borderWidth: '1px',
             borderStyle: 'solid',
             borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937'),
-            boxShadow: selectedSport === 'Live'
-              ? (isLightTheme ? '0 3px 7px rgba(220,38,38,0.38), 0 7px 16px rgba(220,38,38,0.24), inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -2px 2px rgba(127,29,29,0.30)' : '0 3px 7px rgba(220,38,38,0.45), 0 7px 18px rgba(220,38,38,0.30), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -2px 2px rgba(0,0,0,0.5)')
-              : pillDepthShadow,
+            boxShadow: pillDepthShadow,
           }}
         >
           <span
