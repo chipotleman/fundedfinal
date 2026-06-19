@@ -2079,24 +2079,24 @@ function PiksNewsPromo() {
       className="block rounded-2xl overflow-hidden mb-3 transition-transform lg:hover:-translate-y-0.5"
       style={{ border: `1px solid ${border}`, background: surface, boxShadow: cardShadow }}
     >
-      <div className="px-4 py-3" style={{ background: 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)' }}>
+      <div className="px-4 py-3" style={{ background: 'linear-gradient(135deg, #facc15 0%, #eab308 100%)' }}>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center rounded-lg" style={{ width: 26, height: 26, background: 'rgba(255,255,255,0.22)' }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <span className="inline-flex items-center justify-center rounded-lg" style={{ width: 26, height: 26, background: 'rgba(26,21,5,0.16)' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1a1505" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M4 5h13a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" />
               <path d="M19 8h1a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2" />
               <line x1="7" y1="9" x2="14" y2="9" /><line x1="7" y1="13" x2="14" y2="13" /><line x1="7" y1="17" x2="11" y2="17" />
             </svg>
           </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.92)' }}>Introducing</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(26,21,5,0.75)' }}>Introducing</span>
         </div>
-        <div className="text-[18px] font-black leading-tight mt-1.5" style={{ color: '#ffffff' }}>Piks News</div>
+        <div className="text-[18px] font-black leading-tight mt-1.5" style={{ color: '#1a1505' }}>Piks News</div>
       </div>
       <div className="px-4 py-3">
         <p className="text-[12px] leading-snug" style={{ color: textSecondary }}>
           Sports headlines with the betting angle — injuries, line moves, and the storylines that actually move your piks.
         </p>
-        <span className="mt-2.5 inline-flex items-center gap-1.5 text-[12px] font-black" style={{ color: '#fb923c' }}>
+        <span className="mt-2.5 inline-flex items-center gap-1.5 text-[12px] font-black" style={{ color: '#ca8a04' }}>
           Explore Piks News
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -2145,7 +2145,7 @@ function SportsNewsRail() {
         <Link
           href="/news"
           className="text-[11px] font-semibold lg:hover:underline"
-          style={{ color: '#fb923c' }}
+          style={{ color: '#ca8a04' }}
         >
           View all
         </Link>

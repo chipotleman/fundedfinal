@@ -94,7 +94,7 @@ export default function NewsArticlePage() {
             <p className="text-sm mb-6" style={{ color: 'var(--sf-text-secondary)' }}>
               It may have rolled off the feed. Browse the latest instead.
             </p>
-            <Link href="/news" className="inline-block px-5 py-2.5 rounded-full font-bold text-sm" style={{ background: '#fb923c', color: '#0d1024' }}>
+            <Link href="/news" className="inline-block px-5 py-2.5 rounded-full font-bold text-sm" style={{ background: '#facc15', color: '#0d1024' }}>
               Back to Piks News
             </Link>
           </div>
@@ -124,7 +124,7 @@ export default function NewsArticlePage() {
 
             {/* The Gist */}
             <section className="rounded-2xl p-5 mb-5" style={CARD}>
-              <h2 className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#fb923c' }}>The Gist</h2>
+              <h2 className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#facc15' }}>The Gist</h2>
               {!ai ? <AiPulse /> : <p className="text-[15px] leading-relaxed">{ai.gist}</p>}
             </section>
 
@@ -145,8 +145,8 @@ export default function NewsArticlePage() {
 
             {/* Betting Angle */}
             {ai?.bettingAngle && (
-              <section className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(251,146,60,0.10)', border: '1px solid rgba(251,146,60,0.3)' }}>
-                <h2 className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#fb923c' }}>The Betting Angle</h2>
+              <section className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(250,204,21,0.10)', border: '1px solid rgba(250,204,21,0.3)' }}>
+                <h2 className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#facc15' }}>The Betting Angle</h2>
                 <p className="text-[15px] leading-relaxed">{ai.bettingAngle}</p>
               </section>
             )}
@@ -167,7 +167,7 @@ export default function NewsArticlePage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-shrink-0 text-center px-5 py-2.5 rounded-full font-bold text-sm"
-                style={{ background: '#fb923c', color: '#0d1024' }}
+                style={{ background: '#facc15', color: '#0d1024' }}
               >
                 Read full story →
               </a>
