@@ -696,16 +696,26 @@ export function NotificationsProvider({ children }) {
   }, []);
 
   const acceptInvite = useCallback(async (id) => {
+    // Returns a tagged result so callers can tell success from failure and
+    // surface the server's human-readable reason (expired / "already in a
+    // battle" / "already handled") instead of silently dismissing the popup.
+    //   success: { ok: true, matchup, matchupId, ... }
+    //   failure: { ok: false, error }
     try {
       const res = await fetch(`/api/battles/invite/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'accept' }),
       });
-      const data = res.ok ? await res.json() : null;
+      const json = await res.json().catch(() => null);
       refresh();
-      return data;
-    } catch { return null; }
+      if (!res.ok) {
+        return { ok: false, error: json?.error || 'Could not accept this invite.' };
+      }
+      return { ok: true, ...(json || {}) };
+    } catch {
+      return { ok: false, error: 'Network error. Please try again.' };
+    }
   }, [refresh]);
 
   const declineInvite = useCallback(async (id) => {

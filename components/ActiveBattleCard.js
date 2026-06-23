@@ -290,7 +290,7 @@ export default function ActiveBattleCard({
               </div>
               <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center mt-1 min-h-[14px]">{userName || '\u00A0'}</p>
               <p className={`text-[10px] md:text-xs font-bold leading-tight ${isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-yellow-400'}`}>
-                ${formatMoney(myBalanceNum, 0)}
+                ⚔ {formatMoney(myBalanceNum, 0)}
               </p>
             </div>
 
@@ -317,7 +317,7 @@ export default function ActiveBattleCard({
                   color: theme.prizeColor,
                   textShadow: `0 0 10px rgba(${theme.accentRgb},0.4)`,
                 }}>
-                  ${formatMoney(winnerPayout, 0)}
+                  👑 {formatMoney(winnerPayout, 0)}
                 </p>
               </div>
 
@@ -354,7 +354,7 @@ export default function ActiveBattleCard({
                 <p className="text-white text-[11px] md:text-xs font-bold truncate text-center">{opponent.username || 'Opponent'}</p>
               </div>
               <p className="text-[10px] md:text-xs font-bold text-red-400 leading-tight">
-                ${formatMoney(oppBalanceNum, 0)}
+                ⚔ {formatMoney(oppBalanceNum, 0)}
               </p>
             </div>
           </div>
@@ -457,7 +457,7 @@ export default function ActiveBattleCard({
                             color: theme.prizeColor,
                             textShadow: `0 0 15px rgba(${theme.accentRgb},0.5)`,
                           }}>
-                            ${formatMoney(winnerPayout, 0)}
+                            👑 {formatMoney(winnerPayout, 0)}
                           </p>
                         </div>
                       </div>
@@ -549,12 +549,12 @@ export default function ActiveBattleCard({
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Balance</span>
-                          <span className={`text-sm font-bold ${'text-white'}`}>${formatMoney(myBalanceNum, 0)}</span>
+                          <span className={`text-sm font-bold ${'text-white'}`}>⚔ {formatMoney(myBalanceNum, 0)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">P&L</span>
                           <span className={`text-sm font-bold ${myPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {myPnL >= 0 ? '+' : ''}${formatMoney(myPnL, 0)}
+                            {myPnL >= 0 ? '+' : ''}{formatMoney(myPnL, 0)} ⚔
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline">
@@ -578,12 +578,12 @@ export default function ActiveBattleCard({
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Balance</span>
-                          <span className={`text-sm font-bold ${'text-white'}`}>${formatMoney(oppBalanceNum, 0)}</span>
+                          <span className={`text-sm font-bold ${'text-white'}`}>⚔ {formatMoney(oppBalanceNum, 0)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">P&L</span>
                           <span className={`text-sm font-bold ${oppPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {oppPnL >= 0 ? '+' : ''}${formatMoney(oppPnL, 0)}
+                            {oppPnL >= 0 ? '+' : ''}{formatMoney(oppPnL, 0)} ⚔
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline">
@@ -592,7 +592,7 @@ export default function ActiveBattleCard({
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Staked</span>
-                          <span className={`text-sm font-bold ${'text-white'}`}>${formatMoney(oppStaked, 0)}</span>
+                          <span className={`text-sm font-bold ${'text-white'}`}>⚔ {formatMoney(oppStaked, 0)}</span>
                         </div>
                       </div>
                     </div>
@@ -631,7 +631,7 @@ export default function ActiveBattleCard({
                                   <span className="text-[10px] text-gray-500 ml-1.5">({formatOdds(bet.odds)})</span>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                  <span className="text-[10px] text-gray-500">${formatMoney(bet.stake, 0)}</span>
+                                  <span className="text-[10px] text-gray-500">⚔ {formatMoney(bet.stake, 0)}</span>
                                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                     bet.status === 'won' ? 'bg-green-500/15 text-green-400' :
                                     bet.status === 'lost' ? 'bg-red-500/15 text-red-400' :

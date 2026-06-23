@@ -2,8 +2,10 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import TapSurface from '../components/TapSurface';
+import { useTheme } from '../contexts/ThemeContext';
 import TeamLogo from '../components/TeamLogo';
 import LiveGameTimer from '../components/LiveGameTimer';
+import OddsHistoryChart from '../components/game/OddsHistoryChart';
 import DepositMatchContainer from '../components/DepositMatchContainer';
 import TrendingBetContainer from '../components/TrendingBetContainer';
 import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
@@ -22,6 +24,8 @@ import PromoCarousel from '../components/PromoCarousel';
 import { DEFAULT_PROMO_SLOTS, normalizePromoSlots } from '../lib/promoSlots';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
+import DesktopRightRail from '../components/desktop/DesktopRightRail';
+import DesktopScrollRow from '../components/desktop/DesktopScrollRow';
 import Footer from '../components/Footer';
 import { readLastBuyIn, fetchLastBuyIn } from '../utils/lastBattleBuyIn';
 import { inferLeague } from '../lib/leagueInference';
@@ -190,12 +194,19 @@ export default function Dashboard() {
   const isBeta = useBetaMode();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, hasFetchedOnce: gamesHasFetchedOnce, error: gamesError, lastUpdated, isDemoMode } = useGames();
-  const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup, myBalance: matchupMyBalance, opponentBalance: matchupOppBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl } = useMatchup();
+  const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup, myBalance: matchupMyBalance, opponentBalance: matchupOppBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl, loading: matchupLoading } = useMatchup();
+  const { theme: uiTheme } = useTheme();
+  const isLightTheme = uiTheme === 'light';
   const [selectedSport, setSelectedSport] = useState('Live');
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
   const [walkthroughDismissed, setWalkthroughDismissed] = useState(false);
   const [walkthroughDontShowAgain, setWalkthroughDontShowAgain] = useState(false);
+  // True when the user arrived here straight from the QuickMatchModal
+  // "MATCH READY" splash — that splash already showed the matched
+  // celebration, so the walkthrough opens on step 1 ("How it works")
+  // and the Back button can't return to the redundant step 0.
+  const [walkthroughSkipIntro, setWalkthroughSkipIntro] = useState(false);
   const closeWalkthrough = () => {
     if (walkthroughDontShowAgain && typeof window !== 'undefined') {
       try { window.localStorage.setItem('piks_battle_walkthrough_dismissed', '1'); } catch (_) {}
@@ -203,21 +214,34 @@ export default function Dashboard() {
     setShowBattleWalkthrough(false);
     setWalkthroughDismissed(true);
     setWalkthroughStep(0);
+    setWalkthroughSkipIntro(false);
   };
   const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
   const [promoSlots, setPromoSlots] = useState(() =>
     DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })),
   );
+  // Master switch for the whole promo row — when an admin turns it off the
+  // carousel is removed entirely and the page below shifts up. Defaults to
+  // OFF so the row stays hidden until an admin explicitly enables it (and so
+  // it never flashes on before the /api/promo-slots fetch resolves).
+  const [promoRowEnabled, setPromoRowEnabled] = useState(false);
 
   const battleStartedRetryRef = useRef(null);
+  // Guards the battleStarted effect so it initializes the walkthrough
+  // (step + skip-intro flag consumption) exactly once per query cycle —
+  // the effect also re-runs when `hasActiveMatchup` flips, and without
+  // this guard that re-run would reset the step back to 0 and re-show
+  // the intro the splash already covered.
+  const battleStartedHandledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     fetch('/api/promo-slots')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (cancelled || !data?.slots) return;
-        setPromoSlots(normalizePromoSlots(data.slots));
+        if (cancelled || !data) return;
+        if (data.slots) setPromoSlots(normalizePromoSlots(data.slots));
+        if (typeof data.rowEnabled === 'boolean') setPromoRowEnabled(data.rowEnabled);
       })
       .catch(() => {});
     return () => {
@@ -266,7 +290,39 @@ export default function Dashboard() {
   useModalScrollLock(showBattleWalkthrough, { restoreScroll: true });
 
   useEffect(() => {
-    if (router.query.battleStarted !== 'true') return;
+    if (router.query.battleStarted !== 'true') {
+      // Query cleared — reset the guard so the next battleStarted cycle
+      // re-initializes the walkthrough from scratch.
+      battleStartedHandledRef.current = false;
+      return;
+    }
+
+    // This effect also re-runs when `hasActiveMatchup` flips. On those
+    // re-runs only finish the URL cleanup once the matchup has hydrated —
+    // never re-initialize the walkthrough step (that would undo the
+    // skip-intro and flash step 0 back in).
+    if (battleStartedHandledRef.current) {
+      if (hasActiveMatchup) {
+        router.replace('/', undefined, { shallow: true });
+        if (battleStartedRetryRef.current) {
+          clearInterval(battleStartedRetryRef.current);
+          battleStartedRetryRef.current = null;
+        }
+      }
+      return;
+    }
+    battleStartedHandledRef.current = true;
+
+    // Always consume the one-shot "came from MATCH READY splash" flag
+    // FIRST — even if we bail on don't-show-again below — so it can never
+    // leak into a later, unrelated battleStarted cycle.
+    let cameFromSplash = false;
+    if (typeof window !== 'undefined') {
+      try {
+        cameFromSplash = window.sessionStorage.getItem('piks_battle_intro_seen') === '1';
+        if (cameFromSplash) window.sessionStorage.removeItem('piks_battle_intro_seen');
+      } catch (_) {}
+    }
 
     // Respect the user's "Don't show this again" preference — clear the
     // query string and bail before the walkthrough overlay ever renders.
@@ -275,10 +331,17 @@ export default function Dashboard() {
       return;
     }
 
-    // Open the overlay IMMEDIATELY so the dashboard underneath never
-    // flashes. The walkthrough renders a loading skeleton internally
-    // until the matchup payload finishes hydrating.
+    // Open the educational "How It Works" walkthrough right after the
+    // battle starts. When the user came straight from the QuickMatchModal
+    // "MATCH READY" splash, that splash already played the "You're Matched!"
+    // celebration — so skip the redundant intro (step 0, the duplicate
+    // match popup we removed) and open directly on step 1 ("How it works").
+    // Otherwise (rare non-modal battleStarted navigation) start at step 0.
+    // The walkthrough renders a loading skeleton internally until the
+    // matchup payload finishes hydrating, so the dashboard never flashes.
     window.scrollTo({ top: 0, behavior: 'auto' });
+    setWalkthroughSkipIntro(cameFromSplash);
+    setWalkthroughStep(cameFromSplash ? 1 : 0);
     setShowBattleWalkthrough(true);
 
     if (hasActiveMatchup) {
@@ -331,7 +394,21 @@ export default function Dashboard() {
   // response that already powers the bankroll display so the modal
   // gets username/avatar/equipped frame without an extra fetch.
   const [profileSnapshot, setProfileSnapshot] = useState(null);
+  // Battle stats for the dashboard's "Start a Battle" row stats card.
+  // Sourced from the same /api/profiles fetch that powers the bankroll.
+  const [statsSnapshot, setStatsSnapshot] = useState(null);
   const [expandedGames, setExpandedGames] = useState({});
+  // Desktop gate for the in-card odds sparkline — render (and therefore
+  // mount/fetch) only at lg+ so mobile never spins up per-card polling.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const apply = () => setIsDesktop(mq.matches);
+    apply();
+    mq.addEventListener ? mq.addEventListener('change', apply) : mq.addListener(apply);
+    return () => { mq.removeEventListener ? mq.removeEventListener('change', apply) : mq.removeListener(apply); };
+  }, []);
   const scrollPositionRef = useRef(0);
   const isFrozenRef = useRef(false);
 
@@ -462,6 +539,13 @@ export default function Dashboard() {
                 frameId: p.equippedFrame || null,
               });
             }
+            // Battle stats for the "Start a Battle" row's stats card. The
+            // profile API spreads the row at the top level, so battle
+            // win/loss counts live on `profile`, not the wrapped `p`.
+            setStatsSnapshot({
+              battleWins: parseInt(profile.battleWins, 10) || 0,
+              battleLosses: parseInt(profile.battleLosses, 10) || 0,
+            });
           }
         } catch (error) {
           console.error('Error fetching profile:', error);
@@ -1166,18 +1250,31 @@ export default function Dashboard() {
   // it, so both leagues remain reachable from the condensed bar.
   const renderSportPills = (variant = 'inline') => {
     const isCondensed = variant === 'condensed';
-    // When the Pik Slip is empty in the condensed sticky header, the
-    // bet-slip button is hidden and the pills row owns the full width
-    // — spread them evenly so the bar doesn't look lopsided. As soon
-    // as the user adds a pick, the bet-slip button mounts on the right
-    // and we collapse back to the natural left-packed layout.
-    const spreadEvenly = isCondensed && (betSlip?.length || 0) === 0;
+    // In the condensed sticky header the pills always stay left-packed with a
+    // tight gap. We used to spread them evenly (justify-between, full width)
+    // when the Pik Slip was empty, but that pushed the rightmost pill toward
+    // the edge where it collided with the Pik Slip button on phones. Keeping
+    // them snug + left-packed means the row scrolls cleanly and never overlaps
+    // the Pik Slip.
     // Match the inline pill sizing in the condensed bar too — earlier
     // we shrank them, but that made the condensed row look mismatched
     // against the desktop top-nav icons that sit alongside the pills.
     const pillPadding = '10px 16px';
     const pillFontSize = '14px';
     const iconSize = '16px';
+
+    // Pronounced 3D depth so the pills read as physically raised chips: a
+    // layered drop shadow (tight + soft) lifts them off the surface, a bright
+    // top-edge highlight (inset) bevels the upper rim, and a darker bottom-edge
+    // inset rounds the lower lip — together they sell a tactile, embossed look.
+    const pillDepthShadow = isLightTheme
+      ? '0 1px 2px rgba(15,23,42,0.12), 0 3px 7px rgba(15,23,42,0.12), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 1px rgba(15,23,42,0.08)'
+      : '0 2px 4px rgba(0,0,0,0.5), 0 5px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -2px 2px rgba(0,0,0,0.45)';
+    // Active pills are indicated by the colored border alone — no colored
+    // drop-shadow "glow" (user feedback: the glow under clicked buttons looks
+    // bad). Reuse the neutral depth shadow so active vs. inactive pills share
+    // the same tactile depth and only the border color changes.
+    const pillActiveShadow = pillDepthShadow;
 
     // Build the per-variant list of pill sources. For the inline row
     // each league is its own pill; for the condensed bar we collapse
@@ -1213,14 +1310,33 @@ export default function Dashboard() {
 
     return (
       <div
-        className={`flex items-center overflow-x-auto scrollbar-hide ${spreadEvenly ? 'justify-between gap-1.5 w-full' : 'space-x-2'} ${isCondensed ? '' : 'pb-1'}`}
+        className={`flex items-center overflow-x-auto scrollbar-hide ${isCondensed ? 'space-x-1 sm:space-x-2' : 'space-x-2 pb-1'}`}
         style={isCondensed ? { WebkitOverflowScrolling: 'touch' } : undefined}
       >
-        {isDemoMode && !isCondensed && (
-          <div className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10">
-            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
-            <span className="text-cyan-400 text-[10px] font-bold uppercase tracking-wider">Demo</span>
-          </div>
+        {!isCondensed && (
+          <button
+            type="button"
+            onClick={() => router.push('/battle')}
+            aria-label="Go to Social"
+            className="flex-shrink-0 flex items-center"
+            style={{
+              gap: '8px',
+              padding: pillPadding,
+              borderRadius: '9999px',
+              fontSize: pillFontSize,
+              fontWeight: '700',
+              color: '#1a1505',
+              background: 'linear-gradient(135deg, #facc15, #eab308)',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Social</span>
+          </button>
         )}
         <TapSurface
           onTap={() => handleSportClick('Live')}
@@ -1240,7 +1356,8 @@ export default function Dashboard() {
             fontWeight: '600',
             borderWidth: '1px',
             borderStyle: 'solid',
-            borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937')
+            borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937'),
+            boxShadow: pillDepthShadow,
           }}
         >
           <span
@@ -1260,7 +1377,9 @@ export default function Dashboard() {
           const isBundle = pill.sports.length > 1;
           const handleTap = () => {
             if (!isBundle) {
-              handleSportClick(pill.sports[0]);
+              // Toggle: re-tapping the already-active pill clears the filter
+              // back to the default "Live" view instead of staying stuck on.
+              handleSportClick(isActive ? 'Live' : pill.sports[0]);
               return;
             }
             // Bundled (condensed) pill: cycle through the leagues so
@@ -1309,9 +1428,9 @@ export default function Dashboard() {
               key={pill.key}
               onTap={handleTap}
               isActive={isActive}
-              activeColor={'#1a1a1a'}
+              activeColor={isLightTheme ? '#facc15' : '#1a1a1a'}
               inactiveColor="transparent"
-              activeTextColor={'#ffffff'}
+              activeTextColor={isLightTheme ? '#0a0a0a' : '#ffffff'}
               inactiveTextColor={'#9ca3af'}
               aria-label={labelList}
               title={isCondensed ? labelList : undefined}
@@ -1338,8 +1457,8 @@ export default function Dashboard() {
                 // soft glow instead of the previous near-invisible
                 // gray border. We use box-shadow for the ring so the
                 // pill width doesn't shift when active vs. inactive.
-                borderColor: isActive ? '#3b82f6' : '#1f2937',
-                boxShadow: 'none',
+                borderColor: isActive ? (isLightTheme ? '#eab308' : '#3b82f6') : '#1f2937',
+                boxShadow: isActive ? pillActiveShadow : pillDepthShadow,
                 transition: 'box-shadow 140ms ease-out, border-color 140ms ease-out',
               }}
             >
@@ -1375,8 +1494,8 @@ export default function Dashboard() {
                     height: 14,
                     padding: '0 3px',
                     borderRadius: 9999,
-                    backgroundColor: isActive ? '#3b82f6' : '#1f2937',
-                    color: '#ffffff',
+                    backgroundColor: isActive ? (isLightTheme ? '#facc15' : '#3b82f6') : '#1f2937',
+                    color: isActive && isLightTheme ? '#0a0a0a' : '#ffffff',
                     fontSize: 9,
                     fontWeight: 700,
                     lineHeight: '14px',
@@ -1407,7 +1526,7 @@ export default function Dashboard() {
         renderCondensedSportPills={() => renderSportPills('condensed')}
       />
 
-      <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
+      <div className="pt-3 sm:pt-2 lg:pt-2 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16 lg:max-w-[1600px] lg:mx-auto">
         {/* Carousel→pills gap halved per user feedback: was
             `mb-2 sm:mb-4` + `py-2` (16px mobile / 24px sm+), now
             `mb-1 sm:mb-2` + `py-1` (8px mobile / 12px sm+).
@@ -1415,9 +1534,11 @@ export default function Dashboard() {
             outer page padding so it runs edge-to-edge across the
             viewport — partial-card peeks should bleed off the screen,
             not stop short with a visible side gutter. */}
-        <div className="mb-1 sm:mb-2 -mx-4 sm:-mx-6 lg:-mx-8">
-          <PromoCarousel slides={promoSlides} />
-        </div>
+        {promoRowEnabled && (
+          <div className="mb-1 sm:mb-2 -mx-4 sm:-mx-6 lg:mx-0">
+            <PromoCarousel slides={promoSlides} />
+          </div>
+        )}
 
         {/* Sentinel: placed immediately above the inline sport-choice row.
             When this scrolls above the top of the viewport the condensed
@@ -1429,17 +1550,27 @@ export default function Dashboard() {
         />
 
         <div
-          className="piks-sports-pills-row -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-1 mb-3"
+          className="piks-sports-pills-row -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-0 py-1 mb-3"
           style={{ backgroundColor: '#000000' }}
         >
           {renderSportPills('inline')}
         </div>
 
+        {/* Two-column shell starts BELOW the full-width sport-pills band so the
+            pills span the entire content width (not just the main column) and
+            the Featured Battles / games column aligns top-level with the
+            right-rail cards instead of being pushed down by the pills. */}
+        <div className="lg:flex lg:gap-8">
+        <div className="lg:flex-1 lg:min-w-0">
         <LiveBattlesSection
           compact
           currentUserId={user?.id}
           balance={bankroll}
           youVsState={{
+            // Lets YouVsCard distinguish "not in a battle" from "matchup
+            // not loaded yet" so it shows a skeleton instead of flashing
+            // PLAY NOW before snapping to an active battle on refresh.
+            hydrated: !matchupLoading,
             status: hasActiveMatchup
               ? 'active'
               : isWaiting
@@ -1471,6 +1602,7 @@ export default function Dashboard() {
           friends={friendsList}
           lastBuyIn={lastBuyIn}
           currentUser={profileSnapshot || (user ? { id: user.id, username: user.username || user.name, avatar: user.avatar } : null)}
+          currentUserStats={statsSnapshot}
           onPlayFriendInviteSent={() => {
             // Refresh both: the friends list (its activeMatchupId
             // markers may have changed) and the remembered buy-in
@@ -1514,8 +1646,8 @@ export default function Dashboard() {
           // edges; inner left padding keeps the first card aligned
           // with the "Close Games" header above. Right side bleeds
           // so the trailing card peeks off-screen.
-          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:-mx-8 pl-4 sm:pl-6 lg:pl-8 pr-2">
-            {closeGames.map((game) => {
+          <DesktopScrollRow innerClassName="flex gap-2.5 overflow-x-auto lg:overflow-x-visible pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2">
+            {closeGames.slice(0, 4).map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               const isTightened = !!tightenedGames[game.id];
               const isLeadChange = !!leadChangedGames[game.id];
@@ -1532,7 +1664,7 @@ export default function Dashboard() {
               return (
                 <div 
                   key={game.id} 
-                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden flex flex-col piks-game-card ${pulseClass}`}
+                  className={`flex-shrink-0 w-[260px] lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[320px] rounded-xl overflow-hidden flex flex-col piks-game-card ${pulseClass}`}
                   style={{
                     backgroundColor: '#0d0d0d',
                     border: `1px solid ${accentBorder}`,
@@ -1640,7 +1772,7 @@ export default function Dashboard() {
                 </div>
               );
             })}
-          </div>
+          </DesktopScrollRow>
           )}
         </div>
         )}
@@ -1668,6 +1800,10 @@ export default function Dashboard() {
                 const isFinal = game.isCompleted || game.status === 'FINAL';
                 const hasAnyLines = game.lines && (game.lines.moneyline || game.lines.spread || game.lines.total);
                 const linesLocked = game.linesLocked || isFinal || !hasAnyLines;
+                const mlHome = game.lines?.moneyline?.home;
+                const mlAway = game.lines?.moneyline?.away;
+                const liveOdds = (mlHome != null && mlAway != null) ? { home: mlHome, away: mlAway } : null;
+                const showMiniChart = isDesktop && isLive && !linesLocked && liveOdds;
                 
                 return (
                   <div 
@@ -1680,7 +1816,14 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 text-[11px] font-medium">{game.league || sport}</span>
                           {game.isSimulated && (
-                            <span className="text-[9px] font-semibold text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">DEMO</span>
+                            <span
+                              className="text-[9px] font-semibold px-1.5 py-0.5 rounded border"
+                              style={{
+                                color: isLightTheme ? '#0e7490' : '#22d3ee',
+                                backgroundColor: isLightTheme ? 'rgba(14, 116, 144, 0.12)' : 'rgba(6, 182, 212, 0.1)',
+                                borderColor: isLightTheme ? 'rgba(14, 116, 144, 0.4)' : 'rgba(6, 182, 212, 0.2)',
+                              }}
+                            >DEMO</span>
                           )}
                           {isFinal ? (
                             <span className="text-gray-500 text-[11px] font-semibold">FINAL</span>
@@ -1698,30 +1841,53 @@ export default function Dashboard() {
                       </div>
                       
                       <div 
-                        className="mb-3 cursor-pointer -mx-1.5 px-1.5 py-0.5 rounded-lg transition-colors"
+                        className="mb-3 cursor-pointer -mx-1.5 px-1.5 py-0.5 rounded-lg transition-colors flex items-center gap-3"
                         onClick={() => router.push(`/game/${game.id}`)}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: 'calc(100% - 40px)' }}>
+                        <div className="min-w-0" style={{ flex: showMiniChart ? '0 1 auto' : '1 1 0%' }}>
+                          <div className="flex items-center gap-2 min-w-0 h-5 mb-1">
                             <TeamLogo name={game.awayTeamFull || game.awayTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={20} />
                             <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.awayTeamFull || game.awayTeam}</span>
                           </div>
-                          {(isLive || isFinal) ? (
-                            <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>
-                          ) : (
-                            <span className="text-gray-600 text-sm flex-shrink-0 ml-2">-</span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 min-w-0" style={{ maxWidth: 'calc(100% - 40px)' }}>
+                          <div className="flex items-center gap-2 min-w-0 h-5">
                             <TeamLogo name={game.homeTeamFull || game.homeTeam} sport={game.sport} sportName={game.sportName} league={game.league} size={20} />
                             <span className="font-medium text-sm truncate" style={{ color: '#ffffff' }}>{game.homeTeamFull || game.homeTeam}</span>
                           </div>
-                          {(isLive || isFinal) ? (
-                            <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>
-                          ) : (
-                            <span className="text-gray-600 text-sm flex-shrink-0 ml-2">-</span>
-                          )}
+                        </div>
+
+                        {showMiniChart && (
+                          <div className="flex items-center flex-1 min-w-0">
+                            <OddsHistoryChart
+                              mini
+                              gameId={game.id}
+                              homeTeam={game.homeTeam}
+                              awayTeam={game.awayTeam}
+                              homeTeamFull={game.homeTeamFull}
+                              awayTeamFull={game.awayTeamFull}
+                              sport={game.sport || sport}
+                              liveOdds={liveOdds}
+                              commenceTime={game.time}
+                              isLive={isLive}
+                              isFinal={isFinal}
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex-shrink-0 text-right">
+                          <div className="flex items-center justify-end h-5 mb-1">
+                            {(isLive || isFinal) ? (
+                              <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>
+                            ) : (
+                              <span className="text-gray-600 text-sm">-</span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-end h-5">
+                            {(isLive || isFinal) ? (
+                              <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>
+                            ) : (
+                              <span className="text-gray-600 text-sm">-</span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -1897,6 +2063,11 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+        </div>
+        </div>
+        <aside className="hidden lg:block lg:w-[330px] lg:flex-shrink-0">
+          <DesktopRightRail isLoggedIn={!!user} />
+        </aside>
         </div>
       </div>
 
@@ -2265,7 +2436,7 @@ export default function Dashboard() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-white text-sm font-extrabold flex items-center gap-1.5"><span aria-hidden="true">{s.icon}</span>{s.title}</p>
-                          <p className="text-gray-300 text-[11px] mt-0.5 leading-snug">{s.desc}</p>
+                          <p className="text-[12px] mt-0.5 leading-snug font-medium" style={{ color: '#e2e8f0' }}>{s.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -2325,7 +2496,7 @@ export default function Dashboard() {
                         }} aria-hidden="true">{t.icon}</div>
                         <div className="min-w-0">
                           <p className="text-white text-sm font-extrabold">{t.title}</p>
-                          <p className="text-gray-300 text-[11px] mt-0.5 leading-snug">{t.desc}</p>
+                          <p className="text-[12px] mt-0.5 leading-snug font-medium" style={{ color: '#e2e8f0' }}>{t.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -2336,7 +2507,7 @@ export default function Dashboard() {
 
             {/* CTA — big yellow cartoon button + Back */}
             <div className="px-5 pb-5 pt-2 flex-shrink-0 flex gap-2 items-stretch">
-              {walkthroughStep > 0 && (
+              {walkthroughStep > (walkthroughSkipIntro ? 1 : 0) && (
                 <button
                   onClick={() => setWalkthroughStep(walkthroughStep - 1)}
                   className="wt-back-btn py-3 px-4 rounded-2xl text-xs font-extrabold uppercase tracking-wider"
@@ -2475,21 +2646,45 @@ export default function Dashboard() {
   );
 }
 
-// Server-side rendering for ZERO delay game loading
-// Serve cached data instantly - never block on cache warming
+// Server-side rendering for ZERO delay game loading. Serves the warm
+// in-memory cache instantly; on a cold start it briefly warms + waits so the
+// first render still ships real games instead of skeletons.
 export async function getServerSideProps() {
   try {
     const { getInplayService } = require('../lib/goalserve-inplay');
-    const { getScheduledGamesForSSR } = require('../lib/goalserve-autostart');
-    
+    const {
+      getScheduledGamesForSSR,
+      initializeGoalservePolling,
+      waitForScheduleCache,
+    } = require('../lib/goalserve-autostart');
+
+    // Make sure the live + scheduled pollers are actually running. This is
+    // idempotent: on a warm server it's a no-op and the cache is already
+    // populated, so the reads below return instantly. Previously SSR read
+    // the cache but never started warming it, so the very first visitor
+    // after a server start always saw an empty page → skeletons → a slow
+    // client-side /api/games fetch. Kicking warming off here fixes that.
+    initializeGoalservePolling();
+
     const service = getInplayService();
-    
-    // Get whatever is cached RIGHT NOW - no waiting
+
+    // Block briefly for the SCHEDULED-games cache only. waitForScheduleCache
+    // returns the moment the first fetch settles (success OR failure) because
+    // it awaits the shared initialFetchPromise — so on a warm server, and even
+    // during an upstream outage once that first attempt is done, it's instant.
+    // It only truly blocks (bounded to 3s) on a genuine cold start while the
+    // first fetch is still in flight, which is exactly when we'd otherwise
+    // ship an empty skeleton page. We deliberately do NOT block on live
+    // (inplay) events: those are legitimately empty most of the time and
+    // stream in over SSE within ~1s, so waiting on them would add latency to
+    // every request for no benefit.
+    await waitForScheduleCache(3000);
+
     const events = service.getEventsForSSR();
     const scheduledGames = getScheduledGamesForSSR();
-    
-    console.log(`[Dashboard SSR] Serving ${events.length} live + ${scheduledGames.length} scheduled (instant)`);
-    
+
+    console.log(`[Dashboard SSR] Serving ${events.length} live + ${scheduledGames.length} scheduled`);
+
     return {
       props: {
         initialInplayEvents: events,

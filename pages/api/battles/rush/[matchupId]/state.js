@@ -1,131 +1,30 @@
 /**
  * GET /api/battles/rush/:matchupId/state
  *
- * Returns the current Rush mini-game state for a matchup, with the
- * current viewer's perspective applied (correct answers hidden for
- * questions still in flight).
- *
- * This endpoint is also the workhorse "tick" — every read advances the
- * server-authoritative timer if the active question's deadline has
- * passed (or if both players have answered). When the 6th question is
- * graded, the matchup is settled here (winner declared, payout written,
- * SSE matchup:end fan-out fired) so the existing /battle page result
- * popup picks up the rush completion through the same plumbing as
- * regular matchups.
- *
- * Bot opponents are also driven from this endpoint: if the matchup is
- * against a fake opponent, the bot is auto-readied (3s after the
- * ready_check phase opens) and auto-answers each question after a
- * randomized 4–12s delay so the human never sits waiting on a stub.
+ * Returns the current Rush mini-game state for a matchup from the
+ * viewer's perspective. This endpoint is also the workhorse "tick":
+ * every read rolls the server-authoritative state machine forward
+ * (accept → confirmed → picking → live → round_result → … → completed)
+ * and drives the bot opponent (auto-accept, auto-pick, auto-continue)
+ * so a human never sits waiting on a stub. When the match completes it
+ * is settled here (winner declared, payout written, SSE fan-out).
  */
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../../lib/auth';
 import { db } from '../../../../../lib/db';
 import { matchups, profiles } from '../../../../../shared/schema';
-import { eq, and, sql, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 const {
   buildInitialRushState,
-  resolveVotingIfReady,
-  markReady,
-  resolveReadyIfReady,
-  advanceIfReady,
-  gradeAnswer,
+  rollForward,
+  applyBotAutomation,
   publicView,
-  shouldCancelStaleReady,
+  shouldCancelStaleAccept,
   cancelStaleMatchup,
-  BOT_READY_DELAY_MS,
-  QUESTION_DURATION_MS,
 } = require('../../../../../lib/rush');
+const { commitRushMutation } = require('../../../../../lib/rushPersist');
 const { settleRushMatchup } = require('../../../../../lib/rushSettlement');
 const { publishBattleEvent } = require('../../../../../lib/battle-events');
-
-// Bot answer delay window — kept tight so the human isn't watching
-// "OPP …" sit there for 10s after they've already locked in. Bot
-// still takes long enough to feel like it's "thinking" and not auto.
-const BOT_ANSWER_MIN_MS = 1500;
-const BOT_ANSWER_MAX_MS = 4000;
-
-function applyBotAutomation(state, matchup) {
-  if (!matchup?.isFakeOpponent) return state;
-  const botId = matchup.user2Id;
-  if (!botId) return state;
-
-  // Apply a delayed bot vote (queued by /vote). The 3–5s pause makes
-  // the bot's pick feel human — the player sees their own check land
-  // first, then the bot's badge animates in a moment later instead of
-  // both flashing in at the same instant.
-  if (state.phase === 'voting' && state.pendingBotVote) {
-    const pv = state.pendingBotVote;
-    const applyAt = pv.applyAt ? new Date(pv.applyAt).getTime() : 0;
-    if (Date.now() >= applyAt && pv.botId === botId && !state.gameVotes?.[botId]) {
-      const newVotes = {
-        ...(state.gameVotes || {}),
-        [botId]: {
-          gameId: pv.gameId,
-          gameSnapshot: pv.gameSnapshot,
-          votedAt: new Date().toISOString(),
-        },
-      };
-      const { pendingBotVote, ...rest } = state;
-      return { ...rest, gameVotes: newVotes };
-    }
-  }
-
-  // Auto-ready the bot 3s after ready_check began.
-  if (state.phase === 'ready_check') {
-    const startedAt = state.readyStartedAt
-      ? new Date(state.readyStartedAt).getTime()
-      : Date.now();
-    if (Date.now() - startedAt >= BOT_READY_DELAY_MS && !state.readyVotes?.[botId]) {
-      return markReady(state, botId);
-    }
-    return state;
-  }
-
-  // Auto-answer the current question after a randomized delay.
-  if (state.phase === 'playing') {
-    const idx = state.currentQuestionIndex;
-    const question = state.questions?.[idx];
-    if (!question) return state;
-    const existing = state.answers?.[botId]?.[question.id];
-    if (existing) return state;
-
-    const startedAt = state.questionStartedAt
-      ? new Date(state.questionStartedAt).getTime()
-      : Date.now();
-    const elapsed = Date.now() - startedAt;
-    if (elapsed < BOT_ANSWER_MIN_MS) return state;
-
-    // Deterministic delay per question so multiple state reads agree
-    // on when the bot "answers" — derived from the question id so it
-    // doesn't shift between polls on the same question.
-    const seed = (question.id || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    const rng = (seed % 1000) / 1000; // 0..1
-    const delay = BOT_ANSWER_MIN_MS + rng * (BOT_ANSWER_MAX_MS - BOT_ANSWER_MIN_MS);
-    if (elapsed < delay) return state;
-
-    const optionKeys = (question.options || []).map(o => o.key);
-    if (optionKeys.length === 0) return state;
-    // Bot picks "randomly" — but seeded per question id so multiple
-    // reads on the same question pick the same answer (preventing
-    // race-condition flickering between polls).
-    const pickIdx = (seed + 7) % optionKeys.length;
-    const botPick = optionKeys[pickIdx];
-    const graded = gradeAnswer(question, botPick, elapsed);
-    return {
-      ...state,
-      answers: {
-        ...state.answers,
-        [botId]: {
-          ...(state.answers?.[botId] || {}),
-          [question.id]: graded,
-        },
-      },
-    };
-  }
-
-  return state;
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -139,107 +38,70 @@ export default async function handler(req, res) {
   const { matchupId } = req.query;
 
   try {
-    const [matchup] = await db.select().from(matchups).where(eq(matchups.id, matchupId));
-    if (!matchup) return res.status(404).json({ error: 'Matchup not found' });
-    if (matchup.user1Id !== userId && matchup.user2Id !== userId) {
-      return res.status(403).json({ error: 'Not a participant' });
-    }
-    if (matchup.durationType !== 'rush') {
-      return res.status(400).json({ error: 'Not a rush matchup' });
-    }
-
-    const ctx = { user1Id: matchup.user1Id, user2Id: matchup.user2Id };
-    let state = matchup.rushState;
-
-    // Lazy-init: the rushState column is null until the first state read.
-    if (!state) {
-      state = buildInitialRushState({ hostUserId: matchup.user1Id });
-      await db.update(matchups).set({ rushState: state, updatedAt: new Date() }).where(eq(matchups.id, matchupId));
-    }
-
-    // Backfill: very old ready_check states from before stale-cancel
-    // shipped may not have a readyStartedAt timestamp. Without it the
-    // stale-cancel timer never starts, so a user could still be stuck
-    // forever. If we land in ready_check with no startedAt, set it now
-    // so the timer begins from this poll instead of never. New states
-    // get this set inside resolveVotingIfReady.
-    if (state.phase === 'ready_check' && !state.readyStartedAt) {
-      state = { ...state, readyStartedAt: new Date().toISOString() };
-    }
-
-    // Roll forward through any expired phases. All helpers are pure and
-    // idempotent — running them on every read is cheap.
-    let next = resolveVotingIfReady(state, ctx);
-    next = applyBotAutomation(next, matchup);
-    // The bot vote may have just landed — re-resolve voting so we
-    // transition to ready_check in the same tick instead of waiting
-    // an extra poll cycle.
-    next = resolveVotingIfReady(next, ctx);
-    next = resolveReadyIfReady(next, ctx);
-    next = applyBotAutomation(next, matchup);
-    next = advanceIfReady(next, ctx);
-    // Hard escape: if the ready_check has been stuck for too long
-    // (opponent ghosted), auto-cancel so the user isn't trapped on the
-    // ready screen forever. Bot opponents auto-ready well before this
-    // fires, so this only matters for human-vs-human.
-    const wantsCancel = shouldCancelStaleReady(next);
-    if (wantsCancel) {
-      next = cancelStaleMatchup(next);
-    }
-
-    const stateChanged = JSON.stringify(next) !== JSON.stringify(state);
-
-    if (wantsCancel) {
-      // Race-safe cancellation: only commit if the on-disk row is still
-      // in ready_check (i.e. a concurrent /ready POST hasn't just
-      // advanced us to 'playing'). The conditional WHERE prevents us
-      // from clobbering a legitimate playing/completed/cancelled row
-      // with a stale snapshot. If the row already moved on, we re-read
-      // and use that as the source of truth.
-      const updated = await db
-        .update(matchups)
-        .set({ rushState: next, status: 'cancelled', endsAt: new Date(), updatedAt: new Date() })
-        .where(and(
-          eq(matchups.id, matchupId),
-          sql`${matchups.rushState}->>'phase' = 'ready_check'`,
-        ))
-        .returning({ id: matchups.id });
-      if (updated.length > 0) {
-        state = next;
-        // Reflect the persisted status locally so the JSON response
-        // we build below is internally consistent (rush.phase ===
-        // 'cancelled' AND matchup.status === 'cancelled').
-        matchup.status = 'cancelled';
-        try {
-          const recipients = [matchup.user1Id, matchup.user2Id].filter(Boolean);
-          publishBattleEvent(recipients, {
-            type: 'matchup:rush:update',
-            matchupId,
-            phase: 'cancelled',
-          });
-        } catch (_e) {}
-      } else {
-        // Concurrent advance won — re-read and use that.
-        const [fresh] = await db.select().from(matchups).where(eq(matchups.id, matchupId));
-        if (fresh) {
-          matchup.status = fresh.status;
-          matchup.rushState = fresh.rushState;
-          state = fresh.rushState || state;
-        }
+    let didCancel = false;
+    const result = await commitRushMutation(matchupId, (matchup) => {
+      if (matchup.user1Id !== userId && matchup.user2Id !== userId) {
+        return { abort: true, status: 403, body: { error: 'Not a participant' } };
       }
-    } else if (stateChanged) {
-      await db.update(matchups).set({ rushState: next, updatedAt: new Date() }).where(eq(matchups.id, matchupId));
-      state = next;
+      if (matchup.durationType !== 'rush') {
+        return { abort: true, status: 400, body: { error: 'Not a rush matchup' } };
+      }
+
+      const ctx = { matchupId, user1Id: matchup.user1Id, user2Id: matchup.user2Id };
+      const state = matchup.rushState || buildInitialRushState({ hostUserId: matchup.user1Id });
+
+      // Roll the machine forward, then let the bot act, then roll again so
+      // a bot action (accept/pick/continue) resolves in the same tick.
+      let next = rollForward(state, ctx);
+      next = applyBotAutomation(next, matchup);
+      next = rollForward(next, ctx);
+
+      // Hard escape: a human who ghosts the accept screen would otherwise
+      // trap the other player forever. Bots auto-accept well before this.
+      const wantsCancel = shouldCancelStaleAccept(next);
+      if (wantsCancel) next = cancelStaleMatchup(next);
+
+      const changed = matchup.rushState == null || JSON.stringify(next) !== JSON.stringify(matchup.rushState);
+      if (!changed) return { changed: false };
+
+      didCancel = wantsCancel;
+      const extraSet = wantsCancel ? { status: 'cancelled', endsAt: new Date() } : undefined;
+      return { next, extraSet };
+    });
+
+    if (result.abort) return res.status(result.status).json(result.body);
+    if (!result.ok) {
+      if (result.code === 'not_found') return res.status(404).json({ error: 'Matchup not found' });
+      return res.status(409).json({ error: 'Conflict, please retry' });
     }
 
-    // If we just transitioned to 'completed' and the matchup hasn't been
-    // settled yet, settle it now. settleRushMatchup is idempotent.
-    // CRITICAL: never let a settlement failure 500 the state read — the
-    // client is mid-game and needs the completed-phase payload to render
-    // the result screen. Settlement will be retried on the next poll.
+    const matchup = result.matchup;
+    const ctx = { matchupId, user1Id: matchup.user1Id, user2Id: matchup.user2Id };
+    let state = result.state || matchup.rushState;
+
+    if (result.changed) {
+      if (didCancel) matchup.status = 'cancelled';
+      try {
+        const recipients = [matchup.user1Id, matchup.user2Id].filter(Boolean);
+        publishBattleEvent(recipients, {
+          type: 'matchup:rush:update',
+          matchupId,
+          phase: didCancel ? 'cancelled' : state.phase,
+          roundIndex: state.roundIndex,
+        });
+      } catch (_e) {}
+    }
+
+    // Settle on completion (idempotent). Never let settlement failure
+    // 500 the read — the client needs the completed payload to render.
     if (state.phase === 'completed' && matchup.status !== 'completed') {
       try {
-        await settleRushMatchup(matchup.id);
+        const settled = await settleRushMatchup(matchup.id);
+        if (settled) {
+          matchup.status = settled.status;
+          matchup.winnerId = settled.winnerId;
+          matchup.winnerType = settled.winnerType;
+        }
       } catch (settleErr) {
         console.error('[rush/state] settleRushMatchup failed (non-fatal, will retry):', settleErr?.message || settleErr);
       }
@@ -247,10 +109,7 @@ export default async function handler(req, res) {
 
     const view = publicView(state, { ...ctx, viewerId: userId });
 
-    // Surface lightweight player profiles so the rush voting overlay
-    // can render a real "VS lobby" header (avatars + usernames) for
-    // both players. Without this the overlay can only label slots
-    // "YOU"/"OPP" — fine for state badges but bland as a lobby.
+    // Lightweight player profiles for the VS header.
     const playerIds = [matchup.user1Id, matchup.user2Id].filter(Boolean);
     let player1 = null;
     let player2 = null;
@@ -265,7 +124,6 @@ export default async function handler(req, res) {
       } catch (_e) {}
     }
     if (matchup.isFakeOpponent && !player2 && matchup.user2Id) {
-      // Bot opponent fallback — give the lobby something to render.
       player2 = { id: matchup.user2Id, username: 'Bot Opponent', avatar: null };
     }
 

@@ -1,275 +1,241 @@
 import ReactDOM from 'react-dom';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import { useTheme } from '../../contexts/ThemeContext';
 import haptic from '../../utils/haptics';
 
-// Cartoon-themed mode picker. Chunky black outlines, drop-shadow lifts,
-// bold uppercase labels, and gradient sticker backgrounds in the same
-// blue / orange / emerald palette the CartoonChip primitive uses on the
-// Featured Battles cards. Replaces the older flat-card treatment so the
-// modal feels like part of the same product as the YouVsCard and the
-// QuickMatchModal chip selectors. Purple is intentionally avoided per
-// the project's no-purple-gradients preference.
+// Compact, cartoon-styled "How do you want to battle?" mode picker. It is a
+// small centered popup (NOT a full-page takeover): thick black outlines, bold
+// flat color buttons, and a hard offset drop-shadow that shrinks on press for
+// the bouncy cartoon feel. No images / emojis — pure markup + CSS so it paints
+// instantly. Adapts to both app themes (light + dark) via the `bmc-light` /
+// `bmc-dark` class on the shell. Purple is intentionally avoided; every hover
+// lift is gated under @media (hover: hover) so touch devices stay flat, and all
+// motion is disabled under prefers-reduced-motion.
 
-const MODES = [
-  {
-    key: 'quick',
-    label: 'Quick Match',
-    sub: 'Find a random opponent',
-    color: 'blue',
-    palette: { from: '#60a5fa', to: '#2563eb', text: '#0d1024', glow: 'rgba(59,130,246,0.55)' },
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ width: 22, height: 22 }}>
-        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-  },
-  {
-    key: 'friend',
-    label: 'Challenge Friend',
-    sub: 'Invite a friend to battle',
-    color: 'orange',
-    palette: { from: '#fbbf24', to: '#f97316', text: '#2a1404', glow: 'rgba(249,115,22,0.55)' },
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ width: 22, height: 22 }}>
-        <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
-  {
-    key: 'private',
-    label: 'Private Match',
-    sub: 'Create a room with a code',
-    color: 'emerald',
-    palette: { from: '#34d399', to: '#059669', text: '#022c1f', glow: 'rgba(16,185,129,0.55)' },
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ width: 22, height: 22 }}>
-        <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-      </svg>
-    ),
-  },
-];
+const Chevron = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }} aria-hidden="true">
+    <polyline points="9 6 15 12 9 18" />
+  </svg>
+);
 
-export default function BattleModeChooser({ isOpen, onClose, onPickQuickMatch, onPickChallengeFriend, onPickPrivateMatch }) {
+export default function BattleModeChooser({
+  isOpen,
+  onClose,
+  onPickQuickMatch,
+  onPickChallengeFriend,
+  onPickPrivateMatch,
+  // currentUser is accepted for API compatibility but intentionally unused.
+  currentUser = null,
+}) {
   useModalScrollLock(isOpen);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
 
-  const handlers = {
-    quick: onPickQuickMatch,
-    friend: onPickChallengeFriend,
-    private: onPickPrivateMatch,
-  };
-
-  const handlePick = (key) => {
+  const pick = (fn) => {
     haptic.tap();
-    const fn = handlers[key];
     if (typeof fn === 'function') fn();
   };
 
   const content = (
     <div
       data-allow-fixed-overlay="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 cartoon-chooser-overlay"
+      className="bmc-overlay"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Choose battle mode"
+      aria-label="How do you want to battle?"
     >
       <div
-        className="cartoon-chooser-card w-full max-w-sm"
+        className={`bmc-shell ${isLight ? 'bmc-light' : 'bmc-dark'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="cartoon-chooser-header">
-          <span className="cartoon-chooser-title">Choose Battle Mode</span>
-          <span className="cartoon-chooser-subtitle">Pick how you want to play</span>
-        </div>
-
-        <div className="cartoon-chooser-options">
-          {MODES.map((m) => (
-            <button
-              key={m.key}
-              type="button"
-              onClick={() => handlePick(m.key)}
-              className={`cartoon-chooser-option cartoon-chooser-option-${m.color} no-hover-effect`}
-              style={{
-                background: `linear-gradient(135deg, ${m.palette.from} 0%, ${m.palette.to} 100%)`,
-                color: m.palette.text,
-                boxShadow: `0 5px 0 #0a0a0a, 0 0 18px ${m.palette.glow}`,
-              }}
-            >
-              <span
-                className="cartoon-chooser-icon"
-                style={{ color: m.palette.text }}
-                aria-hidden="true"
-              >
-                {m.icon}
-              </span>
-              <span className="cartoon-chooser-text">
-                <span className="cartoon-chooser-label">{m.label}</span>
-                <span className="cartoon-chooser-sub" style={{ color: m.palette.text, opacity: 0.78 }}>{m.sub}</span>
-              </span>
-              <span className="cartoon-chooser-arrow" aria-hidden="true" style={{ color: m.palette.text }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </span>
-            </button>
-          ))}
-        </div>
-
         <button
           type="button"
+          className="bmc-close no-hover-effect"
           onClick={() => { haptic.tap(); onClose(); }}
-          className="cartoon-chooser-cancel no-hover-effect"
+          aria-label="Close"
         >
-          Cancel
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" style={{ width: 18, height: 18 }}>
+            <line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" />
+          </svg>
         </button>
+
+        <div className="bmc-header">
+          <h2 className="bmc-title">How do you want to battle?</h2>
+          <p className="bmc-subtitle">Pick your opponent. Win.</p>
+        </div>
+
+        <div className="bmc-options">
+          <button type="button" className="bmc-opt bmc-blue no-hover-effect" onClick={() => pick(onPickQuickMatch)}>
+            <span className="bmc-opt-text">
+              <span className="bmc-mode">Quick Match</span>
+              <span className="bmc-desc">Get matched with a random player — fastest way to play.</span>
+            </span>
+            <span className="bmc-chev"><Chevron /></span>
+          </button>
+
+          <button type="button" className="bmc-opt bmc-red no-hover-effect" onClick={() => pick(onPickChallengeFriend)}>
+            <span className="bmc-opt-text">
+              <span className="bmc-mode">Challenge Friend</span>
+              <span className="bmc-desc">Send a challenge and battle a friend head-to-head.</span>
+            </span>
+            <span className="bmc-chev"><Chevron /></span>
+          </button>
+
+          <button type="button" className="bmc-opt bmc-green no-hover-effect" onClick={() => pick(onPickPrivateMatch)}>
+            <span className="bmc-opt-text">
+              <span className="bmc-mode">Private Match</span>
+              <span className="bmc-desc">Create a room and battle with a code — you're in control.</span>
+            </span>
+            <span className="bmc-chev"><Chevron /></span>
+          </button>
+        </div>
       </div>
 
       <style jsx>{`
-        .cartoon-chooser-card {
-          position: relative;
-          background: #0d0d0d;
-          border: 3px solid #000000;
-          border-radius: 24px;
-          padding: 22px 18px 18px;
-          box-shadow: 0 10px 0 #000000, 0 14px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.04) inset;
-          animation: cartoonChooserPop 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-        }
-        .cartoon-chooser-header {
-          text-align: center;
-          margin-bottom: 16px;
-        }
-        .cartoon-chooser-title {
-          display: block;
-          color: #ffffff;
-          font-weight: 900;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          font-size: 18px;
-          line-height: 1.1;
-          text-shadow: 0 2px 0 #000;
-        }
-        .cartoon-chooser-subtitle {
-          display: block;
-          margin-top: 6px;
-          color: rgba(229, 231, 235, 0.65);
-          font-size: 11px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-        .cartoon-chooser-options {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .cartoon-chooser-option {
-          position: relative;
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          width: 100%;
-          padding: 14px 14px;
-          border-radius: 18px;
-          border: 2.5px solid #000000;
-          text-align: left;
-          cursor: pointer;
-          transform-origin: center;
-          transition: transform 120ms ease, box-shadow 120ms ease;
-          will-change: transform;
-        }
-        .cartoon-chooser-option:active {
-          transform: translateY(2px);
-          box-shadow: 0 2px 0 #0a0a0a !important;
-        }
-        @media (hover: hover) {
-          .cartoon-chooser-option:hover {
-            transform: translateY(-2px) rotate(-0.4deg);
-          }
-          .cartoon-chooser-option-friend:hover {
-            transform: translateY(-2px) rotate(0.4deg);
-          }
-        }
-        .cartoon-chooser-icon {
-          flex-shrink: 0;
-          width: 40px;
-          height: 40px;
-          border-radius: 14px;
-          background: rgba(255, 255, 255, 0.22);
-          border: 2px solid rgba(0, 0, 0, 0.55);
+        .bmc-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 60;
           display: flex;
           align-items: center;
           justify-content: center;
+          overflow-y: auto;
+          padding: 20px 16px;
+          background: rgba(3, 7, 18, 0.55);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          animation: bmcFade 160ms ease both;
         }
-        .cartoon-chooser-text {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          min-width: 0;
-        }
-        .cartoon-chooser-label {
-          font-weight: 900;
-          font-size: 15px;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          line-height: 1.1;
-          text-shadow: 0 1px 0 rgba(255, 255, 255, 0.18);
-        }
-        .cartoon-chooser-sub {
-          font-weight: 700;
-          font-size: 11px;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          line-height: 1.2;
-        }
-        .cartoon-chooser-arrow {
-          flex-shrink: 0;
-          opacity: 0.85;
-        }
-        .cartoon-chooser-cancel {
-          margin-top: 14px;
+        .bmc-shell {
+          position: relative;
           width: 100%;
-          padding: 12px 0;
-          border-radius: 14px;
-          background: transparent;
-          border: 2px solid #1f2937;
-          color: rgba(229, 231, 235, 0.85);
-          font-weight: 800;
-          font-size: 12px;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
+          max-width: 380px;
+          margin: auto;
+          padding: 22px 20px 20px;
+          border-radius: 22px;
+          border: 3px solid #0a0a0a;
+          animation: bmcPop 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .bmc-light {
+          background: #fffdf7;
+          box-shadow: 7px 7px 0 #0a0a0a;
+        }
+        .bmc-dark {
+          background: #1b2230;
+          box-shadow: 7px 7px 0 #000000;
+        }
+
+        .bmc-close {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          border: 2.5px solid #0a0a0a;
           cursor: pointer;
-          transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+          z-index: 3;
+          transition: transform 120ms ease;
         }
-        .cartoon-chooser-cancel:active {
-          transform: translateY(1px);
-          background: rgba(31, 41, 55, 0.6);
-          color: #ffffff;
-        }
+        .bmc-light .bmc-close { background: #ffffff; color: #0a0a0a; box-shadow: 2px 2px 0 #0a0a0a; }
+        .bmc-dark .bmc-close { background: #2b3446; color: #f8fafc; box-shadow: 2px 2px 0 #000000; }
+        .bmc-close:active { transform: translate(2px, 2px); box-shadow: none; }
         @media (hover: hover) {
-          .cartoon-chooser-cancel:hover {
-            background: rgba(31, 41, 55, 0.5);
-            color: #ffffff;
-          }
+          .bmc-close:hover { transform: translate(-1px, -1px); }
         }
-        @keyframes cartoonChooserPop {
-          0%   { transform: scale(0.85) rotate(-1.5deg); opacity: 0; }
-          70%  { transform: scale(1.04) rotate(0.5deg); opacity: 1; }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+
+        .bmc-header { text-align: center; margin: 2px 6px 18px; }
+        .bmc-title {
+          margin: 0;
+          font-weight: 900;
+          font-style: italic;
+          letter-spacing: 0.01em;
+          line-height: 1.1;
+          font-size: 22px;
+        }
+        .bmc-light .bmc-title { color: #0a0a0a; }
+        .bmc-dark .bmc-title { color: #f8fafc; text-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+        .bmc-subtitle {
+          margin: 7px 0 0;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          font-size: 10.5px;
+        }
+        .bmc-light .bmc-subtitle { color: #64748b; }
+        .bmc-dark .bmc-subtitle { color: #94a3b8; }
+
+        .bmc-options { display: flex; flex-direction: column; gap: 14px; }
+        .bmc-opt {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          width: 100%;
+          text-align: left;
+          padding: 14px 14px;
+          border-radius: 16px;
+          border: 3px solid #0a0a0a;
+          color: #ffffff;
+          cursor: pointer;
+          box-shadow: 5px 5px 0 #0a0a0a;
+          transition: transform 120ms ease, box-shadow 120ms ease;
+        }
+        .bmc-blue { background: #3b82f6; }
+        .bmc-red { background: #ef4444; }
+        .bmc-green { background: #10b981; }
+
+        .bmc-opt:active { transform: translate(5px, 5px); box-shadow: 0 0 0 #0a0a0a; }
+        @media (hover: hover) {
+          .bmc-opt:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #0a0a0a; }
+        }
+
+        .bmc-opt-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+        .bmc-mode {
+          font-weight: 900;
+          font-style: italic;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
+          font-size: 16px;
+          text-shadow: 0 1.5px 0 rgba(0, 0, 0, 0.28);
+        }
+        .bmc-desc {
+          font-size: 12px;
+          line-height: 1.3;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.92);
+        }
+        .bmc-chev {
+          flex-shrink: 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 9px;
+          background: rgba(0, 0, 0, 0.22);
+          border: 2px solid rgba(0, 0, 0, 0.35);
+        }
+
+        @keyframes bmcFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes bmcPop {
+          0% { transform: scale(0.92) translateY(8px); opacity: 0; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .cartoon-chooser-card {
-            animation: none;
-          }
-          .cartoon-chooser-option,
-          .cartoon-chooser-cancel {
-            transition: none;
-          }
+          .bmc-overlay, .bmc-shell { animation: none; }
+          .bmc-opt, .bmc-close { transition: none; }
         }
       `}</style>
     </div>
   );
+
   return ReactDOM.createPortal(content, document.body);
 }

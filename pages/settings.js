@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
+import { useTheme } from '../contexts/ThemeContext';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import PushSettingsSection from '../components/notifications/PushSettingsSection';
@@ -57,12 +58,14 @@ const DEFAULTS = {
 };
 
 function Toggle({ value, onChange }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   return (
     <button
       type="button"
       onClick={() => onChange(!value)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        value ? 'bg-blue-500' : 'bg-[#222]'
+        value ? 'bg-blue-500' : (isLight ? 'bg-slate-300' : 'bg-[#222]')
       }`}
       aria-pressed={value}
     >
@@ -99,6 +102,8 @@ function Toast({ toast, onClose }) {
 
 export default function Settings() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const { data: session, status } = useSession();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { setOddsFormat, setAnalyticsOptOut, refresh: refreshPrefs } = useUserPreferences();
@@ -241,28 +246,14 @@ export default function Settings() {
     }
     if (kind === 'banner') setUploadingBanner(true); else setUploadingAvatar(true);
     try {
-      const urlRes = await fetch('/api/uploads/request-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type, kind }),
-      });
-      if (!urlRes.ok) {
-        const data = await urlRes.json().catch(() => ({}));
-        if (urlRes.status === 413) throw new Error('That image is too large.');
-        await reportUploadFailure(kind, urlRes.status, data);
-        throw new Error(uploadFailureMessage(urlRes.status, data));
-      }
-      const { uploadURL, objectPath } = await urlRes.json();
-      const up = await fetch(uploadURL, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-      if (!up.ok) throw new Error('Upload failed. Please try a different image.');
-      if (kind === 'banner') update('bannerUrl', objectPath);
-      else update('avatar', objectPath);
+      const { uploadToBlob } = await import('../utils/blobUpload');
+      const { url } = await uploadToBlob(file, { kind });
+      if (kind === 'banner') update('bannerUrl', url);
+      else update('avatar', url);
     } catch (err) {
-      showToast(err.message || 'Upload failed. Please try again.', 'error');
+      const status = err?.status || 0;
+      await reportUploadFailure(kind, status, { error: err?.message });
+      showToast(uploadFailureMessage(status, { error: err?.message }), 'error');
     } finally {
       if (kind === 'banner') setUploadingBanner(false); else setUploadingAvatar(false);
     }
@@ -306,19 +297,35 @@ export default function Settings() {
     }
   }
 
+  const pageBg = isLight ? 'bg-[#f5f1ea]' : 'bg-[#0d0d0d]';
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center">
+      <div className={`min-h-screen ${pageBg} flex items-center justify-center`}>
         <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  const sectionClass = 'bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-6 sm:p-8 mb-8';
-  const inputClass = 'w-full bg-[#1a1a1a] text-white px-3 py-2 rounded-lg border border-[#222] focus:border-blue-400 focus:outline-none';
+  const sectionClass = isLight
+    ? 'bg-white backdrop-blur-lg rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 mb-8'
+    : 'bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-6 sm:p-8 mb-8';
+  const inputClass = isLight
+    ? 'w-full bg-[#f5f1ea] text-slate-900 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-400 focus:outline-none'
+    : 'w-full bg-[#1a1a1a] text-white px-3 py-2 rounded-lg border border-[#222] focus:border-blue-400 focus:outline-none';
+  const headingColor = isLight ? 'text-slate-900' : 'text-white';
+  const labelStrong = isLight ? 'text-slate-900' : 'text-white';
+  const dividerColor = isLight ? 'border-slate-200' : 'border-[#1a1a1a]';
+  const chipClass = isLight ? 'bg-slate-100 border border-slate-300' : 'bg-[#1a1a1a] border border-[#222]';
+  const subtleBtn = isLight
+    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+    : 'bg-[#1a1a1a] hover:bg-[#222] text-white border border-[#222]';
+  const optionInactive = isLight
+    ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+    : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]';
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d]">
+    <div className={`min-h-screen ${pageBg}`}>
       <TopNavbar
         bankroll={15450}
         pnl={2450}
@@ -330,11 +337,11 @@ export default function Settings() {
 
       <div className="pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
+          <h1 className={`text-3xl font-bold ${headingColor} mb-8`}>Settings</h1>
 
           {/* Profile */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-6">Profile</h2>
+            <h2 className={`text-xl font-bold ${headingColor} mb-6`}>Profile</h2>
 
             <div className="space-y-5">
               <div className="text-xs text-gray-500">
@@ -345,7 +352,7 @@ export default function Settings() {
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">Avatar</label>
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full overflow-hidden bg-[#1a1a1a] border border-[#222] flex items-center justify-center">
+                  <div className={`w-16 h-16 rounded-full overflow-hidden ${chipClass} flex items-center justify-center`}>
                     {form.avatar ? (
                       <img src={form.avatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
@@ -364,7 +371,7 @@ export default function Settings() {
                       type="button"
                       onClick={() => avatarInputRef.current?.click()}
                       disabled={uploadingAvatar}
-                      className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#1a1a1a] border border-[#222] text-gray-200"
+                      className={`text-xs font-medium px-3 py-1.5 rounded-md ${subtleBtn}`}
                     >
                       {uploadingAvatar ? 'Uploading…' : 'Upload image'}
                     </button>
@@ -425,7 +432,7 @@ export default function Settings() {
 
           {/* Account */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-6">Account</h2>
+            <h2 className={`text-xl font-bold ${headingColor} mb-6`}>Account</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">Email</label>
@@ -438,7 +445,7 @@ export default function Settings() {
                   type="button"
                   onClick={sendPasswordReset}
                   disabled={resetting}
-                  className="w-full sm:w-auto bg-[#1a1a1a] hover:bg-[#222] text-white font-medium py-2.5 px-4 rounded-lg border border-[#222]"
+                  className={`w-full sm:w-auto ${subtleBtn} font-medium py-2.5 px-4 rounded-lg`}
                 >
                   {resetting ? 'Sending…' : 'Send password reset email'}
                 </button>
@@ -464,10 +471,10 @@ export default function Settings() {
 
           {/* Preferences */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-6">Preferences</h2>
+            <h2 className={`text-xl font-bold ${headingColor} mb-6`}>Preferences</h2>
             <div>
               <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">Odds format</label>
-              <div className="inline-flex rounded-lg border border-[#222] overflow-hidden">
+              <div className={`inline-flex rounded-lg border ${dividerColor} overflow-hidden`}>
                 {[
                   { id: 'american', label: 'American (-110 / +120)' },
                   { id: 'decimal', label: 'Decimal (1.91 / 2.20)' },
@@ -479,7 +486,7 @@ export default function Settings() {
                       type="button"
                       onClick={() => update('oddsFormat', opt.id)}
                       className={`px-4 py-2 text-sm font-medium ${
-                        active ? 'bg-blue-500 text-white' : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
+                        active ? 'bg-blue-500 text-white' : optionInactive
                       }`}
                     >
                       {opt.label}
@@ -506,13 +513,13 @@ export default function Settings() {
 
           {/* Social */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-1">Social</h2>
+            <h2 className={`text-xl font-bold ${headingColor} mb-1`}>Social</h2>
             <p className="text-sm text-gray-500 mb-6">Shown on your public profile so other players can find you.</p>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">Instagram handle</label>
                 <div className="flex items-center">
-                  <span className="px-3 py-2 bg-[#1a1a1a] border border-r-0 border-[#222] text-gray-400 rounded-l-lg">@</span>
+                  <span className={`px-3 py-2 border border-r-0 rounded-l-lg ${isLight ? 'bg-slate-100 border-slate-300 text-slate-500' : 'bg-[#1a1a1a] border-[#222] text-gray-400'}`}>@</span>
                   <input
                     type="text"
                     value={form.instagramHandle}
@@ -556,14 +563,14 @@ export default function Settings() {
 
           {/* Gameplay */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-2">Gameplay</h2>
+            <h2 className={`text-xl font-bold ${headingColor} mb-2`}>Gameplay</h2>
             <p className="text-gray-400 text-sm mb-6">
               Per-device safeguards for paid actions. Saved on this
               browser only — flip these on each device you use.
             </p>
             <div className="flex items-center justify-between py-3">
               <div className="pr-4">
-                <div className="text-white font-medium">
+                <div className={`${labelStrong} font-medium`}>
                   Confirm before starting a paid battle
                 </div>
                 <div className="text-gray-400 text-sm">
@@ -582,7 +589,7 @@ export default function Settings() {
 
           {/* Lead-change cues */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-2">In-app cues</h2>
+            <h2 className={`text-xl font-bold ${headingColor} mb-2`}>In-app cues</h2>
             <p className="text-gray-400 text-sm mb-6">
               Quick buzzes and blips for live moments — like a close game flipping its
               leader, or unlocking a new achievement. All cues respect your device&apos;s
@@ -590,9 +597,9 @@ export default function Settings() {
             </p>
             <div className="space-y-4">
               {LEAD_CUE_LABELS.map(([key, label, desc, storageKey]) => (
-                <div key={key} className="flex items-center justify-between py-3 border-b border-[#1a1a1a] last:border-0">
+                <div key={key} className={`flex items-center justify-between py-3 border-b ${dividerColor} last:border-0`}>
                   <div className="pr-4">
-                    <div className="text-white font-medium">{label}</div>
+                    <div className={`${labelStrong} font-medium`}>{label}</div>
                     <div className="text-gray-400 text-sm">{desc}</div>
                   </div>
                   <Toggle
@@ -606,12 +613,12 @@ export default function Settings() {
 
           {/* Notifications */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-6">Notifications</h2>
+            <h2 className={`text-xl font-bold ${headingColor} mb-6`}>Notifications</h2>
             <div className="space-y-4">
               {Object.entries(NOTIF_LABELS).map(([key, [label, desc]]) => (
-                <div key={key} className="flex items-center justify-between py-3 border-b border-[#1a1a1a] last:border-0">
+                <div key={key} className={`flex items-center justify-between py-3 border-b ${dividerColor} last:border-0`}>
                   <div className="pr-4">
-                    <div className="text-white font-medium">{label}</div>
+                    <div className={`${labelStrong} font-medium`}>{label}</div>
                     <div className="text-gray-400 text-sm">{desc}</div>
                   </div>
                   <Toggle
@@ -635,12 +642,12 @@ export default function Settings() {
 
           {/* Privacy */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-6">Privacy</h2>
+            <h2 className={`text-xl font-bold ${headingColor} mb-6`}>Privacy</h2>
             <div className="space-y-4">
               {Object.entries(PRIVACY_LABELS).map(([key, [label, desc]]) => (
-                <div key={key} className="flex items-center justify-between py-3 border-b border-[#1a1a1a] last:border-0">
+                <div key={key} className={`flex items-center justify-between py-3 border-b ${dividerColor} last:border-0`}>
                   <div className="pr-4">
-                    <div className="text-white font-medium">{label}</div>
+                    <div className={`${labelStrong} font-medium`}>{label}</div>
                     <div className="text-gray-400 text-sm">{desc}</div>
                   </div>
                   <Toggle
@@ -649,9 +656,9 @@ export default function Settings() {
                   />
                 </div>
               ))}
-              <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a] last:border-0">
+              <div className={`flex items-center justify-between py-3 border-b ${dividerColor} last:border-0`}>
                 <div className="pr-4">
-                  <div className="text-white font-medium">Don&apos;t track my activity</div>
+                  <div className={`${labelStrong} font-medium`}>Don&apos;t track my activity</div>
                   <div className="text-gray-400 text-sm">
                     Stops page views, clicks, and promo impressions/clicks from
                     being sent for analytics. Your bets and account activity are

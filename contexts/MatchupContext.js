@@ -1,13 +1,64 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 const MatchupContext = createContext(null);
 
+// useLayoutEffect warns during SSR; fall back to useEffect on the server so
+// the client still gets a pre-paint flip without the warning.
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
+// Persist the last-known matchup status so a returning user can render the
+// correct card on the very first paint instead of waiting for the
+// /api/matchups/current round-trip. The YouVsCard otherwise shows a
+// loading skeleton until `loading` flips false, which made the idle
+// "PLAY NOW" box visibly load on every refresh. By caching the status we
+// can skip that skeleton for the common idle case while still keeping it
+// for users who were mid-battle (so they never flash "PLAY NOW" on refresh).
+const MATCHUP_STATUS_CACHE_KEY = 'piks:lastMatchupStatus';
+// Full last-known matchup payload. Caching only the *status* lets us skip the
+// skeleton for idle users, but a user mid-battle still flashed skeleton →
+// battle card because the card had no data to render until the
+// /api/matchups/current round-trip resolved. Persisting the resolved payload
+// lets the isomorphic layout effect paint the real "YOUR BATTLE" card on the
+// very first frame; the background fetch then reconciles it to fresh data.
+const MATCHUP_DATA_CACHE_KEY = 'piks:lastMatchupData';
+const BATTLE_STATUSES = ['active', 'matched', 'waiting', 'queued'];
+
+function readCachedMatchupStatus() {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(MATCHUP_STATUS_CACHE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+function readCachedMatchupData() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(MATCHUP_DATA_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Only trust a cached payload that still describes an in-battle state —
+    // anything else falls back to the skeleton/fetch path.
+    if (parsed && BATTLE_STATUSES.includes(parsed.status)) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function MatchupProvider({ children }) {
   const { data: session, status } = useSession();
   const [matchupData, setMatchupData] = useState(null);
+  // Stays true on the server and the first client render (matches the SSR
+  // skeleton, so no hydration mismatch). The isomorphic layout effect below
+  // flips it to false before the browser paints when our cached hint says the
+  // user was NOT mid-battle, so the idle "PLAY NOW" card appears instantly.
   const [loading, setLoading] = useState(true);
+  const appliedStatusHintRef = useRef(false);
   const [error, setError] = useState(null);
   const [forfeitNotice, setForfeitNotice] = useState(null);
   const prevMatchupIdRef = useRef(null);
@@ -53,6 +104,32 @@ export function MatchupProvider({ children }) {
     }
   }, [session?.user?.id, status, surfaceForfeitNotice]);
 
+  // Before the browser paints, drop the loading skeleton when our cached hint
+  // says the user was NOT mid-battle, so the idle "PLAY NOW" card appears
+  // instantly. Runs after the SSR-matching first render commits but before
+  // paint, so there's no hydration mismatch and no skeleton flash. We keep
+  // loading=true (skeleton) when the last-known state was a battle or there's
+  // no hint at all, so an in-battle user never flashes "PLAY NOW".
+  useIsomorphicLayoutEffect(() => {
+    if (appliedStatusHintRef.current) return;
+    appliedStatusHintRef.current = true;
+    const hint = readCachedMatchupStatus();
+    if (!hint) return;
+    if (!BATTLE_STATUSES.includes(hint)) {
+      // Was idle last time — skip straight to the "PLAY NOW" card.
+      setLoading(false);
+      return;
+    }
+    // Was mid-battle — paint the real "YOUR BATTLE" card from the cached
+    // payload on the first frame so it doesn't flash a skeleton. The
+    // background fetch below reconciles it to fresh data moments later.
+    const cached = readCachedMatchupData();
+    if (cached) {
+      setMatchupData(cached);
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'authenticated') {
       fetchCurrentMatchup();
@@ -61,6 +138,44 @@ export function MatchupProvider({ children }) {
       setMatchupData(null);
     }
   }, [status, fetchCurrentMatchup]);
+
+  // Keep the cached status hint in sync so the next page load can paint the
+  // right card instantly. Idle/no-matchup is stored as 'none' so a user who
+  // just finished a battle goes back to the instant "PLAY NOW" treatment.
+  // Only persist once a fetch has resolved (loading === false); writing the
+  // transient pre-fetch null as 'none' would otherwise downgrade an in-battle
+  // user's hint and let them flash "PLAY NOW" on a quick reload.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (status === 'authenticated') {
+        if (!loading) {
+          const nextStatus = matchupData?.status || 'none';
+          window.localStorage.setItem(MATCHUP_STATUS_CACHE_KEY, nextStatus);
+          // Mirror the full payload so the next reload can paint the real
+          // battle card pre-paint. Only persist in-battle states; idle/none
+          // clears it so a finished battle doesn't get restored next time.
+          if (BATTLE_STATUSES.includes(nextStatus)) {
+            try {
+              window.localStorage.setItem(
+                MATCHUP_DATA_CACHE_KEY,
+                JSON.stringify(matchupData)
+              );
+            } catch {
+              /* payload too large / quota — non-fatal, skeleton fallback */
+            }
+          } else {
+            window.localStorage.removeItem(MATCHUP_DATA_CACHE_KEY);
+          }
+        }
+      } else if (status === 'unauthenticated') {
+        window.localStorage.removeItem(MATCHUP_STATUS_CACHE_KEY);
+        window.localStorage.removeItem(MATCHUP_DATA_CACHE_KEY);
+      }
+    } catch {
+      /* localStorage unavailable (private mode / quota) — non-fatal */
+    }
+  }, [matchupData?.status, status, loading]);
 
   const hasActiveMatchup = matchupData?.status === 'active' || matchupData?.status === 'matched';
   const isWaiting = matchupData?.status === 'waiting';

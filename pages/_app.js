@@ -24,7 +24,6 @@ import ChallengePopup from '../components/ChallengePopup';
 import DemoPopup from '../components/DemoPopup';
 import AuthPopup from '../components/AuthPopup';
 import OnboardingPopup from '../components/OnboardingPopup';
-import SessionSummaryPopup from '../components/SessionSummaryPopup';
 import MyChallengePopup from '../components/MyChallengePopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
@@ -81,6 +80,35 @@ function GlobalClickTrapWatchdog() {
     if (pathname !== '/messenger' && pathname !== '/notifications') return undefined;
     return installTopNavClickTrapWatchdog(pathname.slice(1));
   }, [pathname]);
+  return null;
+}
+
+// Conservative, overlay-free scroll-lock recovery that runs on EVERY route.
+// Distinct from GlobalClickTrapWatchdog above (scoped to /messenger +
+// /notifications because its overlay-REMOVAL heuristic destroys legit
+// fullscreen UI). This variant ONLY clears a stuck body scroll-lock and ONLY
+// when no modal is open — it never detaches any element — so it's safe app-
+// wide, including the battle flow. It rescues the case where a modal crashes
+// mid-teardown and leaves `body { position: fixed; overflow: hidden }`,
+// which otherwise freezes scrolling/taps until a full reload. The gate uses
+// the same markers modals advertise (role=dialog/aria-modal, the scroll-lock
+// owner attribute, and data-allow-fixed-overlay) so an open modal — or the
+// bet slip, which never locks the body — is never disturbed.
+function GlobalScrollLockRecovery() {
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const tick = () => {
+      const b = document.body.style;
+      const isLocked = b.position === 'fixed' || b.overflow === 'hidden';
+      if (!isLocked) return;
+      const hasOpenModal = !!document.querySelector(
+        '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"], [data-allow-fixed-overlay="true"]'
+      );
+      if (!hasOpenModal) releaseBodyScrollLock('orphan body lock (global recovery)');
+    };
+    const interval = setInterval(tick, 1500);
+    return () => clearInterval(interval);
+  }, []);
   return null;
 }
 
@@ -248,8 +276,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [authPopupMode, setAuthPopupMode] = useState('signin');
   const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
-  const [showSessionSummary, setShowSessionSummary] = useState(false);
-  const [sessionSummaryData, setSessionSummaryData] = useState(null);
   const [showMyChallengePopup, setShowMyChallengePopup] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -426,14 +452,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
       setShowAuthPopup(true);
     };
 
-    const handleOpenSessionSummary = (e) => {
-      if (e.detail) {
-        setSessionSummaryData(e.detail);
-        setShowSessionSummary(true);
-        // User is signing out - update login state immediately
-        setCurrentUser(null);
-        setIsLoggedIn(false);
-      }
+    const handleUserLoggedOut = () => {
+      setCurrentUser(null);
+      setIsLoggedIn(false);
     };
 
     const handleOpenMyChallengePopup = () => {
@@ -449,7 +470,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
       window.addEventListener('mobileMenuToggle', handleMobileMenuToggle);
       window.addEventListener('openDemoPopup', handleOpenDemoPopup);
       window.addEventListener('openAuthPopup', handleOpenAuthPopup);
-      window.addEventListener('openSessionSummary', handleOpenSessionSummary);
+      window.addEventListener('userLoggedOut', handleUserLoggedOut);
       window.addEventListener('openMyChallengePopup', handleOpenMyChallengePopup);
       window.addEventListener('openOnboardingPopup', handleOpenOnboardingPopup);
     }
@@ -460,7 +481,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
         window.removeEventListener('mobileMenuToggle', handleMobileMenuToggle);
         window.removeEventListener('openDemoPopup', handleOpenDemoPopup);
         window.removeEventListener('openAuthPopup', handleOpenAuthPopup);
-        window.removeEventListener('openSessionSummary', handleOpenSessionSummary);
+        window.removeEventListener('userLoggedOut', handleUserLoggedOut);
         window.removeEventListener('openMyChallengePopup', handleOpenMyChallengePopup);
         window.removeEventListener('openOnboardingPopup', handleOpenOnboardingPopup);
       }
@@ -674,6 +695,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
                 <ForfeitNoticeOverlay />
                 <AnalyticsTracker />
                 <GlobalClickTrapWatchdog />
+                <GlobalScrollLockRecovery />
                 <PresenceHeartbeat isLoggedIn={isLoggedIn} />
                 <AutoGrader />
                 <GlobalToastContainer />
@@ -747,15 +769,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router, initia
                 <OnboardingPopup
                   isOpen={showOnboardingPopup}
                   onClose={() => setShowOnboardingPopup(false)}
-                />
-
-                <SessionSummaryPopup
-                  isOpen={showSessionSummary}
-                  onClose={() => {
-                    setShowSessionSummary(false);
-                    setSessionSummaryData(null);
-                  }}
-                  sessionData={sessionSummaryData}
                 />
 
                 <MyChallengePopup

@@ -5,6 +5,7 @@ import useModalScrollLock from '../../hooks/useModalScrollLock';
 import useRushAvailability from '../../hooks/useRushAvailability';
 import haptic from '../../utils/haptics';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { MatchConfirmed, FlowCard, FlowButton } from './matchflow/MatchFlowScreens';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
@@ -176,6 +177,130 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
 
   if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
+
+  // ── Premium match-flow moments (shared look with Quick Match) ──────
+  // These restyle the "waiting for opponent" and "opponent joined /
+  // joined" states with the sleek dark match-flow cards. They render
+  // INSTEAD of the cartoon shell for those states only. No matchmaking,
+  // polling, or navigation logic lives here — that all stays in the
+  // effects/handlers above; we only swap the presentation layer.
+  const flowStake = isBeta ? (Number(buyIn) || 10000) : (Number(buyIn) || 0);
+  const flowYou = { name: 'You' };
+  const flowOpp = { name: 'Opponent' };
+  const premiumShell = (inner) => (
+    <div
+      data-allow-fixed-overlay="true"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="max-w-md w-full my-auto rounded-[22px] overflow-hidden"
+        style={{
+          backgroundColor: '#070a14',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 28px 64px rgba(0,0,0,0.62)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {inner}
+      </div>
+    </div>
+  );
+
+  if (mode === 'opponent_joined' || joined) {
+    return ReactDOM.createPortal(
+      premiumShell(
+        <MatchConfirmed
+          you={flowYou}
+          opp={flowOpp}
+          balance={flowStake}
+          stake={flowStake}
+          label="Battle starting now…"
+        />,
+      ),
+      document.body,
+    );
+  }
+
+  if (mode === 'created') {
+    return ReactDOM.createPortal(
+      premiumShell(
+        <FlowCard balance={flowStake}>
+          <div className="px-6 pt-5 pb-8 text-center">
+            <span aria-hidden="true" style={{ fontSize: 24 }}>🔑</span>
+            <h2 className="mt-1 font-black italic uppercase leading-[0.95]" style={{ fontSize: 'clamp(24px,7vw,34px)' }}>
+              <span style={{ color: '#fff' }}>Match</span>{' '}
+              <span style={{ color: '#3b82f6' }}>Created</span>
+            </h2>
+            <p className="mt-2 text-[12px]" style={{ color: '#94a3b8' }}>
+              Share this code with your opponent
+            </p>
+
+            {error && (
+              <div
+                className="mx-auto mt-4 rounded-xl px-3 py-2.5 text-xs font-semibold"
+                style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5', maxWidth: 300 }}
+              >
+                {error}
+              </div>
+            )}
+
+            <div
+              className="mx-auto mt-5 rounded-2xl px-4 py-5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', maxWidth: 300 }}
+            >
+              <div
+                className="font-mono font-black text-white"
+                style={{ fontSize: 38, letterSpacing: '0.3em', lineHeight: 1 }}
+              >
+                {generatedCode}
+              </div>
+            </div>
+
+            <div className="mt-4 max-w-[300px] mx-auto">
+              <FlowButton color={copied ? 'green' : 'blue'} onClick={copyCode}>
+                {copied ? '✓ Copied' : 'Copy Code'}
+              </FlowButton>
+            </div>
+
+            <div className="mt-6 flex items-center justify-center gap-2">
+              <span className="mf-blink" style={{ color: '#facc15', fontSize: 13 }}>●</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: '#94a3b8' }}>
+                Waiting for opponent…
+              </span>
+            </div>
+
+            <p className="mt-2 text-[11px] leading-snug" style={{ color: '#64748b' }}>
+              You can close this and come back — your match stays active on the Battle and My Battle pages.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Cancel this match?')) {
+                  fetch('/api/battles/private', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'cancel' }),
+                  }).then(r => r.json()).then(data => {
+                    if (data.success) {
+                      haptic.warning && haptic.warning();
+                      onClose();
+                    }
+                  }).catch(() => {});
+                }
+              }}
+              className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.16em] transition-colors hover:text-red-300"
+              style={{ color: '#f87171' }}
+            >
+              Cancel Match
+            </button>
+          </div>
+        </FlowCard>,
+      ),
+      document.body,
+    );
+  }
 
   // Header back/close icon buttons share the same chunky cartoon look.
   const renderIconBtn = (onPress, ariaLabel, child, bg = '#1a1a1a') => (
@@ -527,7 +652,7 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                             {m.coins.toLocaleString()}
                           </div>
                           <div className="text-gray-500 text-[9px] uppercase tracking-wider">
-                            coins
+                            Clash Coins
                           </div>
                         </div>
                       </button>

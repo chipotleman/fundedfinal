@@ -14,6 +14,7 @@ const STATIC_DEFAULTS = {
   betaMode: true,
   maintenanceMode: false,
   demoEnabled: true,
+  promoRowEnabled: false,
   challengeTiers: {
     starter: { price: 149, funding: 5000, profitSplit: 90 },
     pro: { price: 249, funding: 10000, profitSplit: 90 },
@@ -46,6 +47,7 @@ function pickSiteFlags(input) {
     if (typeof input.betaMode === 'boolean') out.betaMode = input.betaMode;
     if (typeof input.maintenanceMode === 'boolean') out.maintenanceMode = input.maintenanceMode;
     if (typeof input.demoEnabled === 'boolean') out.demoEnabled = input.demoEnabled;
+    if (typeof input.promoRowEnabled === 'boolean') out.promoRowEnabled = input.promoRowEnabled;
     if (input.challengeTiers && typeof input.challengeTiers === 'object') {
       out.challengeTiers = input.challengeTiers;
     }

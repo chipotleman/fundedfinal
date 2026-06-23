@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import CoinRain from '../CoinRain';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
-import PiksBetCard from '../PiksBetCard';
-import { TicketCarousel } from '../BattleOverviewPopup';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { MatchWin } from './matchflow/MatchFlowScreens';
 
 function useCountUp(target, duration = 1000, shouldStart = false) {
   const [value, setValue] = useState(0);
@@ -159,8 +160,6 @@ function PlayerBlock({
   );
 }
 
-const REACTION_EMOJIS = ['👍', '🔥', '😂', '🎯', '👏'];
-const REACTION_TEXTS = ['GG', 'Nice!', 'Close one', 'WP'];
 const REACTION_TTL_MS = 1800;
 
 export default function MatchResult({
@@ -178,21 +177,15 @@ export default function MatchResult({
   highlightRematch = false,
 }) {
   const isBeta = useBetaMode();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const router = useRouter();
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
-  const [summaryTab, setSummaryTab] = useState('mine');
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState(null);
-  const [summaryData, setSummaryData] = useState(null);
-  const summaryFetchRef = useRef(null);
   const [myReactions, setMyReactions] = useState([]);
   const [oppReactions, setOppReactions] = useState([]);
-  const [customText, setCustomText] = useState('');
-  const [customSending, setCustomSending] = useState(false);
-  const [customError, setCustomError] = useState('');
   // Brief, non-blocking hint shown near the reaction strip when a canned tap
   // can't be sent (e.g., 429 burst limit, network/server error). Auto-clears.
   const [reactionHint, setReactionHint] = useState('');
@@ -204,7 +197,6 @@ export default function MatchResult({
   const tokenBucketRef = useRef({ tokens: 6, last: 0 });
   const TOKEN_CAPACITY = 6;
   const TOKEN_REFILL_MS = 350;
-  const lastCustomSendRef = useRef(0);
   const declineFiredRef = useRef(false);
 
   const isCompleted = matchup && matchup.status === 'completed';
@@ -264,17 +256,6 @@ export default function MatchResult({
     ? (isUser1 ? rematchState.user2Rematch : rematchState.user1Rematch)
     : 'pending';
 
-  // Reset inline summary state when the matchup changes so a previous
-  // battle's piks never leak into a freshly opened result popup.
-  useEffect(() => {
-    setShowSummary(false);
-    setSummaryTab('mine');
-    setSummaryData(null);
-    setSummaryError(null);
-    setSummaryLoading(false);
-    summaryFetchRef.current = null;
-  }, [matchup?.id]);
-
   useEffect(() => {
     if (!isCompleted) return;
     setShowTitle(false);
@@ -297,25 +278,11 @@ export default function MatchResult({
       : `I just won $${formatMoney(prizeWon)} on Piks! 🏆🔥`;
     const id = matchup?.id;
 
-    // Pick a deep-linkable "moment" — the biggest winning pik on our side,
-    // if we have summary data loaded — so the shared link auto-opens the
-    // pivotal pick. Falls back to a plain battle deep link when no summary
-    // is available yet.
-    let momentId = null;
-    if (Array.isArray(summaryData?.myBets)) {
-      const winners = summaryData.myBets.filter((b) => Number(b?.pnl) > 0);
-      if (winners.length > 0) {
-        winners.sort((a, b) => Number(b.pnl) - Number(a.pnl));
-        momentId = winners[0].id || null;
-      }
-    }
-
     let url = null;
     if (id && typeof window !== 'undefined') {
       try {
         const u = new URL('/bet-history', window.location.origin);
         u.searchParams.set('battle', id);
-        if (momentId) u.searchParams.set('m', momentId);
         url = u.toString();
       } catch (_) {
         url = null;
@@ -337,7 +304,7 @@ export default function MatchResult({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (_) {}
-  }, [prizeWon, matchup?.id, summaryData]);
+  }, [prizeWon, matchup?.id]);
 
   // Per-reaction expiry timers. Each reaction owns its own timer so rapid-fire
   // reactions all expire independently and don't get cancelled when a newer
@@ -469,62 +436,6 @@ export default function MatchResult({
     }
   }, [onSendReaction, scheduleReactionExpiry, showReactionHint]);
 
-  const sendCustomMessage = useCallback(async () => {
-    const trimmed = customText.replace(/\s+/g, ' ').trim();
-    if (!trimmed) return;
-    const now = Date.now();
-    if (now - lastCustomSendRef.current < 2500) {
-      setCustomError('Slow down a moment.');
-      return;
-    }
-    lastCustomSendRef.current = now;
-    setCustomSending(true);
-    setCustomError('');
-    try {
-      const r = await onSendReaction?.({ customText: trimmed });
-      if (r && r.error) {
-        // Preserve the draft so the user can edit/retry.
-        setCustomError(typeof r.error === 'string' ? r.error : 'Could not send');
-      } else {
-        setCustomText('');
-      }
-    } catch {
-      setCustomError('Could not send');
-    } finally {
-      setCustomSending(false);
-    }
-  }, [customText, onSendReaction]);
-
-  const fetchSummary = useCallback(async () => {
-    const id = matchup?.id;
-    if (!id) return;
-    if (summaryFetchRef.current === id) return;
-    summaryFetchRef.current = id;
-    setSummaryLoading(true);
-    setSummaryError(null);
-    try {
-      const res = await fetch(`/api/matchups/${id}`);
-      if (!res.ok) throw new Error('failed');
-      const data = await res.json();
-      setSummaryData({
-        myBets: Array.isArray(data.myBets) ? data.myBets : [],
-        opponentBets: Array.isArray(data.opponentBets) ? data.opponentBets : [],
-      });
-    } catch (e) {
-      summaryFetchRef.current = null;
-      setSummaryError('Could not load piks');
-    } finally {
-      setSummaryLoading(false);
-    }
-  }, [matchup?.id]);
-
-  const handleToggleSummary = useCallback(() => {
-    setShowSummary((prev) => {
-      const next = !prev;
-      if (next && !summaryData && !summaryLoading) fetchSummary();
-      return next;
-    });
-  }, [fetchSummary, summaryData, summaryLoading]);
 
   const handleClose = useCallback(() => {
     // Treat closing without accepting as an implicit decline so the
@@ -541,6 +452,14 @@ export default function MatchResult({
     onClose?.();
   }, [isFakeOpponent, myRematchStatus, onRematchDecline, onClose]);
 
+  // Open the full, shareable Battle Summary page for this matchup. Falls back
+  // to simply closing the modal if we somehow don't have a matchup id.
+  const handleSummary = useCallback(() => {
+    const mid = matchup?.id;
+    if (!mid) { handleClose(); return; }
+    try { router.push(`/battle/summary/${encodeURIComponent(mid)}`); } catch (_e) {}
+  }, [matchup?.id, router, handleClose]);
+
   if (!isCompleted) return null;
 
   const confettiColors = ['#3b82f6', '#10b981', '#06b6d4', '#f97316', '#fbbf24', '#22d3ee'];
@@ -553,6 +472,18 @@ export default function MatchResult({
   else if (rematchAcceptedByMe && oppRematchStatus === 'accepted') rematchLabel = 'Starting rematch…';
   else if (oppDeclined) rematchLabel = 'Opponent declined';
   else if (isFakeOpponent) rematchLabel = 'Find new match';
+
+  // Player objects + outcome mapping for the premium match-flow screens.
+  const outcome = isWinner ? 'win' : isTie ? 'tie' : 'lose';
+  const youPlayer = { id: currentUserId, name: myName, username: myName, avatar: myAvatar };
+  const oppPlayer = { id: opponentId, name: opponentName, username: opponentName, avatar: opponentAvatar };
+  // Preserve the per-side rematch intent (previously shown as ✓/✕ badges) as
+  // a status line under the rematch panel.
+  let rematchStatusText = '';
+  if (!isFakeOpponent) {
+    if (oppRematchStatus === 'accepted') rematchStatusText = `${opponentName} wants a rematch`;
+    else if (oppRematchStatus === 'declined') rematchStatusText = `${opponentName} declined the rematch`;
+  }
 
   return (
     <>
@@ -680,7 +611,7 @@ export default function MatchResult({
       <div
         data-allow-fixed-overlay="true"
         className={`fixed inset-0 backdrop-blur-md z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto ${!isWinner && !isTie ? 'mr-shake' : ''}`}
-        style={{ background: 'rgba(0,0,0,0.9)', overscrollBehavior: 'contain' }}
+        style={{ background: isLight ? 'rgba(15,23,42,0.45)' : 'rgba(0,0,0,0.9)', overscrollBehavior: 'contain' }}
         onClick={handleClose}
       >
         <div
@@ -688,223 +619,66 @@ export default function MatchResult({
           onClick={(e) => e.stopPropagation()}
         >
 
-          {showTitle && (
-            <div className="mb-4">
-              {isTie ? (
-                <>
-                  <div className="mr-title-tie"><span className="text-5xl block mb-2">⚖️</span></div>
-                  <h2 className="text-3xl font-black text-cyan-400 mr-title-tie">DRAW!</h2>
-                </>
-              ) : isWinner ? (
-                <>
-                  <div className="mr-trophy"><span className="text-6xl block mb-2">🏆</span></div>
-                  <h2 className="text-4xl font-black text-yellow-400 mr-title-win tracking-wider">VICTORY!</h2>
-                </>
-              ) : (
-                <>
-                  <span className="text-5xl block mb-2 mr-title-lose">😤</span>
-                  <h2 className="text-4xl font-black text-red-500 mr-title-lose tracking-wider">DEFEAT</h2>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Dual-avatar layout with pot transfer cue */}
-          {showStats && (
-            <div className="mr-stats-card mb-5">
-              <div className="flex items-end justify-between gap-3 px-2">
-                <PlayerBlock
-                  side="left"
-                  username={myName}
-                  avatar={myAvatar}
-                  frameId={myFrameId}
-                  userId={currentUserId}
-                  score={animatedFinal}
-                  isWinner={isWinner}
-                  isLoser={isLoser}
-                  isTie={isTie}
-                  rematchStatus={isFakeOpponent ? null : myRematchStatus}
-                  reactions={myReactions}
-                />
-
-                <div className="flex-1 flex flex-col items-center pb-3 min-w-0">
-                  <div
-                    className="text-[10px] uppercase tracking-wider text-gray-500 leading-none"
-                  >
-                    {isTie ? 'Pot split' : 'Pot'}
-                  </div>
-                  <div
-                    className="text-xl font-black leading-tight"
+          {/* Win / lose / draw outcome splash — premium match-flow screen */}
+          <div className="mb-5 rounded-2xl overflow-hidden" style={{ border: `1px solid ${isLight ? 'rgba(10,10,10,0.12)' : 'rgba(255,255,255,0.08)'}` }}>
+            <MatchWin
+              outcome={outcome}
+              you={youPlayer}
+              opp={oppPlayer}
+              balance={myFinalBalance}
+              prize={prizeWon}
+              onPrimary={isWinner ? handleShare : handleSummary}
+              primaryLabel={isWinner ? (copied ? 'Copied!' : 'Share Win') : 'Summary'}
+              secondary={isWinner ? (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className={`py-2 rounded-lg text-sm font-bold transition-colors ${isLight ? 'text-slate-600 hover:text-slate-900' : 'text-gray-300 hover:text-white'}`}
                     style={{
-                      color: isTie ? '#06b6d4' : '#facc15',
-                      textShadow: isTie
-                        ? '0 0 12px rgba(6,182,212,0.45)'
-                        : '0 0 14px rgba(250,204,21,0.55)',
+                      border: `1px solid ${isLight ? 'rgba(10,10,10,0.12)' : '#2a2a2a'}`,
+                      background: isLight ? 'rgba(10,10,10,0.03)' : 'rgba(255,255,255,0.03)',
                     }}
                   >
-                    ${formatMoney(potSize, 0)}
-                  </div>
-                  <div className="mt-1 text-[10px] leading-tight text-gray-400 flex items-center justify-center gap-1">
-                    {isTie ? (
-                      <span>↔︎ refunded ↔︎</span>
-                    ) : isWinner ? (
-                      <span className="text-emerald-300 font-bold">← won by you</span>
-                    ) : (
-                      <span className="text-red-300 font-bold">won by {opponentName} →</span>
-                    )}
-                  </div>
+                    Exit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSummary}
+                    className={`py-2 rounded-lg text-sm font-bold transition-colors ${isLight ? 'text-cyan-700' : 'text-white'}`}
+                    style={{ border: '1px solid rgba(34,211,238,0.45)', background: isLight ? 'rgba(34,211,238,0.10)' : 'rgba(34,211,238,0.12)' }}
+                  >
+                    Summary
+                  </button>
                 </div>
-
-                <PlayerBlock
-                  side="right"
-                  username={opponentName}
-                  avatar={opponentAvatar}
-                  frameId={opponentFrameId}
-                  userId={opponentId}
-                  score={animatedOpp}
-                  isWinner={!isWinner && !isTie}
-                  isLoser={isWinner}
-                  isTie={isTie}
-                  rematchStatus={isFakeOpponent ? null : oppRematchStatus}
-                  reactions={oppReactions}
-                />
-              </div>
-            </div>
-          )}
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className={`mt-3 w-full py-2 text-sm font-bold transition-colors ${isLight ? 'text-slate-500 hover:text-slate-900' : 'text-gray-300 hover:text-white'}`}
+                >
+                  Exit
+                </button>
+              )}
+            />
+          </div>
 
           {showStats && (
             <div
               className={`mr-stats-card rounded-xl p-4 mb-5 space-y-3 ${highlight ? 'mr-result-highlight' : ''}`}
               style={{
-                background: '#0d0d0d',
-                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : '#1a1a1a'}`,
+                background: isLight ? '#ffffff' : '#0d0d0d',
+                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : (isLight ? 'rgba(10,10,10,0.12)' : '#1a1a1a')}`,
               }}
             >
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Buy-in</span>
-                <span className="font-medium text-white">${formatMoney(cashBuyIn)}</span>
+                <span className={`text-sm ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Buy-in</span>
+                <span className={`font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>${formatMoney(cashBuyIn)}</span>
               </div>
               {isWinner && prizeWon > 0 && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-400">Prize Won</span>
-                  <span className="text-emerald-400 font-bold text-lg">${formatMoney(animatedPrize)}</span>
-                </div>
-              )}
-              <div className="pt-2" style={{ borderTop: '1px solid #1a1a1a' }}>
-                <button
-                  type="button"
-                  onClick={handleToggleSummary}
-                  aria-expanded={showSummary}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold text-white transition-colors hover:bg-white/5 active:bg-white/10"
-                  style={{ border: '1px solid #2a2a2a', background: 'rgba(255,255,255,0.03)' }}
-                >
-                  <span>{showSummary ? 'Hide summary' : 'Show summary'}</span>
-                  <svg
-                    className={`w-3.5 h-3.5 transition-transform ${showSummary ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              </div>
-              {showSummary && (
-                <div className="pt-3 text-left">
-                  {summaryLoading && !summaryData && (
-                    <div className="space-y-2">
-                      <div className="h-7 w-48 rounded-full bg-white/5 animate-pulse" />
-                      <div className="h-32 rounded-xl bg-white/5 animate-pulse" />
-                    </div>
-                  )}
-                  {summaryError && !summaryLoading && (
-                    <div className="text-xs text-red-400 text-center py-3">
-                      {summaryError}
-                      <button
-                        type="button"
-                        onClick={() => { summaryFetchRef.current = null; fetchSummary(); }}
-                        className="ml-2 underline text-cyan-300"
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  )}
-                  {summaryData && (() => {
-                    const myBets = summaryData.myBets || [];
-                    const oppBets = summaryData.opponentBets || [];
-                    const myCards = myBets.length > 0 ? myBets.map((bet) => (
-                      <PiksBetCard
-                        key={bet.id}
-                        bet={bet}
-                        compactHeader
-                        isBattleEnded={true}
-                      />
-                    )) : null;
-                    const oppCards = oppBets.length > 0 ? oppBets.map((bet) => (
-                      <PiksBetCard
-                        key={bet.id}
-                        bet={bet}
-                        compactHeader
-                        isBattleEnded={true}
-                        isOpponent
-                        opponentName={opponentName}
-                        opponentAvatar={opponentAvatar}
-                      />
-                    )) : null;
-                    const carouselTheme = {
-                      borderColor: 'rgba(255,255,255,0.12)',
-                      accentColor: '#06b6d4',
-                    };
-                    return (
-                      <div>
-                        <div
-                          className="inline-flex rounded-full p-1 mb-2"
-                          style={{
-                            background: 'rgba(255,255,255,0.04)',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => setSummaryTab('mine')}
-                            className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
-                            style={{
-                              background: summaryTab === 'mine' ? '#06b6d4' : 'transparent',
-                              color: summaryTab === 'mine' ? '#fff' : '#9ca3af',
-                            }}
-                          >
-                            Your Piks ({myBets.length})
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setSummaryTab('theirs')}
-                            className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
-                            style={{
-                              background: summaryTab === 'theirs' ? '#ef4444' : 'transparent',
-                              color: summaryTab === 'theirs' ? '#fff' : '#9ca3af',
-                            }}
-                          >
-                            {opponentName}'s Piks ({oppBets.length})
-                          </button>
-                        </div>
-                        {summaryTab === 'mine' ? (
-                          <TicketCarousel
-                            key="mine"
-                            cards={myCards}
-                            theme={carouselTheme}
-                            emptyMessage="You didn't place any piks in this battle."
-                          />
-                        ) : (
-                          <TicketCarousel
-                            key="theirs"
-                            cards={oppCards}
-                            theme={carouselTheme}
-                            emptyMessage={`${opponentName} didn't place any piks in this battle.`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })()}
+                  <span className={`text-sm ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Prize Won</span>
+                  <span className={`font-bold text-lg ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>${formatMoney(animatedPrize)}</span>
                 </div>
               )}
               {totalPendingCount > 0 && (
@@ -920,7 +694,7 @@ export default function MatchResult({
                     <div className="text-yellow-400 text-[11px] font-bold uppercase tracking-wide leading-tight">
                       {totalPendingCount} {totalPendingCount === 1 ? 'pik' : 'piks'} did not grade in time
                     </div>
-                    <div className="text-[11px] mt-0.5 leading-snug text-gray-300">
+                    <div className={`text-[11px] mt-0.5 leading-snug ${isLight ? 'text-slate-600' : 'text-gray-300'}`}>
                       {(() => {
                         const parts = [];
                         if (myPendingCount > 0) parts.push(`${myPendingCount} of yours`);
@@ -935,132 +709,6 @@ export default function MatchResult({
             </div>
           )}
 
-          {showStats && !isFakeOpponent && (
-            <div
-              className="mr-stats-card mb-3 rounded-xl px-3 py-2"
-              style={{ background: '#0d0d0d', border: '1px solid #1a1a1a' }}
-            >
-              <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                {REACTION_EMOJIS.map((e) => (
-                  <button
-                    key={e}
-                    type="button"
-                    onClick={() => sendReaction({ emoji: e })}
-                    className="mr-chip text-xl leading-none px-2 py-1.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
-                    aria-label={`Send ${e} reaction`}
-                  >
-                    {e}
-                  </button>
-                ))}
-                <div className="w-px h-6 bg-white/10 mx-1" />
-                {REACTION_TEXTS.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => sendReaction({ text: t })}
-                    className="mr-chip text-xs font-bold text-gray-200 px-2.5 py-1.5 rounded-full hover:bg-white/5 active:bg-white/10 transition-colors"
-                    style={{ border: '1px solid #2a2a2a' }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              {reactionHint && (
-                <div
-                  className="mt-1 text-[11px] text-amber-300/90 text-center select-none"
-                  role="status"
-                  aria-live="polite"
-                >
-                  {reactionHint}
-                </div>
-              )}
-              <form
-                className="mt-2 flex items-center gap-2"
-                onSubmit={(e) => { e.preventDefault(); sendCustomMessage(); }}
-              >
-                <input
-                  type="text"
-                  value={customText}
-                  onChange={(e) => { setCustomText(e.target.value); if (customError) setCustomError(''); }}
-                  maxLength={60}
-                  placeholder="Say something…"
-                  aria-label="Send a custom message"
-                  className="flex-1 min-w-0 text-sm text-white placeholder-gray-500 bg-black/40 rounded-full px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                  style={{ border: '1px solid #2a2a2a' }}
-                />
-                <span className="text-[10px] tabular-nums text-gray-500 select-none w-8 text-right">
-                  {Math.max(0, 60 - customText.length)}
-                </span>
-                <button
-                  type="submit"
-                  disabled={customSending || !customText.trim()}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${
-                    customSending || !customText.trim()
-                      ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                      : 'bg-cyan-500 text-black hover:bg-cyan-400'
-                  }`}
-                >
-                  Send
-                </button>
-              </form>
-              {customError && (
-                <div className="mt-1 text-[11px] text-red-400 text-left px-1">{customError}</div>
-              )}
-            </div>
-          )}
-
-          {showStats && (
-            <div className="flex gap-3 mr-stats-card">
-              <button
-                onClick={() => {
-                  if (rematchDisabled || rematchAcceptedByMe) return;
-                  declineFiredRef.current = true; // accepting suppresses implicit decline
-                  onRematchAccept?.();
-                }}
-                disabled={rematchDisabled || rematchAcceptedByMe}
-                className={`flex-1 font-semibold py-3 rounded-lg transition-colors ${
-                  rematchDisabled
-                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                    : rematchAcceptedByMe
-                    ? 'bg-emerald-600 text-white cursor-default'
-                    : 'bg-white text-black hover:bg-gray-100'
-                } ${highlightRematch && !rematchDisabled && !rematchAcceptedByMe ? 'mr-rematch-pulse' : ''}`}
-                style={
-                  highlightRematch && !rematchDisabled && !rematchAcceptedByMe
-                    ? { boxShadow: '0 0 0 2px rgba(16,185,129,0.85), 0 0 24px rgba(16,185,129,0.55)' }
-                    : undefined
-                }
-              >
-                {rematchLabel}
-              </button>
-              <style jsx>{`
-                @keyframes mrRematchPulse {
-                  0%, 100% { transform: scale(1); }
-                  50% { transform: scale(1.03); }
-                }
-                .mr-rematch-pulse {
-                  animation: mrRematchPulse 1.4s ease-in-out infinite;
-                }
-              `}</style>
-              {isWinner ? (
-                <button
-                  onClick={handleShare}
-                  className="flex-1 text-emerald-400 font-semibold py-3 rounded-lg transition-colors"
-                  style={{ background: '#1a1a1a', border: '1px solid #333' }}
-                >
-                  {copied ? 'Copied!' : 'Share Win'}
-                </button>
-              ) : (
-                <button
-                  onClick={handleClose}
-                  className="flex-1 font-medium py-3 rounded-lg transition-colors text-gray-300"
-                  style={{ background: '#1a1a1a', border: '1px solid #333' }}
-                >
-                  Back to Battle
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </>

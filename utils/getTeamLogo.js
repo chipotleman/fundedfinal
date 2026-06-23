@@ -459,6 +459,25 @@ const INTL_HOCKEY = {
   'lithuania': 'lt',
   'estonia': 'ee',
   'china': 'cn',
+  // KHL / CHL / DEL clubs that show up in the Goalserve "icehockey_intl"
+  // feed. Wikipedia exposes no crest thumbnail for these (their logos are
+  // non-free), so we represent each club by its country flag — same
+  // treatment as the national teams above. The last-word fallback in
+  // getTeamLogo also lets name variants ("SKA St. Petersburg" → ends with
+  // "petersburg", "Eisbären Berlin" → ends with "berlin") resolve here.
+  'cska moscow': 'ru',
+  'ska saint petersburg': 'ru',
+  'ak bars kazan': 'ru',
+  'metallurg magnitogorsk': 'ru',
+  'avangard omsk': 'ru',
+  'dynamo moscow': 'ru',
+  'jokerit helsinki': 'fi',
+  'tps turku': 'fi',
+  'eisbaeren berlin': 'de',
+  'zsc lions': 'ch',
+  'geneveservette hc': 'ch',
+  'frolunda hc': 'se',
+  'sparta prague': 'cz',
 };
 
 function espnBuilder(league) {
@@ -578,14 +597,19 @@ function resolveSportEntry(key) {
   return null;
 }
 
-export function getTeamLogo(name, sport) {
+export function getTeamLogo(name, sport, exactOnly = false) {
   if (!name || !sport) return null;
   const key = String(sport).toLowerCase();
   const entry = resolveSportEntry(key);
   if (!entry) return null;
   const normalized = normalizeName(name);
   let slug = entry.map[normalized];
-  if (!slug) {
+  // The last-word fuzzy fallback ("Panthers" -> "florida panthers") is only
+  // safe when we already know the sport. Across sports it produces false
+  // positives via mascot collisions (e.g. NFL "carolina panthers" ends with
+  // "panthers" and would steal NHL "florida panthers"), so getTeamLogoAnySport
+  // can disable it with `exactOnly` for an exact-match-first sweep.
+  if (!slug && !exactOnly) {
     // Try matching by last word (e.g. "Panthers" -> "florida panthers")
     const parts = normalized.split(' ');
     if (parts.length > 1) {
@@ -607,6 +631,17 @@ const ANY_SPORT_FALLBACK_ORDER = ['nba', 'nfl', 'nhl', 'mlb', 'ncaab', 'ncaaf', 
 
 export function getTeamLogoAnySport(name) {
   if (!name) return null;
+  // Pass 1 — exact name matches only. A full name like "Florida Panthers"
+  // must resolve to the sport whose map contains it exactly (NHL here),
+  // regardless of where that sport sits in the probe order. This prevents
+  // an earlier sport's fuzzy mascot match (NFL "Carolina Panthers") from
+  // hijacking a team that has an exact match in a later sport.
+  for (const key of ANY_SPORT_FALLBACK_ORDER) {
+    const url = getTeamLogo(name, key, true);
+    if (url) return url;
+  }
+  // Pass 2 — allow the last-word fuzzy fallback for bare mascots / partial
+  // names that don't exactly match any map (e.g. "Maple Leafs").
   for (const key of ANY_SPORT_FALLBACK_ORDER) {
     const url = getTeamLogo(name, key);
     if (url) return url;

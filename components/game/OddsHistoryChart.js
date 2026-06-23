@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getTeamColor, inkFor, readableLineColor } from '../../utils/teamColors';
+import { useTheme } from '../../contexts/ThemeContext';
 
-// Kalshi-style live odds chart. Plots de-vigged implied win probability
-// for the home (blue) and away (orange) teams over time. Self-contained
+// Kalshi-style live odds chart. Plots de-vigged implied win probability for
+// the home and away teams over time. The away team draws in a theme-neutral
+// color (white on dark, near-black on light, via --team-neutral) and the home
+// team draws in its brand color, so only one team carries a hue. Self-contained
 // SVG — no chart-library dep. Cartoon shell (2.5px #0a0a0a border + 4px
 // hard shadow) matches the rest of the arcade theme.
 
@@ -13,8 +17,8 @@ const RANGES = [
   { key: 'ALL', label: 'ALL' },
 ];
 
-const AWAY_COLOR = '#fb923c';
-const HOME_COLOR = '#3b82f6';
+// Cartoon shell border + hard shadow. Theme-independent — the black outline
+// reads well on both the dark and the light panel surface.
 const BORDER = '#0a0a0a';
 const SHADOW = '4px 4px 0 0 #0a0a0a';
 
@@ -23,6 +27,16 @@ function americanToImplied(odds) {
   const n = Number(odds);
   if (!Number.isFinite(n) || n === 0) return null;
   return n > 0 ? 100 / (n + 100) : -n / (-n + 100);
+}
+// Inverse of americanToImplied: turn a (with-vig) implied probability back
+// into an American moneyline. Used so every point on the chart carries the
+// odds that match where the LINE actually is at that moment — otherwise the
+// graph moves but the tooltip stays frozen on the opening number.
+function impliedToAmerican(prob) {
+  if (prob == null || !Number.isFinite(prob)) return null;
+  const p = Math.min(0.99, Math.max(0.01, prob));
+  const a = p >= 0.5 ? -((p / (1 - p)) * 100) : ((1 - p) / p) * 100;
+  return Math.round(a);
 }
 function devig(home, away) {
   const h = americanToImplied(home);
@@ -42,13 +56,48 @@ function fmtML(n) {
 }
 function fmtTime(t, range) {
   const d = new Date(t);
-  if (range === '1D' || range === 'ALL') {
-    return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  // The chart can be as narrow as ~320px, so three axis labels must stay short
+  // or they overlap. Use compact date-only for the multi-day "ALL" view and
+  // time-only everywhere else (1D still fits in a 24h window).
+  if (range === 'ALL') {
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   }
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds, commenceTime, isLive, isFinal }) {
+export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, homeTeamFull, awayTeamFull, sport, liveOdds, commenceTime, isLive, isFinal, compact = false, mini = false }) {
+  // Home team draws in its brand color; fall back to the app blue when the
+  // team isn't in the color map. Resolve the color from the FULL team name
+  // (e.g. "Michigan Wolverines") — the short `homeTeam` label ("MICH") used
+  // for the legend won't match the color map and would fall back to blue.
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  // Resolve the brand color, then guard it for the light theme: a near-white
+  // team color (e.g. UCLA on a white panel) would draw an invisible white
+  // line + legend label, so readableLineColor darkens it to a visible shade
+  // of the same hue. Dark theme keeps the true brand color.
+  const HOME_COLOR = readableLineColor(
+    getTeamColor(homeTeamFull || homeTeam, sport) || '#3b82f6',
+    isLight
+  );
+  const HOME_INK = inkFor(HOME_COLOR);
+  // Away team = the theme-neutral line: near-black on the light panel, white on
+  // the dark panel. AWAY_INK is the contrasting ink for content on the away chip.
+  const AWAY_COLOR = isLight ? '#0a0a0a' : '#ffffff';
+  const AWAY_INK = isLight ? '#ffffff' : '#0a0a0a';
+  // Surface + axis colors that flip with the page theme so the chart never
+  // renders dark-on-dark (or a black panel on the light page).
+  const PANEL_BG = isLight ? '#ffffff' : '#0d0d0d';
+  const GRID_MID = isLight ? '#cbd5e1' : '#27272a';
+  const GRID_LINE = isLight ? '#e2e8f0' : '#1a1a1a';
+  const AXIS_TEXT = isLight ? '#64748b' : '#71717a';
+  const PCT_TEXT = isLight ? '#94a3b8' : '#52525b';
+  const PILL_BG = isLight ? '#f1f5f9' : '#0d0d0d';
+  const PILL_TEXT = isLight ? '#475569' : '#cbd5e1';
+  const EMPTY_TITLE = isLight ? '#334155' : '#d1d5db';
+  const EMPTY_BODY = isLight ? '#64748b' : '#6b7280';
+  const TOOLTIP_BG = isLight ? '#ffffff' : '#0a0a0a';
+  const TOOLTIP_TEXT = isLight ? '#0f172a' : '#e5e7eb';
   const [range, setRange] = useState('1H');
   const [data, setData] = useState({ points: [], openedAt: null, current: null });
   const [loading, setLoading] = useState(true);
@@ -128,13 +177,24 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
     if (!liveOdds || liveOdds.home == null || liveOdds.away == null) return null;
     const probs = devig(liveOdds.home, liveOdds.away);
     if (probs.home == null) return null;
-    return { home: probs.home, away: probs.away, homeML: liveOdds.home, awayML: liveOdds.away };
+    // The book's overround (vig) = sum of the raw with-vig implied probs.
+    // We re-apply it to each point's de-vigged probability when deriving its
+    // per-point moneyline, so the right edge reproduces the exact live odds
+    // while earlier points show the odds implied by where the line was then.
+    const rawH = americanToImplied(liveOdds.home);
+    const rawA = americanToImplied(liveOdds.away);
+    const overround = (rawH != null && rawA != null && rawH + rawA > 0) ? rawH + rawA : 1;
+    return { home: probs.home, away: probs.away, homeML: liveOdds.home, awayML: liveOdds.away, overround };
   }, [liveOdds]);
 
   // Window length per range pill (how far back the chart should look).
   // Default is 1H — gives enough outlook to see both pre-game movement
   // and in-game swings.
   const rangeWindowMs = useMemo(() => {
+    // The in-card sparkline is a fixed, label-free 15-min window so it can
+    // stretch wide across the empty space in the game card without a range
+    // picker. The full chart keeps its selectable ranges.
+    if (mini) return 15 * 60_000;            // 15 min
     switch (range) {
       case 'LIVE': return 30 * 60_000;      // 30 min
       case '1H':   return 60 * 60_000;      // 1 h
@@ -143,7 +203,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
       case 'ALL':  return 7 * 24 * 60 * 60_000; // 7 d
       default:     return 60 * 60_000;
     }
-  }, [range]);
+  }, [range, mini]);
 
   // Resolve game start time (ms epoch). If the page didn't pass one,
   // assume the game just started (so the entire window is treated as
@@ -174,6 +234,13 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
     const now = Date.now();
     const start = now - rangeWindowMs;
     const target = liveAnchor.home;
+    const overround = liveAnchor.overround || 1;
+    // Per-point moneylines derived from where the line is at that point, so
+    // the tooltip odds move with the graph (re-vigged via overround).
+    const mlFor = (homeImplied) => ({
+      homeML: impliedToAmerican(homeImplied * overround),
+      awayML: impliedToAmerican((1 - homeImplied) * overround),
+    });
 
     // Deterministic seed from gameId so reloads/range-changes don't
     // reshuffle the whole pre-game history.
@@ -188,7 +255,10 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
     // Opening line — a stable probability the book put up before the
     // game. Anchored loosely to the current anchor but pulled toward
     // 50/50, so a 70/30 current game might have opened ~58/42 etc.
-    const opening = Math.min(0.85, Math.max(0.15, 0.5 + (target - 0.5) * 0.4 + (rand() - 0.5) * 0.06));
+    // Opening sits most of the way toward the current line (not pinned near
+    // 50/50) so the favorite is visible across the whole window instead of the
+    // line looking flat-and-even until a dramatic fan-out at the right edge.
+    const opening = Math.min(0.88, Math.max(0.12, 0.5 + (target - 0.5) * 0.62 + (rand() - 0.5) * 0.06));
 
     // Effective game-start clamped to the visible window. If the game
     // hasn't actually started yet (scheduled), treat 'now' as the
@@ -225,8 +295,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
           t,
           homeImplied: v,
           awayImplied: 1 - v,
-          homeML: liveAnchor.homeML,
-          awayML: liveAnchor.awayML,
+          ...mlFor(v),
           isPreGame: true,
         });
       }
@@ -262,9 +331,11 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
         const openingBlend = Math.max(0, 0.4 - frac);
         intent = intent * (1 - openingBlend) + opening * openingBlend;
 
-        // Per-tick jitter for the jagged look — bigger than pre-game.
+        // Per-tick jitter for the jagged look — bigger than pre-game. A lower
+        // pull lets the line wander off the intent path between swings so it
+        // reads as live movement rather than a smooth glide to the target.
         const noise = (rand() - 0.5) * 0.05;
-        const pull = (intent - v) * 0.32;
+        const pull = (intent - v) * 0.26;
         v = Math.min(0.98, Math.max(0.02, v + noise + pull));
 
         const t = gameStartInWindow + frac * inGameSpan;
@@ -272,8 +343,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
           t,
           homeImplied: v,
           awayImplied: 1 - v,
-          homeML: liveAnchor.homeML,
-          awayML: liveAnchor.awayML,
+          ...mlFor(v),
         });
       }
     }
@@ -317,18 +387,21 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
         if (prev.length === 0) return prev;
         const last = prev[prev.length - 1];
         const target = liveAnchor.home;
-        // Bigger drift than before (±1.5%) so movement is actually
-        // visible, with a moderate pull-back so it stays near the anchor.
-        const drift = (Math.random() - 0.5) * 0.03;
-        const pull = (target - last.homeImplied) * 0.12;
+        // Gentle drift (±0.6%) with a firmer pull-back so the right edge
+        // wanders just enough to feel live, without whipping toward the anchor
+        // every few seconds (which made every game's tail look like a big
+        // last-minute swing).
+        const drift = (Math.random() - 0.5) * 0.012;
+        const pull = (target - last.homeImplied) * 0.16;
         let v = last.homeImplied + drift + pull;
         v = Math.min(0.985, Math.max(0.015, v));
+        const orr = liveAnchor.overround || 1;
         const next = {
           t: Date.now(),
           homeImplied: v,
           awayImplied: 1 - v,
-          homeML: liveAnchor.homeML,
-          awayML: liveAnchor.awayML,
+          homeML: impliedToAmerican(v * orr),
+          awayML: impliedToAmerican((1 - v) * orr),
           isLive: true,
           isSimulated: true,
         };
@@ -344,7 +417,15 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   // history points, prefer those + a synthesized tail; otherwise use
   // the synthesized history.
   const series = useMemo(() => {
-    const real = (data.points || []).filter(p => p.homeImplied != null && p.awayImplied != null);
+    let real = (data.points || []).filter(p => p.homeImplied != null && p.awayImplied != null);
+    // The in-card sparkline strictly shows only the last 15 min, so always
+    // clip the real history to that window. If too few real points survive
+    // the clip, the synthesized 15-min history (which snaps to the live
+    // anchor) is used instead — never older-than-15m real data.
+    if (mini && real.length) {
+      const cutoff = Date.now() - rangeWindowMs;
+      real = real.filter(p => p.t >= cutoff);
+    }
     if (real.length >= 5) {
       // Server has real data — drop synthesized history older than the
       // first real point and append synthesized tail only after the last
@@ -354,19 +435,21 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
       return [...real, ...tail];
     }
     return history;
-  }, [data.points, history]);
+  }, [data.points, history, mini, rangeWindowMs]);
 
   // Layout — use the *measured* container width as the viewBox width so
   // the SVG renders 1:1 with screen pixels and text doesn't get stretched
   // horizontally. (Previously we used a fixed 800-wide viewBox with
   // preserveAspectRatio="none", which made labels and badges look
   // squished/elongated on wider screens.) Height is fixed.
-  const VB_H = 220;
-  const VB_W = Math.max(320, Math.round(width));
-  const PAD_L = 14;
-  const PAD_R = 56;  // room for right-edge live labels
-  const PAD_T = 16;
-  const PAD_B = 26;
+  const VB_H = mini ? 46 : (compact ? 120 : 184);
+  // Mini stretches to fill its (flex) container — measured width, 1:1 with px
+  // so hover math stays accurate. Falls back to a sane min so it never collapses.
+  const VB_W = mini ? Math.max(120, Math.round(width)) : Math.max(320, Math.round(width));
+  const PAD_L = mini ? 4 : 14;
+  const PAD_R = mini ? 32 : 56;  // room for right-edge live labels
+  const PAD_T = mini ? 7 : 16;
+  const PAD_B = mini ? 7 : 26;
   const plotW = VB_W - PAD_L - PAD_R;
   const plotH = VB_H - PAD_T - PAD_B;
 
@@ -383,7 +466,33 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
     if (tMax === tMin) return PAD_L;
     return PAD_L + ((t - tMin) / (tMax - tMin)) * plotW;
   }, [tMin, tMax, plotW]);
-  const yOf = useCallback((p) => PAD_T + (1 - p) * plotH, [plotH]);
+
+  // Mini sparkline auto-scales its vertical axis to the data's actual win-%
+  // range (with padding + a minimum span) so a live game's movement fills the
+  // tiny chart instead of collapsing into a near-flat line across the full
+  // 0–100% scale. The full chart keeps the fixed 0–1 domain — it pins axis
+  // labels at 0/50/100%, so it must not auto-zoom.
+  const yDomain = useMemo(() => {
+    if (!mini || series.length === 0) return { lo: 0, hi: 1 };
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const p of series) {
+      if (p.homeImplied != null) { lo = Math.min(lo, p.homeImplied); hi = Math.max(hi, p.homeImplied); }
+      if (p.awayImplied != null) { lo = Math.min(lo, p.awayImplied); hi = Math.max(hi, p.awayImplied); }
+    }
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) return { lo: 0, hi: 1 };
+    const mid = (lo + hi) / 2;
+    // Min half-span keeps a dead-flat market from zooming so far in that the
+    // jitter looks like an earthquake; the 1.4x pad stops lines from kissing
+    // the top/bottom edges.
+    const half = Math.max((hi - lo) / 2, 0.05) * 1.4;
+    return { lo: Math.max(0, mid - half), hi: Math.min(1, mid + half) };
+  }, [mini, series]);
+
+  const yOf = useCallback((p) => {
+    const span = (yDomain.hi - yDomain.lo) || 1;
+    return PAD_T + (1 - (p - yDomain.lo) / span) * plotH;
+  }, [yDomain, plotH]);
 
   const pathFor = useCallback((key) => {
     if (series.length === 0) return '';
@@ -401,6 +510,99 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   const homePath = useMemo(() => pathFor('homeImplied'), [pathFor]);
   const awayPath = useMemo(() => pathFor('awayImplied'), [pathFor]);
   const last = series[series.length - 1] || null;
+
+  // Mini mode — a tiny in-card sparkline (no header, axes, pills, tooltip).
+  // Reuses all the same series/synth/live-tail data machinery as the full
+  // chart so the line stays consistent; just renders a compact two-line SVG
+  // with a dashed 50% midline and small right-edge win-% badges.
+  if (mini) {
+    if (series.length < 2 || !last) {
+      return <div ref={wrapRef} style={{ width: '100%', height: VB_H }} aria-hidden="true" />;
+    }
+    // Desktop-only hover annotations (mini only renders on desktop). The
+    // viewBox is 1:1 with rendered px, so clientX − svg left maps straight to
+    // viewBox x. We show a guide line, dots, and a small value tooltip — no
+    // axis/time labels are drawn unless the user hovers.
+    const onMiniMove = (e) => {
+      if (!svgRef.current || series.length === 0) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const vbX = e.clientX - rect.left;
+      if (vbX < PAD_L - 6 || vbX > PAD_L + plotW + 6) { setHover(null); return; }
+      let best = 0, bestDx = Infinity;
+      for (let i = 0; i < series.length; i++) {
+        const dx = Math.abs(xOf(series[i].t) - vbX);
+        if (dx < bestDx) { bestDx = dx; best = i; }
+      }
+      setHover({ idx: best });
+    };
+    const mh = hover != null && series[hover.idx] ? series[hover.idx] : null;
+    const mhX = mh ? xOf(mh.t) : null;
+    const mhHomeY = mh ? yOf(mh.homeImplied) : null;
+    const mhAwayY = mh ? yOf(mh.awayImplied) : null;
+    // Center the tooltip over the hovered point but clamp it inside the chart
+    // width so the card's overflow-hidden never clips it.
+    const TIP_HALF = 50;
+    const tipMax = (width || VB_W);
+    const tipLeft = mhX != null ? Math.min(Math.max(mhX, TIP_HALF + 2), tipMax - TIP_HALF - 2) : 0;
+    return (
+      <div ref={wrapRef} className="relative" style={{ width: '100%', height: VB_H }}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${VB_W} ${VB_H}`}
+          style={{ width: '100%', height: VB_H }}
+          className="block overflow-visible select-none"
+          onPointerMove={onMiniMove}
+          onPointerLeave={() => setHover(null)}
+        >
+          <line x1={PAD_L} x2={PAD_L + plotW} y1={yOf(0.5)} y2={yOf(0.5)} stroke={GRID_MID} strokeDasharray="3 3" strokeWidth="1" />
+          <path d={awayPath} fill="none" stroke={AWAY_COLOR} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <path d={homePath} fill="none" stroke={HOME_COLOR} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          {mh && (
+            <g>
+              <line x1={mhX} x2={mhX} y1={PAD_T} y2={PAD_T + plotH} stroke={GRID_MID} strokeWidth="1" />
+              {mh.awayImplied != null && <circle cx={mhX} cy={mhAwayY} r="2.6" fill={AWAY_COLOR} stroke={PANEL_BG} strokeWidth="1.25" />}
+              {mh.homeImplied != null && <circle cx={mhX} cy={mhHomeY} r="2.6" fill={HOME_COLOR} stroke={PANEL_BG} strokeWidth="1.25" />}
+            </g>
+          )}
+          {last.awayImplied != null && (
+            <g>
+              <rect x={PAD_L + plotW + 2} y={yOf(last.awayImplied) - 7} width="29" height="13" rx="3" fill={AWAY_COLOR} stroke="#0a0a0a" strokeWidth="1.25" />
+              <text x={PAD_L + plotW + 16.5} y={yOf(last.awayImplied) + 2.5} fontSize="8.5" fontWeight="800" fill={AWAY_INK} textAnchor="middle">{fmtPct(last.awayImplied)}</text>
+            </g>
+          )}
+          {last.homeImplied != null && (
+            <g>
+              <rect x={PAD_L + plotW + 2} y={yOf(last.homeImplied) - 7} width="29" height="13" rx="3" fill={HOME_COLOR} stroke="#0a0a0a" strokeWidth="1.25" />
+              <text x={PAD_L + plotW + 16.5} y={yOf(last.homeImplied) + 2.5} fontSize="8.5" fontWeight="800" fill={HOME_INK} textAnchor="middle">{fmtPct(last.homeImplied)}</text>
+            </g>
+          )}
+        </svg>
+        {mh && (
+          <div
+            className="absolute pointer-events-none z-10 rounded-md px-2 py-1 whitespace-nowrap"
+            style={{
+              left: tipLeft,
+              top: -2,
+              transform: 'translate(-50%, -100%)',
+              backgroundColor: TOOLTIP_BG,
+              border: '1px solid #0a0a0a',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            }}
+          >
+            <div className="text-[9px] font-semibold" style={{ color: AXIS_TEXT }}>{fmtTime(mh.t, range)}</div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold" style={{ color: AWAY_COLOR }}>
+                <span className="w-2 h-2 rounded-sm" style={{ background: AWAY_COLOR }} />{fmtPct(mh.awayImplied)}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold" style={{ color: HOME_COLOR }}>
+                <span className="w-2 h-2 rounded-sm" style={{ background: HOME_COLOR }} />{fmtPct(mh.homeImplied)}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Pointer interaction — find nearest point by x. Works for both mouse
   // and touch via pointer events. viewBox is now sized to live width so
@@ -461,8 +663,8 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
             onClick={() => setRange(r.key)}
             className="px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider rounded-md transition-transform active:translate-y-[1px]"
             style={{
-              background: active ? '#fb923c' : '#0d0d0d',
-              color: active ? '#0a0a0a' : '#cbd5e1',
+              background: active ? HOME_COLOR : PILL_BG,
+              color: active ? HOME_INK : PILL_TEXT,
               border: `2px solid ${BORDER}`,
               boxShadow: active ? '2px 2px 0 0 #0a0a0a' : '2px 2px 0 0 #0a0a0a',
             }}
@@ -475,10 +677,10 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
   );
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center text-center" style={{ height: 200 }}>
+    <div className="flex flex-col items-center justify-center text-center" style={{ height: VB_H }}>
       <div className="text-3xl mb-1">📈</div>
-      <div className="text-sm font-bold text-gray-300">Tracking odds…</div>
-      <div className="text-xs text-gray-500 mt-1 max-w-[260px]">
+      <div className="text-sm font-bold" style={{ color: EMPTY_TITLE }}>Tracking odds…</div>
+      <div className="text-xs mt-1 max-w-[260px]" style={{ color: EMPTY_BODY }}>
         We just started capturing this market. Check back in a few minutes to see how the line moves.
       </div>
     </div>
@@ -489,7 +691,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
       ref={wrapRef}
       className="rounded-xl p-3 sm:p-4"
       style={{
-        background: '#0d0d0d',
+        background: PANEL_BG,
         border: `2.5px solid ${BORDER}`,
         boxShadow: SHADOW,
       }}
@@ -497,8 +699,8 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
       {headerLabel}
 
       {loading && series.length === 0 ? (
-        <div className="flex items-center justify-center" style={{ height: 200 }}>
-          <div className="w-7 h-7 border-2 border-gray-700 border-t-emerald-400 rounded-full animate-spin" />
+        <div className="flex items-center justify-center" style={{ height: VB_H }}>
+          <img src="/pikslogotransparent.png" alt="Piks" className="h-7 w-auto opacity-80 animate-pulse" />
         </div>
       ) : series.length === 0 ? (
         emptyState
@@ -521,7 +723,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
                 x2={PAD_L + plotW}
                 y1={yOf(p)}
                 y2={yOf(p)}
-                stroke={p === 0.5 ? '#27272a' : '#1a1a1a'}
+                stroke={p === 0.5 ? GRID_MID : GRID_LINE}
                 strokeDasharray={p === 0.5 ? '4 4' : ''}
                 strokeWidth="1"
               />
@@ -532,7 +734,7 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
                 x={PAD_L + plotW + 6}
                 y={yOf(p) + 4}
                 fontSize="11"
-                fill="#52525b"
+                fill={PCT_TEXT}
                 fontWeight="600"
               >
                 {Math.round(p * 100)}%
@@ -540,13 +742,13 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
             ))}
 
             {/* Time axis labels (start / mid / end) */}
-            <text x={PAD_L} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600">
+            <text x={PAD_L} y={VB_H - 6} fontSize="11" fill={AXIS_TEXT} fontWeight="600">
               {fmtTime(tMin, range)}
             </text>
-            <text x={PAD_L + plotW / 2} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600" textAnchor="middle">
+            <text x={PAD_L + plotW / 2} y={VB_H - 6} fontSize="11" fill={AXIS_TEXT} fontWeight="600" textAnchor="middle">
               {fmtTime((tMin + tMax) / 2, range)}
             </text>
-            <text x={PAD_L + plotW} y={VB_H - 6} fontSize="11" fill="#71717a" fontWeight="600" textAnchor="end">
+            <text x={PAD_L + plotW} y={VB_H - 6} fontSize="11" fill={AXIS_TEXT} fontWeight="600" textAnchor="end">
               now
             </text>
 
@@ -576,13 +778,13 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
             {last && last.awayImplied != null && (
               <g>
                 <rect x={PAD_L + plotW + 4} y={yOf(last.awayImplied) - 9} width="38" height="16" rx="4" fill={AWAY_COLOR} stroke="#0a0a0a" strokeWidth="1.5" />
-                <text x={PAD_L + plotW + 23} y={yOf(last.awayImplied) + 2} fontSize="10" fontWeight="800" fill="#0a0a0a" textAnchor="middle">{fmtPct(last.awayImplied)}</text>
+                <text x={PAD_L + plotW + 23} y={yOf(last.awayImplied) + 2} fontSize="10" fontWeight="800" fill={AWAY_INK} textAnchor="middle">{fmtPct(last.awayImplied)}</text>
               </g>
             )}
             {last && last.homeImplied != null && (
               <g>
                 <rect x={PAD_L + plotW + 4} y={yOf(last.homeImplied) - 9} width="38" height="16" rx="4" fill={HOME_COLOR} stroke="#0a0a0a" strokeWidth="1.5" />
-                <text x={PAD_L + plotW + 23} y={yOf(last.homeImplied) + 2} fontSize="10" fontWeight="800" fill="#0a0a0a" textAnchor="middle">{fmtPct(last.homeImplied)}</text>
+                <text x={PAD_L + plotW + 23} y={yOf(last.homeImplied) + 2} fontSize="10" fontWeight="800" fill={HOME_INK} textAnchor="middle">{fmtPct(last.homeImplied)}</text>
               </g>
             )}
 
@@ -607,10 +809,10 @@ export default function OddsHistoryChart({ gameId, homeTeam, awayTeam, liveOdds,
               style={{
                 left: `clamp(0px, ${(xOf(hovered.t) / VB_W) * width + 8}px, ${Math.max(0, width - 160)}px)`,
                 top: 6,
-                background: '#0a0a0a',
+                background: TOOLTIP_BG,
                 border: `2px solid ${BORDER}`,
                 boxShadow: '2px 2px 0 0 #0a0a0a',
-                color: '#e5e7eb',
+                color: TOOLTIP_TEXT,
                 minWidth: 130,
               }}
             >

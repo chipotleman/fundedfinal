@@ -34,6 +34,19 @@ function timeAgo(iso) {
   return `${d}d`;
 }
 
+// Canonical social-battle-flow mode identity (matches the invite popup,
+// Play-a-Friend modal, and the --sbf-* tokens in styles/globals.css):
+// RUSH amber, ORIGINAL blue, TOURNAMENT violet. Used for the small mode
+// chip on each battle-invite row so the dropdown speaks the same language.
+const MODE_DISPLAY = {
+  rush: { label: 'Rush', color: '#fb923c' },
+  original: { label: 'Original', color: '#3b82f6' },
+  tournament: { label: 'Tournament', color: '#8b5cf6' },
+};
+function modeDisplay(m) {
+  return MODE_DISPLAY[m] || MODE_DISPLAY.original;
+}
+
 // Notifications dropdown — alerts only (battle invites, friend requests, and
 // any future game-result alerts). Messages have moved to MessagesDropdown.
 export default function NotificationsDropdown({ open, onClose, anchorRef }) {
@@ -103,10 +116,11 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
       ref={ref}
       role="dialog"
       aria-label="Notifications"
-      className="fixed left-1/2 -translate-x-1/2 top-[var(--top-nav-height,70px)] sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 sm:top-full mt-2 w-[calc(100vw-16px)] max-w-sm sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#3b82f6]/30 rounded-xl shadow-2xl z-[70] overflow-hidden"
+      data-notifications-dropdown="true"
+      className="fixed left-1/2 -translate-x-1/2 top-[var(--top-nav-height,70px)] sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 sm:top-full mt-2 w-[calc(100vw-16px)] max-w-sm sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#f97316]/30 rounded-xl shadow-2xl z-[70] overflow-hidden"
       style={{
         maxHeight: '70vh',
-        boxShadow: '0 0 0 1px rgba(59,130,246,0.10), 0 18px 48px -12px rgba(59,130,246,0.35)',
+        boxShadow: '0 0 0 1px rgba(249,115,22,0.25), 0 10px 30px -16px rgba(0,0,0,0.6)',
       }}
     >
       <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between gap-2">
@@ -137,14 +151,23 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
           <Section type="invite" title="Battle Invites">
             {battleInvites.map((inv) => {
               const buyIn = parseFloat(inv.buyIn) || 0;
+              const md = modeDisplay(inv.gameMode);
               return (
                 <Row key={inv.id} type="invite" sender={inv.sender} time={inv.createdAt}>
-                  <div className="text-white text-sm font-semibold truncate">
-                    {inv.sender?.username || 'Someone'} challenged you
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="text-white text-sm font-semibold truncate">
+                      {inv.sender?.username || 'Someone'} challenged you
+                    </div>
+                    <span
+                      className="shrink-0 text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
+                      style={{ color: md.color, background: `${md.color}1f`, border: `1px solid ${md.color}59` }}
+                    >
+                      {md.label}
+                    </span>
                   </div>
-                  <div className="text-gray-400 text-xs">
+                  <div className="text-gray-400 text-xs mt-0.5">
                     {isBeta
-                      ? `${formatMoney(buyIn, 0)} coin buy-in · ${formatMoney(buyIn * 2, 0)} coin pot`
+                      ? `${formatMoney(buyIn, 0)} Clash Coins buy-in · ${formatMoney(buyIn * 2, 0)} Crowns pot`
                       : `$${buyIn} buy-in · $${buyIn * 2} pot`}{inv.duration ? ` · ${inv.duration}h` : ''}
                   </div>
                   <div className="flex gap-2 mt-2">
@@ -153,15 +176,16 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                       onClick={() => wrap(inv.id, async () => {
                         const data = await ctx.acceptInvite(inv.id);
                         onClose?.();
-                        if (data) navigateToBattleStart(router, data.matchup);
+                        if (data?.ok && data.matchup) navigateToBattleStart(router, data.matchup);
                       })}
-                      className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                      style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
+                      className="notif-primary-action flex-1 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ background: 'linear-gradient(180deg,#3b82f6,#4f46e5)', boxShadow: '0 2px 10px rgba(59,130,246,0.28)' }}
                     >Accept</button>
                     <button
                       disabled={busyId === inv.id}
                       onClick={() => wrap(inv.id, async () => { await ctx.declineInvite(inv.id); })}
-                      className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
+                      className="flex-1 text-gray-300 text-xs font-semibold py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.08)' }}
                     >Decline</button>
                   </div>
                 </Row>
@@ -214,9 +238,9 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
               const amount = Math.abs(pnl);
               let label;
               if (r.outcome === 'won') {
-                label = amount > 0 ? (isBeta ? `Won ${formatMoney(amount)} coins` : `Won $${formatMoney(amount)}`) : 'Won';
+                label = amount > 0 ? (isBeta ? `Won ${formatMoney(amount)} Crowns` : `Won $${formatMoney(amount)}`) : 'Won';
               } else if (r.outcome === 'lost') {
-                label = amount > 0 ? (isBeta ? `Lost ${formatMoney(amount)} coins` : `Lost $${formatMoney(amount)}`) : 'Lost';
+                label = amount > 0 ? (isBeta ? `Lost ${formatMoney(amount)} Crowns` : `Lost $${formatMoney(amount)}`) : 'Lost';
               } else {
                 label = 'Push';
               }
@@ -244,7 +268,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                         // Ack after navigation so the popup is rendered first.
                         ctx.ackGameResult(r.matchupId);
                       })}
-                      className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      className="notif-primary-action flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
                       style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                     >View</button>
                     <button
@@ -282,13 +306,14 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
         {socialActivity.length > 0 && (
           <Section type="social_like" title="Social Activity">
             {socialActivity.map((s) => {
-              const isComment = s.type === 'comment';
+              const isReply = s.type === 'reply';
+              const isComment = s.type === 'comment' || isReply;
               const rowType = isComment ? 'social_comment' : 'social_like';
               return (
                 <Row key={s.id} type={rowType} sender={s.actor} time={s.createdAt}>
                   <div className="text-white text-sm font-semibold truncate">
                     {(s.actor?.username || 'Someone')}{' '}
-                    {isComment ? 'commented on your post' : 'liked your post'}
+                    {isReply ? 'replied to you' : isComment ? 'commented on your post' : 'liked your post'}
                   </div>
                   {(isComment ? s.commentPreview : s.postPreview) && (
                     <div className="text-gray-400 text-xs truncate">

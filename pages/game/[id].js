@@ -7,6 +7,7 @@ import OddsHistoryChart from '../../components/game/OddsHistoryChart';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { leavePage } from '../../utils/leavePage';
 import TeamLogo from '../../components/TeamLogo';
+import { getTeamColor, inkFor } from '../../utils/teamColors';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -42,8 +43,19 @@ export default function GameDetail() {
     // commits the next route looks much cleaner.
     // Defer to the next tick so React flushes any in-flight
     // state before we ask the router to navigate.
+    // When a page deep-links into the game with `?from=/path` (e.g. the
+    // My Piks pick rows / Battle Insights "Open Game"), prefer returning
+    // there. router.back() still wins when there's genuine in-app history
+    // (it preserves scroll); the `from` target only kicks in as the
+    // fallback when this page was a fresh/hard load (history idx 0), so
+    // the user lands back where they came from instead of the dashboard.
+    // Guard against open-redirects by requiring a single leading slash.
+    const fromParam = router.query.from;
+    const from = typeof fromParam === 'string' && fromParam.startsWith('/') && !fromParam.startsWith('//')
+      ? fromParam
+      : null;
     setTimeout(() => {
-      leavePage({ router, fallbackHref: '/dashboard' });
+      leavePage({ router, fallbackHref: from || '/dashboard' });
     }, 0);
   };
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -147,20 +159,29 @@ export default function GameDetail() {
       return;
     }
 
-    console.log('[GameDetail] Not found in context, fetching from API...');
     const fetchGame = async () => {
       try {
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          console.log('[GameDetail] API returned', data.games?.length || 0, 'games');
           const foundGame = data.games?.find(g => String(g.id) === String(id));
           if (foundGame) {
-            console.log('[GameDetail] Found in API response');
-          } else {
-            console.log('[GameDetail] Not found in API response');
+            setGame(foundGame);
+            return;
           }
-          setGame(foundGame);
+        }
+
+        // Not in the live feed — the game has likely ended or aged out of the
+        // homepage window (common for games linked from My Piks). Resolve it
+        // directly by id so we can still show the summary (final score + odds
+        // chart) instead of a "Game not found" dead end.
+        const single = await fetch(`/api/games/${encodeURIComponent(id)}`);
+        if (single.ok) {
+          const data = await single.json();
+          if (data.game) {
+            setGame(data.game);
+            return;
+          }
         }
       } catch (error) {
         console.error('Error fetching game:', error);
@@ -223,19 +244,29 @@ export default function GameDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+      <div className="game-detail-page min-h-screen bg-black flex items-center justify-center">
+        <img
+          src="/pikslogotransparent.png"
+          alt="Piks"
+          className="w-32 h-auto opacity-90 animate-pulse"
+        />
       </div>
     );
   }
 
   if (!game) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-        <p className="text-xl mb-4">Game not found</p>
-        <button 
+      <div className="game-detail-page min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 text-center">
+        <img
+          src="/pikslogotransparent.png"
+          alt="Piks"
+          className="w-28 h-auto opacity-90 mb-6"
+        />
+        <p className="text-lg font-semibold mb-1">This game has wrapped up</p>
+        <p className="text-sm text-gray-400 mb-6">Its details are no longer available.</p>
+        <button
           onClick={handleBack}
-          className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
+          className="bg-[var(--home-color,#3b82f6)] text-white px-6 py-3 rounded-lg font-semibold"
         >
           Go Back
         </button>
@@ -259,13 +290,24 @@ export default function GameDetail() {
   const isFinal = game.isCompleted || game.status === 'FINAL';
   const betsForThisGame = betSlip.filter(b => String(b.gameId) === String(game.id));
 
+  // Theme the page after the home team. `homeColor` drives the LIVE pill,
+  // the selected-bet highlight, and the View Bet Slip button. Exposed as CSS
+  // vars on the page wrapper so Tailwind arbitrary-value classes (and the
+  // desktop sub-components) can pick up the dynamic color without prop drilling.
+  const homeName = game.homeTeamFull || game.homeTeam;
+  const homeColor = getTeamColor(homeName) || '#3b82f6';
+  const homeInk = inkFor(homeColor);
+
   return (
     <>
       <Head>
         <title>{game.awayTeamFull} vs {game.homeTeamFull} | Piks</title>
       </Head>
 
-      <div className="min-h-screen bg-black text-white pb-32">
+      <div
+        className="game-detail-page min-h-screen bg-black text-white pb-32"
+        style={{ '--home-color': homeColor, '--home-bg': `${homeColor}26`, '--home-ink': homeInk }}
+      >
         <DesktopGameDetail
           game={game}
           possession={possession}
@@ -328,7 +370,7 @@ export default function GameDetail() {
                     <TeamLogoBadge name={game.awayTeamFull || game.awayTeam} sport={game.sport} accent="orange" size={28} />
                     <span className="text-lg font-bold truncate text-white">{game.awayTeamFull || game.awayTeam}</span>
                   </div>
-                  <span className="text-2xl font-black tabular-nums" style={{ color: '#fb923c' }}>
+                  <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>
                     {isLive || isFinal ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0) : '—'}
                   </span>
                 </div>
@@ -337,7 +379,7 @@ export default function GameDetail() {
                     <TeamLogoBadge name={game.homeTeamFull || game.homeTeam} sport={game.sport} accent="blue" size={28} />
                     <span className="text-lg font-bold truncate text-white">{game.homeTeamFull || game.homeTeam}</span>
                   </div>
-                  <span className="text-2xl font-black tabular-nums" style={{ color: '#3b82f6' }}>
+                  <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>
                     {isLive || isFinal ? (possession?.homeScore ?? game.scores?.home?.total ?? game.homeScore ?? 0) : '—'}
                   </span>
                 </div>
@@ -349,12 +391,12 @@ export default function GameDetail() {
                   <span
                     className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
                     style={{
-                      background: 'rgba(239,68,68,0.18)',
-                      border: '1.5px solid rgba(239,68,68,0.55)',
-                      color: '#fca5a5',
+                      background: `${homeColor}2e`,
+                      border: `1.5px solid ${homeColor}8c`,
+                      color: homeColor,
                     }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: homeColor }} />
                     Live
                   </span>
                 ) : (
@@ -374,13 +416,16 @@ export default function GameDetail() {
             small jitter tick every 3 seconds so the line visibly moves
             like public money is shifting, then snaps back to the real
             odds whenever the server snapshot refreshes. */}
-        {hasLines && (
+        {(hasLines || isFinal) && (
           <div className="px-4 pt-4 md:hidden">
             <OddsHistoryChart
               gameId={game.id}
               homeTeam={game.homeTeam || game.homeTeamFull}
               awayTeam={game.awayTeam || game.awayTeamFull}
-              liveOdds={{ home: moneyline.home, away: moneyline.away }}
+              homeTeamFull={game.homeTeamFull || game.homeTeam}
+              awayTeamFull={game.awayTeamFull || game.awayTeam}
+              sport={game.sport}
+              liveOdds={hasLines ? { home: moneyline.home, away: moneyline.away } : null}
               commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
               isLive={isLive}
               isFinal={isFinal}
@@ -422,12 +467,12 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('moneyline', game.awayTeamFull || game.awayTeam)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.awayTeamFull || game.awayTeam}</div>
-                    <div className={`text-xl font-bold ${checkBetInSlip('moneyline', game.awayTeamFull || game.awayTeam) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-xl font-bold ${checkBetInSlip('moneyline', game.awayTeamFull || game.awayTeam) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(moneyline.away) : '-'}
                     </div>
                   </button>
@@ -437,12 +482,12 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('moneyline', game.homeTeamFull || game.homeTeam)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.homeTeamFull || game.homeTeam}</div>
-                    <div className={`text-xl font-bold ${checkBetInSlip('moneyline', game.homeTeamFull || game.homeTeam) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-xl font-bold ${checkBetInSlip('moneyline', game.homeTeamFull || game.homeTeam) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(moneyline.home) : '-'}
                     </div>
                   </button>
@@ -465,13 +510,13 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('spread', `${game.awayTeamFull || game.awayTeam} ${spread.away.point}`)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.awayTeamFull || game.awayTeam}</div>
                     <div className="text-lg font-bold text-white">{hasLines ? formatSpread(spread.away.point) : '-'}</div>
-                    <div className={`text-sm ${checkBetInSlip('spread', `${game.awayTeamFull || game.awayTeam} ${spread.away.point}`) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-sm ${checkBetInSlip('spread', `${game.awayTeamFull || game.awayTeam} ${spread.away.point}`) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(spread.away.odds) : '-'}
                     </div>
                   </button>
@@ -481,13 +526,13 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('spread', `${game.homeTeamFull || game.homeTeam} ${spread.home.point}`)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.homeTeamFull || game.homeTeam}</div>
                     <div className="text-lg font-bold text-white">{hasLines ? formatSpread(spread.home.point) : '-'}</div>
-                    <div className={`text-sm ${checkBetInSlip('spread', `${game.homeTeamFull || game.homeTeam} ${spread.home.point}`) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-sm ${checkBetInSlip('spread', `${game.homeTeamFull || game.homeTeam} ${spread.home.point}`) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(spread.home.odds) : '-'}
                     </div>
                   </button>
@@ -510,13 +555,13 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('total', `Over ${total.over.point}`)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">Over</div>
                     <div className="text-lg font-bold text-white">{hasLines ? total.over.point : '-'}</div>
-                    <div className={`text-sm ${checkBetInSlip('total', `Over ${total.over.point}`) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-sm ${checkBetInSlip('total', `Over ${total.over.point}`) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(total.over.odds) : '-'}
                     </div>
                   </button>
@@ -526,13 +571,13 @@ export default function GameDetail() {
                     className={`rounded-lg p-3 text-center transition-all ${
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('total', `Under ${total.under.point}`)
-                        ? 'bg-blue-600 border-2 border-blue-500'
+                        ? 'bg-[var(--home-bg)] border-2 border-[var(--home-color)]'
                         : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">Under</div>
                     <div className="text-lg font-bold text-white">{hasLines ? total.under.point : '-'}</div>
-                    <div className={`text-sm ${checkBetInSlip('total', `Under ${total.under.point}`) ? 'text-white' : 'text-blue-400'}`}>
+                    <div className={`text-sm ${checkBetInSlip('total', `Under ${total.under.point}`) ? 'text-white' : 'text-white'}`}>
                       {hasLines ? formatOdds(total.under.odds) : '-'}
                     </div>
                   </button>
@@ -556,8 +601,8 @@ export default function GameDetail() {
         {betSlip.length > 0 && (
           <div className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-[#1a1a1a] p-4 z-40 md:hidden">
             <button
-              onClick={() => router.push(demo ? '/demo-dashboard' : '/dashboard')}
-              className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"
+              onClick={() => setShowBetSlip(true)}
+              className="w-full bg-[var(--home-color)] text-[var(--home-ink)] font-bold py-4 rounded-xl flex items-center justify-center gap-2"
             >
               <span>View Bet Slip</span>
               <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">{betSlip.length}</span>
@@ -598,7 +643,12 @@ function DesktopMarketCard({ title, children }) {
 }
 
 function DesktopOptionButton({ active, disabled, label, value, sub, onClick, accent = 'blue' }) {
-  const accentBg = accent === 'orange' ? '#fb923c' : '#3b82f6';
+  // Selection highlight is themed after the home team via the `--home-color` /
+  // `--home-bg` CSS vars set on the desktop page wrapper (falls back to the
+  // app blue). The odds number uses the `text-white` class (not an inline
+  // color) so the page's light-theme override (`.game-detail-page .text-white
+  // -> #0f172a`) flips it to dark slate in light mode — an inline #ffffff
+  // can't be overridden by CSS and left the odds invisible on white cards.
   return (
     <button
       onClick={onClick}
@@ -610,7 +660,7 @@ function DesktopOptionButton({ active, disabled, label, value, sub, onClick, acc
             ? 'border-2 text-white'
             : 'bg-[#141414] border border-[#1a1a1a] hover:border-gray-600'
       }`}
-      style={active && !disabled ? { background: 'rgba(59,130,246,0.15)', borderColor: accentBg } : undefined}
+      style={active && !disabled ? { background: 'var(--home-bg, rgba(59,130,246,0.15))', borderColor: 'var(--home-color, #3b82f6)' } : undefined}
     >
       <div className="flex flex-col items-start">
         <span className="text-sm font-semibold text-gray-200">{label}</span>
@@ -623,10 +673,7 @@ function DesktopOptionButton({ active, disabled, label, value, sub, onClick, acc
           {sub != null ? sub : '\u00a0'}
         </span>
       </div>
-      <span
-        className="text-lg font-extrabold tabular-nums"
-        style={{ color: active && !disabled ? '#ffffff' : accentBg }}
-      >
+      <span className="text-lg font-extrabold tabular-nums text-white">
         {value}
       </span>
     </button>
@@ -657,6 +704,8 @@ function DesktopGameDetail({
 }) {
   const awayName = game.awayTeamFull || game.awayTeam;
   const homeName = game.homeTeamFull || game.homeTeam;
+  const homeColor = getTeamColor(homeName) || '#3b82f6';
+  const homeInk = inkFor(homeColor);
   const awayScore = isLive || isFinal
     ? (possession?.awayScore ?? game.scores?.away?.total ?? game.awayScore ?? 0)
     : '—';
@@ -720,8 +769,11 @@ function DesktopGameDetail({
   }, [game?.events]);
 
   return (
-    <div className="hidden md:block">
-      <div className="max-w-[1400px] mx-auto px-6 xl:px-10 py-6">
+    <div
+      className="hidden md:block"
+      style={{ '--home-color': homeColor, '--home-bg': `${homeColor}26`, '--home-ink': homeInk }}
+    >
+      <div className="max-w-[1400px] mx-auto px-6 xl:px-10 py-4">
         {/* Top breadcrumb / back */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -740,8 +792,8 @@ function DesktopGameDetail({
         </div>
 
         {/* Hero */}
-        <div className="bg-gradient-to-b from-[#0d0d0d] to-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 mb-6">
-          <div className="flex items-start justify-between mb-6">
+        <div className="bg-gradient-to-b from-[#0d0d0d] to-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-5 mb-4">
+          <div className="flex items-start justify-between mb-4">
             <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">
               {game.sportName || game.sport || 'Sports'}{game.season ? ` · ${game.season}` : ''}
             </div>
@@ -766,7 +818,7 @@ function DesktopGameDetail({
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-8">
             {/* Away */}
             <div className="flex items-center gap-4">
-              <TeamLogoBadge name={awayName} sport={game.sport} accent="orange" size={64} />
+              <TeamLogoBadge name={awayName} sport={game.sport} accent="orange" size={52} />
               <div className="min-w-0">
                 <div className="text-xl font-black text-white truncate">{awayName}</div>
                 <div className="text-xs text-gray-500 font-semibold">{game.awayRecord || 'Away'}</div>
@@ -776,9 +828,9 @@ function DesktopGameDetail({
             {/* Center scoreboard */}
             <div className="text-center min-w-[260px]">
               <div className="flex items-center justify-center gap-5">
-                <div className="text-5xl xl:text-6xl font-black tabular-nums" style={{ color: '#fb923c' }}>{awayScore}</div>
+                <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>{awayScore}</div>
                 <div className="text-3xl font-bold text-gray-700">—</div>
-                <div className="text-5xl xl:text-6xl font-black tabular-nums" style={{ color: '#3b82f6' }}>{homeScore}</div>
+                <div className="text-4xl xl:text-5xl font-black tabular-nums" style={{ color: 'var(--team-neutral, #ffffff)' }}>{homeScore}</div>
               </div>
               <div className="mt-2 flex items-center justify-center gap-2">
                 {isFinal ? (
@@ -787,9 +839,9 @@ function DesktopGameDetail({
                   <>
                     <span
                       className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
-                      style={{ background: 'rgba(239,68,68,0.18)', border: '1.5px solid rgba(239,68,68,0.55)', color: '#fca5a5' }}
+                      style={{ background: `${homeColor}2e`, border: `1.5px solid ${homeColor}8c`, color: homeColor }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: homeColor }} />
                       Live
                     </span>
                     {game.quarter && (
@@ -811,7 +863,7 @@ function DesktopGameDetail({
                 <div className="text-xl font-black text-white truncate">{homeName}</div>
                 <div className="text-xs text-gray-500 font-semibold">{game.homeRecord || 'Home'}</div>
               </div>
-              <TeamLogoBadge name={homeName} sport={game.sport} accent="blue" size={64} />
+              <TeamLogoBadge name={homeName} sport={game.sport} accent="blue" size={52} />
             </div>
           </div>
 
@@ -824,19 +876,19 @@ function DesktopGameDetail({
 
           {/* Quarter-by-quarter strip (only when data exists) */}
           {periodCount > 0 && (
-            <div className="mt-5 pt-4 border-t border-[#1a1a1a]">
+            <div className="mt-4 pt-3 border-t border-[#1a1a1a]">
               <div className="grid gap-2 text-xs" style={{ gridTemplateColumns: `120px repeat(${periodCount + 1}, minmax(0, 1fr))` }}>
                 <div />
                 {Array.from({ length: periodCount }).map((_, i) => (
                   <div key={i} className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-500">{periodLabel}{i + 1}</div>
                 ))}
                 <div className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-400">T</div>
-                <div className="text-sm font-bold truncate" style={{ color: '#fb923c' }}>{awayName}</div>
+                <div className="text-sm font-bold truncate" style={{ color: 'var(--team-neutral, #ffffff)' }}>{awayName}</div>
                 {Array.from({ length: periodCount }).map((_, i) => (
                   <div key={i} className="text-center text-sm font-bold text-gray-300 tabular-nums">{awayPeriods[i] ?? '—'}</div>
                 ))}
                 <div className="text-center text-sm font-black text-white tabular-nums">{awayScore}</div>
-                <div className="text-sm font-bold truncate" style={{ color: '#3b82f6' }}>{homeName}</div>
+                <div className="text-sm font-bold truncate" style={{ color: '#ffffff' }}>{homeName}</div>
                 {Array.from({ length: periodCount }).map((_, i) => (
                   <div key={i} className="text-center text-sm font-bold text-gray-300 tabular-nums">{homePeriods[i] ?? '—'}</div>
                 ))}
@@ -848,15 +900,18 @@ function DesktopGameDetail({
 
         {/* Two-column shell — single column at md (sidebar collapses
             under the markets), two columns at lg+ with sticky sidebar. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
           {/* Main column */}
-          <div className="min-w-0 space-y-5">
-            {hasLines && (
+          <div className="min-w-0 space-y-4">
+            {(hasLines || isFinal) && (
               <OddsHistoryChart
                 gameId={game.id}
                 homeTeam={game.homeTeam || game.homeTeamFull}
                 awayTeam={game.awayTeam || game.awayTeamFull}
-                liveOdds={{ home: moneyline.home, away: moneyline.away }}
+                homeTeamFull={game.homeTeamFull || game.homeTeam}
+                awayTeamFull={game.awayTeamFull || game.awayTeam}
+                sport={game.sport}
+                liveOdds={hasLines ? { home: moneyline.home, away: moneyline.away } : null}
                 commenceTime={game.commenceTime || game.startTime || game.startsAt || null}
                 isLive={isLive}
                 isFinal={isFinal}
@@ -1145,11 +1200,16 @@ function DesktopGameDetail({
                   type="button"
                   onClick={onOpenAllPicks}
                   disabled={betsForThisGame.length === 0}
-                  className={`w-full text-center text-xs font-bold py-2 rounded-lg transition-colors ${
+                  className={`w-full text-center text-xs font-bold py-2 rounded-lg transition-transform active:scale-[0.98] ${
                     betsForThisGame.length === 0
                       ? 'bg-[#141414] text-gray-600 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-500'
+                      : ''
                   }`}
+                  style={
+                    betsForThisGame.length === 0
+                      ? undefined
+                      : { background: homeColor, color: homeInk }
+                  }
                 >
                   View All Picks
                 </button>

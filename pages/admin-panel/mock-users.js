@@ -69,34 +69,9 @@ export default function MockUsersPage() {
 
     for (const file of files) {
       try {
-        const urlRes = await fetch('/api/uploads/request-url', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({
-            filename: file.name,
-            contentType: file.type,
-            folder: 'mock-avatars',
-          }),
-        });
-
-        if (!urlRes.ok) {
-          console.error('Failed to get upload URL for', file.name);
-          continue;
-        }
-
-        const { uploadUrl, objectKey, publicUrl } = await urlRes.json();
-
-        const uploadRes = await fetch(uploadUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': file.type },
-          body: file,
-        });
-
-        if (uploadRes.ok) {
-          uploadedUrls.push(publicUrl);
-        } else {
-          console.error('Failed to upload', file.name);
-        }
+        const { uploadToBlob } = await import('../../utils/blobUpload');
+        const { url } = await uploadToBlob(file, { kind: 'avatar' });
+        uploadedUrls.push(url);
       } catch (err) {
         console.error('Upload error for', file.name, err);
       }

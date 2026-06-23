@@ -10,6 +10,7 @@ import { formatMoney } from '../utils/formatMoney';
 import { NOTIF_TYPES, TypeChip, getResultStyle } from '../components/notifications/notificationTypeStyles';
 import FriendRequestCard from '../components/notifications/FriendRequestCard';
 import { useBetaMode } from '../contexts/SiteConfigContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -28,12 +29,37 @@ function Avatar(props) {
   return <UserAvatar {...props} link />;
 }
 
-const cardBg = '#0a0a0a';
-const cardBorder = 'rgba(59,130,246,0.22)';
-const textPrimary = '#ffffff';
-const textSecondary = '#9ca3af';
+// Canonical social-battle-flow mode identity (matches the invite popup,
+// Play-a-Friend modal, notifications dropdown, and the --sbf-* tokens):
+// RUSH amber, ORIGINAL blue, TOURNAMENT violet.
+const MODE_DISPLAY = {
+  rush: { label: 'Rush', color: '#fb923c' },
+  original: { label: 'Original', color: '#3b82f6' },
+  tournament: { label: 'Tournament', color: '#8b5cf6' },
+};
+function modeDisplay(m) {
+  return MODE_DISPLAY[m] || MODE_DISPLAY.original;
+}
 
-function SectionHeader({ type, title }) {
+// Theme-aware palette. The page was hardcoded dark, so in light theme it
+// rendered as a black page with a black card. Each sub-component destructures
+// this into the same names (cardBg/cardBorder/textPrimary/textSecondary) so the
+// existing references pick up the themed values automatically.
+function getPalette(isLight) {
+  return {
+    pageBg: isLight ? '#f5f1ea' : '#000000',
+    cardBg: isLight ? '#ffffff' : '#0a0a0a',
+    cardBorder: isLight ? 'rgba(59,130,246,0.28)' : 'rgba(59,130,246,0.22)',
+    textPrimary: isLight ? '#0f172a' : '#ffffff',
+    textSecondary: isLight ? '#64748b' : '#9ca3af',
+    neutralBg: isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.03)',
+    neutralBorder: isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.08)',
+    neutralText: isLight ? '#334155' : '#e5e7eb',
+  };
+}
+
+function SectionHeader({ type, title, pal }) {
+  const { textSecondary } = pal;
   const style = NOTIF_TYPES[type];
   const accent = style?.accent || textSecondary;
   return (
@@ -50,7 +76,8 @@ function SectionHeader({ type, title }) {
   );
 }
 
-function TypedRow({ type, time, avatar, children, accentOverride }) {
+function TypedRow({ type, time, avatar, children, accentOverride, pal }) {
+  const { cardBorder, textSecondary } = pal;
   const style = NOTIF_TYPES[type];
   const accent = accentOverride || style?.accent || '#3b82f6';
   return (
@@ -98,7 +125,7 @@ function hexToRgb(hex) {
   return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
 }
 
-function FilterPills({ active, onChange, counts }) {
+function FilterPills({ active, onChange, counts, pal }) {
   return (
     <div
       className="-mx-3 sm:mx-0 mb-3 px-3 sm:px-0 overflow-x-auto"
@@ -111,11 +138,11 @@ function FilterPills({ active, onChange, counts }) {
           const { r, g, b } = hexToRgb(f.accent);
           const bg = isActive
             ? `rgba(${r},${g},${b},0.16)`
-            : 'rgba(255,255,255,0.03)';
+            : pal.neutralBg;
           const border = isActive
             ? `rgba(${r},${g},${b},0.55)`
-            : 'rgba(255,255,255,0.08)';
-          const color = isActive ? f.accent : '#9ca3af';
+            : pal.neutralBorder;
+          const color = isActive ? f.accent : pal.textSecondary;
           const shadow = isActive
             ? `0 0 12px rgba(${r},${g},${b},0.28)`
             : 'none';
@@ -172,7 +199,13 @@ const BULK_ACTIONS = {
   social: { label: 'Dismiss all', confirmTitle: null, destructive: false },
 };
 
-function NotificationsFeed({ ctx, router, filter }) {
+function NotificationsFeed({ ctx, router, filter, pal, isLight }) {
+  const { cardBg, cardBorder, textPrimary, textSecondary, neutralBg, neutralBorder, neutralText } = pal;
+  // Shared neutral (Decline / Dismiss / Cancel) button styling, theme-aware so
+  // the buttons don't disappear on a light background.
+  const neutralBtnCls = isLight
+    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+    : 'bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10';
   const isBeta = useBetaMode();
   const allBattleInvites = ctx.battleInvites || [];
   const allFriendRequests = ctx.friendRequests || [];
@@ -277,9 +310,9 @@ function NotificationsFeed({ ctx, router, filter }) {
               aria-label={`${bulkAction.label} (${totalNew})`}
               className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap disabled:opacity-50 transition-colors"
               style={{
-                color: '#e5e7eb',
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.10)',
+                color: neutralText,
+                backgroundColor: neutralBg,
+                border: `1px solid ${neutralBorder}`,
               }}
             >
               {bulkBusy ? 'Working…' : bulkAction.label}
@@ -321,7 +354,7 @@ function NotificationsFeed({ ctx, router, filter }) {
               type="button"
               onClick={() => setConfirmOpen(false)}
               disabled={bulkBusy}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+              className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 ${neutralBtnCls}`}
             >
               Cancel
             </button>
@@ -351,11 +384,13 @@ function NotificationsFeed({ ctx, router, filter }) {
 
       {battleInvites.length > 0 && (
         <div>
-          <SectionHeader type="invite" title="Battle Invites" />
+          <SectionHeader type="invite" title="Battle Invites" pal={pal} />
           {battleInvites.map((inv) => {
             const buyIn = parseFloat(inv.buyIn) || 0;
+            const md = modeDisplay(inv.gameMode);
             return (
               <TypedRow
+                pal={pal}
                 key={inv.id}
                 type="invite"
                 time={timeAgo(inv.createdAt)}
@@ -369,13 +404,19 @@ function NotificationsFeed({ ctx, router, filter }) {
               >
                 <div className="flex items-center gap-2 mb-1">
                   <TypeChip type="invite" />
+                  <span
+                    className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
+                    style={{ color: md.color, background: `${md.color}1f`, border: `1px solid ${md.color}59` }}
+                  >
+                    {md.label}
+                  </span>
                 </div>
                 <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
                   <UserNameLink user={inv.sender} fallback="Someone" /> challenged you
                 </div>
                 <div className="text-xs" style={{ color: textSecondary }}>
                   {isBeta
-                    ? `${formatMoney(buyIn, 0)} coin buy-in · ${formatMoney(buyIn * 2, 0)} coin pot`
+                    ? `${formatMoney(buyIn, 0)} Clash Coins buy-in · ${formatMoney(buyIn * 2, 0)} Crowns pot`
                     : `$${buyIn} buy-in · $${buyIn * 2} pot`}{inv.duration ? ` · ${inv.duration}h` : ''}
                 </div>
                 <div className="flex gap-2 mt-2">
@@ -383,15 +424,15 @@ function NotificationsFeed({ ctx, router, filter }) {
                     disabled={busyId === inv.id}
                     onClick={() => wrap(inv.id, async () => {
                       const data = await ctx.acceptInvite(inv.id);
-                      if (data) navigateToBattleStart(router, data.matchup);
+                      if (data?.ok && data.matchup) navigateToBattleStart(router, data.matchup);
                     })}
-                    className="bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-shadow"
-                    style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
+                    className="text-white text-xs font-bold px-4 py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ background: 'linear-gradient(180deg,#3b82f6,#4f46e5)', boxShadow: '0 2px 10px rgba(59,130,246,0.28)' }}
                   >Accept</button>
                   <button
                     disabled={busyId === inv.id}
                     onClick={() => wrap(inv.id, () => ctx.declineInvite(inv.id))}
-                    className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+                    className={`text-xs font-semibold px-4 py-1.5 rounded-lg disabled:opacity-50 ${neutralBtnCls}`}
                   >Decline</button>
                 </div>
               </TypedRow>
@@ -402,9 +443,10 @@ function NotificationsFeed({ ctx, router, filter }) {
 
       {pendingRematches.length > 0 && (
         <div>
-          <SectionHeader type="rematch" title="Rematch Requests" />
+          <SectionHeader type="rematch" title="Rematch Requests" pal={pal} />
           {pendingRematches.map((rm) => (
             <TypedRow
+                pal={pal}
               key={`rematch:${rm.matchupId}`}
               type="rematch"
               time={timeAgo(rm.requestedAt)}
@@ -431,7 +473,7 @@ function NotificationsFeed({ ctx, router, filter }) {
                 <button
                   disabled={busyId === rm.matchupId}
                   onClick={() => wrap(rm.matchupId, () => ctx.declineRematch(rm.matchupId))}
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+                  className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 ${neutralBtnCls}`}
                 >Decline</button>
               </div>
             </TypedRow>
@@ -441,7 +483,7 @@ function NotificationsFeed({ ctx, router, filter }) {
 
       {gameResults.length > 0 && (
         <div>
-          <SectionHeader type="result_won" title="Results" />
+          <SectionHeader type="result_won" title="Results" pal={pal} />
           {gameResults.map((r) => {
             const resultStyle = getResultStyle(r.outcome);
             const resultType = r.outcome === 'won'
@@ -453,14 +495,15 @@ function NotificationsFeed({ ctx, router, filter }) {
             const amount = Math.abs(pnl);
             let label;
             if (r.outcome === 'won') {
-              label = amount > 0 ? (isBeta ? `Won ${formatMoney(amount)} coins` : `Won $${formatMoney(amount)}`) : 'Won';
+              label = amount > 0 ? (isBeta ? `Won ${formatMoney(amount)} Crowns` : `Won $${formatMoney(amount)}`) : 'Won';
             } else if (r.outcome === 'lost') {
-              label = amount > 0 ? (isBeta ? `Lost ${formatMoney(amount)} coins` : `Lost $${formatMoney(amount)}`) : 'Lost';
+              label = amount > 0 ? (isBeta ? `Lost ${formatMoney(amount)} Crowns` : `Lost $${formatMoney(amount)}`) : 'Lost';
             } else {
               label = 'Push';
             }
             return (
               <TypedRow
+                pal={pal}
                 key={`result:${r.id}`}
                 type={resultType}
                 accentOverride={resultStyle.accent}
@@ -488,7 +531,7 @@ function NotificationsFeed({ ctx, router, filter }) {
                   <button
                     disabled={busyId === r.id}
                     onClick={() => wrap(r.id, () => ctx.ackGameResult(r.matchupId))}
-                    className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+                    className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 ${neutralBtnCls}`}
                   >Dismiss</button>
                 </div>
               </TypedRow>
@@ -499,7 +542,7 @@ function NotificationsFeed({ ctx, router, filter }) {
 
       {friendRequests.length > 0 && (
         <div>
-          <SectionHeader type="friend_request" title="Friend Requests" />
+          <SectionHeader type="friend_request" title="Friend Requests" pal={pal} />
           <div
             className="px-3 sm:px-4 pt-1 pb-3 flex flex-col gap-2.5"
             style={{ borderTop: `1px solid ${cardBorder}` }}
@@ -521,12 +564,14 @@ function NotificationsFeed({ ctx, router, filter }) {
 
       {socialActivity.length > 0 && (
         <div>
-          <SectionHeader type="social_like" title="Social Activity" />
+          <SectionHeader type="social_like" title="Social Activity" pal={pal} />
           {socialActivity.map((s) => {
-            const isComment = s.type === 'comment';
+            const isReply = s.type === 'reply';
+            const isComment = s.type === 'comment' || isReply;
             const rowType = isComment ? 'social_comment' : 'social_like';
             return (
               <TypedRow
+                pal={pal}
                 key={`social:${s.id}`}
                 type={rowType}
                 time={timeAgo(s.createdAt)}
@@ -537,7 +582,7 @@ function NotificationsFeed({ ctx, router, filter }) {
                 </div>
                 <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
                   <UserNameLink user={s.actor} fallback="Someone" />{' '}
-                  {isComment ? 'commented on your post' : 'liked your post'}
+                  {isReply ? 'replied to you' : isComment ? 'commented on your post' : 'liked your post'}
                 </div>
                 {(isComment ? s.commentPreview : s.postPreview) && (
                   <div className="text-xs truncate" style={{ color: textSecondary }}>
@@ -560,7 +605,7 @@ function NotificationsFeed({ ctx, router, filter }) {
                   <button
                     disabled={busyId === s.id}
                     onClick={() => wrap(s.id, () => ctx.ackSocial?.([s.id]))}
-                    className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+                    className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 ${neutralBtnCls}`}
                   >Dismiss</button>
                 </div>
               </TypedRow>
@@ -577,6 +622,10 @@ export default function NotificationsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const ctx = useNotifications();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const pal = getPalette(isLight);
+  const { textPrimary, textSecondary } = pal;
   const [filter, setFilterState] = useState('all');
   // Tracks whether the user has manually changed the filter in this session.
   // Used to discard a late-arriving server fetch that would otherwise
@@ -688,7 +737,7 @@ export default function NotificationsPage() {
     }
   }, [router.isReady, router.query.chat]);
 
-  const bg = '#000000';
+  const bg = pal.pageBg;
 
   if (status === 'loading') {
     return (
@@ -721,8 +770,8 @@ export default function NotificationsPage() {
         <h1 className="text-xl sm:text-2xl font-bold mb-4 tracking-tight" style={{ color: '#3b82f6' }}>
           Notifications
         </h1>
-        <FilterPills active={filter} onChange={setFilter} counts={counts} />
-        <NotificationsFeed ctx={ctx} router={router} filter={filter} />
+        <FilterPills active={filter} onChange={setFilter} counts={counts} pal={pal} />
+        <NotificationsFeed ctx={ctx} router={router} filter={filter} pal={pal} isLight={isLight} />
       </div>
     </div>
   );

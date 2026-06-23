@@ -7,6 +7,7 @@ import { useNotifications } from '../contexts/NotificationsContext';
 import MessagesPanel from '../components/messages/MessagesPanel';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
 import { leavePage } from '../utils/leavePage';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function MessengerPage() {
   const router = useRouter();
@@ -102,9 +103,11 @@ export default function MessengerPage() {
     leavePage({ router, fallbackHref: isAuthed ? '/dashboard' : '/' });
   }, [router, isAuthed]);
 
-  const bg = '#000000';
-  const textPrimary = '#ffffff';
-  const textSecondary = '#9ca3af';
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const bg = isLight ? '#f5f1ea' : '#000000';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
 
   if (status === 'loading') {
     return (
@@ -218,11 +221,14 @@ export default function MessengerPage() {
             <span>Back</span>
           </button>
           <h1
-            className="font-extrabold uppercase tracking-tight text-white"
+            className="font-extrabold uppercase tracking-tight"
             style={{
+              color: textPrimary,
               fontSize: 'clamp(18px, 4vw, 26px)',
               letterSpacing: '0.04em',
-              textShadow: '0 2px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
+              textShadow: isLight
+                ? '0 1px 0 rgba(255,255,255,0.6), 0 0 18px rgba(59,130,246,0.18)'
+                : '0 2px 0 #0a0a0a, 0 0 18px rgba(59,130,246,0.35)',
             }}
           >
             Messenger

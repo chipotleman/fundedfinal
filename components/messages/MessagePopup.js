@@ -2,9 +2,12 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import { ConversationThread } from './MessagesPanel';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const cardRef = useRef(null);
 
   useModalScrollLock(isOpen, { restoreScroll: true });
@@ -25,8 +28,12 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
 
   if (!isOpen || !friend) return null;
 
-  const cardBg = '#0a0a0a';
+  const cardBg = isLight ? '#ffffff' : '#0a0a0a';
   const cardBorder = 'rgba(59,130,246,0.22)';
+  const footerBg = isLight ? '#f8fafc' : '#080a08';
+  const closeBg = isLight ? 'rgba(255,255,255,0.95)' : 'rgba(15,15,15,0.92)';
+  const closeBorder = isLight ? '#cbd5e1' : '#1f2937';
+  const closeColor = isLight ? '#334155' : '#ffffff';
 
   return (
     <div
@@ -49,7 +56,9 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
         style={{
           backgroundColor: cardBg,
           border: `1px solid ${cardBorder}`,
-          boxShadow: '0 0 0 1px rgba(59,130,246,0.08), 0 25px 50px rgba(0,0,0,0.5)',
+          boxShadow: isLight
+            ? '0 0 0 1px rgba(59,130,246,0.08), 0 25px 50px rgba(15,23,42,0.18)'
+            : '0 0 0 1px rgba(59,130,246,0.08), 0 25px 50px rgba(0,0,0,0.5)',
           height: 'min(80vh, 640px)',
           maxHeight: '92dvh',
           overflow: 'hidden',
@@ -62,11 +71,12 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
           type="button"
           onClick={onClose}
           aria-label="Close messages"
-          className="absolute top-2 right-2 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full text-white transition-transform active:scale-95"
+          className="absolute top-2 right-2 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full transition-transform active:scale-95"
           style={{
-            background: 'rgba(15,15,15,0.92)',
-            border: '2px solid #1f2937',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
+            background: closeBg,
+            border: `2px solid ${closeBorder}`,
+            color: closeColor,
+            boxShadow: isLight ? '0 2px 8px rgba(15,23,42,0.18)' : '0 2px 8px rgba(0,0,0,0.6)',
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -81,7 +91,7 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
 
         <div
           className="flex-shrink-0 px-4 py-2 text-center"
-          style={{ borderTop: `1px solid ${cardBorder}`, backgroundColor: '#080a08' }}
+          style={{ borderTop: `1px solid ${cardBorder}`, backgroundColor: footerBg }}
         >
           <button
             type="button"

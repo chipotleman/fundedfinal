@@ -27,6 +27,7 @@ export default function AdminSettings() {
       cashoutFee: 10,
       inactivityDays: 5,
     },
+    promoRowEnabled: false,
     promoSlots: DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })),
   });
   const [saving, setSaving] = useState(false);
@@ -156,10 +157,26 @@ export default function AdminSettings() {
             </div>
             Promo Slots
           </h2>
-          <p className="text-gray-400 text-sm mb-6">
-            Configure the promo containers that auto-rotate at the top of the dashboard. Disabled or empty slots are skipped.
+          <p className="text-gray-400 text-sm mb-4">
+            Configure the promo containers that auto-rotate at the top of the dashboard. Disabled or empty slots are skipped, and the page below shifts up to fill the gap.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="flex items-center justify-between gap-4 cursor-pointer mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+            <span>
+              <span className="block text-white font-semibold">Show promo row on dashboard</span>
+              <span className="block text-gray-400 text-sm">Turn this off to hide the entire promo row at once — everything on the page shifts up.</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={settings.promoRowEnabled !== false}
+              onChange={(e) => setSettings({ ...settings, promoRowEnabled: e.target.checked })}
+              className="w-5 h-5 shrink-0 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-purple-500"
+            />
+          </label>
+          <div
+            className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-opacity ${
+              settings.promoRowEnabled === false ? 'opacity-40 pointer-events-none' : ''
+            }`}
+          >
             {settings.promoSlots.map((slot, idx) => (
               <div key={idx} className="p-5 bg-white/5 rounded-xl border border-white/10">
                 <div className="flex items-center justify-between mb-4">

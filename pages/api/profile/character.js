@@ -1,0 +1,135 @@
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../../../lib/auth';
+import { db } from '../../../lib/db';
+import { profiles } from '../../../shared/schema';
+import { and, eq, isNull, ne, or, sql } from 'drizzle-orm';
+import {
+  hashAvatarSource,
+  isGeneratableAvatar,
+  generateCharacter,
+} from '../../../lib/aiCharacter';
+
+// AI battle-character endpoint.
+//
+// GET  -> report the cached character state for the signed-in user.
+// POST -> (re)generate the character from the current profile photo if it's
+//         missing or stale, then return the result. Idempotent: a fresh
+//         character whose source hash still matches is returned without
+//         re-calling the image model.
+//
+// Response shape (both verbs):
+//   { status: 'ready' | 'pending' | 'failed' | 'none', url: string | null }
+// 'none' means there's no real profile photo to base a character on, so the
+// client should show the generic default character.
+
+const PENDING_GRACE_MS = 90_000; // don't re-trigger a generation already in flight
+
+export default async function handler(req, res) {
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user?.id) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  const userId = session.user.id;
+
+  let rows;
+  try {
+    rows = await db
+      .select({
+        avatar: profiles.avatar,
+        aiCharacterUrl: profiles.aiCharacterUrl,
+        aiCharacterStatus: profiles.aiCharacterStatus,
+        aiCharacterSourceHash: profiles.aiCharacterSourceHash,
+        updatedAt: profiles.updatedAt,
+      })
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .limit(1);
+  } catch (err) {
+    console.error('[profile/character] load failed:', err);
+    return res.status(500).json({ error: 'Failed to load character' });
+  }
+
+  const profile = rows?.[0];
+  if (!profile) {
+    return res.status(404).json({ error: 'Profile not found' });
+  }
+
+  const avatar = profile.avatar;
+  const canGenerate = isGeneratableAvatar(avatar);
+  const currentHash = canGenerate ? hashAvatarSource(avatar) : null;
+  const isFresh =
+    profile.aiCharacterStatus === 'ready' &&
+    profile.aiCharacterUrl &&
+    profile.aiCharacterSourceHash === currentHash;
+
+  if (req.method === 'GET') {
+    if (!canGenerate) return res.status(200).json({ status: 'none', url: null });
+    if (isFresh) return res.status(200).json({ status: 'ready', url: profile.aiCharacterUrl });
+    return res.status(200).json({ status: profile.aiCharacterStatus || 'idle', url: null });
+  }
+
+  if (req.method === 'POST') {
+    if (!canGenerate) return res.status(200).json({ status: 'none', url: null });
+    if (isFresh) return res.status(200).json({ status: 'ready', url: profile.aiCharacterUrl });
+
+    // Atomically claim the generation lock. The conditional UPDATE only
+    // succeeds when there is NOT already a fresh in-flight generation for this
+    // same source hash, so two concurrent POSTs can never both call the model.
+    const graceCutoff = new Date(Date.now() - PENDING_GRACE_MS);
+    let claimed;
+    try {
+      claimed = await db
+        .update(profiles)
+        .set({ aiCharacterStatus: 'pending', aiCharacterSourceHash: currentHash, updatedAt: new Date() })
+        .where(
+          and(
+            eq(profiles.id, userId),
+            or(
+              ne(profiles.aiCharacterStatus, 'pending'),
+              isNull(profiles.aiCharacterStatus),
+              ne(profiles.aiCharacterSourceHash, currentHash),
+              isNull(profiles.aiCharacterSourceHash),
+              sql`${profiles.updatedAt} < ${graceCutoff}`,
+            ),
+          ),
+        )
+        .returning({ id: profiles.id });
+    } catch (err) {
+      console.error('[profile/character] claim lock failed:', err);
+      return res.status(200).json({ status: 'failed', url: null });
+    }
+
+    // Lost the race: another request is already generating for this same photo.
+    if (!claimed || claimed.length === 0) {
+      return res.status(200).json({ status: 'pending', url: null });
+    }
+
+    try {
+      const url = await generateCharacter(userId, avatar);
+      await db
+        .update(profiles)
+        .set({
+          aiCharacterUrl: url,
+          aiCharacterStatus: 'ready',
+          aiCharacterSourceHash: currentHash,
+          updatedAt: new Date(),
+        })
+        .where(eq(profiles.id, userId));
+      return res.status(200).json({ status: 'ready', url });
+    } catch (err) {
+      console.error('[profile/character] generation failed:', err);
+      try {
+        await db
+          .update(profiles)
+          .set({ aiCharacterStatus: 'failed', updatedAt: new Date() })
+          .where(eq(profiles.id, userId));
+      } catch (e) {
+        console.error('[profile/character] mark failed errored:', e);
+      }
+      return res.status(200).json({ status: 'failed', url: null });
+    }
+  }
+
+  res.setHeader('Allow', ['GET', 'POST']);
+  return res.status(405).json({ error: 'Method not allowed' });
+}

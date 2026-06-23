@@ -15,6 +15,123 @@ import MessagesDropdown from './notifications/MessagesDropdown';
 import MessagePopup from './messages/MessagePopup';
 import { formatMoney } from '../utils/formatMoney';
 import haptic from '../utils/haptics';
+import DesktopGlobalSearch from './desktop/DesktopGlobalSearch';
+import HowItWorksModal from './desktop/HowItWorksModal';
+
+// Polymarket-style stacked balance readout: small uppercase label on top,
+// bold value below in the currency's signature color. No pill container.
+// Crowns = yellow (#facc15), Clash Coins = white (#ffffff).
+function NavBalance({ label, value, color, onClick, title, ariaLabel, align = 'start', compact = false, glyph = null, glyphColor = null, glyphAlign = 'start', glyphSize = null, glyphInLabel = false }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  // Clash Coins are white (#ffffff) in the dark theme — invisible on the light
+  // theme's white surface, so swap to near-black there. Crowns yellow (#facc15)
+  // washes out on the light surface too, so darken it to #D99A16 there.
+  const isWhite = color === '#ffffff' || color === '#fff';
+  const isCrownYellow = color === '#facc15';
+  const effColor = isLight
+    ? (isWhite ? '#0f172a' : isCrownYellow ? '#D99A16' : color)
+    : color;
+  // The glyph follows the same light-theme darkening so the crown's amber stays
+  // readable on the white surface instead of washing out to near-invisible.
+  const rawGlyphColor = glyphColor || effColor;
+  const effGlyphColor = isLight && (rawGlyphColor === '#facc15') ? '#D99A16' : rawGlyphColor;
+  const gSize = glyphSize != null ? glyphSize : (compact ? 13 : 16);
+  const glyphEl = glyph ? (
+    <span
+      aria-hidden="true"
+      style={{ color: effGlyphColor, fontSize: gSize, lineHeight: 1, display: 'inline-flex', alignItems: 'center' }}
+    >
+      {glyph}
+    </span>
+  ) : null;
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={ariaLabel}
+      className="no-hover-effect flex-shrink-0"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: align === 'end' ? 'flex-end' : 'flex-start',
+        gap: 1,
+        background: 'transparent',
+        border: 'none',
+        padding: 0,
+        cursor: 'pointer',
+        lineHeight: 1,
+      }}
+    >
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: glyphInLabel ? (compact ? 3 : 4) : 0,
+          fontSize: compact ? 8 : 9,
+          fontWeight: 800,
+          letterSpacing: '0.09em',
+          textTransform: 'uppercase',
+          color: effColor,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
+        {glyphInLabel && glyphEl}
+      </span>
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: compact ? 3 : 4,
+          fontSize: compact ? 14 : 17,
+          fontWeight: 900,
+          letterSpacing: '0.01em',
+          color: effColor,
+          lineHeight: 1.05,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {!glyphInLabel && glyphAlign !== 'end' && glyphEl}
+        {value}
+        {!glyphInLabel && glyphAlign === 'end' && glyphEl}
+      </span>
+    </button>
+  );
+}
+
+// The navbar re-mounts on every client-side route change (each page imports
+// its own <TopNavbar/>), and its session/profile are fetched asynchronously.
+// Reading the last-known user + profile straight from localStorage lets the
+// nav paint the correct signed-in state and the right avatar on the very first
+// frame of every mount — no signed-out flash, no avatar swap. The async
+// fetchUser/profile effect still runs afterward to refresh from the server.
+function readCachedUser() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const parsed = JSON.parse(localStorage.getItem('current_user') || 'null');
+    return parsed && parsed.id ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function readCachedProfile() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const parsed = JSON.parse(localStorage.getItem('user_profile') || 'null');
+    if (!parsed || !parsed.id) return null;
+    // Only trust the cached profile if it belongs to the cached current user.
+    // current_user + user_profile are always written as a pair, so a mismatch
+    // means the cache is stale (e.g. account switch) — ignore it so we never
+    // paint the previous user's avatar.
+    const user = JSON.parse(localStorage.getItem('current_user') || 'null');
+    if (user && user.id && String(user.id) !== String(parsed.id)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 export default function TopNavbar({
   betSlipCount,
@@ -38,20 +155,22 @@ export default function TopNavbar({
   // scroll-up-then-down pass.
   const showCondensedBar = hasCondensedBar && sportsRowPassed;
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const userMenuRef = useRef(null);
   const userMenuBtnRef = useRef(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [explainerType, setExplainerType] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(readCachedUser);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [themeColor, setThemeColor] = useState('green');
-  const [userProfile, setUserProfile] = useState(null);
+  const [userProfile, setUserProfile] = useState(readCachedProfile);
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const navRef = useRef(null);
   const router = useRouter();
+  const isNewsRoute = router.pathname === '/news' || router.pathname.startsWith('/news/');
   const { data: session, status } = useSession();
   const { hasActiveMatchup, myBalance: matchupBalance, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
   const notificationsCtx = useNotifications();
@@ -313,7 +432,12 @@ export default function TopNavbar({
   useEffect(() => {
     const handleBankrollUpdate = (event) => {
       if (event.detail?.bankroll !== undefined) {
-        setUserProfile(prev => prev ? { ...prev, bankroll: event.detail.bankroll } : prev);
+        setUserProfile(prev => {
+          if (!prev) return prev;
+          const next = { ...prev, bankroll: event.detail.bankroll };
+          try { localStorage.setItem('user_profile', JSON.stringify(next)); } catch {}
+          return next;
+        });
       }
     };
     
@@ -327,6 +451,10 @@ export default function TopNavbar({
       if (session?.user) {
         setCurrentUser(session.user);
         localStorage.setItem('current_user', JSON.stringify(session.user));
+        // Account switch: if a profile from a different user is still in state
+        // (lazy-loaded from a stale cache), drop it so we never paint the
+        // previous user's avatar while the new profile loads.
+        setUserProfile(prev => (prev && String(prev.id) !== String(session.user.id) ? null : prev));
         
         // Fetch user profile to check for active challenge
         try {
@@ -334,6 +462,9 @@ export default function TopNavbar({
           if (response.ok) {
             const profile = await response.json();
             setUserProfile(profile);
+            // Cache the profile so the next mount paints the right avatar /
+            // balance instantly instead of flashing a placeholder.
+            try { localStorage.setItem('user_profile', JSON.stringify(profile)); } catch {}
             // User has active challenge if status is not 'inactive' and they have a bankroll > 0
             const isActive = profile.status !== 'inactive' && parseFloat(profile.bankroll) > 0;
             setHasActiveChallenge(isActive);
@@ -362,6 +493,7 @@ export default function TopNavbar({
       setCurrentUser(null);
       setUserProfile(null);
       setHasActiveChallenge(false);
+      try { localStorage.removeItem('user_profile'); } catch {}
     };
 
     fetchUser();
@@ -390,169 +522,21 @@ export default function TopNavbar({
   }, []);
 
   const handleSignOut = async () => {
-    // Gather session data for summary popup BEFORE signing out
     if (typeof window !== 'undefined') {
-      const sessionStartTime = localStorage.getItem('session_start_time');
-      const duration = sessionStartTime ? Date.now() - parseInt(sessionStartTime) : 0;
-      
-      // Get session start stats for calculating bets placed THIS session
-      let sessionStartStats = { 
-        demoBets: 0, 
-        demoBetHistoryCount: 0, 
-        profileBets: 0,
-        profileWins: 0,
-        profileLosses: 0,
-        startingBalance: null,
-        challengeName: null
-      };
-      try {
-        const startStats = localStorage.getItem('session_start_stats');
-        if (startStats) {
-          sessionStartStats = JSON.parse(startStats);
-        }
-      } catch (e) {}
-      
-      // Get betting stats - prioritize real user data over demo data
-      let sessionBetsPlaced = 0;
-      let sessionWins = 0;
-      let sessionLosses = 0;
-      let sessionPending = 0;
-      let startingBalance = null;
-      let endingBalance = null;
-      let challengeName = null;
-      let challengePhase = null;
-      let isDemo = false;
-      
-      // Check real user profile stats FIRST (prioritize real data)
-      if (userProfile && (userProfile.total_bets > 0 || userProfile.wins > 0 || userProfile.losses > 0 || sessionStartStats.startingBalance)) {
-        // Calculate SESSION-specific bet counts
-        const currentTotalBets = userProfile.total_bets || 0;
-        const currentWins = userProfile.wins || 0;
-        const currentLosses = userProfile.losses || 0;
-        
-        sessionBetsPlaced = currentTotalBets - (sessionStartStats.profileBets || 0);
-        if (sessionBetsPlaced < 0) sessionBetsPlaced = 0;
-        
-        sessionWins = currentWins - (sessionStartStats.profileWins || 0);
-        if (sessionWins < 0) sessionWins = 0;
-        
-        sessionLosses = currentLosses - (sessionStartStats.profileLosses || 0);
-        if (sessionLosses < 0) sessionLosses = 0;
-        
-        sessionPending = sessionBetsPlaced - sessionWins - sessionLosses;
-        if (sessionPending < 0) sessionPending = 0;
-        
-        // Balance tracking (use nullish check so 0 balance is valid)
-        startingBalance = sessionStartStats.startingBalance;
-        endingBalance = userProfile?.bankroll !== undefined && userProfile?.bankroll !== null 
-          ? parseFloat(userProfile.bankroll) 
-          : startingBalance;
-        
-        // Get challenge info
-        challengePhase = userProfile.phase || null;
-        challengeName = sessionStartStats.challengeName;
-        isDemo = false;
-        
-        // If challengeName wasn't stored at session start, get it now
-        if (!challengeName) {
-          const storedChallenge = localStorage.getItem('purchased_challenge');
-          if (storedChallenge) {
-            try {
-              const challenge = JSON.parse(storedChallenge);
-              challengeName = challenge.name || null;
-            } catch (e) {}
-          }
-        }
-      } else {
-        // Only use demo data if no real user data exists
-        const demoState = localStorage.getItem('demo_state');
-        const demoBetHistory = localStorage.getItem('demo_bet_history');
-        const demoChallenge = localStorage.getItem('demo_challenge');
-        
-        if (demoState) {
-          try {
-            const state = JSON.parse(demoState);
-            const currentDemoBets = state.totalBets || 0;
-            sessionBetsPlaced = currentDemoBets - (sessionStartStats.demoBets || 0);
-            if (sessionBetsPlaced < 0) sessionBetsPlaced = currentDemoBets;
-            
-            sessionWins = state.wins || 0;
-            sessionLosses = state.losses || 0;
-            isDemo = true;
-          } catch (e) {}
-        }
-        
-        // Also check demo bet history for more accurate tracking
-        if (demoBetHistory) {
-          try {
-            const bets = JSON.parse(demoBetHistory);
-            const sessionBetsFromHistory = bets.length - (sessionStartStats.demoBetHistoryCount || 0);
-            
-            // Use the higher count between state and history
-            if (sessionBetsFromHistory > sessionBetsPlaced) {
-              sessionBetsPlaced = sessionBetsFromHistory;
-            }
-            
-            // Calculate wins/losses/pending from bet history
-            let historyWins = 0;
-            let historyLosses = 0;
-            let historyPending = 0;
-            
-            bets.forEach(bet => {
-              if (bet.status === 'won') {
-                historyWins++;
-              } else if (bet.status === 'lost') {
-                historyLosses++;
-              } else {
-                historyPending++;
-              }
-            });
-            
-            // Use history stats if they're more complete
-            if (bets.length > 0) {
-              sessionWins = historyWins;
-              sessionLosses = historyLosses;
-              sessionPending = historyPending;
-            }
-            
-            isDemo = true;
-          } catch (e) {}
-        }
-        
-        // Get demo challenge info
-        if (demoChallenge) {
-          try {
-            const challenge = JSON.parse(demoChallenge);
-            challengeName = 'Demo Trial';
-            challengePhase = challenge.name || 'Demo';
-          } catch (e) {}
-        }
-      }
-      
-      const sessionData = {
-        duration,
-        betsPlaced: sessionBetsPlaced,
-        wins: sessionWins,
-        losses: sessionLosses,
-        pending: sessionPending,
-        startingBalance,
-        endingBalance,
-        challengeName,
-        challengePhase,
-        isDemo
-      };
-      
-      // Clear local session data first
+      // Clear local session data
       localStorage.removeItem('demo_user');
       localStorage.removeItem('user_session');
       localStorage.removeItem('current_user');
+      localStorage.removeItem('user_profile');
       localStorage.removeItem('session_start_time');
       localStorage.removeItem('session_start_stats');
       sessionStorage.clear();
-      
-      // Dispatch event to show summary popup first
-      window.dispatchEvent(new CustomEvent('openSessionSummary', { detail: sessionData }));
-      
+
+      // Reset app-level login state immediately (the _app session effect is
+      // keyed on the SSR `session` prop, which doesn't change on a
+      // non-redirecting client sign-out).
+      window.dispatchEvent(new CustomEvent('userLoggedOut'));
+
       // Sign out from NextAuth without triggering redirect
       signOut({ redirect: false, callbackUrl: '/' });
     }
@@ -603,6 +587,54 @@ export default function TopNavbar({
     }
   };
 
+  // Shared Crowns + Clash Coins readout. Rendered in two slots: centered in
+  // the desktop top-bar gap (lg+) and inside the right cluster on tablet
+  // widths (sm–lg) where the desktop bar is hidden. Kept as one definition
+  // so the two placements never drift apart.
+  // Clash Coins always render for a logged-in user — when they aren't in a
+  // battle there's no matchup balance, so fall back to "0" rather than hiding
+  // the pill entirely.
+  const coinsValue = matchupBalance != null ? formatMoney(parseFloat(matchupBalance), 0) : '0';
+  // Small crown mark shown beside the Crowns value — mirrors the ⚔ glyph on the
+  // Clash Coins pill. SVG uses currentColor so it picks up the pill's yellow.
+  const crownGlyph = (
+    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" style={{ display: 'block' }}>
+      <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2.5h14V21H5v-2.5z" />
+    </svg>
+  );
+  const showNavBalances = isLoggedIn;
+  const navBalancesInner = (
+    <>
+      {hasActiveChallenge && userProfile && (
+        <NavBalance
+          onClick={() => setExplainerType('cash')}
+          title="Your Crowns — click for details"
+          ariaLabel="Crowns balance"
+          label="Crowns"
+          value={formatMoney(parseFloat(userProfile.bankroll), 0)}
+          color="#facc15"
+          glyph={crownGlyph}
+          glyphColor="#facc15"
+          glyphInLabel
+          glyphSize={11}
+        />
+      )}
+      {isLoggedIn && (
+        <NavBalance
+          onClick={() => setExplainerType('coins')}
+          title="Clash Coins — click for details"
+          ariaLabel="Clash Coins balance"
+          label="Clash Coins"
+          value={coinsValue}
+          color="#ffffff"
+          glyph="⚔"
+          glyphColor="#fb923c"
+          align="end"
+        />
+      )}
+    </>
+  );
+
   return (
     <>
       <nav
@@ -611,7 +643,7 @@ export default function TopNavbar({
         className={`${pinned ? 'sticky top-0' : 'relative lg:sticky lg:top-0'} left-0 right-0 z-50`}
         style={{ backgroundColor: '#000000' }}
       >
-        <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
+        <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
             {/* Logo - absolutely positioned on mobile to not affect bar height */}
             <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 sm:relative sm:left-0 sm:top-auto sm:translate-y-0 sm:-mt-[5.75px]">
@@ -623,7 +655,7 @@ export default function TopNavbar({
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }
                 }}
-                className="flex items-center"
+                className="flex items-center sm:h-[76px] sm:overflow-hidden"
               >
                 <img
                   src="/pikslogotransparent.png"
@@ -651,72 +683,76 @@ export default function TopNavbar({
                   Piks
                 </span>
               </a>
+              {isNewsRoute && (
+                <span
+                  aria-hidden="true"
+                  className="absolute pointer-events-none select-none font-black lowercase left-[68px] sm:left-[166px]"
+                  style={{
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#facc15',
+                    fontSize: '15px',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  news
+                </span>
+              )}
             </div>
 
-            {/* Desktop Navigation - Show different links based on auth status.
-                The route currently being viewed gets an active treatment: bright
-                white text, bold weight, and a thick blue (#3b82f6) underline
-                accent so it's obvious at a glance which page you're on. */}
-            <div className="hidden lg:flex items-center space-x-8">
-              {(() => {
-                const currentPath = router.pathname || '';
-                const isActive = (href) => {
-                  // The Battle link points at `/dashboard`, but that route is a
-                  // permanent redirect to `/` (home). Treat home as Battle's
-                  // landing page so the active treatment actually shows up
-                  // when the user lands there. Other links keep the plain
-                  // path-prefix check so they don't accidentally light up on
-                  // home too.
-                  if (href === '/dashboard') {
-                    return currentPath === '/dashboard' || currentPath === '/';
-                  }
-                  return currentPath === href || currentPath.startsWith(`${href}/`);
-                };
-                const renderNavLink = (href, label) => {
-                  const active = isActive(href);
-                  return (
-                    <Link
-                      href={href}
-                      aria-current={active ? 'page' : undefined}
-                      className={`relative font-${active ? 'bold' : 'light'} text-sm uppercase tracking-wider transition-all duration-300 lg:hover:scale-105 lg:hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] py-1`}
-                      style={{ color: active ? '#ffffff' : '#d1d5db' }}
-                    >
-                      {label}
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          bottom: -6,
-                          height: 3,
-                          borderRadius: 2,
-                          background: active ? '#3b82f6' : 'transparent',
-                          boxShadow: active ? '0 0 8px rgba(59,130,246,0.7)' : 'none',
-                          transition: 'background 200ms ease',
-                        }}
-                      />
-                    </Link>
-                  );
-                };
-                return isLoggedIn ? (
-                  <>
-                    {renderNavLink('/dashboard', 'Battle')}
-                    {renderNavLink('/my-picks', 'My Picks')}
-                    {renderNavLink('/battle', 'Social')}
-                    {renderNavLink('/leaderboard', 'Leaderboard')}
-                  </>
-                ) : (
-                  <>
-                    {renderNavLink('/battle', 'Social')}
-                    {renderNavLink('/leaderboard', 'Leaderboard')}
-                  </>
-                );
-              })()}
+            {/* Desktop top-bar tools (lg+ only) — Polymarket-style: a prominent
+                centered global search with a "How it works" trigger to its
+                right. Primary nav links live inside the avatar/profile menu
+                (logged in) — logged-out users get Sign In / Sign Up on the
+                right instead. This whole cluster is `hidden lg:flex`, so the
+                mobile/tablet hamburger experience below is unaffected. */}
+            <div className="hidden lg:flex items-center justify-start gap-3 flex-1 min-w-0 ml-3 mr-4">
+              <div className="min-w-0 w-[clamp(220px,30vw,440px)] flex-shrink-0">
+                <DesktopGlobalSearch />
+              </div>
+              {/* When a logged-in user is mid-battle, swap the generic
+                  "How it works" helper for a direct "My Piks" shortcut to
+                  their active picks page — they don't need the explainer
+                  while fighting, they need their slip. */}
+              {isLoggedIn && hasActiveMatchup ? (
+                <button
+                  type="button"
+                  onClick={() => router.push('/my-picks')}
+                  className="flex items-center gap-1.5 flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-colors lg:hover:text-white"
+                  style={{ color: '#d1d5db' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                  My Piks
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowHowItWorks(true)}
+                  className="flex items-center gap-1.5 flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-colors lg:hover:text-white"
+                  style={{ color: '#d1d5db' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
+                  </svg>
+                  How it works
+                </button>
+              )}
+              {/* Desktop (lg+) Crowns + Clash Coins — centered in the empty
+                  space between the "How it works" / "My Piks" link and the
+                  notifications bell. `mx-auto` splits the leftover flex space
+                  evenly on both sides so the readout sits equidistant. */}
+              {showNavBalances && (
+                <div className="flex items-center gap-5 mx-auto">
+                  {navBalancesInner}
+                </div>
+              )}
             </div>
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
-            <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 sm:relative sm:right-0">
+            <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 top-1/2 -translate-y-1/2 sm:relative sm:right-0 sm:top-auto sm:translate-y-0">
               {/* Desktop Balances — Cash (always) + Coins (only when in active
                   battle). Both use the cartoon-chip aesthetic shared with the
                   Featured Battles cards: chunky rounded-full pill, thick dark
@@ -733,78 +769,15 @@ export default function TopNavbar({
                   the second player in a battle would see no balance in the
                   top nav until they opened the Pik Slip — which side-loads
                   the profile and flips `hasActiveChallenge` true. */}
-              {isLoggedIn && (hasActiveChallenge && userProfile || (hasActiveMatchup && matchupBalance != null)) && (
-                <div className="hidden sm:flex items-center gap-2">
-                  {hasActiveChallenge && userProfile && (
-                    <button
-                      onClick={() => setExplainerType('cash')}
-                      title="Real cash balance — click for details"
-                      className="cartoon-balance-pill"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '5px 12px 5px 10px',
-                        borderRadius: 999,
-                        background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
-                        border: '1.5px solid #0d0d0d',
-                        boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
-                        color: '#022c1f',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          fontSize: 16,
-                          lineHeight: 1,
-                          fontFamily:
-                            '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                          color: 'initial',
-                        }}
-                      >
-                        {`💵\uFE0F`}
-                      </span>
-                      <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                        ${formatMoney(parseFloat(userProfile.bankroll), 0)}
-                      </span>
-                    </button>
-                  )}
-                  {hasActiveMatchup && matchupBalance != null && (
-                    <button
-                      onClick={() => setExplainerType('coins')}
-                      title="In-battle play coins — click for details"
-                      className="cartoon-balance-pill"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '5px 12px 5px 10px',
-                        borderRadius: 999,
-                        background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                        border: '1.5px solid #0d0d0d',
-                        boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(249,115,22,0.55)',
-                        color: '#2a1404',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          fontSize: 16,
-                          lineHeight: 1,
-                          fontFamily:
-                            '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                          color: 'initial',
-                        }}
-                      >
-                        {`⚔\uFE0F`}
-                      </span>
-                      <span style={{ fontWeight: 900, fontSize: 14, color: '#2a1404', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                        {formatMoney(parseFloat(matchupBalance), 0)}
-                      </span>
-                    </button>
-                  )}
+              {/* Tablet (sm–lg) balances. On desktop (lg+) the same readout is
+                  rendered centered inside the top-bar gap instead, so this copy
+                  hides at lg to avoid showing twice. */}
+              {showNavBalances && (
+                <div
+                  className="hidden sm:flex lg:hidden items-center gap-5"
+                  style={{ marginRight: 0 }}
+                >
+                  {navBalancesInner}
                 </div>
               )}
 
@@ -888,44 +861,31 @@ export default function TopNavbar({
               {/* Mobile Balances - sword/battle-coins pill only (cash lives
                   in drawer). Cartoon-chip aesthetic mirrors the desktop
                   pills above so the look is identical across breakpoints —
-                  just sized down for the cramped mobile right rail. */}
-              {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
+                  just sized down for the cramped mobile right rail.
+                  Only shown mid-battle on phones: when there's no active
+                  matchup the Clash Coins balance is meaningless (it falls
+                  back to "0"), so we hide it entirely on mobile to keep the
+                  bar clean. Desktop keeps the readout because the centered
+                  top-bar gap has the room. The small `top` nudge drops the
+                  stacked label/value so its baseline lines up with the logo
+                  and hamburger instead of riding high. */}
+              {isLoggedIn && hasActiveMatchup && (
                 <div
                   className="sm:hidden flex items-center gap-1"
-                  style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
+                  style={{ marginRight: 0, position: 'relative', top: '14px' }}
                 >
-                  <button
+                  <NavBalance
                     onClick={() => setExplainerType('coins')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      padding: '4px 10px 4px 8px',
-                      borderRadius: 999,
-                      background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                      border: '1.5px solid #0d0d0d',
-                      boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(249,115,22,0.55)',
-                      color: '#2a1404',
-                      cursor: 'pointer',
-                    }}
-                    aria-label="Battle coins details"
-                  >
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        fontSize: 13,
-                        lineHeight: 1,
-                        fontFamily:
-                          '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                        color: 'initial',
-                      }}
-                    >
-                      {`⚔\uFE0F`}
-                    </span>
-                    <span style={{ fontWeight: 900, fontSize: 12, color: '#2a1404', letterSpacing: '0.02em', whiteSpace: 'nowrap', lineHeight: 1.1 }}>
-                      {formatMoney(parseFloat(matchupBalance), 0)}
-                    </span>
-                  </button>
+                    title="Clash Coins — tap for details"
+                    ariaLabel="Clash Coins details"
+                    label="Clash Coins"
+                    value={coinsValue}
+                    color="#ffffff"
+                    glyph="⚔"
+                    glyphColor="#fb923c"
+                    align="end"
+                    compact
+                  />
                 </div>
               )}
 
@@ -938,37 +898,37 @@ export default function TopNavbar({
                   cluster — the !important rule guarantees the shift
                   applies regardless of cluster layout quirks, and the
                   media query keeps the desktop spacing tight. */}
-              {effectiveBetSlipCount > 0 && (
-                <button
-                  onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
-                  className="relative no-hover-effect topnav-pikslip"
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 16px',
-                    borderRadius: '9999px',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: '#2563eb',
-                    backgroundColor: '#2563eb',
-                    color: '#ffffff',
-                    lineHeight: 1,
-                  }}
-                  aria-label="Open Pik Slip"
-                >
-                  <svg style={{ width: '16px', height: '16px', fill: '#ffffff' }} viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
-                  </svg>
-                  <span style={{ color: '#ffffff' }}>Pik Slip</span>
+              <button
+                onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
+                className="relative no-hover-effect topnav-pikslip"
+                style={{
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  borderRadius: '9999px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: '#2563eb',
+                  backgroundColor: '#2563eb',
+                  color: '#ffffff',
+                  lineHeight: 1,
+                }}
+                aria-label="Open Pik Slip"
+              >
+                <svg style={{ width: '16px', height: '16px', fill: '#ffffff' }} viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <span style={{ color: '#ffffff' }}>Pik Slip</span>
+                {effectiveBetSlipCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center" style={{ color: '#ffffff' }}>
                     {effectiveBetSlipCount}
                   </span>
-                </button>
-              )}
+                )}
+              </button>
 
               {/* Desktop Authentication Buttons - All the way on the right */}
               <div className="hidden lg:flex items-center space-x-3 ml-4">
@@ -1026,6 +986,45 @@ export default function TopNavbar({
                           <div className="px-4 py-3 border-b border-[#1a1a1a]/50 bg-[#111111]">
                             <p className="text-sm text-gray-500">Signed in as</p>
                             <p className="text-sm font-semibold text-white truncate">{currentUser?.email}</p>
+                          </div>
+
+                          {/* Primary navigation — tucked into the profile menu
+                              (Polymarket-style) instead of spread across the
+                              top bar. The /dashboard route lands on home (`/`),
+                              so Battle is treated active there too. */}
+                          <div className="py-1 border-b border-[#1a1a1a]/50">
+                            {(() => {
+                              const currentPath = router.pathname || '';
+                              const navIsActive = (href) =>
+                                href === '/dashboard'
+                                  ? currentPath === '/dashboard' || currentPath === '/'
+                                  : currentPath === href || currentPath.startsWith(`${href}/`);
+                              const navLinks = [
+                                ['/dashboard', 'Battle'],
+                                ['/my-picks', 'My Piks'],
+                                ['/battle', 'Social'],
+                                ['/news', 'News'],
+                                ['/leaderboard', 'Leaderboard'],
+                              ];
+                              return navLinks.map(([href, label]) => {
+                                const active = navIsActive(href);
+                                return (
+                                  <Link
+                                    key={href}
+                                    href={href}
+                                    onClick={() => setShowUserMenu(false)}
+                                    aria-current={active ? 'page' : undefined}
+                                    className={`flex items-center px-4 py-2.5 lg:hover:bg-[#1a1a1a] lg:hover:text-blue-400 transition-colors border-l-[3px] ${
+                                      active
+                                        ? 'bg-[#0f1d3a] text-white border-l-[#3b82f6]'
+                                        : 'text-gray-300 border-l-transparent'
+                                    }`}
+                                  >
+                                    <span className="font-medium text-sm">{label}</span>
+                                  </Link>
+                                );
+                              });
+                            })()}
                           </div>
 
                           {/* Menu Items */}
@@ -1158,20 +1157,18 @@ export default function TopNavbar({
                   <>
                     <button
                       onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin' } }))}
-                      className="bg-[#111111] hover:bg-[#1a1a1a] text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-[#1a1a1a] hover:border-[#333]"
+                      className="bg-[#111111] hover:bg-[#1a1a1a] text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border-2 border-black"
                       style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       SIGN IN
                     </button>
-                    <div className="snake-border-container relative" style={{ height: '48px' }}>
-                      <button
-                        onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
-                        className="relative font-bold px-6 rounded-lg text-sm z-10 flex items-center h-full"
-                        style={{ backgroundColor: '#000000', color: '#ffffff' }}
-                      >
-                        SIGN UP
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
+                      className="relative font-bold px-6 rounded-lg text-sm flex items-center"
+                      style={{ height: '48px', background: 'linear-gradient(135deg, #facc15, #eab308)', color: '#1a1505' }}
+                    >
+                      SIGN UP
+                    </button>
                   </>
                 )}
               </div>
@@ -1181,7 +1178,7 @@ export default function TopNavbar({
                 <button
                   onClick={() => { haptic.tap(); toggleMobileMenu(); }}
                   className="lg:hidden absolute no-hover-effect hamburger-btn"
-                  style={{ WebkitTapHighlightColor: 'transparent', right: '4px', top: '50%', marginTop: '-19px', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
+                  style={{ WebkitTapHighlightColor: 'transparent', right: '-6px', top: '50%', marginTop: '-19px', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
                   aria-label={isLoggedIn && (notifAlerts + notifMessages) > 0 ? 'Open menu (you have unread notifications)' : 'Open menu'}
                 >
                   <svg className="w-7 h-7 text-gray-300 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -1210,14 +1207,13 @@ export default function TopNavbar({
           ref={condensedBarRef}
           data-topnavbar="true"
           data-condensed-topnavbar="true"
-          // Desktop / tablet only. On phone-width viewports the balance
-          // pills + bell + chat + Pik Slip already eat the right-hand
-          // half of the row, leaving the horizontally-scrolling sport
-          // pills clipped by the right cluster (the "sports header is
-          // cut off by balance" report). There simply isn't room for
-          // a second pills row on a phone, so the condensed bar is
-          // hidden below the `sm` breakpoint.
-          className="hidden sm:block fixed top-0 left-0 right-0 z-50 piks-condensed-bar"
+          // Shown on every breakpoint so phone users keep the sport pills +
+          // Pik Slip pinned while scrolling. The balance pills + bell + chat
+          // cluster (which used to clip the pills on narrow widths — the
+          // "sports header cut off by balance" report) is hidden below `sm`
+          // via its own wrapper below, so the phone bar carries only the
+          // scrollable sport pills and the Pik Slip.
+          className="block fixed top-0 left-0 right-0 z-50 piks-condensed-bar"
           style={{
             backgroundColor: '#000000',
             paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -1235,85 +1231,41 @@ export default function TopNavbar({
               {renderCondensedSportPills && renderCondensedSportPills()}
             </div>
 
-            {/* Right cluster: balance pills + notif + msg + (optional) Pik
-                Slip. These mirror the main top nav so the user retains
-                access to balance / alerts / DMs without scrolling back
-                up. Sized compact (icon-only, smaller pills) to share
-                the row with the horizontally-scrolling sport pills on
-                narrow viewports. */}
+            {/* Right cluster: balance pills + notif + msg. These mirror the
+                main top nav so the user retains access to balance / alerts /
+                DMs without scrolling back up. Hidden below `sm` on phones —
+                there isn't room next to the horizontally-scrolling sport
+                pills and they'd clip them (the "sports header cut off by
+                balance" report). The Pik Slip stays visible on phone (it's
+                rendered after this cluster) so the bet slip is always
+                reachable while scrolling. */}
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
             {isLoggedIn && hasActiveChallenge && userProfile && (
-              <button
+              <NavBalance
                 onClick={() => setExplainerType('cash')}
-                title="Real cash balance — click for details"
-                className="cartoon-balance-pill no-hover-effect flex-shrink-0"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '5px 12px 5px 10px',
-                  borderRadius: 999,
-                  background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
-                  border: '1.5px solid #0d0d0d',
-                  boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(16,185,129,0.55)',
-                  color: '#022c1f',
-                  cursor: 'pointer',
-                  lineHeight: 1,
-                }}
-                aria-label="Cash balance"
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    fontSize: 16,
-                    lineHeight: 1,
-                    fontFamily:
-                      '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                    color: 'initial',
-                  }}
-                >
-                  {`💵\uFE0F`}
-                </span>
-                <span style={{ fontWeight: 900, fontSize: 14, color: '#04221a', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                  ${formatMoney(parseFloat(userProfile.bankroll), 0)}
-                </span>
-              </button>
+                title="Your Crowns — click for details"
+                ariaLabel="Crowns balance"
+                label="Crowns"
+                value={formatMoney(parseFloat(userProfile.bankroll), 0)}
+                color="#facc15"
+                glyph={crownGlyph}
+                glyphColor="#facc15"
+                glyphInLabel
+                glyphSize={11}
+              />
             )}
-            {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
-              <button
+            {isLoggedIn && (
+              <NavBalance
                 onClick={() => setExplainerType('coins')}
-                title="In-battle play coins — click for details"
-                className="cartoon-balance-pill no-hover-effect flex-shrink-0"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '5px 12px 5px 10px',
-                  borderRadius: 999,
-                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
-                  border: '1.5px solid #0d0d0d',
-                  boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 12px rgba(249,115,22,0.55)',
-                  color: '#2a1404',
-                  cursor: 'pointer',
-                  lineHeight: 1,
-                }}
-                aria-label="Matchup coins balance"
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    fontSize: 16,
-                    lineHeight: 1,
-                    fontFamily:
-                      '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
-                    color: 'initial',
-                  }}
-                >
-                  {`⚔\uFE0F`}
-                </span>
-                <span style={{ fontWeight: 900, fontSize: 14, color: '#2a1404', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                  {formatMoney(parseFloat(matchupBalance), 0)}
-                </span>
-              </button>
+                title="Clash Coins — click for details"
+                ariaLabel="Clash Coins balance"
+                label="Clash Coins"
+                value={coinsValue}
+                color="#ffffff"
+                glyph="⚔"
+                glyphColor="#fb923c"
+                align="end"
+              />
             )}
             {isLoggedIn && (
               <button
@@ -1381,14 +1333,17 @@ export default function TopNavbar({
                 />
               </>
             )}
+            </div>
 
             {/* Pik Slip — only right-side affordance in the condensed bar.
                 Shown on both mobile and desktop so the bar reads identically
-                across breakpoints. Sized compact to fit narrow widths.
-                Stays snug to the right edge: no hamburger to clear in the
-                condensed bar, so we deliberately do NOT apply the
-                `topnav-pikslip` shift here. */}
-            {effectiveBetSlipCount > 0 && (
+                across breakpoints. Always rendered (even with zero piks) so
+                the scrolling header never has an awkward empty slot in the
+                top-right — the count badge only appears once a pik is added.
+                Sized compact to fit narrow widths. Stays snug to the right
+                edge: no hamburger to clear in the condensed bar, so we
+                deliberately do NOT apply the `topnav-pikslip` shift here. */}
+            {isLoggedIn && (
               <button
                 onClick={() => { haptic.tap(); effectiveOnBetSlipClick(); }}
                 className="relative no-hover-effect flex-shrink-0"
@@ -1413,12 +1368,14 @@ export default function TopNavbar({
                   <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
                 <span style={{ color: '#ffffff' }}>Pik Slip</span>
-                <span
-                  className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center"
-                  style={{ color: '#ffffff' }}
-                >
-                  {effectiveBetSlipCount}
-                </span>
+                {effectiveBetSlipCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                    style={{ color: '#ffffff' }}
+                  >
+                    {effectiveBetSlipCount}
+                  </span>
+                )}
               </button>
             )}
           </div>
@@ -1465,50 +1422,6 @@ export default function TopNavbar({
           100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
         }
 
-        .snake-border-container {
-          position: relative;
-          border-radius: 8px;
-          padding: 2px;
-          background: ${'#111111'};
-          overflow: hidden;
-        }
-        
-        .snake-border-container::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: conic-gradient(
-            from 0deg,
-            transparent 0deg,
-            transparent 60deg,
-            #2563eb 120deg,
-            #60a5fa 180deg,
-            transparent 240deg,
-            transparent 360deg
-          );
-          animation: snakeRotate 3s linear infinite;
-        }
-        
-        .snake-border-container::after {
-          content: '';
-          position: absolute;
-          inset: 2px;
-          background: ${'#000000'};
-          border-radius: 6px;
-        }
-        
-        .snake-border-container button {
-          position: relative;
-          z-index: 10;
-        }
-        
-        @keyframes snakeRotate {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
       `}</style>
       <MessagePopup
         isOpen={!!messageFriend}
@@ -1517,6 +1430,8 @@ export default function TopNavbar({
         myId={session?.user?.id}
         onClose={() => setMessageFriend(null)}
       />
+
+      <HowItWorksModal open={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
     </>
   );
 } 

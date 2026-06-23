@@ -26,6 +26,7 @@ export default async function handler(req, res) {
           id: socialPostComments.id,
           userId: socialPostComments.userId,
           body: socialPostComments.body,
+          parentId: socialPostComments.parentId,
           createdAt: socialPostComments.createdAt,
         })
         .from(socialPostComments)
@@ -52,6 +53,7 @@ export default async function handler(req, res) {
       const comments = rows.map((r) => ({
         id: r.id,
         body: r.body,
+        parentId: r.parentId || null,
         createdAt: r.createdAt,
         author: authorMap.get(r.userId) || {
           id: r.userId,
@@ -78,6 +80,7 @@ export default async function handler(req, res) {
     if (body.length > MAX_BODY) {
       return res.status(400).json({ error: `Comments must be under ${MAX_BODY} characters` });
     }
+    const parentId = (req.body?.parentId || '').toString().trim() || null;
     try {
       const [post] = await db
         .select({ id: socialPosts.id, userId: socialPosts.userId })
@@ -86,9 +89,25 @@ export default async function handler(req, res) {
         .limit(1);
       if (!post) return res.status(404).json({ error: 'Post not found' });
 
+      // When replying to a specific comment, resolve who is being replied to so
+      // we can @-mention/notify them. Reject a parentId that isn't a comment on
+      // this same post (don't let replies leak across posts).
+      let replyToUserId = null;
+      if (parentId) {
+        const [parent] = await db
+          .select({ id: socialPostComments.id, userId: socialPostComments.userId, postId: socialPostComments.postId })
+          .from(socialPostComments)
+          .where(eq(socialPostComments.id, parentId))
+          .limit(1);
+        if (!parent || parent.postId !== postId) {
+          return res.status(400).json({ error: 'Invalid parent comment' });
+        }
+        replyToUserId = parent.userId;
+      }
+
       const [row] = await db
         .insert(socialPostComments)
-        .values({ postId, userId: session.user.id, body })
+        .values({ postId, userId: session.user.id, body, parentId })
         .returning();
 
       await db
@@ -107,38 +126,52 @@ export default async function handler(req, res) {
         .where(eq(profiles.id, session.user.id))
         .limit(1);
 
-      // Notify the post owner about the new comment. Skip self-comments.
-      // Each comment is its own row (unlike likes, which dedupe) — every
-      // comment is a distinct event the owner may want to see.
-      if (post.userId && post.userId !== session.user.id) {
+      // Fan out notifications. Each comment is its own row (unlike likes, which
+      // dedupe) — every comment is a distinct event. We notify at most two
+      // people and never the same person twice:
+      //   • the replied-to user (Instagram-style @mention) → type 'reply'
+      //   • the post owner → type 'comment'
+      // If the reply target IS the post owner, the more specific 'reply' wins
+      // and we skip the duplicate 'comment'. Self-actions are always skipped.
+      const actorName = author?.username || 'Someone';
+      const notified = new Set([session.user.id]);
+
+      const notify = async ({ recipientId, type, title }) => {
+        if (!recipientId || notified.has(recipientId)) return;
+        notified.add(recipientId);
         try {
           await db.insert(socialNotifications).values({
-            recipientId: post.userId,
+            recipientId,
             actorId: session.user.id,
-            type: 'comment',
+            type,
             postId,
             commentId: row.id,
             commentPreview: body.slice(0, 140),
           });
-          try { publishBattleEvent(post.userId, { type: 'notification:refresh' }); } catch {}
-          const actorName = author?.username || 'Someone';
-          sendPushToUsers(post.userId, {
+          try { publishBattleEvent(recipientId, { type: 'notification:refresh' }); } catch {}
+          sendPushToUsers(recipientId, {
             category: 'social',
-            title: 'New comment on your post',
+            title,
             body: `${actorName}: ${body.slice(0, 80)}`,
             url: '/battle',
-            tag: `social:comment:${postId}:${row.id}`,
-            data: { type: 'social_comment', postId, commentId: row.id, actorId: session.user.id },
+            tag: `social:${type}:${postId}:${row.id}`,
+            data: { type: type === 'reply' ? 'social_reply' : 'social_comment', postId, commentId: row.id, actorId: session.user.id },
           }).catch(() => {});
         } catch (e) {
           console.error('[social/comment notify] error', e);
         }
-      }
+      };
+
+      // Replied-to user first so they get the specific 'reply' notification
+      // even when they also own the post.
+      await notify({ recipientId: replyToUserId, type: 'reply', title: `${actorName} replied to you` });
+      await notify({ recipientId: post.userId, type: 'comment', title: 'New comment on your post' });
 
       return res.status(201).json({
         comment: {
           id: row.id,
           body: row.body,
+          parentId: row.parentId || null,
           createdAt: row.createdAt,
           author: author || {
             id: session.user.id,

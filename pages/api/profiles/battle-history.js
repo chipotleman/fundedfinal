@@ -15,6 +15,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'User ID required' });
   }
 
+  // Only the most recent battles are sent to the profile. The full list made
+  // the profile slow (an opponent lookup per matchup); stats are still computed
+  // over the wider set so the win/loss record stays accurate.
+  const DISPLAY_LIMIT = 5;
+
   try {
     const userMatchups = await db
       .select()
@@ -26,18 +31,55 @@ export default async function handler(req, res) {
       .orderBy(desc(matchups.createdAt))
       .limit(50);
 
-    const battleHistory = await Promise.all(userMatchups.map(async (matchup) => {
+    // Lightweight result/pnl per matchup — no opponent lookups, used for stats.
+    const resolveOutcome = (matchup) => {
+      let result = 'pending';
+      let pnl = 0;
+      if (matchup.status === 'completed') {
+        if (matchup.winnerId === userId) {
+          result = 'win';
+          pnl = parseFloat(matchup.winnerPayout);
+        } else if (matchup.winnerType === 'tie') {
+          result = 'tie';
+          pnl = parseFloat(matchup.startingBalance) * 0.9;
+        } else {
+          result = 'loss';
+          pnl = -parseFloat(matchup.startingBalance);
+        }
+      }
+      return { result, pnl };
+    };
+
+    const outcomes = userMatchups.map((m) => ({ matchup: m, ...resolveOutcome(m) }));
+
+    const completedBattles = outcomes.filter((o) => o.matchup.status === 'completed');
+    const stats = {
+      totalBattles: outcomes.length,
+      completedBattles: completedBattles.length,
+      wins: outcomes.filter((o) => o.result === 'win').length,
+      losses: outcomes.filter((o) => o.result === 'loss').length,
+      ties: outcomes.filter((o) => o.result === 'tie').length,
+      active: outcomes.filter((o) => o.result === 'pending' || o.matchup.status !== 'completed').length,
+      totalWinnings: outcomes
+        .filter((o) => o.result === 'win')
+        .reduce((sum, o) => sum + o.pnl, 0),
+      netPnl: completedBattles.reduce((sum, o) => sum + o.pnl, 0),
+    };
+
+    // Enrich (opponent lookup) only the battles we actually display.
+    const recent = outcomes.slice(0, DISPLAY_LIMIT);
+    const battleHistory = await Promise.all(recent.map(async ({ matchup, result, pnl }) => {
       const isUser1 = matchup.user1Id === userId;
       const opponentId = isUser1 ? matchup.user2Id : matchup.user1Id;
-      
+
       let opponent = null;
-      
+
       if (matchup.isFakeOpponent && matchup.fakeOpponentId) {
         const [fakeOpp] = await db
           .select()
           .from(fakeOpponents)
           .where(eq(fakeOpponents.id, matchup.fakeOpponentId));
-        
+
         if (fakeOpp) {
           opponent = {
             id: fakeOpp.id,
@@ -52,7 +94,7 @@ export default async function handler(req, res) {
           .select()
           .from(profiles)
           .where(eq(profiles.id, opponentId));
-        
+
         if (oppProfile) {
           opponent = {
             id: oppProfile.id,
@@ -65,24 +107,7 @@ export default async function handler(req, res) {
         }
       }
 
-      const userStartBalance = isUser1 ? parseFloat(matchup.startingBalance) : parseFloat(matchup.startingBalance);
       const userFinalBalance = isUser1 ? matchup.user1FinalBalance : matchup.user2FinalBalance;
-      
-      let result = 'pending';
-      let pnl = 0;
-      
-      if (matchup.status === 'completed') {
-        if (matchup.winnerId === userId) {
-          result = 'win';
-          pnl = parseFloat(matchup.winnerPayout);
-        } else if (matchup.winnerType === 'tie') {
-          result = 'tie';
-          pnl = parseFloat(matchup.startingBalance) * 0.9;
-        } else {
-          result = 'loss';
-          pnl = -parseFloat(matchup.startingBalance);
-        }
-      }
 
       return {
         id: matchup.id,
@@ -100,19 +125,6 @@ export default async function handler(req, res) {
         createdAt: matchup.createdAt,
       };
     }));
-
-    const completedBattles = battleHistory.filter(b => b.status === 'completed');
-    const stats = {
-      totalBattles: battleHistory.length,
-      completedBattles: completedBattles.length,
-      wins: battleHistory.filter(b => b.result === 'win').length,
-      losses: battleHistory.filter(b => b.result === 'loss').length,
-      ties: battleHistory.filter(b => b.result === 'tie').length,
-      totalWinnings: battleHistory
-        .filter(b => b.result === 'win')
-        .reduce((sum, b) => sum + b.pnl, 0),
-      netPnl: completedBattles.reduce((sum, b) => sum + b.pnl, 0),
-    };
 
     return res.status(200).json({ battles: battleHistory, stats });
   } catch (error) {

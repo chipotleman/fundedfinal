@@ -12,6 +12,8 @@ import TeamLogo from '../TeamLogo';
 import MutualFriendsLine from '../social/MutualFriendsLine';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useUserPreview } from '../../contexts/UserPreviewContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
 import { navigateToBattleStart } from '../../lib/battleStartNavigation';
 import {
@@ -20,8 +22,10 @@ import {
 } from '../../lib/playNowConfirm';
 import { readLocalOneTapPrefs, writeLocalOneTapPrefs, fetchOneTapPrefs, saveOneTapPrefs } from '../../utils/oneTapPrefs';
 import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
+import DesktopScrollRow from '../desktop/DesktopScrollRow';
 import PreMatchPopup from './PreMatchPopup';
 import haptic from '../../utils/haptics';
+import SlideToForfeit from './SlideToForfeit';
 import { useBetaMode } from '../../contexts/SiteConfigContext';
 
 function formatTimeRemaining(ms) {
@@ -224,8 +228,8 @@ function PickPill({ pick, compact = false }) {
         >
           {pick.odds}
         </span>
-        <span style={{ color: 'rgba(148,163,184,0.7)', fontSize: compact ? '9px' : '10px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-          ${pick.amount}
+        <span style={{ color: '#fb923c', fontSize: compact ? '9px' : '10px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+          <span aria-hidden="true">⚔</span> {pick.amount}
         </span>
       </div>
     </div>
@@ -282,21 +286,27 @@ function PlayerAvatar({ user, isWinning, size = 44, bgColor = '#1e40af', onClick
   );
 }
 
-function PnlBadge({ pnlPercent, size = 'normal' }) {
+function PnlBadge({ pnlPercent, size = 'normal', tone = 'green' }) {
   const val = parseFloat(pnlPercent);
   const isPos = val >= 0;
   const fontSize = size === 'small' ? '10px' : '11px';
   const padding = size === 'small' ? '1px 5px' : '2px 6px';
-  
+  // `tone="gold"` recolors the positive state to the same yellow as the
+  // active YouVsCard's outer glow so the in-card PnL chip matches the
+  // card frame instead of clashing green-on-gold. Negative stays red.
+  const posBg = tone === 'gold' ? 'rgba(250, 204, 21, 0.12)' : 'rgba(16, 185, 129, 0.12)';
+  const posColor = tone === 'gold' ? '#facc15' : '#10b981';
+  const posBorder = tone === 'gold' ? 'rgba(250, 204, 21, 0.25)' : 'rgba(16, 185, 129, 0.25)';
+
   return (
     <span style={{
       fontSize,
       fontWeight: 700,
       padding,
       borderRadius: '6px',
-      background: isPos ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-      color: isPos ? '#10b981' : '#ef4444',
-      border: `1px solid ${isPos ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
+      background: isPos ? posBg : 'rgba(239, 68, 68, 0.12)',
+      color: isPos ? posColor : '#ef4444',
+      border: `1px solid ${isPos ? posBorder : 'rgba(239, 68, 68, 0.25)'}`,
     }}>
       {isPos ? '+' : ''}{pnlPercent}%
     </span>
@@ -308,6 +318,8 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
   // real money in beta. Player balances and the pot are coin scores.
   const isBeta = useBetaMode();
   const router = useRouter();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
   const [internalExpanded, setInternalExpanded] = useState(false);
   const expanded = compact ? isExpanded : internalExpanded;
@@ -373,7 +385,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
     return (
       <div
         ref={cardRef}
-        className={`w-full h-full rounded-xl cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
+        className={`bc-surface w-full h-full rounded-xl cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
         onClick={() => setExpanded(!expanded)}
         style={{
           backgroundColor: '#0d0d0d',
@@ -673,8 +685,8 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                                       >
                                         {pick.odds || '—'}
                                       </span>
-                                      <span className="text-[9px] text-gray-500 tabular-nums leading-tight">
-                                        ${Number(pick.amount || 0).toFixed(0)}
+                                      <span className="text-[9px] tabular-nums leading-tight inline-flex items-center gap-0.5" style={{ color: '#fb923c' }}>
+                                        <span aria-hidden="true">⚔</span>{Number(pick.amount || 0).toFixed(0)}
                                       </span>
                                     </div>
                                   </div>
@@ -689,8 +701,8 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                             <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">
                               Total wagered
                             </span>
-                            <span className="text-[12px] font-black text-white tabular-nums">
-                              ${totalStake.toFixed(0)}
+                            <span className="text-[12px] font-black tabular-nums inline-flex items-center gap-1" style={{ color: '#fb923c' }}>
+                              <span aria-hidden="true">⚔</span>{totalStake.toFixed(0)}
                             </span>
                           </div>
                         </div>
@@ -731,10 +743,14 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                       router.push(`/battle/spectate/${battle.id}`);
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold text-white"
+                  className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold ${isLight ? 'text-[#1a1505]' : 'text-white'}`}
                   style={{
-                    background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
-                    boxShadow: '0 4px 12px rgba(59,130,246,0.25)',
+                    background: isLight
+                      ? 'linear-gradient(135deg, #facc15, #eab308)'
+                      : 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+                    boxShadow: isLight
+                      ? '0 4px 12px rgba(234,179,8,0.35)'
+                      : '0 4px 12px rgba(59,130,246,0.25)',
                   }}
                 >
                   {battle.simulated || isSimulated ? 'Open in Social' : 'See More'}
@@ -1148,191 +1164,6 @@ const ONE_TAP_GAME_MODE_OPTIONS = [
 // product changes the matchmaking buy-in, mode, or anything else
 // worth re-confirming.
 
-// Slide-to-forfeit affordance for the active YOUR BATTLE card. The
-// thumb is dragged across the track; releasing past ~88% of the
-// track snaps to the end, fires a haptic, and invokes onConfirm.
-// Releasing earlier snaps the thumb back to the start. Pointer
-// events keep mouse + touch on the same code path so it feels
-// fluid on phones and trackpads alike.
-function SlideToForfeit({ onConfirm, disabled = false }) {
-  const trackRef = useRef(null);
-  const animRef = useRef(null);
-  const startPointerXRef = useRef(0);
-  const startThumbRef = useRef(0);
-  const thumbXRef = useRef(0);
-  const maxXRef = useRef(0);
-  const [thumbX, setThumbX] = useState(0);
-  const [maxX, setMaxX] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const THUMB = 44;
-  const COMPLETE_RATIO = 0.88;
-
-  useEffect(() => { thumbXRef.current = thumbX; }, [thumbX]);
-  useEffect(() => { maxXRef.current = maxX; }, [maxX]);
-
-  useEffect(() => {
-    const measure = () => {
-      const el = trackRef.current;
-      if (!el) return;
-      setMaxX(Math.max(0, el.clientWidth - THUMB - 4));
-    };
-    measure();
-    let ro = null;
-    if (typeof ResizeObserver !== 'undefined' && trackRef.current) {
-      ro = new ResizeObserver(measure);
-      ro.observe(trackRef.current);
-    } else if (typeof window !== 'undefined') {
-      window.addEventListener('resize', measure);
-    }
-    return () => {
-      if (ro) ro.disconnect();
-      else if (typeof window !== 'undefined') window.removeEventListener('resize', measure);
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-    };
-  }, []);
-
-  const animateTo = useCallback((target, onDone) => {
-    if (animRef.current) cancelAnimationFrame(animRef.current);
-    let last = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    const step = (now) => {
-      const dt = Math.min(0.05, ((now || Date.now()) - last) / 1000);
-      last = now || Date.now();
-      const current = thumbXRef.current;
-      const diff = target - current;
-      if (Math.abs(diff) < 0.5) {
-        thumbXRef.current = target;
-        setThumbX(target);
-        animRef.current = null;
-        if (onDone) onDone();
-        return;
-      }
-      const next = current + diff * Math.min(1, dt * 14);
-      thumbXRef.current = next;
-      setThumbX(next);
-      animRef.current = requestAnimationFrame(step);
-    };
-    animRef.current = requestAnimationFrame(step);
-  }, []);
-
-  const handlePointerDown = (e) => {
-    if (disabled || confirming) return;
-    e.preventDefault();
-    e.stopPropagation();
-    if (animRef.current) {
-      cancelAnimationFrame(animRef.current);
-      animRef.current = null;
-    }
-    setDragging(true);
-    startPointerXRef.current = e.clientX;
-    startThumbRef.current = thumbXRef.current;
-    try { e.currentTarget.setPointerCapture && e.currentTarget.setPointerCapture(e.pointerId); } catch {}
-  };
-
-  const handlePointerMove = (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - startPointerXRef.current;
-    const next = Math.max(0, Math.min(maxXRef.current, startThumbRef.current + dx));
-    thumbXRef.current = next;
-    setThumbX(next);
-  };
-
-  const handlePointerUp = (e) => {
-    if (!dragging) return;
-    setDragging(false);
-    try { e.currentTarget.releasePointerCapture && e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
-    const max = maxXRef.current;
-    if (max > 0 && thumbXRef.current / max >= COMPLETE_RATIO) {
-      animateTo(max, () => {
-        try { haptic.warning(); } catch {}
-        setConfirming(true);
-        Promise.resolve(onConfirm && onConfirm()).catch(() => {}).finally(() => {
-          setConfirming(false);
-          animateTo(0);
-        });
-      });
-    } else {
-      animateTo(0);
-    }
-  };
-
-  const progress = maxX > 0 ? thumbX / maxX : 0;
-  const trackBg = `linear-gradient(90deg, rgba(239,68,68,${0.16 + progress * 0.30}) 0%, rgba(249,115,22,${0.10 + progress * 0.22}) 100%)`;
-
-  return (
-    <div
-      ref={trackRef}
-      style={{
-        position: 'relative',
-        height: 52,
-        borderRadius: 14,
-        background: `linear-gradient(180deg, rgba(15,20,36,0.95), rgba(10,14,28,0.95)), ${trackBg}`,
-        border: '2.5px solid #0a0a0a',
-        boxShadow: `0 4px 0 #0a0a0a, inset 0 0 0 1.5px rgba(239,68,68,${0.35 + progress * 0.4}), inset 0 0 18px rgba(239,68,68,${0.12 + progress * 0.2})`,
-        overflow: 'hidden',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        touchAction: 'none',
-        WebkitTouchCallout: 'none',
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          pointerEvents: 'none',
-          color: '#fca5a5',
-          fontSize: 11.5,
-          fontWeight: 900,
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          textShadow: '0 2px 0 #0a0a0a, 0 0 10px rgba(239,68,68,0.5)',
-          opacity: confirming ? 0 : Math.max(0.18, 1 - progress * 1.4),
-          transition: dragging ? 'none' : 'opacity 200ms ease',
-        }}
-      >
-        {confirming ? 'Forfeiting…' : '→  Slide to Forfeit  →'}
-      </div>
-      <div
-        role="button"
-        aria-label="Slide to forfeit battle"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onClick={(e) => { e.stopPropagation(); }}
-        style={{
-          position: 'absolute',
-          top: 2,
-          left: 2,
-          width: THUMB,
-          height: THUMB,
-          borderRadius: '50%',
-          background: 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)',
-          border: '2.5px solid #0a0a0a',
-          boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(239,68,68,0.65)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          transform: `translateX(${thumbX}px)`,
-          transition: dragging ? 'none' : 'transform 220ms cubic-bezier(0.22,1,0.36,1)',
-          cursor: disabled || confirming ? 'not-allowed' : 'grab',
-          touchAction: 'none',
-        }}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 1px 0 #0a0a0a)' }}>
-          <path d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
 function YouVsCard({
   youVsState,
   onClick,
@@ -1367,6 +1198,11 @@ function YouVsCard({
   // matchmaking to original regardless of remembered prefs.
   const isBeta = useBetaMode();
   const status = youVsState?.status || 'idle';
+  // Whether the caller's matchup state has finished its initial load.
+  // The home page forwards `hydrated: !matchupLoading` from MatchupContext
+  // so we can tell "genuinely not in a battle" from "haven't fetched yet".
+  // Callers that don't pass it default to hydrated (unchanged behavior).
+  const hydrated = youVsState?.hydrated !== false;
   const myProfile = youVsState?.myProfile || null;
   const opponent = youVsState?.opponent || null;
   const matchup = youVsState?.matchup || null;
@@ -1468,11 +1304,52 @@ function YouVsCard({
   const selectedGameMode = ONE_TAP_GAME_MODE_OPTIONS.find((m) => m.id === gameMode)
     || ONE_TAP_GAME_MODE_OPTIONS[0];
 
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const { openMessage, openPreview } = useUserPreview();
+
   const isActive = status === 'active';
   const isWaiting = status === 'waiting';
   const isQueued = status === 'queued';
   const showOpponent = !!opponent && (isActive || isWaiting || isQueued);
   const isIdle = !isActive && !isWaiting && !isQueued;
+
+  // Clicking the opponent's portrait/name in the active/waiting hero
+  // surfaces the site-wide profile popover (anchored to the click)
+  // instead of triggering the card's "open battle" tap. stopPropagation
+  // keeps the outer card from also handling the click.
+  const opponentPreviewable = showOpponent && !!opponent?.id;
+  const openOpponentPreview = (anchorEl) => {
+    if (!opponentPreviewable) return;
+    openPreview(
+      { id: opponent.id, username: opponent.username, avatar: opponent.avatar },
+      anchorEl,
+    );
+  };
+  const handleOpponentClick = (e) => {
+    if (!opponentPreviewable) return;
+    e.stopPropagation();
+    openOpponentPreview(e.currentTarget);
+  };
+  const handleOpponentKeyDown = (e) => {
+    if (!opponentPreviewable) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      openOpponentPreview(e.currentTarget);
+    }
+  };
+  const opponentClickProps = opponentPreviewable
+    ? {
+        onClick: handleOpponentClick,
+        onKeyDown: handleOpponentKeyDown,
+        role: 'button',
+        tabIndex: 0,
+        title: `View ${opponent.username || 'opponent'}'s profile`,
+        'aria-label': `View ${opponent.username || 'opponent'}'s profile`,
+        style: { cursor: 'pointer' },
+      }
+    : {};
 
   // In-card matchmaking state. Drives the new "finding battle" animation
   // that plays inside the card before the standard match-found popup
@@ -1781,6 +1658,26 @@ function YouVsCard({
     } catch {}
   }, [matchup, refreshMatchup]);
 
+  const handleOverviewMessage = useCallback((opp) => {
+    // Open the in-place DM popup overlay instead of navigating to the
+    // full /messenger page — staying on the current page keeps the user
+    // in the light/dark theme they were in and lets "Back" return them
+    // to the battle container they came from.
+    const peer = (opp && opp.id)
+      ? opp
+      : (opponent?.id ? opponent : null);
+    if (peer?.id) {
+      openMessage({ id: peer.id, username: peer.username, avatar: peer.avatar });
+    } else {
+      // Last-resort fallback so the button never silently no-ops.
+      router.push('/messenger');
+    }
+  }, [opponent, openMessage, router]);
+
+  const handleOverviewViewUpdates = useCallback(() => {
+    router.push('/notifications');
+  }, [router]);
+
   const handleSearchError = useCallback((message) => {
     cleanupSearchTimers();
     setSearchError(message);
@@ -2000,6 +1897,15 @@ function YouVsCard({
       }
       return;
     }
+    // Active matchups open the full overview modal (a portal with Open
+    // Battle + forfeit + opponent/balances) rather than the inline expand.
+    // Inside the Featured Battles carousel the inline expand grows the card
+    // height, but the row clips overflow — so the preview / Open Battle /
+    // forfeit controls render but stay hidden ("nothing happens" on tap).
+    if (isActive && matchup?.id) {
+      handleNavigate();
+      return;
+    }
     if (onToggle) onToggle();
     else handleNavigate();
   };
@@ -2110,13 +2016,19 @@ function YouVsCard({
       }
       aria-expanded={isIdle ? undefined : isExpanded}
       style={{
-        background:
-          'linear-gradient(180deg, rgba(16,185,129,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
-        border: isExpanded
-          ? '1.5px solid rgba(52, 211, 153, 0.85)'
-          : '1.5px solid rgba(16, 185, 129, 0.6)',
-        boxShadow:
-          '0 0 0 1px rgba(16,185,129,0.15) inset, 0 0 18px rgba(16,185,129,0.28), 0 0 32px rgba(6,182,212,0.12)',
+        background: isLight
+          ? 'linear-gradient(180deg, rgba(249,115,22,0.16) 0%, rgba(234,88,12,0.08) 45%, #ffffff 100%), #ffffff'
+          : 'linear-gradient(180deg, rgba(249,115,22,0.16) 0%, rgba(234,88,12,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
+        border: isLight
+          ? (isExpanded
+              ? '1.5px solid rgba(234, 88, 12, 0.9)'
+              : '1.5px solid rgba(249, 115, 22, 0.65)')
+          : (isExpanded
+              ? '1.5px solid rgba(234, 88, 12, 0.9)'
+              : '1.5px solid rgba(249, 115, 22, 0.65)'),
+        boxShadow: isLight
+          ? '0 0 0 1px rgba(249,115,22,0.25) inset, 0 0 18px rgba(249,115,22,0.45), 0 0 32px rgba(234,88,12,0.25)'
+          : '0 0 0 1px rgba(249,115,22,0.18) inset, 0 0 18px rgba(249,115,22,0.32), 0 0 32px rgba(234,88,12,0.18)',
         transition: 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease-out, border-color 180ms ease-out',
         outline: 'none',
         willChange: 'transform',
@@ -2255,8 +2167,8 @@ function YouVsCard({
           animation: heroRingPulse 2s ease-out infinite;
         }
         :global(.hero-ring-you) {
-          border-color: rgba(52,211,153,0.75);
-          box-shadow: 0 0 12px rgba(16,185,129,0.55);
+          border-color: rgba(249,115,22,0.75);
+          box-shadow: 0 0 12px rgba(234,88,12,0.55);
         }
         :global(.hero-ring-opp) {
           border-color: rgba(248,113,113,0.75);
@@ -2388,21 +2300,21 @@ function YouVsCard({
           :global(.hero-ring) { opacity: 0.4; }
         }
         .youvs-card:focus-visible {
-          border-color: rgba(52, 211, 153, 0.95) !important;
+          border-color: rgba(249, 115, 22, 0.95) !important;
           box-shadow:
-            0 0 0 3px rgba(16, 185, 129, 0.55),
-            0 0 0 5px rgba(6, 182, 212, 0.45),
-            0 0 24px rgba(16, 185, 129, 0.45),
-            0 0 40px rgba(6, 182, 212, 0.28) !important;
+            0 0 0 3px rgba(249, 115, 22, 0.55),
+            0 0 0 5px rgba(234, 88, 12, 0.45),
+            0 0 24px rgba(249, 115, 22, 0.45),
+            0 0 40px rgba(234, 88, 12, 0.28) !important;
         }
         @media (hover: hover) {
           .youvs-card:hover {
             transform: translateY(-3px);
-            border-color: rgba(52, 211, 153, 0.95) !important;
+            border-color: rgba(249, 115, 22, 0.95) !important;
             box-shadow:
-              0 0 0 1px rgba(16, 185, 129, 0.3) inset,
-              0 0 28px rgba(16, 185, 129, 0.55),
-              0 0 48px rgba(6, 182, 212, 0.32),
+              0 0 0 1px rgba(249, 115, 22, 0.3) inset,
+              0 0 28px rgba(249, 115, 22, 0.55),
+              0 0 48px rgba(234, 88, 12, 0.32),
               0 10px 28px rgba(0, 0, 0, 0.45) !important;
           }
           .youvs-card:hover:active {
@@ -2413,11 +2325,11 @@ function YouVsCard({
         @media (hover: none) {
           .youvs-card:active {
             transform: scale(0.97);
-            border-color: rgba(52, 211, 153, 0.95) !important;
+            border-color: rgba(249, 115, 22, 0.95) !important;
             box-shadow:
-              0 0 0 1px rgba(16, 185, 129, 0.3) inset,
-              0 0 24px rgba(16, 185, 129, 0.5),
-              0 0 40px rgba(6, 182, 212, 0.28) !important;
+              0 0 0 1px rgba(249, 115, 22, 0.3) inset,
+              0 0 24px rgba(249, 115, 22, 0.5),
+              0 0 40px rgba(234, 88, 12, 0.28) !important;
             transition-duration: 80ms;
           }
         }
@@ -2437,10 +2349,14 @@ function YouVsCard({
             <span
               className="text-[9px] font-extrabold uppercase tracking-[0.18em] px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
               style={{
-                background: 'linear-gradient(135deg, #34d399, #10b981)',
-                color: '#022c1f',
+                background: isLight
+                  ? 'linear-gradient(135deg, #facc15, #eab308)'
+                  : 'linear-gradient(135deg, #fb923c, #f97316)',
+                color: isLight ? '#1a1505' : '#1a1505',
                 border: '1.5px solid #0d0d0d',
-                boxShadow: '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(16,185,129,0.45)',
+                boxShadow: isLight
+                  ? '0 2px 0 rgba(0,0,0,0.45), 0 0 10px rgba(234,179,8,0.45)'
+                  : '0 2px 0 rgba(0,0,0,0.55), 0 0 10px rgba(234,88,12,0.45)',
               }}
             >
               <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -2454,7 +2370,7 @@ function YouVsCard({
             ></div>
             <span
               className="text-[10px] font-semibold uppercase tracking-wider truncate"
-              style={{ color: topDotColor }}
+              style={{ color: isLight ? '#0a0a0a' : topDotColor }}
             >
               {topLabel}
             </span>
@@ -2687,7 +2603,7 @@ function YouVsCard({
                     if (bal != null) {
                       return (
                         <>
-                          <span className="text-[10px] font-bold uppercase tracking-wider sm:hidden" style={{ color: '#34d399' }}>
+                          <span className="text-[10px] font-bold uppercase tracking-wider sm:hidden" style={{ color: '#fff' }}>
                             You
                           </span>
                           <div className="hidden sm:flex items-center gap-1.5 mt-0.5">
@@ -2700,7 +2616,7 @@ function YouVsCard({
                       );
                     }
                     return (
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#34d399' }}>
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#fff' }}>
                         You
                       </span>
                     );
@@ -2716,7 +2632,7 @@ function YouVsCard({
                 </span>
                 <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
               </div>
-              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end" {...opponentClickProps}>
                 <div className="min-w-0 text-right">
                   <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
                     {showOpponent ? (opponent?.username || 'Opponent') : 'Opponent'}
@@ -2764,6 +2680,7 @@ function YouVsCard({
                     isWinning={false}
                     size={40}
                     bgColor="#7c2d12"
+                    onClick={opponentPreviewable ? handleOpponentClick : undefined}
                   />
                 ) : (
                   <SilhouetteAvatar
@@ -2851,7 +2768,7 @@ function YouVsCard({
                 </div>
                 <span
                   className="text-[11px] font-medium flex items-center gap-1 flex-shrink-0"
-                  style={{ color: '#34d399' }}
+                  style={{ color: isLight ? '#0a0a0a' : '#34d399' }}
                 >
                   {isExpanded ? 'Hide' : 'More'}
                   <svg
@@ -2870,6 +2787,24 @@ function YouVsCard({
               </div>
             </div>
           </>
+        ) : !hydrated ? (
+          // First-load placeholder. Until MatchupContext resolves we don't
+          // yet know whether the user is mid-battle, so render a neutral
+          // skeleton instead of the idle PLAY NOW treatment — otherwise a
+          // user already in a battle sees PLAY NOW flash on refresh and
+          // snap to their battle once the matchup data arrives.
+          <div className="flex flex-1 items-center gap-2.5 py-1 sm:py-2 select-none animate-pulse" aria-hidden="true">
+            <div className="w-10 h-10 rounded-full bg-white/10 flex-shrink-0" />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="h-3 w-24 max-w-full rounded bg-white/10" />
+              <div className="h-2.5 w-16 max-w-full rounded bg-white/5" />
+            </div>
+            <div className="w-8 h-5 rounded bg-white/10 flex-shrink-0" />
+            <div className="flex-1 min-w-0 flex flex-col items-end space-y-1.5">
+              <div className="h-3 w-24 max-w-full rounded bg-white/10" />
+              <div className="h-2.5 w-16 max-w-full rounded bg-white/5" />
+            </div>
+          </div>
         ) : isIdle ? (
           // Graffiti / cartoon PLAY NOW treatment — the sticker is the
           // focal point of the card. The buy-in / game-mode / pot
@@ -2996,7 +2931,7 @@ function YouVsCard({
                 <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
               </div>
 
-              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+              <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end" {...opponentClickProps}>
                 <div className="min-w-0 text-right">
                   {showOpponent ? (
                     <>
@@ -3024,6 +2959,7 @@ function YouVsCard({
                     isWinning={false}
                     size={40}
                     bgColor="#065f46"
+                    onClick={opponentPreviewable ? handleOpponentClick : undefined}
                   />
                 ) : (
                   <div
@@ -3064,7 +3000,7 @@ function YouVsCard({
                 )}
                 <span
                   className="text-[11px] font-semibold flex items-center gap-1"
-                  style={{ color: '#34d399' }}
+                  style={{ color: isLight ? '#0a0a0a' : '#34d399' }}
                 >
                   {isExpanded ? 'Hide' : 'More'}
                   <svg
@@ -3132,11 +3068,15 @@ function YouVsCard({
                 modal frame language. */}
             <div className="px-3.5 pb-3">
               <div
-                className="rounded-xl px-3 py-2.5 text-[11.5px] text-gray-300 leading-snug font-semibold"
+                className={`rounded-xl px-3 py-2.5 text-[11.5px] leading-snug font-semibold ${isLight ? 'text-[#334155]' : 'text-gray-300'}`}
                 style={{
-                  background: 'linear-gradient(180deg,#0f1424,#0a0e1c)',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 3px 0 #0a0a0a, inset 0 0 0 1.5px rgba(6,182,212,0.18)',
+                  background: isLight
+                    ? 'linear-gradient(180deg,#fffbeb,#fef9c3)'
+                    : 'linear-gradient(180deg,#0f1424,#0a0e1c)',
+                  border: isLight ? '2.5px solid #1a1505' : '2.5px solid #0a0a0a',
+                  boxShadow: isLight
+                    ? '0 3px 0 #1a1505, inset 0 0 0 1.5px rgba(234,179,8,0.25)'
+                    : '0 3px 0 #0a0a0a, inset 0 0 0 1.5px rgba(6,182,212,0.18)',
                 }}
               >
                 {expandedBody}
@@ -3151,13 +3091,17 @@ function YouVsCard({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleNavigate(); }}
-                className="w-full relative flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-black text-white uppercase tracking-[0.12em]"
+                className={`w-full relative flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-[0.12em] ${isLight ? 'text-[#1a1505]' : 'text-white'}`}
                 style={{
-                  background: 'linear-gradient(180deg,#3b82f6 0%,#0891b2 100%)',
-                  border: '2.5px solid #0a0a0a',
-                  boxShadow: '0 4px 0 #0a0a0a, 0 0 18px rgba(6,182,212,0.45)',
+                  background: isLight
+                    ? 'linear-gradient(180deg,#facc15 0%,#eab308 100%)'
+                    : 'linear-gradient(180deg,#3b82f6 0%,#0891b2 100%)',
+                  border: isLight ? '2.5px solid #1a1505' : '2.5px solid #0a0a0a',
+                  boxShadow: isLight
+                    ? '0 4px 0 #1a1505, 0 0 18px rgba(234,179,8,0.5)'
+                    : '0 4px 0 #0a0a0a, 0 0 18px rgba(6,182,212,0.45)',
                   letterSpacing: '0.14em',
-                  textShadow: '0 2px 0 rgba(0,0,0,0.45)',
+                  textShadow: isLight ? '0 1px 0 rgba(255,255,255,0.35)' : '0 2px 0 rgba(0,0,0,0.45)',
                 }}
               >
                 {ctaText}
@@ -3168,12 +3112,12 @@ function YouVsCard({
                     width: 22,
                     height: 22,
                     borderRadius: '50%',
-                    background: '#0a0e1c',
-                    border: '2px solid #67e8f9',
-                    boxShadow: '0 0 8px rgba(6,182,212,0.7)',
+                    background: isLight ? '#fffbeb' : '#0a0e1c',
+                    border: isLight ? '2px solid #1a1505' : '2px solid #67e8f9',
+                    boxShadow: isLight ? '0 0 8px rgba(234,179,8,0.6)' : '0 0 8px rgba(6,182,212,0.7)',
                   }}
                 >
-                  <svg width="11" height="11" fill="none" stroke="#67e8f9" viewBox="0 0 24 24">
+                  <svg width="11" height="11" fill="none" stroke={isLight ? '#1a1505' : '#67e8f9'} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
                   </svg>
                 </span>
@@ -3211,6 +3155,12 @@ function YouVsCard({
       isBeta={isBeta}
       onOpenBattle={handleOverviewOpenBattle}
       onForfeit={handleOverviewForfeit}
+      onMessageOpponent={handleOverviewMessage}
+      onViewUpdates={handleOverviewViewUpdates}
+      myLiveBalance={youVsMyLiveBalance}
+      opponentLiveBalance={youVsOppLiveBalance}
+      myUnrealizedPnl={youVsMyUnrealizedPnl}
+      opponentUnrealizedPnl={youVsOppUnrealizedPnl}
     />
     <BattleModeChooser
       isOpen={showChooser}
@@ -3218,6 +3168,7 @@ function YouVsCard({
       onPickQuickMatch={handleChooserQuickMatch}
       onPickChallengeFriend={handleChooserChallengeFriend}
       onPickPrivateMatch={handleChooserPrivateMatch}
+      currentUser={myProfile ? { id: myProfile.id, username: myProfile.username, avatar: myProfile.avatar } : null}
     />
     {/* Quick Match modal — same component the /battle page mounts when
         the Start a Battle chooser picks Quick Match. Surfaces the full
@@ -3271,6 +3222,7 @@ function YouVsCard({
         <PlayFriendModal
           isOpen={showPlayFriend}
           onClose={() => setShowPlayFriend(false)}
+          onBack={() => { setShowPlayFriend(false); setShowChooser(true); }}
           friends={friends}
           currentUser={currentUser}
           initialBuyIn={lastBuyIn}
@@ -3306,6 +3258,106 @@ function YouVsCard({
   );
 }
 
+// Your-stats card that sits beside the PLAY NOW card in the dashboard's
+// "Start a Battle" row. Replaces the old "other people's live battles"
+// peers — the row is now about YOUR battle: start one (PLAY NOW) and see
+// how you're doing (your record + win rate). Battle-only metrics so the
+// numbers are accurate (battleWins/battleLosses). Uses the same
+// `bc-surface` class as BattleCard so globals.css handles light theme
+// automatically (inline `color:#fff` → dark text, `background:#111` →
+// light tile in `html.light`).
+function YourStatsCard({ stats, currentUser, currentUserId, onViewProfile }) {
+  const wins = parseInt(stats?.battleWins, 10) || 0;
+  const losses = parseInt(stats?.battleLosses, 10) || 0;
+  const total = wins + losses;
+  const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+
+  const tiles = [
+    { label: 'Wins', value: wins, color: '#34d399' },
+    { label: 'Losses', value: losses, color: '#f87171' },
+    { label: 'Battles', value: total, color: '#fff' },
+  ];
+
+  return (
+    <div
+      className="bc-surface w-full h-full rounded-xl cursor-pointer flex flex-col"
+      onClick={onViewProfile}
+      style={{
+        backgroundColor: '#0d0d0d',
+        border: '1px solid rgba(16, 185, 129, 0.22)',
+        overflow: 'hidden',
+        transition: 'border-color 200ms ease',
+      }}
+    >
+      <div className="p-2.5 sm:p-3 flex flex-col flex-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <UserAvatar
+              user={{ id: currentUserId, username: currentUser?.username, avatar: currentUser?.avatar }}
+              size={34}
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 leading-tight">Your Stats</p>
+              <p className="text-sm font-bold truncate leading-tight" style={{ color: '#fff' }}>
+                {currentUser?.username || 'You'}
+              </p>
+            </div>
+          </div>
+          <span className="flex items-center gap-0.5 text-[11px] font-semibold text-emerald-400 flex-shrink-0">
+            Profile
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+
+        <div className="mb-2.5">
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Battle Win Rate</span>
+            <span className="text-2xl font-black tabular-nums" style={{ color: total > 0 ? '#34d399' : '#64748b' }}>
+              {winRate}%
+            </span>
+          </div>
+          <div className="w-full rounded-full overflow-hidden" style={{ height: 6, background: '#111' }}>
+            <div
+              style={{
+                width: `${winRate}%`,
+                height: '100%',
+                borderRadius: 999,
+                background: 'linear-gradient(90deg,#10b981,#34d399)',
+                transition: 'width 400ms ease',
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5 mt-auto">
+          {tiles.map((t) => (
+            <div
+              key={t.label}
+              className="rounded-lg flex flex-col items-center justify-center py-1.5"
+              style={{ background: '#111' }}
+            >
+              <span className="text-lg font-black tabular-nums leading-none" style={{ color: t.color }}>
+                {t.value}
+              </span>
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-500 mt-1">{t.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-2 text-center">
+          <span className="text-[10px] text-gray-500 font-medium">
+            {total > 0
+              ? `${total} ${total === 1 ? 'battle' : 'battles'} played`
+              : 'Play your first battle to start tracking'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LiveBattlesSection({
   compact = false,
   focusBattleId = null,
@@ -3320,6 +3372,7 @@ export default function LiveBattlesSection({
   friends = null,
   lastBuyIn = null,
   currentUser = null,
+  currentUserStats = null,
   onPlayFriendInviteSent = null,
   onPlayFriendInviteCancelled = null,
   onPrivateMatchJoined = null,
@@ -3378,22 +3431,24 @@ export default function LiveBattlesSection({
   // (`expandedKey === null`) and Hide reliably closes the one card you
   // clicked. BattleCard forwards the desired next value to onToggle, so we
   // set/clear the shared key explicitly rather than blindly inverting.
-  // The row uses items-stretch so all peer cards grow to match the
-  // tallest sibling's height. Previously only the clicked card revealed
-  // its pick preview, which left the other (force-stretched) peers
-  // showing empty space below their footer. Treat any `peer:*` key as
-  // "all peers expanded" so every card in the row reveals its preview
-  // in lockstep. We still record which card was clicked in `expandedKey`
-  // so Hide on any peer collapses the row back down cleanly.
-  const anyPeerExpanded = typeof expandedKey === 'string' && expandedKey.startsWith('peer:');
-  const peerExpandedFor = useCallback((_battleId) => anyPeerExpanded, [anyPeerExpanded]);
+  // Per-card expansion: each card reveals its own preview independently and
+  // only the card you clicked grows. The row uses items-start (not stretch)
+  // so an expanded card extends downward without dragging its neighbors to
+  // the same height. An earlier revision expanded the whole row in lockstep
+  // (any `peer:*` OR `youvs` key expanded every card) to avoid empty space
+  // under force-stretched siblings — but the YOUR BATTLE (youvs) card has no
+  // pick preview to show, so previewing a neighbor stretched it into a blank
+  // empty container. items-start removes the stretch, so lockstep is no
+  // longer needed and each card only expands when it is the active key.
+  const peerExpandedFor = useCallback(
+    (battleId) => expandedKey === `peer:${battleId}`,
+    [expandedKey],
+  );
   const setPeerExpanded = useCallback((battleId) => (next) => {
+    const key = `peer:${battleId}`;
     setExpandedKey((prev) => {
-      if (next) return `peer:${battleId}`;
-      // Hide on any peer collapses the whole row (since the row
-      // expanded together, it should collapse together too).
-      if (typeof prev === 'string' && prev.startsWith('peer:')) return null;
-      return prev;
+      if (next) return key;
+      return prev === key ? null : prev;
     });
   }, []);
 
@@ -3435,6 +3490,12 @@ export default function LiveBattlesSection({
   // SSE is doing its job. Mirrors the recent-winners strip in pages/battle.js.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // The compact dashboard row ("Start a Battle") no longer renders other
+    // people's live battles — it shows the PLAY NOW card + the user's own
+    // stats card. So skip the live-battles fetch / SSE / fallback poll
+    // entirely in compact mode; this avoids needless background traffic and
+    // the now-irrelevant "Couldn't load this" retry hint surfacing there.
+    if (compact) return;
     let cancelled = false;
     let debounce = null;
     let fallback = null;
@@ -3447,6 +3508,14 @@ export default function LiveBattlesSection({
     // a healthy stream never flickers the hint on or off.
     const load = async ({ isInitial = false, isRetry = false } = {}) => {
       if (cancelled) return;
+      // Only the initial mount fetch and an explicit tap-to-retry are
+      // "foreground" loads allowed to surface the failure hint. Background
+      // loads (SSE-triggered reloads, fallback polls, reconnect catch-up)
+      // must NOT flip to 'failed' on a transient blip — we always have
+      // simulated battles on screen, so popping "Couldn't load this" on
+      // every 30s background poll that times out (e.g. while upstream data
+      // is flaky) is noise. A successful load of any kind still clears it.
+      const foreground = isInitial || isRetry;
       if (isRetry) setLoadStatus('retrying');
       else if (isInitial) setLoadStatus('loading');
       const controller = new AbortController();
@@ -3454,7 +3523,7 @@ export default function LiveBattlesSection({
       try {
         const res = await fetch('/api/battles/live', { signal: controller.signal });
         if (!res.ok) {
-          if (!cancelled) setLoadStatus('failed');
+          if (!cancelled && foreground) setLoadStatus('failed');
           return;
         }
         const data = await res.json();
@@ -3477,7 +3546,7 @@ export default function LiveBattlesSection({
         if (err.name !== 'AbortError') {
           console.error('Error fetching live battles:', err);
         }
-        if (!cancelled) setLoadStatus('failed');
+        if (!cancelled && foreground) setLoadStatus('failed');
       } finally {
         clearTimeout(timeout);
       }
@@ -3615,16 +3684,6 @@ export default function LiveBattlesSection({
     : battles;
 
   if (compact) {
-    const ownMatchupId = youVsState?.matchup?.id || null;
-    const compactBattles = sortedBattles.filter(b => {
-      if (ownMatchupId && b.id === ownMatchupId) return false;
-      if (currentUserId) {
-        if (b.user1?.id && b.user1.id === currentUserId) return false;
-        if (b.user2?.id && b.user2.id === currentUserId) return false;
-      }
-      return true;
-    });
-    const featuredCount = compactBattles.length + (youVsState && youVsState.status !== 'idle' ? 1 : 0);
     return (
       <div className="mb-4">
         {/* Global keyframes / classes for the shared cartoon info chip
@@ -3636,31 +3695,30 @@ export default function LiveBattlesSection({
         <CartoonChipStyles />
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Featured Battles</span>
-            {featuredCount > 0 && (
-              <span className="text-green-400 text-[10px] font-semibold">{featuredCount}</span>
-            )}
+            <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Start a Battle</span>
           </div>
-          <button onClick={() => router.push('/battle')} className="text-blue-400 text-xs">
-            See All
+          <button
+            onClick={() => router.push(currentUserId ? `/profile/${currentUserId}` : '/battle')}
+            className="text-blue-400 text-xs"
+          >
+            {currentUserId ? 'View Profile' : 'See All'}
           </button>
         </div>
-        {retryHint}
-        {/* items-start (instead of items-stretch) lets each card size to its
-            own content. We previously stretched the row to match the tallest
-            sibling so an "awaiting picks" card wouldn't look short next to a
-            fully-locked battle, but with per-card expansion that stretching
-            also forced collapsed peers to grow when one card was expanded —
-            which read as ghost empty space below the Hide button and made the
-            row feel broken. Letting cards grow naturally keeps the visual
-            simple: collapsed cards stay short, expanded cards extend down,
-            and the carousel stays horizontally scrollable either way. */}
-        {/* Edge-to-edge: negative margin cancels the dashboard's
-            px-4/sm:px-6/lg:px-8 wrapper so this row runs to the
-            viewport edges; inner left padding keeps the first card
-            aligned with the "Featured Battles" header above. */}
-        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:-mx-8 pl-4 sm:pl-6 lg:pl-8 pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <div className="flex-shrink-0 w-[380px] flex">
+        {/* Equal-height cards in the resting state so an "awaiting picks"
+            card doesn't look short next to a fully-locked battle: when
+            nothing is expanded the row uses `items-stretch` and every card's
+            `h-full` makes it fill the tallest sibling. The moment a card is
+            expanded we flip to `items-start` so the inline expansion grows
+            only that card — `items-stretch` would otherwise force collapsed
+            peers to match the expanded height and leave ghost empty space
+            below their Hide button. */}
+        {/* Edge-to-edge on mobile/tablet: negative margin cancels the
+            dashboard's px-4/sm:px-6 wrapper so this row runs to the
+            viewport edges. On lg+ the row is clipped to the main column
+            (lg:mx-0 / lg:pl-0) and wrapped in DesktopScrollRow so it never
+            bleeds under the right sidebar — and gets a gutter scroll arrow. */}
+        <DesktopScrollRow innerClassName={`flex gap-3 ${expandedKey === null ? 'items-stretch' : 'items-start'} overflow-x-auto lg:overflow-x-visible pb-2 scrollbar-hide -mx-4 sm:-mx-6 lg:mx-0 pl-4 sm:pl-6 lg:pl-0 pr-2`}>
+          <div className="flex-shrink-0 w-[380px] flex lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[420px]">
             <YouVsCard
               youVsState={youVsState}
               onClick={onYouVsClick}
@@ -3677,17 +3735,17 @@ export default function LiveBattlesSection({
               onPrivateMatchJoined={onPrivateMatchJoined}
             />
           </div>
-          {compactBattles.map(battle => (
-            <div key={battle.id} className="flex-shrink-0 w-[380px] flex">
-              <BattleCard
-                battle={battle}
-                compact
-                isExpanded={peerExpandedFor(battle.id)}
-                onToggle={setPeerExpanded(battle.id)}
+          {currentUserId && (
+            <div className="flex-shrink-0 w-[380px] flex lg:w-auto lg:flex-1 lg:min-w-0 lg:max-w-[420px]">
+              <YourStatsCard
+                stats={currentUserStats}
+                currentUser={currentUser}
+                currentUserId={currentUserId}
+                onViewProfile={() => router.push(`/profile/${currentUserId}`)}
               />
             </div>
-          ))}
-        </div>
+          )}
+        </DesktopScrollRow>
         <QuickMatchModal
           isOpen={!!matchFoundData}
           onClose={() => setMatchFoundData(null)}

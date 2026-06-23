@@ -1,0 +1,21 @@
+- [Messenger dual-event dedup](messaging-dual-event-dedup.md) — `piks:message:new` fires from local send AND SSE echo; dedup must `String(id)`-compare or messages double-render.
+- [DB migration convention](db-migration-convention.md) — schema changes need BOTH drizzle db:push AND a hand-written migrations/*.sql file, or prod breaks.
+- [Dashboard SSR games warming](dashboard-ssr-warming.md) — SSR must initializeGoalservePolling()+await waitForScheduleCache; never block on inplay waitForCache (busy-waits full timeout when live empty).
+- [News aggregation copyright](news-aggregation-copyright.md) — Piks News surfaces headlines/summaries/links + our own AI analysis only; never republish article bodies.
+- [OddsHistoryChart mini autoscale](oddshistorychart-mini-autoscale.md) — in-card live win-% sparkline auto-scales Y to data range (mini only); full chart stays 0–1.
+- [Theme FOUC fix](theme-fouc-css-vars.md) — first-paint surfaces must theme via CSS vars under html.light/.dark, not useTheme() inline styles (SSR defaults dark → flash).
+- [SSR + localStorage instant render](ssr-localstorage-instant-render.md) — don't lazy-init useState from localStorage on SSR pages; flip in an isomorphic layout effect (pre-paint, no mismatch).
+- [Light theme team colors](light-theme-team-colors.md) — never render a team brand color as white on light theme; wrap getTeamColor() in readableLineColor(hex, isLight).
+- [iOS haptics user-activation](ios-haptics-user-activation.md) — the iOS switch-haptic `label.click()` must fire synchronously in the tap handler; any rAF/setTimeout/await defer silently kills it.
+- [Public battle endpoint exposure](public-battle-endpoint-exposure.md) — /api/battles/public/[id] intentionally returns both sides' picks for active battles; bet-history depends on it, don't gate to completed-only.
+- [SelectionLogos parlay auto-detection](selection-logos-parlay.md) — renders split-circle parlay mark from bet.legs>1; single-team callers must pass legs:undefined or they get the parlay mark.
+- [Social comment threading](social-comment-threading.md) — replies nest via parent_id; notify replied-to user ('reply') + post owner ('comment') deduped; thread grouping must never drop a comment.
+- [Grep minified identifiers](grep-minified-identifiers.md) — rg/grep output sometimes renames symbols (PlayFriendModal→ln, props→n); it's a display artifact, read the file for real names.
+- [Light theme inline vs globals](light-theme-inline-vs-globals.md) — inline hex won't flip under html.light; globals.css `html.light .youvs-card`/`.bc-surface` !important rules can override your theme-aware inline fix.
+- [Battle card carousel expand](battle-card-carousel-expand.md) — active "Your Battle" taps must open the portal modal; inline-expand gets clipped by the Featured Battles carousel.
+- [Light-theme inline color trap](light-theme-inline-color.md) — hardcoded hex in inline style{} won't flip under html.light; use CSS vars or useTheme-computed color.
+- [Light theme overrides](light-theme-overrides.md) — light mode = class-based html.light rules in globals.css; inline styles & other dark hex classes (e.g. bg-[#0f1d3a]) stay dark unless explicitly matched.
+- [Currency rebrand](currency-rebrand.md) — Clash Coins (⚔) = in-matchup; Crowns (👑) = account/prize; rebrand only beta branch of isBeta ternaries, leave real-money $ flows alone.
+- [/api/games field shape](api-games-field-shape.md) — game objects are camelCase (commenceTime, awayTeamFull); matchers joining against /api/games must not use Goalserve snake_case.
+- [Odds source = SharpSports](odds-source-sharpsports.md) — odds come from SharpSports betPrices overlaid onto Goalserve games; Goalserve still owns schedule/scores (it has no odds role now).
+- [Match-flow primitives stay dark](matchflow-primitives-stay-dark.md) — shared FlowCard/Fighter/etc. never read global theme; gameplay flow stays dark, opt-in `light` prop only for result splash.

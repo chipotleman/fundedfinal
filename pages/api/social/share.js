@@ -249,7 +249,7 @@ export default async function handler(req, res) {
       const body = cleanNote
         ? `"${cleanNote}"`
         : (preview || (itemType === 'battle'
-            ? 'Tap to spectate the battle'
+            ? 'Tap to view the battle'
             : (itemType === 'result' ? 'Tap to watch the replay' : 'Tap to read the post')));
 
       sendPushToUsers(validRecipients, {

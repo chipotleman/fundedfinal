@@ -5,6 +5,7 @@ import { formatSeenAgo } from '../../utils/relativeTime';
 import ActiveStatus, { isUserOnline } from '../ActiveStatus';
 import UserAvatar, { UserNameLink, useProfilePrefetchHandlers } from '../UserAvatar';
 import { useMatchup } from '../../contexts/MatchupContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
@@ -19,6 +20,30 @@ function timeAgo(iso) {
   if (h < 24) return `${h}h`;
   const d = Math.floor(h / 24);
   return `${d}d`;
+}
+
+// Detect an in-progress "@handle" the caret is currently sitting inside, so the
+// composer can pop an Instagram-style mention picker. Returns the partial
+// handle plus the [start,end) span of the "@handle" token (start points at the
+// "@"), or null when the caret isn't on a mention. The "@" must start the line
+// or follow whitespace so emails / mid-word "@" don't trigger it.
+function detectMention(value, caret) {
+  if (typeof value !== 'string') return null;
+  const upToCaret = value.slice(0, caret);
+  const m = upToCaret.match(/(?:^|\s)@([A-Za-z0-9_]{0,30})$/);
+  if (!m) return null;
+  const leftToken = m[1];
+  // The caret can sit in the MIDDLE of an existing handle, so extend the span
+  // right to the end of the token. `token` (left of caret) drives the search;
+  // [start,end) covers the whole "@handle" so replacement never leaves a
+  // trailing fragment behind (e.g. "@jo|hn" → "@picked", not "@picked hn").
+  const rightMatch = value.slice(caret).match(/^[A-Za-z0-9_]*/);
+  const right = rightMatch ? rightMatch[0] : '';
+  return {
+    token: leftToken,
+    start: caret - leftToken.length - 1,
+    end: caret + right.length,
+  };
 }
 
 // Local Avatar wrapper kept as a thin alias so older call sites continue to
@@ -105,6 +130,113 @@ function FriendMuteToggle({ friend }) {
         </svg>
       )}
     </button>
+  );
+}
+
+// Per-message "•••" actions menu (Instagram-style). Replaces the old bare
+// trashcan: tapping the three dots opens a small popover with "Unsend"
+// (delete for everyone — own messages only) and "Delete for me" (hide from
+// just this user's view). The trigger stays visible at low opacity on touch
+// (no-hover preference) and reveals on hover on desktop.
+function MessageActionsMenu({ mine, disabled, onUnsend, onDeleteForMe }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
+        aria-label="Message actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Message actions"
+        className={`flex-shrink-0 inline-flex items-center justify-center rounded-full transition-opacity ${
+          open ? 'opacity-100' : 'opacity-60 lg:opacity-0 lg:group-hover:opacity-80 lg:hover:opacity-100'
+        }`}
+        style={{
+          width: 26,
+          height: 26,
+          background: 'rgba(15,23,42,0.6)',
+          border: '1.5px solid rgba(148,163,184,0.35)',
+          color: '#cbd5e1',
+          cursor: disabled ? 'wait' : 'pointer',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="5" cy="12" r="1.7" />
+          <circle cx="12" cy="12" r="1.7" />
+          <circle cx="19" cy="12" r="1.7" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-1 rounded-xl overflow-hidden"
+          style={{
+            top: '100%',
+            minWidth: 168,
+            background: '#0f1116',
+            border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
+          }}
+        >
+          {mine && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onUnsend();
+              }}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm lg:hover:bg-white/5 transition-colors"
+              style={{ color: '#f87171' }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 7v6h6" />
+                <path d="M3 13a9 9 0 1 0 3-7.7L3 8" />
+              </svg>
+              <span className="font-semibold">Unsend</span>
+            </button>
+          )}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onDeleteForMe();
+            }}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm lg:hover:bg-white/5 transition-colors"
+            style={{ color: '#e2e8f0', borderTop: mine ? '1px solid rgba(255,255,255,0.06)' : 'none' }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+            </svg>
+            <span className="font-semibold">Delete for me</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1191,7 +1323,7 @@ function SharedItemBubble({ raw, mine, onNavigate, senderId, senderUsername }) {
   };
   const handleClick = () => {
     if (!payload.id) return;
-    if (type === 'battle') onNavigate?.(`/battle/spectate/${payload.id}${buildShareSuffix('?')}`);
+    if (type === 'battle') onNavigate?.(`/battle?battle=${encodeURIComponent(payload.id)}${buildShareSuffix('&')}`);
     else if (type === 'result') onNavigate?.(`/battle/replay/${payload.id}${buildShareSuffix('?')}`);
     // Post deep-link: SocialFeedPage reads ?post= and scrolls + opens
     // the post's comment thread so the recipient lands on the original.
@@ -1223,7 +1355,7 @@ function SharedItemBubble({ raw, mine, onNavigate, senderId, senderUsername }) {
                 {(snap.user1?.username || 'P1')} vs {(snap.user2?.username || 'P2')}
               </div>
               <div className="text-[11px] text-white/70 mt-0.5">
-                {snap.durationType ? `${snap.durationType} · ` : ''}Tap to spectate
+                {snap.durationType ? `${snap.durationType} · ` : ''}Tap to view
               </div>
             </>
           )}
@@ -1322,13 +1454,23 @@ function ProfileHeaderLink({ friend, textPrimary, textSecondary }) {
 
 export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack }) {
   const { hasActiveMatchup } = useMatchup();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const router = useRouter();
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [notFriends, setNotFriends] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
+  // Instagram-style @mention autocomplete for the composer. `mentionBox` is
+  // either null or { results, activeIndex } — the dropdown of users matching
+  // the handle the caret is currently typing. The abort ref cancels in-flight
+  // searches so a fast typist's earlier query can't clobber a newer one.
+  const [mentionBox, setMentionBox] = useState(null);
+  const mentionAbortRef = useRef(null);
   // Track which message IDs are mid-delete so we can disable the
   // delete affordance and gray the bubble while the request is in
   // flight (prevents double-deletes from impatient double-taps).
@@ -1361,6 +1503,54 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     });
     try {
       const res = await fetch(`/api/messages/${encodeURIComponent(messageId)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok && res.status !== 404) {
+        throw new Error('delete_failed');
+      }
+    } catch (_e) {
+      if (removed) {
+        setThread((prev) => {
+          if (prev.some((x) => x.id === messageId)) return prev;
+          const next = prev.slice();
+          const insertAt = Math.min(removed.idx, next.length);
+          next.splice(insertAt, 0, removed.msg);
+          return next;
+        });
+      }
+      setSendError('Could not delete message. Try again.');
+    } finally {
+      setDeletingIds((prev) => {
+        if (!prev.has(messageId)) return prev;
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
+    }
+  }, []);
+
+  // "Delete for me" — hides the bubble from this user's view only. The
+  // other participant keeps seeing it (no SSE broadcast). Optimistically
+  // removes locally, then persists via ?scope=me; restores on failure.
+  const handleDeleteForMe = useCallback(async (messageId) => {
+    if (!messageId) return;
+    let removed = null;
+    setThread((prev) => {
+      const idx = prev.findIndex((x) => x.id === messageId);
+      if (idx === -1) return prev;
+      removed = { msg: prev[idx], idx };
+      const next = prev.slice();
+      next.splice(idx, 1);
+      return next;
+    });
+    setDeletingIds((prev) => {
+      const next = new Set(prev);
+      next.add(messageId);
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/messages/${encodeURIComponent(messageId)}?scope=me`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -1491,15 +1681,20 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     let timer = null;
 
     const fetchThread = async ({ initial }) => {
-      if (initial) { setLoading(true); setLoadError(null); }
+      if (initial) { setLoading(true); setLoadError(null); setNotFriends(false); }
       try {
         const res = await fetch(`/api/messages?friendId=${friend.id}`, { credentials: 'include' });
         if (!res.ok) {
           if (!cancelled && initial) {
-            setLoadError(res.status === 403 ? 'You can only message friends.' : 'Could not load messages.');
+            if (res.status === 403) {
+              setNotFriends(true);
+            } else {
+              setLoadError('Could not load messages.');
+            }
           }
           return;
         }
+        if (!cancelled) setNotFriends(false);
         const data = await res.json();
         if (cancelled) return;
         const next = data.messages || [];
@@ -1531,7 +1726,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
       if (timer) clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [friend?.id]);
+  }, [friend?.id, reloadKey]);
 
   useEffect(() => {
     if (!friend?.id || typeof window === 'undefined') return undefined;
@@ -1542,7 +1737,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
       const fromMeToFriend = myId != null && m.senderId === myId && m.receiverId === friend.id;
       if (!fromFriend && !fromMeToFriend) return;
       setThread((prev) => {
-        if (prev.some((x) => x.id === m.id)) return prev;
+        if (prev.some((x) => String(x.id) === String(m.id))) return prev;
         return [...prev, m];
       });
       if (fromFriend) ctx.clearTyping?.(friend.id);
@@ -1610,6 +1805,26 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     setReply(v);
     if (sendError) setSendError(null);
     if (voiceError) setVoiceError(null);
+    // Drive the @mention picker off the caret position. Search needs ≥2 chars
+    // (matches the API's minimum); anything shorter just hides the dropdown.
+    const det = detectMention(v, e.target.selectionStart ?? v.length);
+    // Always cancel any in-flight search first so a slower earlier response
+    // can't repopulate the dropdown after the mention is gone/changed.
+    if (mentionAbortRef.current) { try { mentionAbortRef.current.abort(); } catch {} mentionAbortRef.current = null; }
+    if (!det || det.token.length < 2) {
+      setMentionBox(null);
+    } else {
+      const ctrl = new AbortController();
+      mentionAbortRef.current = ctrl;
+      fetch(`/api/users/search?q=${encodeURIComponent(det.token)}`, { signal: ctrl.signal, credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : { users: [] }))
+        .then((data) => {
+          if (ctrl.signal.aborted) return;
+          const results = Array.isArray(data?.users) ? data.users.slice(0, 6) : [];
+          setMentionBox(results.length ? { results, activeIndex: 0 } : null);
+        })
+        .catch(() => {});
+    }
     if (!friend?.id) return;
     // Clearing the input after typing — proactively tell the friend we
     // stopped so their indicator clears immediately rather than after TTL.
@@ -1629,6 +1844,16 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     lastTypingFriendRef.current = friend.id;
     ctx.notifyTyping?.(friend.id);
   };
+
+  // Switching conversations (or unmounting) must drop any open mention picker
+  // and cancel its in-flight search so stale suggestions can't leak into the
+  // newly opened thread.
+  useEffect(() => {
+    setMentionBox(null);
+    return () => {
+      if (mentionAbortRef.current) { try { mentionAbortRef.current.abort(); } catch {} mentionAbortRef.current = null; }
+    };
+  }, [friend?.id]);
 
   const sendMessagePayload = useCallback(async (payload) => {
     const res = await fetch('/api/messages', {
@@ -1861,59 +2086,26 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     // the parameter-laden value in object-storage metadata isn't worth the
     // playback risk for receivers on Safari.
     const baseMime = (blob.type || 'audio/webm').split(';')[0].trim() || 'audio/webm';
-    let reqRes;
+    // Re-wrap the blob as a File so the Vercel Blob client `upload()`
+    // sees a filename + a normalized content type. The recorder hands us
+    // a MediaRecorder Blob (no name, sometimes `audio/webm;codecs=opus`),
+    // which the server-side `allowedContentTypes` check would reject.
+    const fileForUpload =
+      typeof File !== 'undefined'
+        ? new File([blob], filename, { type: baseMime })
+        : blob;
     try {
-      reqRes = await fetch('/api/uploads/request-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          name: filename,
-          size: blob.size,
-          contentType: baseMime,
-          kind: 'voice-note',
-        }),
-      });
-    } catch (netErr) {
-      const wrapped = new Error('voice-request-url-network');
-      wrapped.stage = 'request-url';
-      wrapped.network = true;
-      wrapped.cause = netErr;
+      const { uploadToBlob } = await import('../../utils/blobUpload');
+      const { url } = await uploadToBlob(fileForUpload, { kind: 'voice-note' });
+      return { attachmentUrl: url, attachmentDurationMs: durationMs };
+    } catch (err) {
+      const wrapped = new Error('voice-upload-failed');
+      wrapped.stage = 'upload';
+      wrapped.status = err?.status || 0;
+      wrapped.serverMessage = err?.message;
+      wrapped.cause = err;
       throw wrapped;
     }
-    if (!reqRes.ok) {
-      const wrapped = new Error('voice-request-url-failed');
-      wrapped.stage = 'request-url';
-      wrapped.status = reqRes.status;
-      try {
-        const body = await reqRes.clone().json();
-        if (body?.error) wrapped.serverMessage = body.error;
-        if (body?.code) wrapped.code = body.code;
-      } catch (_e) {}
-      throw wrapped;
-    }
-    const { uploadURL, objectPath } = await reqRes.json();
-    let putRes;
-    try {
-      putRes = await fetch(uploadURL, {
-        method: 'PUT',
-        headers: { 'Content-Type': baseMime },
-        body: blob,
-      });
-    } catch (netErr) {
-      const wrapped = new Error('voice-put-network');
-      wrapped.stage = 'put';
-      wrapped.network = true;
-      wrapped.cause = netErr;
-      throw wrapped;
-    }
-    if (!putRes.ok) {
-      const wrapped = new Error('voice-put-failed');
-      wrapped.stage = 'put';
-      wrapped.status = putRes.status;
-      throw wrapped;
-    }
-    return { attachmentUrl: objectPath, attachmentDurationMs: durationMs };
   };
 
   const handleStartRecording = async ({ continuingSegment = false } = {}) => {
@@ -2669,6 +2861,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     e?.preventDefault?.();
     const text = reply.trim();
     if (!text || !friend?.id || sending) return;
+    setMentionBox(null);
     setSending(true);
     setSendError(null);
     try {
@@ -2715,10 +2908,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     }
   };
 
-  const cardBorder = 'rgba(59,130,246,0.18)';
-  const textPrimary = '#ffffff';
-  const textSecondary = '#9ca3af';
-  const inputBg = '#0a1220';
+  const cardBorder = isLight ? 'rgba(59,130,246,0.22)' : 'rgba(59,130,246,0.18)';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
+  const inputBg = isLight ? '#f1f5f9' : '#0a1220';
 
   let lastOutgoingIdx = -1;
   for (let i = thread.length - 1; i >= 0; i--) {
@@ -2751,6 +2944,108 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
     const t = setTimeout(() => setInviteEndedNote(null), 6000);
     return () => clearTimeout(t);
   }, [inviteEndedNote]);
+
+  // Render a message body with @mentions turned into clickable links (IG-style)
+  // that navigate to the tagged player's profile. Own-bubble mentions use a
+  // light-blue so they read on the blue gradient; received ones use the brand
+  // blue. Unresolvable handles still render as links — the click just no-ops if
+  // no user matches.
+  const renderMessageContent = (text, mine) => {
+    if (!text) return text;
+    const parts = String(text).split(/(@[A-Za-z0-9_]+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@') && part.length > 1) {
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); resolveAndOpenMention(part.slice(1)); }}
+            className="hover:underline"
+            style={{
+              color: mine ? '#bfdbfe' : '#2563eb',
+              fontWeight: 700,
+              padding: 0,
+              margin: 0,
+              border: 0,
+              background: 'transparent',
+              fontSize: 'inherit',
+              fontFamily: 'inherit',
+              lineHeight: 'inherit',
+              cursor: 'pointer',
+              display: 'inline',
+              verticalAlign: 'baseline',
+            }}
+          >
+            {part}
+          </button>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  // Resolve an @handle to a real user and open their profile. The DM partner is
+  // matched locally (no round-trip); anyone else is looked up via the user
+  // search API (exact, case-insensitive). No match → no navigation.
+  const resolveAndOpenMention = async (handle) => {
+    const norm = (s) => (s || '').replace(/\s+/g, '').toLowerCase();
+    const target = norm(handle);
+    if (!target) return;
+    if (friend?.id && norm(friend.username) === target) {
+      try { router.push(`/profile/${friend.id}`); } catch {}
+      return;
+    }
+    try {
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(handle)}`, { credentials: 'include' });
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = Array.isArray(data?.users) ? data.users : [];
+      const match = list.find((u) => norm(u.username) === target);
+      if (match?.id) { try { router.push(`/profile/${match.id}`); } catch {} }
+    } catch {}
+  };
+
+  // Insert the picked user's "@username " into the composer, replacing the
+  // partial handle the caret is on. Caret span is recomputed from the live
+  // input so it stays correct even if the value changed since the search fired.
+  const applyMention = (user) => {
+    if (!user?.username) return;
+    const el = inputRef.current;
+    const caret = el ? (el.selectionStart ?? reply.length) : reply.length;
+    const det = detectMention(reply, caret);
+    const start = det ? det.start : reply.length;
+    const end = det ? det.end : reply.length;
+    const before = reply.slice(0, start);
+    const after = reply.slice(end);
+    const inserted = `@${user.username} `;
+    const next = `${before}${inserted}${after}`;
+    setReply(next);
+    setMentionBox(null);
+    const pos = (before + inserted).length;
+    requestAnimationFrame(() => {
+      try { el?.focus(); el?.setSelectionRange(pos, pos); } catch {}
+    });
+  };
+
+  // Keyboard nav for the mention dropdown. Enter picks (instead of sending),
+  // arrows move the highlight, Esc dismisses.
+  const handleMentionKeyDown = (e) => {
+    if (!mentionBox || !mentionBox.results.length) return;
+    const n = mentionBox.results.length;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setMentionBox((b) => (b ? { ...b, activeIndex: (b.activeIndex + 1) % n } : b));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setMentionBox((b) => (b ? { ...b, activeIndex: (b.activeIndex - 1 + n) % n } : b));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      applyMention(mentionBox.results[mentionBox.activeIndex]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setMentionBox(null);
+    }
+  };
 
   return (
     // CSS Grid (instead of flex column) for the conversation surface.
@@ -2824,9 +3119,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
               disabled={hasActiveMatchup}
               className="msg-cartoon-btn sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-2xl text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.5)',
+                background: 'linear-gradient(180deg,#3b82f6,#4f46e5)',
+                border: '1px solid rgba(0,0,0,0.4)',
+                boxShadow: '0 3px 0 #1e3a8a, 0 6px 16px rgba(59,130,246,0.28)',
                 textShadow: '0 1px 0 rgba(0,0,0,0.35)',
               }}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : 'Start Battle'}
@@ -2849,9 +3144,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
               disabled={hasActiveMatchup}
               className="msg-cartoon-btn hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-extrabold uppercase tracking-wider text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: 'linear-gradient(180deg,#3b82f6,#2563eb)',
-                border: '2.5px solid #0a0a0a',
-                boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.5)',
+                background: 'linear-gradient(180deg,#3b82f6,#4f46e5)',
+                border: '1px solid rgba(0,0,0,0.4)',
+                boxShadow: '0 3px 0 #1e3a8a, 0 6px 16px rgba(59,130,246,0.28)',
                 textShadow: '0 1px 0 rgba(0,0,0,0.35)',
               }}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
@@ -2887,15 +3182,24 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
         {loading && (
           <div className="text-center text-xs py-6" style={{ color: textSecondary }}>Loading…</div>
         )}
-        {!loading && loadError && (
+        {!loading && notFriends && (
+          <div className="flex items-center justify-center py-6">
+            <NotFriendsNotice
+              userId={friend?.id}
+              username={friend?.username}
+              onFriendAdded={() => { setNotFriends(false); setLoadError(null); setReloadKey((k) => k + 1); }}
+            />
+          </div>
+        )}
+        {!loading && !notFriends && loadError && (
           <div className="text-center text-xs py-6 text-red-400">{loadError}</div>
         )}
-        {!loading && !loadError && thread.length === 0 && (
+        {!loading && !notFriends && !loadError && thread.length === 0 && (
           <div className="text-center text-xs py-6" style={{ color: textSecondary }}>
             No messages yet. Say hi!
           </div>
         )}
-        {!loading && !loadError && thread.map((m, idx) => {
+        {!loading && !notFriends && !loadError && thread.map((m, idx) => {
           const mine = m.senderId === myId;
           const isDeleting = deletingIds.has(m.id);
           return (
@@ -2903,43 +3207,22 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             key={m.id}
             className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}
           >
-            {/* Bubble row. For own messages we add a small unsend
-                affordance to the LEFT of the bubble (since the row is
-                right-aligned). The `group` class lets desktop hover
-                reveal it; on touch (no hover) we keep it visible at
-                low opacity so it's always tappable — per the
-                no-hover-on-touch app preference. */}
+            {/* Bubble row. A "•••" actions menu sits on the outer edge of
+                the bubble (LEFT for own right-aligned messages, RIGHT for
+                received ones). The `group` class lets desktop hover reveal
+                it; on touch (no hover) it stays at low opacity so it's
+                always tappable — per the no-hover-on-touch app preference. */}
             <div
               className={`flex items-center gap-1.5 max-w-full group ${
                 mine ? 'flex-row' : 'flex-row-reverse'
               }`}
             >
-              {mine && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteMessage(m.id)}
-                  disabled={isDeleting}
-                  aria-label="Unsend message"
-                  title="Unsend message"
-                  className="flex-shrink-0 inline-flex items-center justify-center rounded-full transition-opacity opacity-60 lg:opacity-0 lg:group-hover:opacity-80 lg:hover:opacity-100"
-                  style={{
-                    width: 26,
-                    height: 26,
-                    background: 'rgba(15,23,42,0.6)',
-                    border: '1.5px solid rgba(248,113,113,0.45)',
-                    color: '#f87171',
-                    cursor: isDeleting ? 'wait' : 'pointer',
-                  }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                    <path d="M10 11v6" />
-                    <path d="M14 11v6" />
-                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                  </svg>
-                </button>
-              )}
+              <MessageActionsMenu
+                mine={mine}
+                disabled={isDeleting}
+                onUnsend={() => handleDeleteMessage(m.id)}
+                onDeleteForMe={() => handleDeleteForMe(m.id)}
+              />
               {/* Cartoon-themed bubbles — chunky black border + offset
                   shadow on both sides. Mine uses a bold blue gradient
                   (matches the "Start Battle" CTA), theirs uses a dark
@@ -2948,7 +3231,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                 className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-sm leading-snug break-words ${
                   mine
                     ? 'text-white rounded-br-sm'
-                    : 'text-white rounded-bl-sm'
+                    : `rounded-bl-sm ${isLight ? '' : 'text-white'}`
                 }`}
                 style={{
                   ...(mine
@@ -2957,6 +3240,13 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                         border: '2.5px solid #0a0a0a',
                         boxShadow: '0 3px 0 #0a0a0a, 0 0 14px rgba(59,130,246,0.35)',
                         textShadow: '0 1px 0 rgba(0,0,0,0.25)',
+                      }
+                    : isLight
+                    ? {
+                        background: 'linear-gradient(180deg,#ffffff,#f1f5f9)',
+                        border: '2.5px solid #0a0a0a',
+                        boxShadow: '0 3px 0 #0a0a0a',
+                        color: '#0f172a',
                       }
                     : {
                         background: 'linear-gradient(180deg,#1f2937,#111827)',
@@ -2983,7 +3273,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                     onNavigate={(href) => { try { router.push(href); } catch {} }}
                   />
                 ) : (
-                  m.content
+                  renderMessageContent(m.content, mine)
                 )}
               </div>
             </div>
@@ -3016,7 +3306,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
         )}
       </div>
 
-      {!loadError && (
+      {!loadError && !notFriends && (
         <form
           onSubmit={handleSend}
           className="p-3 flex-shrink-0"
@@ -3052,8 +3342,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                   aria-label="Re-record voice note"
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
                   style={{
-                    backgroundColor: '#1f1f1f',
-                    color: '#fca5a5',
+                    backgroundColor: isLight ? '#fef2f2' : '#1f1f1f',
+                    color: isLight ? '#dc2626' : '#fca5a5',
                     border: '1px solid rgba(239,68,68,0.4)',
                   }}
                 >
@@ -3068,8 +3358,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                     title="Add more to this recording"
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
                     style={{
-                      backgroundColor: '#0f1622',
-                      color: '#bfdbfe',
+                      backgroundColor: isLight ? '#eff6ff' : '#0f1622',
+                      color: isLight ? '#2563eb' : '#bfdbfe',
                       border: '1px solid rgba(59,130,246,0.45)',
                     }}
                   >
@@ -3232,12 +3522,43 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
             /* Cartoon-themed composer row — text input has chunky black
                border + soft inset shadow, mic + send have the same
                offset-shadow press behavior as the rest of the slip. */
-            <div className="flex gap-2">
+            <div className="relative">
+              {mentionBox && mentionBox.results.length > 0 && (
+                <div
+                  className="absolute left-0 right-0 bottom-full mb-2 rounded-2xl overflow-hidden z-30"
+                  style={{
+                    backgroundColor: isLight ? '#ffffff' : '#0f172a',
+                    border: '2.5px solid #0a0a0a',
+                    boxShadow: '0 4px 0 #0a0a0a',
+                  }}
+                >
+                  {mentionBox.results.map((u, i) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); applyMention(u); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
+                      style={{
+                        backgroundColor: i === mentionBox.activeIndex
+                          ? (isLight ? 'rgba(37,99,235,0.10)' : 'rgba(59,130,246,0.18)')
+                          : 'transparent',
+                      }}
+                    >
+                      <UserAvatar username={u.username} avatar={u.avatar} size={26} />
+                      <span className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
+                        @{u.username}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
               <input
                 ref={inputRef}
                 type="text"
                 value={reply}
                 onChange={handleReplyChange}
+                onKeyDown={handleMentionKeyDown}
                 placeholder="Write a message…"
                 className="flex-1 min-w-0 px-3.5 py-2.5 rounded-2xl focus:outline-none"
                 style={{
@@ -3287,6 +3608,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
                   {sending ? '…' : 'Send'}
                 </button>
               )}
+              </div>
             </div>
           )}
           {(voiceError || sendError) && (
@@ -3298,38 +3620,17 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, onBack })
   );
 }
 
-function NotFriendsCard({ userId, onFriendAdded, onBack }) {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+function NotFriendsNotice({ userId, username, onFriendAdded }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
   const [requestStatus, setRequestStatus] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setLoadError(null);
-    setProfile(null);
-    setRequestStatus(null);
-    setSendError(null);
-    (async () => {
-      try {
-        const res = await fetch(`/api/profiles/${userId}`, { credentials: 'include' });
-        if (!res.ok) {
-          if (!cancelled) setLoadError(res.status === 404 ? 'User not found.' : 'Could not load user.');
-          return;
-        }
-        const data = await res.json();
-        if (!cancelled) setProfile(data);
-      } catch {
-        if (!cancelled) setLoadError('Could not load user.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [userId]);
+  const cardBorder = isLight ? 'rgba(59,130,246,0.22)' : 'rgba(59,130,246,0.18)';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
+  const innerBg = isLight ? '#f1f5f9' : '#0a1220';
 
   const handleAdd = async () => {
     if (sending) return;
@@ -3361,11 +3662,76 @@ function NotFriendsCard({ userId, onFriendAdded, onBack }) {
     }
   };
 
-  const cardBorder = 'rgba(59,130,246,0.18)';
-  const textPrimary = '#ffffff';
-  const textSecondary = '#9ca3af';
-  const cardBg = '#0a0a0a';
-  const innerBg = '#0a1220';
+  return (
+    <div
+      className="w-full max-w-sm rounded-xl p-5 text-center"
+      style={{ backgroundColor: innerBg, border: `1px solid ${cardBorder}` }}
+    >
+      <div className="text-sm font-semibold mb-1" style={{ color: textPrimary }}>
+        You're not friends yet
+      </div>
+      <p className="text-xs mb-4" style={{ color: textSecondary }}>
+        You can only message friends — send {username || 'this player'} a friend request first.
+      </p>
+      {requestStatus === 'pending' && (
+        <div className="text-xs mb-3" style={{ color: textSecondary }}>
+          Friend request sent. You'll be able to message them once they accept.
+        </div>
+      )}
+      {requestStatus === 'accepted' && (
+        <div className="text-xs mb-3 text-blue-400">You're now friends!</div>
+      )}
+      {!requestStatus && (
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={sending}
+          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg"
+        >
+          {sending ? 'Sending…' : 'Add friend'}
+        </button>
+      )}
+      {sendError && (
+        <div className="text-red-400 text-[11px] mt-2">{sendError}</div>
+      )}
+    </div>
+  );
+}
+
+function NotFriendsCard({ userId, onFriendAdded, onBack }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    setProfile(null);
+    (async () => {
+      try {
+        const res = await fetch(`/api/profiles/${userId}`, { credentials: 'include' });
+        if (!res.ok) {
+          if (!cancelled) setLoadError(res.status === 404 ? 'User not found.' : 'Could not load user.');
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) setProfile(data);
+      } catch {
+        if (!cancelled) setLoadError('Could not load user.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const cardBorder = isLight ? 'rgba(59,130,246,0.22)' : 'rgba(59,130,246,0.18)';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
+  const cardBg = isLight ? '#ffffff' : '#0a0a0a';
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -3411,38 +3777,11 @@ function NotFriendsCard({ userId, onFriendAdded, onBack }) {
         ) : loadError ? (
           <div className="text-xs text-red-400 text-center">{loadError}</div>
         ) : (
-          <div
-            className="w-full max-w-sm rounded-xl p-5 text-center"
-            style={{ backgroundColor: innerBg, border: `1px solid ${cardBorder}` }}
-          >
-            <div className="text-sm font-semibold mb-1" style={{ color: textPrimary }}>
-              You're not friends yet
-            </div>
-            <p className="text-xs mb-4" style={{ color: textSecondary }}>
-              You can only message friends — send {profile?.username || 'this player'} a friend request first.
-            </p>
-            {requestStatus === 'pending' && (
-              <div className="text-xs mb-3" style={{ color: textSecondary }}>
-                Friend request sent. You'll be able to message them once they accept.
-              </div>
-            )}
-            {requestStatus === 'accepted' && (
-              <div className="text-xs mb-3 text-blue-400">You're now friends!</div>
-            )}
-            {!requestStatus && (
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={sending}
-                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg"
-              >
-                {sending ? 'Sending…' : 'Add friend'}
-              </button>
-            )}
-            {sendError && (
-              <div className="text-red-400 text-[11px] mt-2">{sendError}</div>
-            )}
-          </div>
+          <NotFriendsNotice
+            userId={userId}
+            username={profile?.username}
+            onFriendAdded={onFriendAdded}
+          />
         )}
       </div>
     </div>
@@ -3491,6 +3830,8 @@ export default function MessagesPanel({
   minHeight = 520,
   onStartBattle,
 }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -3708,13 +4049,13 @@ export default function MessagesPanel({
     [conversations, selectedId]
   );
 
-  const cardBg = '#0a0a0a';
-  const cardBorder = 'rgba(59,130,246,0.22)';
-  const textPrimary = '#ffffff';
-  const textSecondary = '#9ca3af';
-  const inputBg = '#0a1220';
-  const rowHover = 'rgba(59,130,246,0.06)';
-  const rowSelected = 'rgba(59,130,246,0.18)';
+  const cardBg = isLight ? '#ffffff' : '#0a0a0a';
+  const cardBorder = isLight ? 'rgba(59,130,246,0.28)' : 'rgba(59,130,246,0.22)';
+  const textPrimary = isLight ? '#0f172a' : '#ffffff';
+  const textSecondary = isLight ? '#64748b' : '#9ca3af';
+  const inputBg = isLight ? '#f1f5f9' : '#0a1220';
+  const rowHover = isLight ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.06)';
+  const rowSelected = isLight ? 'rgba(59,130,246,0.14)' : 'rgba(59,130,246,0.18)';
   // Cartoon panel chrome — chunky 2.5px black border + offset shadow
   // matches PikSlip / PlayFriendModal / PrivateMatchModal so the
   // Messenger feels part of the same family. Kept as a separate
@@ -3743,7 +4084,9 @@ export default function MessagesPanel({
           className="px-4 py-3 flex-shrink-0"
           style={{
             borderBottom: '2.5px solid #0a0a0a',
-            background: 'linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%)',
+            background: isLight
+              ? 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)'
+              : 'linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%)',
           }}
         >
           <div

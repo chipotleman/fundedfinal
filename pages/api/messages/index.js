@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { messages, profiles, friendships } from '../../../shared/schema';
-import { eq, or, and, desc } from 'drizzle-orm';
+import { eq, or, and, desc, sql } from 'drizzle-orm';
 const { publishBattleEvent } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
@@ -42,9 +42,13 @@ export default async function handler(req, res) {
         .select()
         .from(messages)
         .where(
-          or(
-            and(eq(messages.senderId, userId), eq(messages.receiverId, friendId)),
-            and(eq(messages.senderId, friendId), eq(messages.receiverId, userId))
+          and(
+            or(
+              and(eq(messages.senderId, userId), eq(messages.receiverId, friendId)),
+              and(eq(messages.senderId, friendId), eq(messages.receiverId, userId))
+            ),
+            // Hide messages this user has "deleted for me".
+            sql`NOT (COALESCE(${messages.deletedFor}, '[]'::jsonb) @> jsonb_build_array(${userId}::text))`
           )
         )
         .orderBy(messages.createdAt)
@@ -92,8 +96,13 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Voice message requires attachmentUrl' });
       }
       // Only accept first-party object-storage paths so attachers can't smuggle
-      // off-platform tracking/beacon URLs into a chat.
-      if (!attachmentUrl.startsWith('/objects/')) {
+      // off-platform tracking/beacon URLs into a chat. Accept the legacy
+      // Replit-sidecar `/objects/...` path AND new Vercel Blob public URLs
+      // (`https://<store>.public.blob.vercel-storage.com/...`).
+      const isOk =
+        attachmentUrl.startsWith('/objects/') ||
+        /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//i.test(attachmentUrl);
+      if (!isOk) {
         return res.status(400).json({ error: 'Invalid attachment URL' });
       }
     } else if (!content?.trim()) {

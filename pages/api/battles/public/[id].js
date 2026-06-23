@@ -10,7 +10,14 @@ import {
 import { eq, and } from 'drizzle-orm';
 
 function formatRawBet(bet) {
-  return {
+  // gameId / sport / full team names live on the first leg for parlays and on
+  // the row for straight bets — surface them so the public Battle Summary page
+  // can render PiksBetCard (final scores) + the odds-history tracker exactly
+  // like My Piks. Scores are only attached when stored, so settled cards
+  // without a stored final fall back to PiksBetCard's own rendering.
+  const legArr = Array.isArray(bet.legs) ? bet.legs : [];
+  const firstLeg = legArr[0] || null;
+  const out = {
     id: bet.id,
     matchupId: bet.matchupId || null,
     matchup: bet.matchupName,
@@ -26,9 +33,17 @@ function formatRawBet(bet) {
       : bet.status === 'lost'
       ? -parseFloat(bet.stake)
       : 0,
+    pnl: bet.pnl != null ? parseFloat(bet.pnl) : null,
     potentialPayout: parseFloat(bet.potentialPayout) || 0,
     legs: bet.legs || null,
+    gameId: bet.gameId || firstLeg?.gameId || null,
+    sport: firstLeg?.sport || firstLeg?.sportName || bet.sport || bet.sportName || null,
+    homeTeamFull: bet.homeTeamFull || firstLeg?.homeTeamFull || null,
+    awayTeamFull: bet.awayTeamFull || firstLeg?.awayTeamFull || null,
   };
+  if (bet.homeScore != null) out.homeScore = bet.homeScore;
+  if (bet.awayScore != null) out.awayScore = bet.awayScore;
+  return out;
 }
 
 export default async function handler(req, res) {

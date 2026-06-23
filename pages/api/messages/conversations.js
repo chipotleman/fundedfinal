@@ -87,8 +87,9 @@ export default async function handler(req, res) {
           id, sender_id, receiver_id, content, read, created_at,
           message_type, attachment_url, attachment_duration_ms, attachment_peaks
         FROM messages
-        WHERE (sender_id = ${userId} AND receiver_id IN (${friendIdList}))
-           OR (receiver_id = ${userId} AND sender_id IN (${friendIdList}))
+        WHERE ((sender_id = ${userId} AND receiver_id IN (${friendIdList}))
+           OR (receiver_id = ${userId} AND sender_id IN (${friendIdList})))
+          AND NOT (COALESCE(deleted_for, '[]'::jsonb) @> jsonb_build_array(${userId}::text))
       ) sub
       ORDER BY other_id, created_at DESC
     `);
@@ -120,6 +121,7 @@ export default async function handler(req, res) {
       WHERE receiver_id = ${userId}
         AND read = false
         AND sender_id IN (${friendIdList})
+        AND NOT (COALESCE(deleted_for, '[]'::jsonb) @> jsonb_build_array(${userId}::text))
       GROUP BY sender_id
     `);
     const unreadCountRows = Array.isArray(unreadCountsResult)

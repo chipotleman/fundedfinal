@@ -7,6 +7,7 @@ import QuickMatchModal from '../components/battle/QuickMatchModal';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
 import PrivateMatchModal from '../components/battle/PrivateMatchModal';
 import BattleModeChooser from '../components/battle/BattleModeChooser';
+import ActiveBattleBlocker from '../components/battle/ActiveBattleBlocker';
 import InviteToast from '../components/battle/InviteToast';
 import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
@@ -97,6 +98,23 @@ export default function BattlePage() {
   }, [profileCache, router]);
 
   const [profile, setProfile] = useState(null);
+  // Cached NextAuth user from localStorage (`current_user`). The TopNavbar
+  // writes the session here for instant rendering and treats its presence as
+  // "logged in"; we mirror that so the feed's guest gating stays consistent
+  // with the nav — otherwise a logged-in user (nav shows their avatar) gets
+  // the "Sign up to share" guest state while `useSession()` is still
+  // loading / slow to resolve. Starts null on SSR + first client render to
+  // avoid a hydration mismatch, then hydrates in the effect below.
+  const [storedUser, setStoredUser] = useState(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('current_user');
+      setStoredUser(raw ? JSON.parse(raw) : null);
+    } catch {
+      setStoredUser(null);
+    }
+  }, [status]);
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState([]);
   const [invites, setInvites] = useState({ received: [], sent: [] });
@@ -115,12 +133,19 @@ export default function BattlePage() {
 
   const [showQuickMatch, setShowQuickMatch] = useState(false);
   const [showPlayFriend, setShowPlayFriend] = useState(false);
+  // Only true when PlayFriendModal was opened from the BattleModeChooser, so the
+  // back arrow (return to chooser) shows only for that flow — not for deep-link
+  // (?play=), auth-resume, or quick-invite fallback openings.
+  const [playFriendFromChooser, setPlayFriendFromChooser] = useState(false);
   const [playFriendInitial, setPlayFriendInitial] = useState(null);
   // When the friend-row "Battle" shortcut succeeds we open PlayFriendModal
   // pre-set into its waiting/sent overlay instead of just toasting. Set to
   // { id, friend, buyIn, gameMode } and cleared on modal close.
   const [playFriendSentInvite, setPlayFriendSentInvite] = useState(null);
   const [showPrivateMatch, setShowPrivateMatch] = useState(false);
+  // Shows the "Finish your fight first" blocker when the user tries to start
+  // a Quick or Private Match while already in a live battle.
+  const [showBattleBlocker, setShowBattleBlocker] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [socialExpanded, setSocialExpanded] = useState(false);
   const [showLobby, setShowLobby] = useState(null);
@@ -158,8 +183,10 @@ export default function BattlePage() {
     setMessageFriend(friend);
   }, []);
   const closeMessagePopup = useCallback(() => setMessageFriend(null), []);
-  const isGuest = status !== 'authenticated';
-  const userId = session?.user?.id;
+  // Treat a cached `current_user` as logged-in too (matches TopNavbar), so the
+  // social feed never shows guest CTAs to a signed-in user mid session-load.
+  const isGuest = status !== 'authenticated' && !storedUser;
+  const userId = session?.user?.id || storedUser?.id || null;
   const debounceRef = useRef(null);
 
   useEffect(() => {
@@ -474,8 +501,13 @@ export default function BattlePage() {
   // the stream is unhealthy.
   const invitesRef = useRef(invites);
   const activeMatchupRef = useRef(activeMatchup);
+  // Always-current mirror of `globalHasActive` so the once-registered resume
+  // listeners and the query-param entry effect can read the live value
+  // without re-subscribing on every matchup change (avoids stale closures).
+  const globalHasActiveRef = useRef(globalHasActive);
   useEffect(() => { invitesRef.current = invites; }, [invites]);
   useEffect(() => { activeMatchupRef.current = activeMatchup; }, [activeMatchup]);
+  useEffect(() => { globalHasActiveRef.current = globalHasActive; }, [globalHasActive]);
 
   // ?play=<friendId> opens the PlayFriendModal with that friend pre-selected.
   useEffect(() => {
@@ -517,7 +549,13 @@ export default function BattlePage() {
     } else if (openPlayFriend) {
       gate(setShowPlayFriend, 'resumePlayFriend');
     } else if (openPrivateMatch) {
-      gate(setShowPrivateMatch, 'resumePrivateMatch');
+      if (isGuest) {
+        gate(setShowPrivateMatch, 'resumePrivateMatch');
+      } else if (globalHasActiveRef.current) {
+        setShowBattleBlocker(true);
+      } else {
+        setShowPrivateMatch(true);
+      }
     }
     const cleaned = { ...router.query };
     delete cleaned.openChooser;
@@ -1128,14 +1166,14 @@ export default function BattlePage() {
   // lightning shortcut. Falls back to opening the full Play Friend modal
   // when the user has no remembered buy-in yet.
   const handleQuickInvite = useCallback(async (friend) => {
-    if (!friend?.id) return;
+    if (!friend?.id) return false;
     if (isGuest) {
       requireAuth(() => {});
-      return;
+      return false;
     }
     if (globalHasActive) {
       showQuickToast("You're already in a battle — finish it first.", 'error');
-      return;
+      return false;
     }
     // Prefer the freshly-hydrated value (which already reflects the
     // cross-device server copy when available) and only fall back to the
@@ -1145,9 +1183,9 @@ export default function BattlePage() {
       // No remembered buy-in — open the modal so the user can pick one.
       setPlayFriendInitial(friend);
       setShowPlayFriend(true);
-      return;
+      return false;
     }
-    if (quickInviteFor) return;
+    if (quickInviteFor) return false;
     setQuickInviteFor(friend.id);
     try {
       const res = await fetch('/api/battles/invite', {
@@ -1163,7 +1201,7 @@ export default function BattlePage() {
         setPlayFriendInitial(friend);
         setShowPlayFriend(true);
         if (data?.error) showQuickToast(data.error, 'error');
-        return;
+        return false;
       }
       // Refresh the remembered values (mode may have been normalised
       // server-side) and persist to the user's profile so the shortcut
@@ -1185,11 +1223,13 @@ export default function BattlePage() {
         });
         setShowPlayFriend(true);
       } else {
-        showQuickToast(`Invite sent to ${friend.username || 'friend'} · ${isBeta ? `${formatMoney(last.buyIn, 0)} coin buy-in` : `$${last.buyIn} buy-in`}`);
+        showQuickToast(`Invite sent to ${friend.username || 'friend'} · ${isBeta ? `${formatMoney(last.buyIn, 0)} Clash Coins buy-in` : `$${last.buyIn} buy-in`}`);
       }
       fetchData();
+      return true;
     } catch {
       showQuickToast('Could not send invite. Try again.', 'error');
+      return false;
     } finally {
       setQuickInviteFor(null);
     }
@@ -1222,7 +1262,10 @@ export default function BattlePage() {
   useEffect(() => {
     const handleResumeOptions = () => setShowBattleOptions(true);
     const handleResumePlayFriend = () => setShowPlayFriend(true);
-    const handleResumePrivateMatch = () => setShowPrivateMatch(true);
+    const handleResumePrivateMatch = () => {
+      if (globalHasActiveRef.current) setShowBattleBlocker(true);
+      else setShowPrivateMatch(true);
+    };
     window.addEventListener('resumeBattleOptions', handleResumeOptions);
     window.addEventListener('resumePlayFriend', handleResumePlayFriend);
     window.addEventListener('resumePrivateMatch', handleResumePrivateMatch);
@@ -1250,6 +1293,43 @@ export default function BattlePage() {
   const handleBattleOptionClick = (setter) => {
     setShowBattleOptions(false);
     requireAuth(() => setter(true));
+  };
+
+  // Quick Match must be mutually exclusive with an outstanding 1v1
+  // commitment: you can't matchmake into a random opponent while you're
+  // already in a battle, or while you have a challenge invite still
+  // pending with a friend (accepting it would create a second matchup).
+  // Being mid-battle shows the same "Finish your fight first" blocker that
+  // Play a Friend uses, so all three entry points behave identically.
+  const openQuickMatch = () => {
+    requireAuth(() => {
+      if (globalHasActive) {
+        setShowBattleBlocker(true);
+        return;
+      }
+      if ((invites.sent || []).length > 0) {
+        showQuickToast('You have a pending challenge — cancel it before a Quick Match.', 'error');
+        return;
+      }
+      setShowQuickMatch(true);
+    });
+  };
+
+  // Private Match also creates a fresh matchup, so it carries the exact
+  // same mid-battle guard as Quick Match — otherwise "Generate Code" would
+  // silently spin up a second matchup while a fight is still live.
+  const openPrivateMatch = () => {
+    requireAuth(() => {
+      if (globalHasActive) {
+        setShowBattleBlocker(true);
+        return;
+      }
+      if ((invites.sent || []).length > 0) {
+        showQuickToast('You have a pending challenge — cancel it before a Private Match.', 'error');
+        return;
+      }
+      setShowPrivateMatch(true);
+    }, 'resumePrivateMatch');
   };
 
   const friendIds = new Set(friends.map(f => f.id));
@@ -1487,14 +1567,14 @@ export default function BattlePage() {
                         hasPendingInvite
                           ? 'Invite already pending'
                           : lastBuyIn
-                          ? `Quick invite — ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} coin` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'}`
+                          ? `Quick invite — ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} Clash Coins` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'}`
                           : 'Quick invite — pick a buy-in (opens the full picker)'
                       }
                       aria-label={
                         hasPendingInvite
                           ? `Invite to ${friend.username || 'friend'} already pending`
                           : lastBuyIn
-                          ? `Quick invite ${friend.username || 'friend'} with ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} coin` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'} buy-in`
+                          ? `Quick invite ${friend.username || 'friend'} with ${isBeta ? `${formatMoney(lastBuyIn.buyIn, 0)} Clash Coins` : `$${lastBuyIn.buyIn}`} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'} buy-in`
                           : `Quick invite ${friend.username || 'friend'} — opens picker to set a buy-in`
                       }
                     >
@@ -1613,7 +1693,7 @@ export default function BattlePage() {
                       <div className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-yellow-500/15 text-yellow-300 border border-yellow-500/30">
                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 9v1" /></svg>
                         {isBeta
-                          ? `${formatMoney(invite.buyIn, 0)} coin buy-in · ${formatMoney(parseFloat(invite.buyIn) * 2, 0)} coin pot`
+                          ? `${formatMoney(invite.buyIn, 0)} Clash Coins buy-in · ${formatMoney(parseFloat(invite.buyIn) * 2, 0)} Crowns pot`
                           : `$${invite.buyIn} buy-in · $${parseFloat(invite.buyIn) * 2} pot`}
                       </div>
                     </div>
@@ -1817,8 +1897,8 @@ export default function BattlePage() {
         onClose={() => setShowHistory(false)}
       />
 
-      <div className={`pt-14 ${!isGuest ? 'pb-[calc(env(safe-area-inset-bottom,0px)+72px)] lg:pb-0' : ''}`}>
-        <div className="max-w-5xl mx-auto px-4">
+      <div className={`pt-4 ${!isGuest ? 'pb-[calc(env(safe-area-inset-bottom,0px)+72px)] lg:pb-0' : ''}`}>
+        <div className="max-w-5xl xl:max-w-[1320px] mx-auto px-4">
 
           {!isGuest && invites.received?.length > 0 && (
             <div className="mb-4 space-y-2">
@@ -1868,7 +1948,7 @@ export default function BattlePage() {
                 <div className="flex gap-5 mb-3">
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Buy-In</p>
-                    <p className="font-semibold text-sm" style={{ color: textPrimary }}>${formatMoney(activeMatchup.startingBalance || 0, 0)}</p>
+                    <p className="font-semibold text-sm" style={{ color: textPrimary }}>⚔ {formatMoney(activeMatchup.startingBalance || 0, 0)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Duration</p>
@@ -1882,7 +1962,7 @@ export default function BattlePage() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                    <p className="font-semibold text-sm" style={{ color: textPrimary }}>${formatMoney(activeMatchup.potSize || activeMatchup.startingBalance * 2 || 0, 0)}</p>
+                    <p className="font-semibold text-sm" style={{ color: textPrimary }}>👑 {formatMoney(activeMatchup.potSize || activeMatchup.startingBalance * 2 || 0, 0)}</p>
                   </div>
                 </div>
                 {activeMatchup.privateCode && (
@@ -2006,11 +2086,11 @@ export default function BattlePage() {
               renderer and the page keeps owning data + side effects. */}
           <SocialFeedPage
             data={{
-              currentUser: profile ? {
+              currentUser: (profile || storedUser) ? {
                 id: userId,
-                username: profile.username || session?.user?.name,
-                avatar: profile.avatar,
-                frameId: profile.equippedFrame,
+                username: profile?.username || storedUser?.username || session?.user?.name || storedUser?.name,
+                avatar: profile?.avatar ?? storedUser?.avatar ?? storedUser?.image ?? null,
+                frameId: profile?.equippedFrame ?? storedUser?.equippedFrame,
               } : null,
               isGuest,
               activeMatchup,
@@ -2020,9 +2100,9 @@ export default function BattlePage() {
               invites,
               friendRequests,
               onStartBattle: () => requireAuth(() => setShowBattleOptions(true)),
-              onPickQuickMatch: () => requireAuth(() => setShowQuickMatch(true)),
+              onPickQuickMatch: openQuickMatch,
               onPickPlayFriend: () => requireAuth(() => setShowPlayFriend(true), 'resumePlayFriend'),
-              onPickPrivateMatch: () => requireAuth(() => setShowPrivateMatch(true), 'resumePrivateMatch'),
+              onPickPrivateMatch: openPrivateMatch,
               onAcceptInvite: handleAcceptInvite,
               onDeclineInvite: handleDeclineInvite,
               onAcceptFriendRequest: handleAcceptFriendRequest,
@@ -2047,12 +2127,17 @@ export default function BattlePage() {
         </div>
       </div>
 
+      {showBattleBlocker && (
+        <ActiveBattleBlocker onClose={() => setShowBattleBlocker(false)} />
+      )}
+
       <BattleModeChooser
         isOpen={showBattleOptions}
         onClose={() => setShowBattleOptions(false)}
-        onPickQuickMatch={() => handleBattleOptionClick(setShowQuickMatch)}
-        onPickChallengeFriend={() => handleBattleOptionClick(setShowPlayFriend)}
-        onPickPrivateMatch={() => handleBattleOptionClick(setShowPrivateMatch)}
+        onPickQuickMatch={() => { setShowBattleOptions(false); openQuickMatch(); }}
+        onPickChallengeFriend={() => { setPlayFriendFromChooser(true); handleBattleOptionClick(setShowPlayFriend); }}
+        onPickPrivateMatch={() => { setShowBattleOptions(false); openPrivateMatch(); }}
+        currentUser={{ id: userId, username: profile?.username, avatar: profile?.avatar }}
       />
 
       <QuickMatchModal
@@ -2074,7 +2159,8 @@ export default function BattlePage() {
 
       <PlayFriendModal
         isOpen={showPlayFriend}
-        onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); refreshLastBuyIn(); }}
+        onClose={() => { setShowPlayFriend(false); setPlayFriendFromChooser(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); refreshLastBuyIn(); }}
+        onBack={playFriendFromChooser ? () => { setShowPlayFriend(false); setPlayFriendFromChooser(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); setShowBattleOptions(true); } : undefined}
         friends={friends}
         initialFriend={playFriendInitial}
         initialBuyIn={lastBuyIn}
@@ -2082,8 +2168,8 @@ export default function BattlePage() {
         currentUser={profile ? { id: userId, username: profile.username, avatar: profile.avatar, frameId: profile.equippedFrame } : (session?.user ? { id: userId, username: session.user.name, avatar: session.user.image } : null)}
         onInviteSent={() => { fetchData(); refreshLastBuyIn(); }}
         onInviteCancelled={() => { setPlayFriendSentInvite(null); fetchData(); }}
-        onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); setShowPrivateMatch(true); }}
-        onOpenMessage={(friend) => { setShowPlayFriend(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); openMessagePopup(friend); }}
+        onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendFromChooser(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); setShowPrivateMatch(true); }}
+        onOpenMessage={(friend) => { setShowPlayFriend(false); setPlayFriendFromChooser(false); setPlayFriendInitial(null); setPlayFriendSentInvite(null); openMessagePopup(friend); }}
       />
 
       <MessagePopup

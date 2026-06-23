@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import FramedAvatar from '../UserAvatar';
-import TeamLogo from '../TeamLogo';
 import { formatMoney } from '../../utils/formatMoney';
 import { formatLastSeen } from '../../utils/relativeTime';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
@@ -11,14 +11,22 @@ import { useBetaMode } from '../../contexts/SiteConfigContext';
 import { useUserPreview } from '../../contexts/UserPreviewContext';
 import SharedByPill from '../messages/SharedByPill';
 
-const surface = '#0d0d0d';
-const surfaceMuted = '#0a0a0a';
-const border = 'rgba(255, 255, 255, 0.06)';
-const borderStrong = 'rgba(255, 255, 255, 0.1)';
-const textPrimary = '#f5f5f5';
-const textSecondary = '#9ca3af';
-const textMuted = '#6b7280';
-const cardShadow = '0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.35)';
+// Theme-aware tokens. These are CSS custom properties resolved on the
+// `.sf-root` wrapper (see styles/globals.css), so the same inline styles
+// render dark by default and flip to light under `html.light .sf-root`.
+// Inline hex values can't be overridden by a light-mode class, which is
+// why the whole feed previously stayed black in light theme.
+const surface = 'var(--sf-surface)';
+const surfaceMuted = 'var(--sf-surface-muted)';
+const elevated = 'var(--sf-elevated)';
+const track = 'var(--sf-track)';
+const avatarBg = 'var(--sf-avatar-bg)';
+const border = 'var(--sf-border)';
+const borderStrong = 'var(--sf-border-strong)';
+const textPrimary = 'var(--sf-text-primary)';
+const textSecondary = 'var(--sf-text-secondary)';
+const textMuted = 'var(--sf-text-muted)';
+const cardShadow = 'var(--sf-card-shadow)';
 
 function timeAgo(input) {
   if (!input) return '';
@@ -63,7 +71,7 @@ const Icon = {
 // Instagram stories. Each "story" is a stacked pair of avatars under a single
 // circular live ring; tapping spectates that battle.
 // =============================================================================
-function StoriesRail({ battles, onSpectate, onOpenStory, onStartBattle, currentUser, isGuest }) {
+function StoriesRail({ battles, onOpenStory, onStartBattle, currentUser, isGuest }) {
   if (!battles?.length) {
     return (
       <div className="rounded-2xl mb-4 px-3 py-3" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
@@ -118,7 +126,7 @@ function StoriesRail({ battles, onSpectate, onOpenStory, onStartBattle, currentU
               <button
                 key={b.id}
                 type="button"
-                onClick={() => (onOpenStory ? onOpenStory(idx) : onSpectate(b))}
+                onClick={() => onOpenStory?.(idx)}
                 className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[78px] focus:outline-none"
               >
                 <div
@@ -127,8 +135,8 @@ function StoriesRail({ battles, onSpectate, onOpenStory, onStartBattle, currentU
                     background: 'linear-gradient(135deg, #22c55e, #06b6d4 60%, #3b82f6)',
                   }}
                 >
-                  <div className="rounded-full p-[2px]" style={{ backgroundColor: '#000' }}>
-                    <div className="w-14 h-14 rounded-full overflow-hidden relative" style={{ backgroundColor: '#1a1a1a' }}>
+                  <div className="rounded-full p-[2px]" style={{ backgroundColor: surface }}>
+                    <div className="w-14 h-14 rounded-full overflow-hidden relative" style={{ backgroundColor: avatarBg }}>
                       <div className="absolute inset-0 flex">
                         <div className="w-1/2 overflow-hidden" style={{ clipPath: 'polygon(0 0, 100% 0, 60% 100%, 0% 100%)' }}>
                           <FramedAvatar avatar={u1.avatar} username={u1.username || 'P'} size={56} bgColor="#1e40af" frameId={u1.equippedFrame} />
@@ -236,7 +244,7 @@ function PostComposer({
           username={currentUser?.username || 'Y'}
           frameId={currentUser?.frameId}
           size={40}
-          bgColor="#1a1a1a"
+          bgColor={avatarBg}
         />
         <div className="flex-1 min-w-0">
           {!expanded ? (
@@ -246,7 +254,7 @@ function PostComposer({
               disabled={isGuest}
               className="w-full text-left rounded-full px-4 py-2.5 text-sm transition-colors"
               style={{
-                backgroundColor: '#111',
+                backgroundColor: elevated,
                 border: `1px solid ${border}`,
                 color: textSecondary,
                 cursor: isGuest ? 'not-allowed' : 'pointer',
@@ -269,7 +277,7 @@ function PostComposer({
                 maxLength={POST_MAX + 50}
                 className="w-full rounded-xl px-3 py-2 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-blue-500"
                 style={{
-                  backgroundColor: '#111',
+                  backgroundColor: elevated,
                   border: `1px solid ${border}`,
                   color: textPrimary,
                   minHeight: 80,
@@ -348,27 +356,370 @@ function PostComposer({
   );
 }
 
+// Normalize an @handle / username to the canonical key we resolve mentions by
+// (lowercase, whitespace stripped) — the same form `startReply` writes.
+function normHandle(h) {
+  return String(h || '').replace(/\s+/g, '').toLowerCase();
+}
+
+// Client-side cache so a handle looked up once stays clickable across every
+// thread for the rest of the session (null = confirmed "no such user").
+const handleResolveCache = new Map(); // normHandle -> user | null
+const handleResolveInFlight = new Map(); // normHandle -> Promise<user|null>
+
+// Resolve an @handle to a real user via the shared user-search endpoint so a
+// mention typed for someone who isn't already in the thread still becomes a
+// clickable link. We only accept an exact (normalized) username match.
+async function resolveHandleRemote(handle) {
+  const key = normHandle(handle);
+  if (!key || key.length < 2) return null;
+  if (handleResolveCache.has(key)) return handleResolveCache.get(key);
+  if (handleResolveInFlight.has(key)) return handleResolveInFlight.get(key);
+  const p = (async () => {
+    try {
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(key)}`, { credentials: 'include' });
+      // Only cache a result from a confirmed 200 response. A transient
+      // 401/500/network error must NOT negative-cache the handle, or it would
+      // stay non-clickable for the whole session even after the server recovers.
+      if (!res.ok) return null;
+      const data = await res.json();
+      const users = Array.isArray(data?.users) ? data.users : [];
+      const match = users.find((u) => normHandle(u.username) === key) || null;
+      handleResolveCache.set(key, match);
+      return match;
+    } catch {
+      return null;
+    } finally {
+      handleResolveInFlight.delete(key);
+    }
+  })();
+  handleResolveInFlight.set(key, p);
+  return p;
+}
+
+// Detect the @mention the caret currently sits inside so the autocomplete can
+// search on the partial handle and replace the whole token on pick.
+function detectMention(value, caret) {
+  if (typeof value !== 'string') return null;
+  const upToCaret = value.slice(0, caret);
+  const m = upToCaret.match(/(?:^|\s)@([A-Za-z0-9_]{0,30})$/);
+  if (!m) return null;
+  const leftToken = m[1];
+  const rightMatch = value.slice(caret).match(/^[A-Za-z0-9_]*/);
+  const right = rightMatch ? rightMatch[0] : '';
+  return { token: leftToken, start: caret - leftToken.length - 1, end: caret + right.length };
+}
+
+// Build a resolver for @handles found in a set of comment/message bodies.
+// Seeds with users we already know (thread authors), then lazily resolves any
+// remaining handles via the search API so mentions stay clickable after reload.
+function useMentionResolver(bodiesKey, seedMap) {
+  const [extra, setExtra] = useState(() => new Map());
+  useEffect(() => {
+    const handles = new Set();
+    const re = /@([A-Za-z0-9_]+)/g;
+    let mt;
+    while ((mt = re.exec(bodiesKey || '')) !== null) handles.add(normHandle(mt[1]));
+    let cancelled = false;
+    handles.forEach((h) => {
+      if (!h || seedMap.has(h)) return;
+      if (handleResolveCache.has(h)) {
+        const u = handleResolveCache.get(h);
+        if (u) setExtra((prev) => (prev.has(h) ? prev : new Map(prev).set(h, u)));
+        return;
+      }
+      resolveHandleRemote(h).then((u) => {
+        if (cancelled || !u) return;
+        setExtra((prev) => (prev.has(h) ? prev : new Map(prev).set(h, u)));
+      });
+    });
+    return () => { cancelled = true; };
+  }, [bodiesKey, seedMap]);
+  return useCallback((h) => {
+    const k = normHandle(h);
+    return seedMap.get(k) || extra.get(k) || null;
+  }, [seedMap, extra]);
+}
+
+// Reusable comment composer with @mention autocomplete. Mirrors the messenger's
+// proven picker: search as you type "@", arrow/enter to pick, click to insert.
+function MentionComposer({ value, onChange, onSubmit, placeholder, submitting, sendLabel = 'Send', maxLength = 300, inputRef: externalRef }) {
+  const internalRef = useRef(null);
+  const inputRef = externalRef || internalRef;
+  const [mentionBox, setMentionBox] = useState(null);
+  const abortRef = useRef(null);
+
+  const runSearch = (v, caret) => {
+    const det = detectMention(v, caret);
+    if (abortRef.current) { try { abortRef.current.abort(); } catch {} abortRef.current = null; }
+    if (!det || det.token.length < 2) { setMentionBox(null); return; }
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    fetch(`/api/users/search?q=${encodeURIComponent(det.token)}`, { signal: ctrl.signal, credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : { users: [] }))
+      .then((data) => {
+        if (ctrl.signal.aborted) return;
+        const results = Array.isArray(data?.users) ? data.users.slice(0, 6) : [];
+        setMentionBox(results.length ? { results, activeIndex: 0 } : null);
+      })
+      .catch(() => {});
+  };
+
+  const handleChange = (e) => {
+    const v = e.target.value;
+    onChange(v);
+    runSearch(v, e.target.selectionStart ?? v.length);
+  };
+
+  const applyMention = (user) => {
+    if (!user?.username) return;
+    const el = inputRef.current;
+    const caret = el ? (el.selectionStart ?? value.length) : value.length;
+    const det = detectMention(value, caret);
+    const start = det ? det.start : value.length;
+    const end = det ? det.end : value.length;
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const inserted = `@${user.username} `;
+    onChange(`${before}${inserted}${after}`);
+    setMentionBox(null);
+    handleResolveCache.set(normHandle(user.username), user); // keep it clickable
+    const pos = (before + inserted).length;
+    requestAnimationFrame(() => { try { el?.focus(); el?.setSelectionRange(pos, pos); } catch {} });
+  };
+
+  const handleKeyDown = (e) => {
+    if (mentionBox && mentionBox.results.length) {
+      const n = mentionBox.results.length;
+      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionBox((b) => (b ? { ...b, activeIndex: (b.activeIndex + 1) % n } : b)); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setMentionBox((b) => (b ? { ...b, activeIndex: (b.activeIndex - 1 + n) % n } : b)); return; }
+      if (e.key === 'Enter') { e.preventDefault(); applyMention(mentionBox.results[mentionBox.activeIndex]); return; }
+      if (e.key === 'Escape') { e.preventDefault(); setMentionBox(null); return; }
+    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSubmit(); }
+  };
+
+  useEffect(() => () => { if (abortRef.current) { try { abortRef.current.abort(); } catch {} } }, []);
+
+  return (
+    <div className="flex-1 relative">
+      {mentionBox && mentionBox.results.length > 0 && (
+        <div className="absolute left-0 right-0 bottom-full mb-2 rounded-2xl overflow-hidden z-30" style={{ backgroundColor: surface, border: `1px solid ${borderStrong}`, boxShadow: '0 8px 24px rgba(0,0,0,0.35)' }}>
+          {mentionBox.results.map((u, i) => (
+            <button
+              key={u.id}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); applyMention(u); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
+              style={{ backgroundColor: i === mentionBox.activeIndex ? 'rgba(59,130,246,0.18)' : 'transparent' }}
+            >
+              <FramedAvatar avatar={u.avatar} username={u.username} size={24} bgColor={avatarBg} />
+              <span className="text-[13px] font-semibold truncate" style={{ color: textPrimary }}>@{u.username}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center gap-2">
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+          style={{ backgroundColor: elevated, border: `1px solid ${border}`, color: textPrimary }}
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!value.trim() || submitting}
+          className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
+          style={{
+            background: value.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
+            cursor: value.trim() && !submitting ? 'pointer' : 'not-allowed',
+            opacity: submitting ? 0.7 : 1,
+          }}
+        >
+          {submitting ? '…' : sendLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // =============================================================================
+// Render a comment body with @mentions highlighted (Instagram-style). The
+// leading "@username" tokens are blue so it's obvious who a reply is addressed
+// to. When `resolveMention(handle)` can map the handle back to a known user
+// (post author or anyone in the thread), the mention becomes a button that
+// opens that player's profile preview via `onMentionClick(user, e)`. Handles
+// that can't be resolved fall back to non-clickable styled text.
+function renderCommentBody(body, mentionColor, baseColor, resolveMention, onMentionClick) {
+  if (!body) return null;
+  const parts = String(body).split(/(@[A-Za-z0-9_]+)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('@') && part.length > 1) {
+      const user = resolveMention ? resolveMention(part.slice(1).toLowerCase()) : null;
+      if (user?.id && onMentionClick) {
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMentionClick(user, e); }}
+            className="hover:underline"
+            style={{
+              color: mentionColor,
+              fontWeight: 600,
+              padding: 0,
+              margin: 0,
+              border: 0,
+              background: 'transparent',
+              fontSize: 'inherit',
+              fontFamily: 'inherit',
+              lineHeight: 'inherit',
+              cursor: 'pointer',
+              display: 'inline',
+              verticalAlign: 'baseline',
+            }}
+          >
+            {part}
+          </button>
+        );
+      }
+      return <span key={i} style={{ color: mentionColor, fontWeight: 600 }}>{part}</span>;
+    }
+    return <span key={i} style={{ color: baseColor }}>{part}</span>;
+  });
+}
+
+// Group a flat comment list into Instagram-style threads: top-level comments,
+// each followed by all of its descendant replies (flattened, chronological).
+// A reply whose parent is itself a reply still surfaces under the same root.
+function buildCommentThreads(comments) {
+  const byId = new Map(comments.map((c) => [c.id, c]));
+  // Walk up to the top-level ancestor. A comment with no resolvable parent — or
+  // one caught in a (theoretically impossible) cycle — resolves to itself, so
+  // every comment is guaranteed a root and nothing is ever dropped.
+  const resolveRoot = (c) => {
+    let cur = c;
+    const seen = new Set();
+    while (cur.parentId && byId.has(cur.parentId)) {
+      if (seen.has(cur.id)) break; // cycle guard: treat current node as root
+      seen.add(cur.id);
+      cur = byId.get(cur.parentId);
+    }
+    return cur.id;
+  };
+  const order = []; // root ids in first-seen (chronological) order
+  const rootSet = new Set();
+  const repliesByRoot = new Map();
+  const ensureRoot = (id) => {
+    if (!rootSet.has(id)) { rootSet.add(id); order.push(id); }
+  };
+  comments.forEach((c) => {
+    const rid = resolveRoot(c);
+    if (rid === c.id) {
+      ensureRoot(c.id);
+    } else {
+      ensureRoot(rid);
+      if (!repliesByRoot.has(rid)) repliesByRoot.set(rid, []);
+      repliesByRoot.get(rid).push(c);
+    }
+  });
+  return order
+    .map((id) => ({
+      root: byId.get(id),
+      replies: (repliesByRoot.get(id) || []).sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      ),
+    }))
+    .filter((t) => t.root);
+}
+
 // PostCard — a user-authored post in the feed: avatar/name/time + body, with
 // like + comment toggle. Tapping comment expands an inline thread (lazy loaded
-// on first expand) plus a comment composer.
+// on first expand) plus a comment composer. Comments support threaded replies:
+// each one has a "Reply" action that addresses that user with an @mention.
 // =============================================================================
+// Subtle, non-interactive footer shown to signed-out viewers in place of
+// the Like / Comment / Share action row so guests aren't given affordances
+// that look clickable but can't do anything.
+function GuestEngageRow() {
+  return (
+    <div
+      className="px-4 py-2.5 text-center text-[12px]"
+      style={{ borderTop: `1px solid ${border}`, color: textMuted }}
+    >
+      Sign up to like, comment &amp; share.
+    </div>
+  );
+}
+
 function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultOpen = false, scrollRef }) {
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [liked, setLiked] = useState(!!post.likedByMe);
   const [likePending, setLikePending] = useState(false);
   const [commentCount, setCommentCount] = useState(post.commentCount || 0);
-  const [commentsOpen, setCommentsOpen] = useState(!!defaultOpen);
+  const [commentsOpen, setCommentsOpen] = useState(!isGuest && !!defaultOpen);
   const [comments, setComments] = useState([]);
   const [commentsLoaded, setCommentsLoaded] = useState(false);
   const [commentDraft, setCommentDraft] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [replyTo, setReplyTo] = useState(null); // { id, username }
+  const commentInputRef = useRef(null);
 
   const author = post.author || {};
 
+  // Resolve an @handle back to a real user so a mention in a comment body can
+  // open that player's profile preview. We index everyone we already know in
+  // this thread — the post author, the viewer, and every comment author —
+  // keyed by their normalized handle (the same lowercase, space-stripped form
+  // `startReply` writes into the body), so clicking "@floydmayweather" finds
+  // the matching user object (with id) the popover needs to fetch a profile.
+  const mentionUsers = useMemo(() => {
+    const map = new Map();
+    const add = (u) => {
+      if (u?.id && u?.username) {
+        map.set(u.username.replace(/\s+/g, '').toLowerCase(), u);
+      }
+    };
+    add(author);
+    add(currentUser);
+    comments.forEach((c) => add(c.author));
+    return map;
+  }, [author, currentUser, comments]);
+
+  // Joined comment bodies (stable key) drive lazy resolution of any @handles
+  // that aren't already known in the thread, so mentions stay clickable.
+  const commentBodiesKey = useMemo(() => comments.map((c) => c.body).join('\n'), [comments]);
+  const resolveMention = useMentionResolver(commentBodiesKey, mentionUsers);
+
+  // Begin a threaded reply to a specific comment: prefill the composer with the
+  // target's @handle (Instagram-style) and remember the parent so the next
+  // submit nests under it and notifies/mentions that user.
+  const startReply = useCallback((comment) => {
+    if (isGuest) return;
+    const ca = comment.author || {};
+    const handle = `@${(ca.username || 'player').replace(/\s+/g, '').toLowerCase()}`;
+    setReplyTo({ id: comment.id, username: ca.username || 'Player' });
+    setCommentDraft((d) => {
+      const stripped = d.replace(/^@[A-Za-z0-9_]+\s+/, '');
+      return `${handle} ${stripped}`.trimStart();
+    });
+    setCommentsOpen(true);
+    requestAnimationFrame(() => commentInputRef.current?.focus());
+  }, [isGuest]);
+
+  const cancelReply = useCallback(() => {
+    setReplyTo(null);
+    setCommentDraft((d) => d.replace(/^@[A-Za-z0-9_]+\s+/, ''));
+  }, []);
+
   // Auto-load comments once when opened via deep-link (?post=<id>).
   useEffect(() => {
-    if (defaultOpen && !commentsLoaded) {
+    if (!isGuest && defaultOpen && !commentsLoaded) {
       (async () => {
         try {
           const res = await fetch(`/api/social/posts/${post.id}/comments`);
@@ -379,7 +730,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
         } catch {}
       })();
     }
-  }, [defaultOpen, commentsLoaded, post.id]);
+  }, [isGuest, defaultOpen, commentsLoaded, post.id]);
 
   const handleLike = async () => {
     if (isGuest || likePending) return;
@@ -431,7 +782,7 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
       const res = await fetch(`/api/social/posts/${post.id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: trimmed }),
+        body: JSON.stringify({ body: trimmed, parentId: replyTo?.id || null }),
       });
       if (!res.ok) throw new Error('Comment failed');
       const json = await res.json();
@@ -439,84 +790,91 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
         setComments((prev) => [...prev, json.comment]);
         setCommentCount((c) => c + 1);
         setCommentDraft('');
+        setReplyTo(null);
       }
     } catch {} finally {
       setCommentSubmitting(false);
     }
   };
 
+  const handle = `@${(author.username || 'player').replace(/\s+/g, '').toLowerCase()}`;
+
   return (
-    <div className="rounded-2xl mb-4 overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
-      <div className="flex items-center gap-3 px-4 pt-3">
-        <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="flex-shrink-0">
-          <FramedAvatar avatar={author.avatar} username={author.username || 'P'} frameId={author.equippedFrame} size={36} bgColor="#1a1a1a" />
+    <div className="rounded-2xl mb-3 overflow-hidden transition-colors hover:bg-white/[0.015]" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
+      <div className="flex gap-3 px-4 py-3.5">
+        <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="flex-shrink-0 self-start">
+          <FramedAvatar avatar={author.avatar} username={author.username || 'P'} frameId={author.equippedFrame} size={40} bgColor={avatarBg} />
         </button>
         <div className="min-w-0 flex-1">
-          <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="text-[13px] font-semibold hover:underline" style={{ color: textPrimary }}>
-            {author.username || 'Player'}
-          </button>
-          <div className="text-[10px]" style={{ color: textMuted }}>{timeAgo(post.createdAt)}</div>
+          <div className="flex items-center gap-1.5 leading-tight min-w-0">
+            <button type="button" onClick={(e) => onOpenProfile?.(author, e)} className="text-[14px] font-bold hover:underline truncate flex-shrink-0 max-w-[55%]" style={{ color: textPrimary }}>
+              {author.username || 'Player'}
+            </button>
+            <span className="text-[13px] truncate" style={{ color: textMuted }}>{handle}</span>
+            <span className="text-[13px] flex-shrink-0" style={{ color: textMuted }}>·</span>
+            <span className="text-[13px] flex-shrink-0" style={{ color: textMuted }}>{timeAgo(post.createdAt)}</span>
+          </div>
+          <div className="mt-1 text-[15px] leading-snug whitespace-pre-wrap break-words" style={{ color: textPrimary }}>
+            {post.body}
+          </div>
+          {isGuest ? (
+            <div className="mt-2.5 text-[12px]" style={{ color: textMuted }}>
+              Sign up to like &amp; comment.
+            </div>
+          ) : (
+          <div className="flex items-center gap-1 mt-2.5 -ml-2 max-w-[340px]">
+            <button
+              type="button"
+              onClick={handleToggleComments}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[12px] font-medium transition-colors hover:bg-blue-500/10"
+              style={{ color: commentsOpen ? '#60a5fa' : textSecondary }}
+              aria-label="Reply"
+            >
+              <Icon.Chat size={16} />
+              {commentCount > 0 && <span>{commentCount}</span>}
+            </button>
+            <button
+              type="button"
+              onClick={handleLike}
+              disabled={isGuest || likePending}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[12px] font-medium transition-colors hover:bg-red-500/10"
+              style={{ color: liked ? '#f87171' : textSecondary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
+              aria-label="Like"
+            >
+              <svg viewBox="0 0 24 24" width={16} height={16} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              {likeCount > 0 && <span>{likeCount}</span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (isGuest) return;
+                onShare?.({
+                  type: 'post',
+                  id: post.id,
+                  snapshot: {
+                    body: post.body,
+                    author: { username: author.username, avatar: author.avatar },
+                  },
+                });
+              }}
+              disabled={isGuest}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[12px] font-medium transition-colors hover:bg-blue-500/10"
+              style={{ color: textSecondary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
+              aria-label="Share"
+            >
+              <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+            </button>
+          </div>
+          )}
         </div>
       </div>
-      <div className="px-4 py-3">
-        <div className="text-[14px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>
-          {post.body}
-        </div>
-      </div>
-      {(likeCount > 0 || commentCount > 0) && (
-        <div className="px-4 pb-2 flex items-center gap-3 text-[11px]" style={{ color: textMuted }}>
-          {likeCount > 0 && <span>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>}
-          {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
-        </div>
-      )}
-      <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
-        <button
-          type="button"
-          onClick={handleLike}
-          disabled={isGuest || likePending}
-          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
-          style={{ color: liked ? '#f87171' : textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
-        >
-          <svg viewBox="0 0 24 24" width={14} height={14} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-          {liked ? 'Liked' : 'Like'}
-        </button>
-        <button
-          type="button"
-          onClick={handleToggleComments}
-          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
-          style={{ color: textPrimary }}
-        >
-          <Icon.Chat size={14} />
-          Comment
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (isGuest) return;
-            onShare?.({
-              type: 'post',
-              id: post.id,
-              snapshot: {
-                body: post.body,
-                author: { username: author.username, avatar: author.avatar },
-              },
-            });
-          }}
-          disabled={isGuest}
-          className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-white/5"
-          style={{ color: textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.6 : 1 }}
-        >
-          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
-          Share
-        </button>
-      </div>
-      {commentsOpen && (
+      {!isGuest && commentsOpen && (
         <div style={{ borderTop: `1px solid ${border}` }}>
           <div className="px-4 py-3 space-y-3">
             {!commentsLoaded ? (
@@ -524,56 +882,64 @@ function PostCard({ post, currentUser, isGuest, onOpenProfile, onShare, defaultO
             ) : comments.length === 0 ? (
               <div className="text-[11px]" style={{ color: textMuted }}>Be the first to comment.</div>
             ) : (
-              comments.map((c) => {
-                const ca = c.author || {};
-                return (
-                  <div key={c.id} className="flex items-start gap-2.5">
-                    <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
-                      <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor="#1a1a1a" />
-                    </button>
-                    <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: '#111' }}>
-                      <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
-                        {ca.username || 'Player'}
+              buildCommentThreads(comments).map(({ root, replies }) => {
+                const renderComment = (c, isReplyRow) => {
+                  const ca = c.author || {};
+                  return (
+                    <div key={c.id} className={`flex items-start gap-2.5 ${isReplyRow ? 'mt-2 ml-7' : ''}`}>
+                      <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
+                        <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={isReplyRow ? 24 : 28} bgColor={avatarBg} />
                       </button>
-                      <div className="text-[13px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>{c.body}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: textMuted }}>{timeAgo(c.createdAt)}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="rounded-2xl px-3 py-2" style={{ backgroundColor: elevated }}>
+                          <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
+                            {ca.username || 'Player'}
+                          </button>
+                          <div className="text-[13px] whitespace-pre-wrap break-words">{renderCommentBody(c.body, '#60a5fa', textPrimary, resolveMention, onOpenProfile)}</div>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 pl-1">
+                          <span className="text-[10px]" style={{ color: textMuted }}>{timeAgo(c.createdAt)}</span>
+                          {!isGuest && (
+                            <button
+                              type="button"
+                              onClick={() => startReply(c)}
+                              className="text-[10px] font-semibold hover:underline"
+                              style={{ color: textSecondary }}
+                            >
+                              Reply
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
+                  );
+                };
+                return (
+                  <div key={root.id}>
+                    {renderComment(root, false)}
+                    {replies.map((r) => renderComment(r, true))}
                   </div>
                 );
               })
             )}
             {!isGuest && (
-              <div className="flex items-start gap-2.5 pt-1">
-                <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor="#1a1a1a" />
-                <div className="flex-1 flex items-center gap-2">
-                  <input
-                    type="text"
+              <div className="pt-1">
+                {replyTo && (
+                  <div className="flex items-center justify-between gap-2 mb-1.5 ml-[38px] px-3 py-1 rounded-full text-[11px]" style={{ backgroundColor: elevated, color: textSecondary }}>
+                    <span className="truncate">Replying to <span style={{ color: '#60a5fa', fontWeight: 600 }}>@{(replyTo.username || 'player').replace(/\s+/g, '').toLowerCase()}</span></span>
+                    <button type="button" onClick={cancelReply} className="flex-shrink-0 font-bold" style={{ color: textMuted }} aria-label="Cancel reply">✕</button>
+                  </div>
+                )}
+                <div className="flex items-start gap-2.5">
+                  <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor={avatarBg} />
+                  <MentionComposer
+                    inputRef={commentInputRef}
                     value={commentDraft}
-                    onChange={(e) => setCommentDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmitComment();
-                      }
-                    }}
-                    placeholder="Write a comment…"
-                    maxLength={300}
-                    className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    style={{ backgroundColor: '#111', border: `1px solid ${border}`, color: textPrimary }}
+                    onChange={setCommentDraft}
+                    onSubmit={handleSubmitComment}
+                    submitting={commentSubmitting}
+                    placeholder={replyTo ? `Reply to ${replyTo.username}…` : 'Post your reply…'}
                   />
-                  <button
-                    type="button"
-                    onClick={handleSubmitComment}
-                    disabled={!commentDraft.trim() || commentSubmitting}
-                    className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
-                    style={{
-                      background: commentDraft.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
-                      cursor: commentDraft.trim() && !commentSubmitting ? 'pointer' : 'not-allowed',
-                      opacity: commentSubmitting ? 0.7 : 1,
-                    }}
-                  >
-                    {commentSubmitting ? '…' : 'Send'}
-                  </button>
                 </div>
               </div>
             )}
@@ -636,7 +1002,7 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
                 username={item.user?.username || '?'}
                 frameId={item.user?.equippedFrame}
                 size={36}
-                bgColor="#1a1a1a"
+                bgColor={avatarBg}
               />
             </button>
             <div className="min-w-0 flex-1">
@@ -663,7 +1029,7 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
                 type="button"
                 onClick={() => (item.kind === 'invite' ? onDeclineInvite?.(item.rawId) : onDeclineFriendRequest?.(item.rawId))}
                 className="px-2.5 py-1.5 rounded-md text-[11px] font-semibold"
-                style={{ backgroundColor: '#1a1a1a', color: textPrimary, border: `1px solid ${border}` }}
+                style={{ backgroundColor: avatarBg, color: textPrimary, border: `1px solid ${border}` }}
               >
                 Decline
               </button>
@@ -685,68 +1051,9 @@ function PendingPile({ invites, friendRequests, onAcceptInvite, onDeclineInvite,
 // override on whoever is currently leading. No purple. Hover utilities
 // gated to lg:hover (touch devices stay flat).
 // =============================================================================
-const HH_BORDER = '#0a0a0a';
 const HH_BLUE = '#3b82f6';
 const HH_ORANGE = '#fb923c';
 const HH_LEAD = '#10b981';
-const HH_SHADOW = '4px 4px 0 #0a0a0a';
-
-function PnlMini({ value, align = 'left' }) {
-  const v = parseFloat(value);
-  if (!Number.isFinite(v)) return null;
-  const pos = v >= 0;
-  return (
-    <span
-      className={`inline-block text-[10px] font-black px-1.5 py-px rounded tabular-nums ${align === 'right' ? 'ml-auto' : ''}`}
-      style={{
-        background: pos ? 'rgba(16,185,129,0.14)' : 'rgba(239,68,68,0.14)',
-        color: pos ? '#34d399' : '#f87171',
-        border: `1px solid ${pos ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}`,
-      }}
-    >
-      {pos ? '+' : ''}{v}%
-    </span>
-  );
-}
-
-function PickMini({ pick, sideColor, align = 'left' }) {
-  if (!pick) return null;
-  const isWon = pick.status === 'won';
-  const isLost = pick.status === 'lost';
-  const accent = isWon ? HH_LEAD : isLost ? '#ef4444' : sideColor;
-  const insetShadow = align === 'right' ? `inset -3px 0 0 0 ${accent}` : `inset 3px 0 0 0 ${accent}`;
-  const oddsColor = isWon ? '#34d399' : isLost ? '#f87171' : '#e5e7eb';
-  return (
-    <div
-      className="px-2.5 py-1.5 rounded-lg flex items-center gap-2 min-w-0"
-      style={{
-        background: '#0d0d0d',
-        border: `1.5px solid ${HH_BORDER}`,
-        boxShadow: insetShadow,
-      }}
-    >
-      {align !== 'right' && <TeamLogo name={pick.team} sport={pick.sport} size={16} />}
-      <div className={`flex-1 min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
-        <div className="text-[11px] font-black truncate" style={{ color: '#fff' }}>
-          {pick.team}
-        </div>
-        <div
-          className="text-[9px] font-bold uppercase tracking-wider truncate"
-          style={{ color: textMuted }}
-        >
-          {pick.type}
-        </div>
-      </div>
-      <span
-        className="text-[12px] font-black tabular-nums flex-shrink-0"
-        style={{ color: oddsColor }}
-      >
-        {pick.odds}
-      </span>
-      {align === 'right' && <TeamLogo name={pick.team} sport={pick.sport} size={16} />}
-    </div>
-  );
-}
 
 // BattleCommentThread — persisted inline comment thread for a matchup
 // (live or completed). Mirrors PostCard's inline comment-thread UX
@@ -761,6 +1068,18 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const userId = currentUser?.id;
+
+  // Resolve @mentions in battle comments to clickable profile links — seed with
+  // everyone in the thread, then lazily resolve any other tagged handles.
+  const mentionSeed = useMemo(() => {
+    const map = new Map();
+    const add = (u) => { if (u?.id && u?.username) map.set(normHandle(u.username), u); };
+    add(currentUser);
+    messages.forEach((m) => add(m.author));
+    return map;
+  }, [currentUser, messages]);
+  const bodiesKey = useMemo(() => messages.map((m) => m.body).join('\n'), [messages]);
+  const resolveMention = useMentionResolver(bodiesKey, mentionSeed);
 
   // Lazy-load comments once when the thread mounts (PostCard pattern:
   // the thread only mounts when the user expands "Comment"). No
@@ -834,13 +1153,13 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
             return (
               <div key={m.id} className="flex items-start gap-2.5">
                 <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="flex-shrink-0 mt-0.5">
-                  <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor="#1a1a1a" />
+                  <FramedAvatar avatar={ca.avatar} username={ca.username || 'P'} frameId={ca.equippedFrame} size={28} bgColor={avatarBg} />
                 </button>
-                <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: '#111' }}>
+                <div className="min-w-0 flex-1 rounded-2xl px-3 py-2" style={{ backgroundColor: elevated }}>
                   <button type="button" onClick={(e) => onOpenProfile?.(ca, e)} className="text-[12px] font-semibold hover:underline" style={{ color: textPrimary }}>
                     {ca.username || 'Spectator'}
                   </button>
-                  <div className="text-[13px] whitespace-pre-wrap break-words" style={{ color: textPrimary }}>{m.body}</div>
+                  <div className="text-[13px] whitespace-pre-wrap break-words">{renderCommentBody(m.body, '#60a5fa', textPrimary, resolveMention, onOpenProfile)}</div>
                   <div className="text-[10px] mt-0.5" style={{ color: textMuted }}>{timeAgo(m.createdAt)}</div>
                 </div>
               </div>
@@ -849,37 +1168,14 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
         )}
         {!isGuest && (
           <div className="flex items-start gap-2.5 pt-1">
-            <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor="#1a1a1a" />
-            <div className="flex-1 flex items-center gap-2">
-              <input
-                type="text"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                placeholder="Write a comment…"
-                maxLength={300}
-                className="flex-1 rounded-full px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                style={{ backgroundColor: '#111', border: `1px solid ${border}`, color: textPrimary }}
-              />
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={!draft.trim() || submitting}
-                className="px-3 py-1.5 rounded-full text-[11px] font-bold text-white"
-                style={{
-                  background: draft.trim() ? 'linear-gradient(135deg, #2563eb, #06b6d4)' : '#374151',
-                  cursor: draft.trim() && !submitting ? 'pointer' : 'not-allowed',
-                  opacity: submitting ? 0.7 : 1,
-                }}
-              >
-                {submitting ? '…' : 'Send'}
-              </button>
-            </div>
+            <FramedAvatar avatar={currentUser?.avatar} username={currentUser?.username || 'Y'} frameId={currentUser?.frameId} size={28} bgColor={avatarBg} />
+            <MentionComposer
+              value={draft}
+              onChange={setDraft}
+              onSubmit={handleSubmit}
+              submitting={submitting}
+              placeholder="Write a comment…"
+            />
           </div>
         )}
         {error && <div className="text-[10px] text-red-400">{error}</div>}
@@ -888,11 +1184,13 @@ function BattleCommentThread({ matchupId, currentUser, isGuest, onOpenProfile, o
   );
 }
 
-function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGuest, onShare }) {
+function LiveBattlePost({ battle, onOpenProfile, currentUser, isGuest, onShare, defaultChatOpen = false }) {
   const isBeta = useBetaMode();
   // Inline chat lives directly inside the card so spectators can drop
   // a quick reaction without navigating to /battle/spectate/[id].
-  const [chatOpen, setChatOpen] = useState(false);
+  // `defaultChatOpen` is set when the user deep-links to this battle (e.g.
+  // from the "Live now" sidebar) so they land on the conversation.
+  const [chatOpen, setChatOpen] = useState(defaultChatOpen);
   const [liked, setLiked] = useState(!!battle.likedByMe);
   const [likeCount, setLikeCount] = useState(Number(battle.likeCount) || 0);
   const [likePending, setLikePending] = useState(false);
@@ -964,15 +1262,11 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
   const u2 = battle.user2 || {};
   const u1Bal = parseFloat(u1.balance || 0);
   const u2Bal = parseFloat(u2.balance || 0);
-  const total = u1Bal + u2Bal;
-  const u1Pct = total > 0 ? Math.max(5, Math.min(95, (u1Bal / total) * 100)) : 50;
   const pot = parseFloat(battle.potSize) || 0;
   const u1Lead = u1Bal > u2Bal;
   const u2Lead = u2Bal > u1Bal;
   const u1OnFire = parseFloat(u1.pnlPercent) > 10;
   const u2OnFire = parseFloat(u2.pnlPercent) > 10;
-  const u1Ring = u1Lead ? HH_LEAD : HH_BLUE;
-  const u2Ring = u2Lead ? HH_LEAD : HH_ORANGE;
 
   const [timeLeft, setTimeLeft] = useState(
     battle.endsAt ? new Date(battle.endsAt).getTime() - Date.now() : 0,
@@ -992,349 +1286,108 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
   const bothPicked = u1Picks.length > 0 && u2Picks.length > 0;
   const onlyU1Locked = u1Picks.length > 0 && u2Picks.length === 0;
   const onlyU2Locked = u2Picks.length > 0 && u1Picks.length === 0;
-  const u1PickPreview = u1Picks[0];
-  const u2PickPreview = u2Picks[0];
-
-  // Clicking the card body (anywhere outside the avatar/username
-  // profile links and the bottom action bar) routes to the full
-  // spectate view. The avatar and the username text are the only
-  // explicit "open profile" affordances — everything else in the
-  // card is treated as "watch this match". Interactive children
-  // (profile links, Spectate/Chat buttons, inline chat panel) stop
-  // propagation so they don't double-fire onSpectate.
-  const handleCardClick = () => onSpectate?.(battle);
+  const tie = !u1Lead && !u2Lead;
+  const leaderName = tie ? null : (u1Lead ? (u1.username || 'Player 1') : (u2.username || 'Player 2'));
+  const statusText = bothPicked
+    ? 'Both players locked in'
+    : onlyU1Locked
+      ? `${u1.username || 'P1'} locked · awaiting other`
+      : onlyU2Locked
+        ? `${u2.username || 'P2'} locked · awaiting other`
+        : 'Awaiting picks from both players';
+  const posterHandle = `@${(u1.username || 'player').replace(/\s+/g, '').toLowerCase()}`;
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={handleCardClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleCardClick();
-        }
-      }}
-      aria-label={`Spectate ${u1.username || 'Player 1'} vs ${u2.username || 'Player 2'}`}
-      className="rounded-2xl mb-4 overflow-hidden cursor-pointer"
-      style={{
-        backgroundColor: surface,
-        border: `2.5px solid ${HH_BORDER}`,
-        boxShadow: HH_SHADOW,
-      }}
+      className="rounded-2xl mb-3 overflow-hidden transition-colors lg:hover:bg-white/[0.015]"
+      style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}
     >
-      {/* Top status strip — LIVE pill + pot + countdown */}
-      <div
-        className="flex items-center justify-between px-3.5 py-2"
-        style={{ borderBottom: `2px solid ${HH_BORDER}`, background: '#0a0a0a' }}
-      >
-        <div className="flex items-center gap-2 min-w-0">
+      {/* Author header — frames the live battle as a post by the player who
+          started it, so it reads like the rest of the feed (Twitter/Facebook
+          style) rather than a standalone block. */}
+      <div className="flex items-start gap-3 px-4 pt-3.5 pb-2">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
+          aria-label={`Open ${u1.username || 'Player 1'} profile`}
+          className="flex-shrink-0 self-start"
+        >
+          <FramedAvatar avatar={u1.avatar} username={u1.username || 'P1'} frameId={u1.equippedFrame} size={40} bgColor="#1e40af" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 leading-tight min-w-0">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
+              className="text-[14px] font-bold hover:underline truncate flex-shrink-0 max-w-[45%]"
+              style={{ color: textPrimary }}
+            >
+              {u1.username || 'Player 1'}
+            </button>
+            <span className="text-[13px] truncate" style={{ color: textMuted }}>{posterHandle}</span>
+            <span className="text-[13px] flex-shrink-0" style={{ color: textMuted }}>·</span>
+            <span className="text-[13px] flex-shrink-0" style={{ color: textMuted }}>{timeAgo(battle.startsAt)}</span>
+          </div>
+          <div className="mt-0.5 text-[14px] leading-snug" style={{ color: textSecondary }}>
+            started a battle with{' '}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
+              className="font-semibold hover:underline"
+              style={{ color: textPrimary }}
+            >
+              {u2.username || 'Player 2'}
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
           <span
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest"
-            style={{
-              background: 'rgba(239,68,68,0.18)',
-              border: '1.5px solid rgba(239,68,68,0.5)',
-              color: '#fca5a5',
-            }}
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+            style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             Live
           </span>
-          {battle.startsAt && (
-            <span className="text-[10px] truncate" style={{ color: textMuted }}>
-              · started {timeAgo(battle.startsAt)}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2.5 flex-shrink-0">
-          <span className="text-[12px] font-black tabular-nums" style={{ color: textPrimary }}>
-            {isBeta ? `${formatMoney(pot, 0)} coins` : `$${formatMoney(pot, 0)}`}
-          </span>
-          <span className="text-[10px] tabular-nums" style={{ color: textMuted }}>
-            {formatTimeLeft(timeLeft)}
-          </span>
+          <span className="text-[10px] tabular-nums" style={{ color: textMuted }}>{formatTimeLeft(timeLeft)}</span>
         </div>
       </div>
 
-      {/* Head-to-Head body */}
-      <div className="px-3.5 pt-3.5 pb-3">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          {/* LEFT player — only the avatar and the username are
-              profile links; the surrounding row (balance, PnL) falls
-              through to the card's spectate click handler. */}
-          <div className="flex items-center gap-2.5 min-w-0 text-left">
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
-              aria-label={`Open ${u1.username || 'Player 1'} profile`}
-              className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
-            >
-              <div
-                className="rounded-full p-[2.5px]"
-                style={{
-                  background: u1Ring,
-                  boxShadow: u1Lead
-                    ? '0 0 14px rgba(16,185,129,0.55)'
-                    : `0 0 10px ${HH_BLUE}55`,
-                }}
-              >
-                <FramedAvatar
-                  avatar={u1.avatar}
-                  username={u1.username || 'P1'}
-                  frameId={u1.equippedFrame}
-                  size={48}
-                  bgColor="#1e40af"
-                />
-              </div>
-              {u1OnFire && (
-                <span className="absolute -top-1 -right-1 text-base hh-flame" aria-label="On fire">
-                  🔥
-                </span>
-              )}
-            </button>
-            <div className="min-w-0">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u1, e); }}
-                className="text-[13px] font-black truncate text-left lg:hover:underline rounded"
-                style={{ color: textPrimary }}
-              >
-                {u1.username || 'Player 1'}
-              </button>
-              <div
-                className="text-[15px] font-black tabular-nums leading-tight"
-                style={{ color: u1Lead ? '#34d399' : textPrimary }}
-              >
-                ${formatMoney(u1Bal, 0)}
-              </div>
-              <div className="mt-0.5">
-                <PnlMini value={u1.pnlPercent} />
-              </div>
-            </div>
-          </div>
-
-          {/* Center VS chip */}
-          <div className="flex flex-col items-center px-1">
-            <div
-              className="px-2.5 py-1 rounded-md"
-              style={{
-                background: '#000',
-                border: `2px solid ${HH_BORDER}`,
-                boxShadow: '2px 2px 0 #0a0a0a',
-              }}
-            >
-              <span
-                className="text-[15px] font-black text-transparent bg-clip-text leading-none"
-                style={{ backgroundImage: `linear-gradient(135deg, ${HH_BLUE}, ${HH_ORANGE})` }}
-              >
-                VS
-              </span>
-            </div>
-            <span
-              className="text-[8px] mt-1 uppercase tracking-widest font-bold"
-              style={{ color: textMuted }}
-            >
-              1v1
-            </span>
-          </div>
-
-          {/* RIGHT player — mirror of LEFT: only avatar + username
-              open the profile; the rest of the row falls through to
-              the card's spectate handler. */}
-          <div className="flex items-center gap-2.5 min-w-0 justify-end">
-            <div className="min-w-0 text-right">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
-                className="text-[13px] font-black truncate text-right lg:hover:underline rounded ml-auto block"
-                style={{ color: textPrimary }}
-              >
-                {u2.username || 'Player 2'}
-              </button>
-              <div
-                className="text-[15px] font-black tabular-nums leading-tight"
-                style={{ color: u2Lead ? '#34d399' : textPrimary }}
-              >
-                ${formatMoney(u2Bal, 0)}
-              </div>
-              <div className="mt-0.5 flex justify-end">
-                <PnlMini value={u2.pnlPercent} align="right" />
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenProfile?.(u2, e); }}
-              aria-label={`Open ${u2.username || 'Player 2'} profile`}
-              className="relative flex-shrink-0 rounded-full lg:hover:opacity-90 transition-opacity"
-            >
-              <div
-                className="rounded-full p-[2.5px]"
-                style={{
-                  background: u2Ring,
-                  boxShadow: u2Lead
-                    ? '0 0 14px rgba(16,185,129,0.55)'
-                    : `0 0 10px ${HH_ORANGE}55`,
-                }}
-              >
-                <FramedAvatar
-                  avatar={u2.avatar}
-                  username={u2.username || 'P2'}
-                  frameId={u2.equippedFrame}
-                  size={48}
-                  bgColor="#7c2d12"
-                />
-              </div>
-              {u2OnFire && (
-                <span className="absolute -top-1 -left-1 text-base hh-flame" aria-label="On fire">
-                  🔥
-                </span>
-              )}
-            </button>
-          </div>
+      {/* Compact text summary — keeps the live battle as a lightweight
+          social post (Twitter/Facebook style) rather than a big VS card. */}
+      <div className="px-4 pb-3 -mt-0.5">
+        <div className="text-[15px] leading-snug" style={{ color: textPrimary }}>
+          {tie
+            ? `It's all square — ${u1.username || 'Player 1'} and ${u2.username || 'Player 2'} are dead even right now.`
+            : `${leaderName} is out in front.`}
         </div>
-
-        {/* Two-tone balance share bar (blue / orange, green-tinted on the leader's side) */}
-        <div
-          className="mt-3 h-2.5 rounded-full overflow-hidden flex"
-          style={{ background: '#000', border: `1.5px solid ${HH_BORDER}` }}
-        >
-          <div
-            style={{
-              width: `${u1Pct}%`,
-              background: u1Lead
-                ? 'linear-gradient(90deg, #10b981, #22c55e)'
-                : HH_BLUE,
-              transition: 'width 700ms ease',
-            }}
-          />
-          <div
-            style={{
-              width: `${100 - u1Pct}%`,
-              background: u2Lead
-                ? 'linear-gradient(90deg, #22c55e, #10b981)'
-                : HH_ORANGE,
-              transition: 'width 700ms ease',
-            }}
-          />
+        <div className="mt-1 text-[13px]" style={{ color: textMuted }}>
+          {statusText}
+          {pot > 0 ? ` · ${isBeta ? `${formatMoney(pot, 0)} coin pot` : `$${formatMoney(pot, 0)} pot`}` : ''}
         </div>
-
-        {/* Picks row — preview each side's top pick once both locked, otherwise status pill */}
-        <div className="mt-3">
-          {bothPicked ? (
-            <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-stretch">
-              <PickMini pick={u1PickPreview} sideColor={HH_BLUE} />
-              <span
-                className="self-center text-[9px] font-black uppercase tracking-widest"
-                style={{ color: textMuted }}
-              >
-                vs
-              </span>
-              <PickMini pick={u2PickPreview} sideColor={HH_ORANGE} align="right" />
-            </div>
-          ) : onlyU1Locked || onlyU2Locked ? (
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-lg"
-              style={{ background: '#0a0a0a', border: `1.5px solid ${HH_BORDER}` }}
-            >
-              <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#9ca3af' }} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-                {onlyU1Locked ? `${u1.username || 'P1'} locked` : `${u2.username || 'P2'} locked`}
-                <span className="font-normal normal-case" style={{ color: textMuted }}>
-                  {' '}· awaiting other player
-                </span>
-              </span>
-            </div>
-          ) : (
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-lg"
-              style={{ background: '#0a0a0a', border: `1.5px solid ${HH_BORDER}` }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 hh-pending" />
-              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-                Awaiting picks from both players
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Cartoon info chips: pik counts when both locked, fire when on a heater */}
-        {(bothPicked || u1OnFire || u2OnFire) && (
-          <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
-            {bothPicked && (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider"
-                style={{
-                  background: 'rgba(59,130,246,0.14)',
-                  border: `1.5px solid ${HH_BORDER}`,
-                  color: '#93c5fd',
-                  boxShadow: '1.5px 1.5px 0 #0a0a0a',
-                }}
-              >
-                🎯 {u1Picks.length} vs {u2Picks.length} piks
-              </span>
-            )}
-            {(u1OnFire || u2OnFire) && (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider"
-                style={{
-                  background: 'rgba(251,146,60,0.16)',
-                  border: `1.5px solid ${HH_BORDER}`,
-                  color: '#fed7aa',
-                  boxShadow: '1.5px 1.5px 0 #0a0a0a',
-                }}
-              >
-                🔥 {(u1OnFire ? (u1.username || 'P1') : (u2.username || 'P2'))} hot
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Like / comment count strip — only shown when there's something
-          to count, mirroring the user-post card's social signals. */}
+      {/* Like / comment count strip */}
       {(likeCount > 0 || commentCount > 0) && (
-        <div
-          className="px-3.5 py-1.5 flex items-center gap-3 text-[11px]"
-          style={{ borderTop: `2px solid ${HH_BORDER}`, color: textMuted, background: '#0a0a0a' }}
-        >
+        <div className="px-4 py-1.5 flex items-center gap-3 text-[11px]" style={{ borderTop: `1px solid ${border}`, color: textMuted }}>
           {likeCount > 0 && <span>{likeCount} {likeCount === 1 ? 'like' : 'likes'}</span>}
           {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
         </div>
       )}
 
-      {/* Action bar — Spectate routes to the full overview page;
-          Like toggles a battle_likes row; Chat opens the inline
-          spectator chat thread (labeled "Hide" when already open);
-          Share opens the in-platform share sheet. */}
-      <div
-        className="grid grid-cols-4"
-        style={{ borderTop: `2px solid ${HH_BORDER}` }}
-      >
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onSpectate?.(battle); }}
-          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{ color: textPrimary, borderRight: `2px solid ${HH_BORDER}` }}
-        >
-          <Icon.Eye size={14} />
-          <span className="hidden sm:inline">Spectate</span>
-        </button>
+      {/* Action row — lightweight post style shared with ResultPost */}
+      {isGuest ? (
+        <GuestEngageRow />
+      ) : (
+      <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
         <button
           type="button"
           onClick={handleLike}
           disabled={isGuest || likePending}
           aria-pressed={liked}
-          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{
-            color: liked ? '#f87171' : textPrimary,
-            borderRight: `2px solid ${HH_BORDER}`,
-            cursor: isGuest ? 'not-allowed' : 'pointer',
-            opacity: isGuest ? 0.55 : 1,
-          }}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: liked ? '#f87171' : textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.55 : 1 }}
         >
-          <svg viewBox="0 0 24 24" width={14} height={14} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" width={16} height={16} fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
           <span>{liked ? 'Liked' : 'Like'}</span>
@@ -1343,28 +1396,20 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
           type="button"
           onClick={(e) => { e.stopPropagation(); setChatOpen((v) => !v); }}
           aria-expanded={chatOpen}
-          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{
-            color: chatOpen ? HH_BLUE : textPrimary,
-            background: chatOpen ? 'rgba(59,130,246,0.08)' : 'transparent',
-            borderRight: `2px solid ${HH_BORDER}`,
-          }}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: chatOpen ? '#60a5fa' : textPrimary }}
         >
-          <Icon.Chat size={14} />
-          <span>{chatOpen ? 'Hide' : 'Chat'}</span>
+          <Icon.Chat size={16} />
+          <span>{chatOpen ? 'Hide' : 'Comment'}</span>
         </button>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); if (!isGuest) onShare?.({ type: 'battle', id: battle.id, isSimulated, snapshot: { potSize: battle.potSize, durationType: battle.durationType, user1: { username: u1.username, avatar: u1.avatar }, user2: { username: u2.username, avatar: u2.avatar } } }); }}
           disabled={isGuest}
-          className="inline-flex items-center justify-center gap-1.5 py-3 text-[12px] font-black uppercase tracking-wider transition-colors lg:hover:bg-white/[0.04]"
-          style={{
-            color: textPrimary,
-            cursor: isGuest ? 'not-allowed' : 'pointer',
-            opacity: isGuest ? 0.55 : 1,
-          }}
+          className="inline-flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold rounded-lg transition-colors lg:hover:bg-white/5"
+          style={{ color: textPrimary, cursor: isGuest ? 'not-allowed' : 'pointer', opacity: isGuest ? 0.55 : 1 }}
         >
-          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
             <polyline points="16 6 12 2 8 6" />
             <line x1="12" y1="2" x2="12" y2="15" />
@@ -1372,8 +1417,9 @@ function LiveBattlePost({ battle, onSpectate, onOpenProfile, currentUser, isGues
           <span>Share</span>
         </button>
       </div>
+      )}
 
-      {chatOpen && (
+      {!isGuest && chatOpen && (
         <div onClick={(e) => e.stopPropagation()}>
           <BattleCommentThread
             matchupId={battle.id}
@@ -1472,7 +1518,7 @@ function ResultPost({ highlight, onOpenProfile, onReplay, currentUser, isGuest, 
           </div>
         </div>
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-          style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', color: '#86efac' }}>
+          style={{ background: 'rgba(22,163,74,0.16)', border: '1px solid rgba(22,163,74,0.55)', color: '#16a34a' }}>
           <Icon.Trophy size={11} />
           Win
         </span>
@@ -1492,6 +1538,9 @@ function ResultPost({ highlight, onOpenProfile, onReplay, currentUser, isGuest, 
           {commentCount > 0 && <span>{commentCount} {commentCount === 1 ? 'comment' : 'comments'}</span>}
         </div>
       )}
+      {isGuest ? (
+        <GuestEngageRow />
+      ) : (
       <div className="grid grid-cols-3 gap-1 px-2 py-1.5" style={{ borderTop: `1px solid ${border}` }}>
         <button
           type="button"
@@ -1531,7 +1580,8 @@ function ResultPost({ highlight, onOpenProfile, onReplay, currentUser, isGuest, 
           <span>Share</span>
         </button>
       </div>
-      {commentsOpen && (
+      )}
+      {!isGuest && commentsOpen && (
         <BattleCommentThread
           matchupId={highlight.id}
           currentUser={currentUser}
@@ -1563,7 +1613,7 @@ function YourMatchPost({ match, onOpenProfile, onShowHistory }) {
   return (
     <div className="rounded-2xl mb-4 p-3 flex items-center gap-3" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
       <button type="button" onClick={(e) => onOpenProfile?.(opp, e)} className="flex-shrink-0">
-        <FramedAvatar avatar={opp.avatar} username={opp.username || '?'} frameId={opp.equippedFrame} size={40} bgColor="#1a1a1a" />
+        <FramedAvatar avatar={opp.avatar} username={opp.username || '?'} frameId={opp.equippedFrame} size={40} bgColor={avatarBg} />
       </button>
       <div className="flex-1 min-w-0">
         <div className="text-[13px]" style={{ color: textPrimary }}>
@@ -1632,7 +1682,7 @@ function FeedSidebar({ onStartBattle, friends, recentHighlights, onOpenProfile, 
             {onlineFriends.map((f) => (
               <div key={f.id} className="flex items-center gap-3 px-3 py-2.5">
                 <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="relative flex-shrink-0">
-                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor="#1a1a1a" isOnline onlineDotBorderColor={surface} />
+                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor={avatarBg} isOnline onlineDotBorderColor={surface} />
                 </button>
                 <div className="min-w-0 flex-1">
                   <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="block w-full text-left">
@@ -1674,7 +1724,7 @@ function FeedSidebar({ onStartBattle, friends, recentHighlights, onOpenProfile, 
                 onClick={() => onReplay?.(b)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-white/5"
               >
-                <FramedAvatar avatar={b.winner?.avatar} username={b.winner?.username || 'W'} frameId={b.winner?.equippedFrame} size={32} bgColor="#1a1a1a" />
+                <FramedAvatar avatar={b.winner?.avatar} username={b.winner?.username || 'W'} frameId={b.winner?.equippedFrame} size={32} bgColor={avatarBg} />
                 <div className="min-w-0 flex-1 text-[11px]" style={{ color: textPrimary }}>
                   <div className="truncate">
                     <span className="font-semibold text-green-400">{b.winner?.username || 'Player'}</span>
@@ -1876,7 +1926,7 @@ function ShareSheet({ target, friends, currentUser, onClose }) {
             placeholder="Search friends…"
             className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             style={{
-              backgroundColor: '#111',
+              backgroundColor: elevated,
               border: `1px solid ${border}`,
               color: textPrimary,
             }}
@@ -1902,7 +1952,7 @@ function ShareSheet({ target, friends, currentUser, onClose }) {
                   className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 text-left transition-colors"
                   aria-pressed={isSel}
                 >
-                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor="#1a1a1a" isOnline={f.isOnline} onlineDotBorderColor={surface} />
+                  <FramedAvatar avatar={f.avatar} username={f.username} frameId={f.equippedFrame} size={36} bgColor={avatarBg} isOnline={f.isOnline} onlineDotBorderColor={surface} />
                   <div className="min-w-0 flex-1">
                     <div className="text-[13px] font-semibold truncate" style={{ color: textPrimary }}>{f.username}</div>
                     <div className="text-[10px]" style={{ color: textMuted }}>{f.isOnline ? 'Online' : formatLastSeen(f.lastSeenAt)}</div>
@@ -1937,7 +1987,7 @@ function ShareSheet({ target, friends, currentUser, onClose }) {
             placeholder="Add a note (optional)"
             className="w-full rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
             style={{
-              backgroundColor: '#111',
+              backgroundColor: elevated,
               border: `1px solid ${border}`,
               color: textPrimary,
             }}
@@ -1975,6 +2025,392 @@ function ShareSheet({ target, friends, currentUser, onClose }) {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// RightSidebar — Twitter-style right rail (desktop only): a Start-a-Battle
+// card, a live "What's happening" list, and a "Who to play" people list.
+// =============================================================================
+function SidebarCard({ title, children, footer }) {
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
+      {title && (
+        <div className="px-4 pt-3.5 pb-2">
+          <h2 className="text-[17px] font-extrabold" style={{ color: textPrimary }}>{title}</h2>
+        </div>
+      )}
+      {children}
+      {footer}
+    </div>
+  );
+}
+
+function newsTimeAgo(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(diff) || diff < 0) return 'now';
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) {
+    const m = Math.floor(diff / 60000);
+    return m < 1 ? 'now' : `${m}m ago`;
+  }
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
+// Internal Piks News reader link for a feed item. Always stays on-site: items
+// without an id/slug fall back to the Piks News hub, never an external source.
+function piksNewsHref(a) {
+  if (a?.slug && a?.id) return `/news/${a.slug}?id=${encodeURIComponent(a.id)}`;
+  return '/news';
+}
+
+// Promo card that sits above the news rail and introduces Piks News like a
+// house ad — orange brand banner, one-line pitch, and a CTA into the hub. The
+// whole card is a link to /news. Uses sf-* tokens so it flips light/dark.
+function PiksNewsPromo() {
+  return (
+    <Link
+      href="/news"
+      className="block rounded-2xl overflow-hidden mb-3 transition-transform lg:hover:-translate-y-0.5"
+      style={{ border: `1px solid ${border}`, background: surface, boxShadow: cardShadow }}
+    >
+      <div className="px-4 py-3" style={{ background: 'linear-gradient(135deg, #facc15 0%, #eab308 100%)' }}>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center justify-center rounded-lg" style={{ width: 26, height: 26, background: 'rgba(26,21,5,0.16)' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1a1505" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 5h13a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" />
+              <path d="M19 8h1a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2" />
+              <line x1="7" y1="9" x2="14" y2="9" /><line x1="7" y1="13" x2="14" y2="13" /><line x1="7" y1="17" x2="11" y2="17" />
+            </svg>
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: 'rgba(26,21,5,0.75)' }}>Introducing</span>
+        </div>
+        <div className="text-[18px] font-black leading-tight mt-1.5" style={{ color: '#1a1505' }}>Piks News</div>
+      </div>
+      <div className="px-4 py-3">
+        <p className="text-[12px] leading-snug" style={{ color: textSecondary }}>
+          Sports headlines with the betting angle — injuries, line moves, and the storylines that actually move your piks.
+        </p>
+        <span className="mt-2.5 inline-flex items-center gap-1.5 text-[12px] font-black" style={{ color: '#ca8a04' }}>
+          Explore Piks News
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+          </svg>
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+// Left desktop rail: Piks News headlines from /api/news/feed (the hosted hub
+// feed). Lives only on xl+ widths where there's room for a third column; hidden
+// below that so the feed stays centered. Styled with the shared sf-* theme
+// tokens so it flips light/dark with the rest of the page. Headlines open the
+// branded Piks News reader (/news/[slug]) instead of an external source.
+function SportsNewsRail() {
+  const [news, setNews] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    // The rail is CSS-hidden below xl; skip the fetch entirely on smaller
+    // screens so we never hit /api/news/feed where the rail isn't shown.
+    if (typeof window !== 'undefined'
+      && window.matchMedia
+      && !window.matchMedia('(min-width: 1280px)').matches) {
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/news/feed')
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((data) => {
+        if (cancelled) return;
+        setNews(Array.isArray(data?.items) ? data.items.slice(0, 8) : []);
+        setLoaded(true);
+      })
+      .catch(() => { if (!cancelled) setLoaded(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: surface, border: `1px solid ${border}`, boxShadow: cardShadow }}>
+      <div className="flex items-center justify-between px-4 pt-3 pb-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
+          Piks News
+        </span>
+        <Link
+          href="/news"
+          className="text-[11px] font-semibold lg:hover:underline"
+          style={{ color: '#ca8a04' }}
+        >
+          View all
+        </Link>
+      </div>
+      <div className="px-2 pb-2">
+        {news.length === 0 ? (
+          <div className="px-2 py-3 text-xs" style={{ color: textMuted }}>
+            {loaded ? 'No headlines right now' : 'Loading headlines…'}
+          </div>
+        ) : (
+          news.map((n, i) => (
+            <Link
+              key={n.id || i}
+              href={piksNewsHref(n)}
+              className="w-full flex flex-col items-start px-2 py-2 rounded-lg text-left transition-colors lg:hover:bg-white/[0.04]"
+            >
+              <span className="text-[10px] uppercase tracking-wide" style={{ color: textMuted }}>
+                {n.league ? `${n.league}` : 'Piks News'}{n.published ? ` · ${newsTimeAgo(n.published)}` : ''}
+              </span>
+              <span className="text-[13px] font-bold leading-snug line-clamp-2 max-w-full" style={{ color: textPrimary }}>
+                {n.headline}
+              </span>
+            </Link>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RightSidebar({
+  liveBattles,
+  friends,
+  leaders,
+  isGuest,
+  onOpenBattle,
+  onOpenProfile,
+  onChallengeFriend,
+  onPickQuickMatch,
+  onPickPlayFriend,
+  onPickPrivateMatch,
+}) {
+  const router = useRouter();
+  const isBeta = useBetaMode();
+  const [challenged, setChallenged] = useState({});
+
+  const happening = (liveBattles || []).slice(0, 4);
+  const people = (friends || [])
+    .slice()
+    .sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0))
+    .slice(0, 4);
+
+  const rollbackChallenge = (id) => setChallenged((p) => {
+    const next = { ...p };
+    delete next[id];
+    return next;
+  });
+
+  const handleChallenge = async (friend) => {
+    if (challenged[friend.id]) return;
+    setChallenged((p) => ({ ...p, [friend.id]: true }));
+    try {
+      // onChallengeFriend returns false when no invite was actually sent
+      // (e.g. the user is already in a battle, or a modal was opened to
+      // collect a buy-in instead). Only keep the "Sent" pill when an
+      // invite truly went out — otherwise roll it back so the button
+      // doesn't lie.
+      const sent = await onChallengeFriend?.(friend);
+      if (sent === false) rollbackChallenge(friend.id);
+    } catch {
+      // Roll back the "Sent" state so the user can retry if the invite failed.
+      rollbackChallenge(friend.id);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {!isGuest && (
+        <SidebarCard title="Start a battle">
+          <div className="px-4 pb-4 pt-1 space-y-2">
+            <button
+              type="button"
+              onClick={onPickQuickMatch}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-white/[0.04]"
+              style={{ border: `1px solid ${border}` }}
+            >
+              <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0" style={{ background: 'rgba(250,204,21,0.12)' }}>
+                <Icon.Bolt size={16} className="text-yellow-400" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-bold" style={{ color: textPrimary }}>Quick Match</span>
+                <span className="block text-[11px]" style={{ color: textMuted }}>Get matched instantly</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={onPickPlayFriend}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-white/[0.04]"
+              style={{ border: `1px solid ${border}` }}
+            >
+              <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0" style={{ background: 'rgba(16,185,129,0.12)' }}>
+                <Icon.Users size={16} className="text-emerald-400" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-bold" style={{ color: textPrimary }}>Play a Friend</span>
+                <span className="block text-[11px]" style={{ color: textMuted }}>Challenge someone you know</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={onPickPrivateMatch}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-white/[0.04]"
+              style={{ border: `1px solid ${border}` }}
+            >
+              <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0" style={{ background: 'rgba(251,146,60,0.12)' }}>
+                <Icon.Trophy size={16} className="text-orange-400" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-bold" style={{ color: textPrimary }}>Private Match</span>
+                <span className="block text-[11px]" style={{ color: textMuted }}>Invite with a code</span>
+              </span>
+            </button>
+          </div>
+        </SidebarCard>
+      )}
+
+      <SidebarCard title="What's happening">
+        {happening.length === 0 ? (
+          <div className="px-4 pb-4 pt-1 text-[12px]" style={{ color: textMuted }}>
+            No live battles right now. Start one to light up the feed.
+          </div>
+        ) : (
+          <div>
+            {happening.map((b) => {
+              const u1 = b.user1 || {};
+              const u2 = b.user2 || {};
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => onOpenBattle?.(b)}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.03]"
+                >
+                  <span className="relative flex-shrink-0 flex -space-x-2">
+                    <FramedAvatar avatar={u1.avatar} username={u1.username || 'P'} frameId={u1.equippedFrame} size={26} bgColor="#1e40af" />
+                    <FramedAvatar avatar={u2.avatar} username={u2.username || 'P'} frameId={u2.equippedFrame} size={26} bgColor="#7c2d12" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#f87171' }}>Live</span>
+                    </span>
+                    <span className="block text-[12px] font-semibold truncate" style={{ color: textPrimary }}>
+                      {(u1.username || 'P1')} vs {(u2.username || 'P2')}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </SidebarCard>
+
+      {people.length > 0 && (
+        <SidebarCard title="Who to play">
+          <div>
+            {people.map((f) => {
+              const done = !!challenged[f.id];
+              return (
+                <div key={f.id} className="flex items-center gap-2.5 px-4 py-2.5">
+                  <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="flex-shrink-0">
+                    <FramedAvatar avatar={f.avatar} username={f.username || 'P'} frameId={f.equippedFrame} size={36} bgColor={avatarBg} isOnline={f.isOnline} onlineDotBorderColor={surface} />
+                  </button>
+                  <button type="button" onClick={(e) => onOpenProfile?.(f, e)} className="min-w-0 flex-1 text-left">
+                    <span className="block text-[13px] font-bold truncate hover:underline" style={{ color: textPrimary }}>{f.username || 'Player'}</span>
+                    <span className="block text-[11px] truncate" style={{ color: f.isOnline ? '#34d399' : textMuted }}>
+                      {f.isOnline ? 'Online now' : (f.lastSeenAt != null ? formatLastSeen(f.lastSeenAt) : 'Offline')}
+                    </span>
+                  </button>
+                  {!isGuest && (
+                    <button
+                      type="button"
+                      onClick={() => handleChallenge(f)}
+                      disabled={done}
+                      className="flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-colors"
+                      style={{
+                        background: done ? 'transparent' : '#facc15',
+                        color: done ? textMuted : '#0a0a0a',
+                        border: done ? `1px solid ${border}` : 'none',
+                        cursor: done ? 'default' : 'pointer',
+                      }}
+                    >
+                      {done ? 'Sent' : 'Challenge'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </SidebarCard>
+      )}
+
+      {leaders && leaders.length > 0 && (
+        <SidebarCard title="Top cappers">
+          <div className="pb-2">
+            {leaders.map((l, i) => (
+              <button
+                key={l.id || i}
+                type="button"
+                onClick={() => l.id && router.push(`/profile/${l.id}`)}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-left transition-colors hover:bg-white/[0.03]"
+              >
+                <span className="flex-shrink-0 w-5 text-center text-[12px] font-black" style={{ color: textPrimary }}>
+                  {i === 0 ? (
+                    <span className="relative inline-flex items-center justify-center" aria-label="1st place" title="1st place">
+                      <span style={{ fontSize: 19, lineHeight: 1 }}>👑</span>
+                      <span
+                        className="absolute font-black"
+                        style={{ fontSize: 9, color: '#7c2d12', top: '58%', left: '50%', transform: 'translate(-50%,-50%)' }}
+                      >
+                        1
+                      </span>
+                    </span>
+                  ) : (
+                    l.rank || i + 1
+                  )}
+                </span>
+                <span className="flex-shrink-0">
+                  <FramedAvatar avatar={l.avatar} username={l.username || 'P'} frameId={l.equippedFrame} size={32} bgColor={avatarBg} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12px] font-semibold truncate" style={{ color: textPrimary }}>
+                    {l.username}
+                  </span>
+                  <span className="block text-[10px]" style={{ color: textMuted }}>
+                    {(parseInt(l.wins, 10) || 0)}W · {(parseInt(l.losses, 10) || 0)}L
+                  </span>
+                </span>
+                {typeof l.profit === 'number' && (
+                  isBeta ? (
+                    <span className="flex-shrink-0 text-right leading-tight">
+                      <span className="block text-[8px] font-semibold uppercase tracking-wider" style={{ color: textPrimary }}>
+                        Crowns
+                      </span>
+                      <span className="block text-[11px] font-bold" style={{ color: 'var(--sf-crown-amount)' }}>
+                        {l.profit >= 0 ? '+' : ''}{l.profit.toLocaleString()}
+                      </span>
+                    </span>
+                  ) : (
+                    <span
+                      className="flex-shrink-0 text-[11px] font-bold"
+                      style={{ color: l.profit >= 0 ? '#10b981' : '#ef4444' }}
+                    >
+                      {l.profit >= 0 ? '+' : ''}{l.profit.toLocaleString()}
+                    </span>
+                  )
+                )}
+              </button>
+            ))}
+          </div>
+        </SidebarCard>
+      )}
+
+      <div className="px-4 text-[11px] leading-relaxed" style={{ color: textMuted }}>
+        Piks · Prove Who's Better. {isBeta ? 'Beta' : ''}
       </div>
     </div>
   );
@@ -2024,7 +2460,27 @@ export default function SocialFeedPage({ data }) {
   // and Instagram-style post cards inline.
   const [liveBattles, setLiveBattles] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [leaders, setLeaders] = useState([]);
   const sseRef = useRef(null);
+
+  // Top cappers for the right rail. Fetched once on mount so the sidebar
+  // (especially for signed-out guests, whose rail is otherwise sparse) has
+  // social proof. Mirrors DesktopRightRail's leaderboard fetch shape.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/leaderboard?sortBy=profit&limit=5');
+        if (res.ok && !cancelled) {
+          const json = await res.json();
+          setLeaders(Array.isArray(json?.leaders) ? json.leaders.slice(0, 5) : []);
+        }
+      } catch {
+        /* leave leaders empty — the card simply doesn't render */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Track initial load so we can render a single matched skeleton until
   // both live battles and posts have resolved (avoids a two-stage flash
@@ -2115,9 +2571,12 @@ export default function SocialFeedPage({ data }) {
   }, [isGuest]);
   const handleCloseShare = useCallback(() => setShareTarget(null), []);
 
-  const handleSpectate = useCallback((battle) => {
-    if (!battle?.id) return;
-    router.push(`/battle/spectate/${battle.id}`);
+  const handleOpenBattle = useCallback((battle) => {
+    const id = battle?.id;
+    if (!id) return;
+    const el = typeof document !== 'undefined' ? document.getElementById(`battle-${id}`) : null;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else router.push(`/battle?battle=${id}`);
   }, [router]);
 
   // Story viewer — opens an Instagram-style highlight reel for a live
@@ -2181,17 +2640,40 @@ export default function SocialFeedPage({ data }) {
     return () => clearTimeout(t);
   }, [deepLinkPostId, posts]);
 
+  // Deep-link to a specific live battle via `?battle=<id>`: clicking a battle
+  // in the "Live now" sidebar drops the user on that battle's feed card with
+  // its comment thread open, so they land on the conversation instead of the
+  // top of /battle.
+  const deepLinkBattleId = typeof router.query.battle === 'string' ? router.query.battle : null;
+  useEffect(() => {
+    if (!deepLinkBattleId) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(`battle-${deepLinkBattleId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [deepLinkBattleId, liveBattles]);
+
   return (
-    <div className="pb-8 w-full px-3 sm:px-4 lg:px-6">
-      {/* Single full-width feed column on desktop — the right
-          "Start a Battle" sidebar was removed at the user's request so
-          the social feed spans the entire page. Mobile keeps the
-          centered readable column. */}
-      <div className="min-w-0 max-w-[680px] mx-auto lg:max-w-none w-full">
+    <div className="sf-root pb-8 w-full">
+      {/* Three-column desktop layout that fills the wide desktop screen: a
+          sticky Sports News rail on the left (xl+ only), the constrained feed
+          column (≤600px) in the middle, and the sticky engagement rail on the
+          right (lg+). Below xl the left rail drops and the remaining two
+          columns center; on phones/tablets both rails hide and the feed
+          centers. */}
+      <div className="flex justify-center gap-6 lg:gap-7">
+      {/* Left rail — Sports News, widest desktop only */}
+      <aside className="hidden xl:block w-[300px] flex-shrink-0">
+        <div className="sticky top-[78px]">
+          <PiksNewsPromo />
+          <SportsNewsRail />
+        </div>
+      </aside>
+      <div className="w-full max-w-[600px] min-w-0">
         <SharedByPill />
         <StoriesRail
           battles={liveBattles}
-          onSpectate={handleSpectate}
           onOpenStory={handleOpenStory}
           onStartBattle={onStartBattle}
           currentUser={currentUser}
@@ -2202,7 +2684,6 @@ export default function SocialFeedPage({ data }) {
             battles={liveBattles}
             startIndex={storyOpenIdx}
             onClose={handleCloseStory}
-            onSpectate={(b) => { handleCloseStory(); handleSpectate(b); }}
           />
         )}
         <PostComposer
@@ -2236,15 +2717,16 @@ export default function SocialFeedPage({ data }) {
           feedItems.map((item) => {
             if (item.kind === 'live') {
               return (
-                <LiveBattlePost
-                  key={item.key}
-                  battle={item.data}
-                  onSpectate={handleSpectate}
-                  onOpenProfile={onOpenProfile}
-                  currentUser={currentUser}
-                  isGuest={isGuest}
-                  onShare={handleOpenShare}
-                />
+                <div key={item.key} id={`battle-${item.data.id}`}>
+                  <LiveBattlePost
+                    battle={item.data}
+                    onOpenProfile={onOpenProfile}
+                    currentUser={currentUser}
+                    isGuest={isGuest}
+                    onShare={handleOpenShare}
+                    defaultChatOpen={deepLinkBattleId === item.data.id}
+                  />
+                </div>
               );
             }
             if (item.kind === 'post') {
@@ -2277,6 +2759,25 @@ export default function SocialFeedPage({ data }) {
             return null;
           })
         )}
+      </div>
+
+        {/* Right rail — desktop only */}
+        <aside className="hidden lg:block w-[330px] flex-shrink-0">
+          <div className="sticky top-[78px]">
+            <RightSidebar
+              liveBattles={liveBattles}
+              friends={friends}
+              leaders={leaders}
+              isGuest={isGuest}
+              onOpenBattle={handleOpenBattle}
+              onOpenProfile={onOpenProfile}
+              onChallengeFriend={onChallengeFriend}
+              onPickQuickMatch={onPickQuickMatch}
+              onPickPlayFriend={onPickPlayFriend}
+              onPickPrivateMatch={onPickPrivateMatch}
+            />
+          </div>
+        </aside>
       </div>
 
       {shareTarget && (

@@ -16,11 +16,21 @@ export default async function handler(req, res) {
     const slots = stored
       ? normalizePromoSlots(stored)
       : DEFAULT_PROMO_SLOTS.map((s) => ({ ...s }));
-    return res.status(200).json({ slots });
+    // Master switch: when an admin turns the promo row off, the dashboard
+    // hides the entire carousel so the page below shifts up. Defaults to
+    // OFF when the flag was never set — an admin must explicitly enable it.
+    let rowEnabled = false;
+    try {
+      const flags = await getSetting('site_flags');
+      if (flags && typeof flags === 'object' && typeof flags.promoRowEnabled === 'boolean') {
+        rowEnabled = flags.promoRowEnabled;
+      }
+    } catch (_) {}
+    return res.status(200).json({ slots, rowEnabled });
   } catch (err) {
     console.error('Failed to load promo slots:', err);
     return res
       .status(200)
-      .json({ slots: DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })) });
+      .json({ slots: DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })), rowEnabled: false });
   }
 }

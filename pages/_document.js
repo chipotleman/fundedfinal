@@ -8,10 +8,10 @@ export default function Document() {
         {/* No-FOUC theme bootstrap — runs before paint so light-mode
             users don't flash the dark background. Mirrors the
             persistence contract in `contexts/ThemeContext.js`
-            (localStorage key `piks-theme`, default `dark`). */}
+            (localStorage key `piks-theme`, default `light`). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('piks-theme');if(t!=='light'&&t!=='dark')t='dark';var r=document.documentElement;r.classList.add(t);r.classList.remove(t==='light'?'dark':'light');r.setAttribute('data-theme',t);}catch(e){document.documentElement.classList.add('dark');}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('piks-theme');if(t!=='light'&&t!=='dark')t='light';var r=document.documentElement;r.classList.add(t);r.classList.remove(t==='light'?'dark':'light');r.setAttribute('data-theme',t);}catch(e){document.documentElement.classList.add('light');}})();`,
           }}
         />
         {/* Preload critical images */}
@@ -29,23 +29,23 @@ export default function Document() {
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=3" />
         
         {/* Open Graph / Social Media Meta Tags */}
-        <meta property="og:title" content="Piks - Get Funded to Bet" />
-        <meta property="og:description" content="Get funded up to $25,000 to bet with and keep 80% of your profits. No risk betting with our money, not yours." />
-        <meta property="og:image" content="https://fundmybet.vercel.app/funder-social-banner.png" />
+        <meta property="og:title" content="Compete with Your Friends!" />
+        <meta property="og:description" content="Go head-to-head in 1v1 sports betting battles on Piks. Quick Match, Play a Friend, or Private Matches — winner takes the pot." />
+        <meta property="og:image" content="https://thepiks.com/piks-social-banner.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://fundmybet.vercel.app" />
+        <meta property="og:url" content="https://thepiks.com" />
         
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Piks - Get Funded to Bet" />
-        <meta name="twitter:description" content="Get funded up to $25,000 to bet with and keep 80% of your profits. No risk betting with our money, not yours." />
-        <meta name="twitter:image" content="https://fundmybet.vercel.app/funder-social-banner.png" />
+        <meta name="twitter:title" content="Compete with Your Friends!" />
+        <meta name="twitter:description" content="Go head-to-head in 1v1 sports betting battles on Piks. Quick Match, Play a Friend, or Private Matches — winner takes the pot." />
+        <meta name="twitter:image" content="https://thepiks.com/piks-social-banner.png" />
         
         {/* General Meta Tags */}
-        <meta name="description" content="Get funded up to $25,000 to bet with and keep 80% of your profits. No risk betting with our money, not yours." />
-        <meta name="keywords" content="sports betting, funded betting, no risk betting, profit sharing" />
+        <meta name="description" content="Go head-to-head in 1v1 sports betting battles on Piks. Quick Match, Play a Friend, or Private Matches — winner takes the pot." />
+        <meta name="keywords" content="sports betting, 1v1 betting, betting battles, compete with friends, head to head betting" />
       </Head>
       <body>
         <Main />

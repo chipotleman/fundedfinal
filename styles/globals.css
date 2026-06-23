@@ -80,6 +80,12 @@ button:focus-within:not(.preserve-active-ring),
   --card-gradient: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-border: rgba(255, 255, 255, 0.12);
+  /* Neutral "away team" accent used on the game-detail page (scores + odds
+     chart). White on the default dark theme, near-black on light theme, so
+     only the home team carries a brand color. --team-neutral-ink is the
+     contrasting ink for content placed ON a neutral-colored chip/badge. */
+  --team-neutral: #ffffff;
+  --team-neutral-ink: #0a0a0a;
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -833,20 +839,21 @@ button.no-hover-effect.rounded-lg:focus-visible {
 .topnav-pikslip {
   margin-right: 60px !important;
   position: relative;
-  /* Pulled back 60px to the left vs. the previous `right: -56px`
-     (so now `right: 4px`) per user feedback that the Pik Slip was
-     sitting too far over toward the hamburger / edge of the screen.
-     Positive `right` values move the position-relative element
-     leftward. */
-  right: 4px;
+  /* Positive `right` values move the position-relative element
+     leftward; negative values move it rightward. Nudged from
+     `right: 4px` to `-6px` (10px further right) per user feedback. */
+  right: -6px;
 }
 @media (min-width: 1024px) {
   .topnav-pikslip {
-    margin-right: 50px !important;
-    /* Desktop is intentionally NOT shifted: the user account
-       cluster (avatar / login buttons) sits immediately to the
-       right of Pik Slip in the lg+ layout, so any rightward
-       offset here would overlap that cluster. */
+    /* Tight gap to the avatar. The desktop right cluster shrinks to
+       fit and is anchored to the page's right edge, so a large
+       trailing margin here widened the whole cluster and pushed its
+       LEFT edge (the Crowns / Clash Coins pills) leftward until they
+       crowded the centered "My Piks" control. The avatar div already
+       carries ml-4 (16px), so a small margin keeps a clean ~20px gap
+       while pulling the Pik Slip closer to the profile image. */
+    margin-right: 4px !important;
     right: 0;
   }
 }
@@ -928,6 +935,68 @@ button.no-hover-effect.rounded-lg:focus-visible {
   }
 }
 
+/* === Live Battle Story Viewer (lbsv) — cartoon/arcade story animations === */
+@keyframes lbsvPop {
+  0% { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.12) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes lbsvUp {
+  0% { transform: translateY(30px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes lbsvInL {
+  0% { transform: translateX(-64px) rotate(-7deg); opacity: 0; }
+  70% { transform: translateX(7px) rotate(2deg); }
+  100% { transform: translateX(0) rotate(0deg); opacity: 1; }
+}
+@keyframes lbsvInR {
+  0% { transform: translateX(64px) rotate(7deg); opacity: 0; }
+  70% { transform: translateX(-7px) rotate(-2deg); }
+  100% { transform: translateX(0) rotate(0deg); opacity: 1; }
+}
+@keyframes lbsvBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes lbsvVsPunch {
+  0% { transform: scale(0) rotate(-22deg); }
+  55% { transform: scale(1.32) rotate(8deg); }
+  75% { transform: scale(0.9) rotate(-4deg); }
+  100% { transform: scale(1) rotate(-4deg); }
+}
+@keyframes lbsvWiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@keyframes lbsvLivePulse {
+  0%, 100% { box-shadow: 0 3px 0 #0a0a0a, 0 0 0 0 rgba(239,68,68,0.55); }
+  50% { box-shadow: 0 3px 0 #0a0a0a, 0 0 0 7px rgba(239,68,68,0); }
+}
+@keyframes lbsvShine {
+  0% { transform: translateX(-130%) skewX(-18deg); }
+  100% { transform: translateX(260%) skewX(-18deg); }
+}
+@keyframes lbsvConfetti {
+  0% { transform: translateY(-14px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(380px) rotate(460deg); opacity: 0; }
+}
+.lbsv-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 36%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: lbsvShine 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lbsv-anim, .lbsv-shine::after { animation: none !important; }
+  .lbsv-anim { opacity: 1 !important; transform: none !important; }
+}
+
 /* ===== Messenger cartoon theme =====
    Press-down behavior shared by every cartoon-styled control inside
    the Messenger surface (back arrow, Start Battle CTA, mic + send
@@ -976,6 +1045,10 @@ html.light body {
   background-color: #f5f1ea !important;
   color: #1f2937;
 }
+html.light {
+  --team-neutral: #0f172a;
+  --team-neutral-ink: #ffffff;
+}
 
 /* Override the fixed black canvas painted by `pages/_app.js` (the
    `position: fixed; backgroundColor: #000000; z-index: -1` div). */
@@ -996,14 +1069,15 @@ html.light .min-h-screen.bg-\[\#0a0a0a\] {
   color: #1f2937;
 }
 
-/* Soften the top nav + condensed bar so it doesn't slam against the
-   off-white page. */
+/* Top nav + condensed bar share the same warm off-white as the page body so
+   the header reads as part of the page instead of a pasty-white slab. A thin
+   hairline border keeps it separated when content scrolls underneath. */
 html.light nav[class*="bg-black"],
 html.light [data-topnavbar="true"],
 html.light .piks-condensed-bar {
-  background-color: #ffffff !important;
+  background-color: #f5f1ea !important;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  box-shadow: none;
   color: #1f2937;
 }
 html.light nav a,
@@ -1050,6 +1124,127 @@ html.light .mobile-menu-drawer svg {
   color: #475569;
 }
 
+/* Social feed (/battle, labeled "Social") theme tokens. The feed uses inline
+   styles (e.g. backgroundColor: var(--sf-surface)) so a light-mode class can't
+   override raw hex — these custom properties on .sf-root let the same markup
+   render dark by default and flip to light under html.light. */
+.sf-root {
+  --sf-surface: #0d0d0d;
+  --sf-surface-muted: #0a0a0a;
+  --sf-elevated: #111111;
+  --sf-track: #000000;
+  --sf-avatar-bg: #1a1a1a;
+  --sf-border: rgba(255, 255, 255, 0.06);
+  --sf-border-strong: rgba(255, 255, 255, 0.1);
+  --sf-text-primary: #f5f5f5;
+  --sf-text-secondary: #9ca3af;
+  --sf-text-muted: #6b7280;
+  --sf-crown-amount: #facc15;
+  --sf-card-shadow: 0 1px 0 rgba(255, 255, 255, 0.02), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+html.light .sf-root {
+  --sf-surface: #ffffff;
+  --sf-surface-muted: #f8fafc;
+  --sf-elevated: #f1f5f9;
+  --sf-track: #e2e8f0;
+  --sf-avatar-bg: #e2e8f0;
+  --sf-border: rgba(15, 23, 42, 0.10);
+  --sf-border-strong: rgba(15, 23, 42, 0.16);
+  --sf-text-primary: #0f172a;
+  --sf-text-secondary: #475569;
+  --sf-text-muted: #94a3b8;
+  --sf-crown-amount: #111111;
+  --sf-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* Piks News pages (/news, /news/[slug]). The page background + base text flip
+   via this class (not useTheme inline styles) so the first paint is correct —
+   html.light/.dark are set pre-paint by _document.js, so no dark→light FOUC.
+   Inner surfaces/cards/text use the shared --sf-* tokens above. */
+.news-page {
+  background-color: #000000;
+  color: var(--sf-text-primary);
+}
+html.light .news-page {
+  background-color: #f5f1ea;
+}
+
+/* Battle History table (/bet-history) theme tokens. The table + its controls
+   use inline styles with raw hex, so a plain light-mode class can't override
+   them — these custom properties on .bht-root let the same markup render dark by
+   default and flip to light under html.light (set pre-paint by _document.js,
+   so no FOUC). */
+.bht-root {
+  --bht-card-bg: rgba(10, 10, 12, 0.85);
+  --bht-card-border: rgba(75, 85, 99, 0.35);
+  --bht-divider: rgba(55, 65, 81, 0.25);
+  --bht-control-bg: #111111;
+  --bht-control-bg-strong: #0a0a0a;
+  --bht-control-border: rgba(75, 85, 99, 0.5);
+  --bht-control-text: #d1d5db;
+  --bht-text-strong: #ffffff;
+  --bht-input-bg: #1a1a1a;
+  --bht-input-scheme: dark;
+  --bht-row-hover: rgba(255, 255, 255, 0.03);
+  --bht-row-active: rgba(255, 255, 255, 0.04);
+  --bht-detail-bg: rgba(255, 255, 255, 0.04);
+  --bht-detail-border: rgba(255, 255, 255, 0.12);
+  --bht-menu-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --bht-page-active-text: #ffffff;
+  --bht-avatar-bg: #111111;
+}
+html.light .bht-root {
+  --bht-card-bg: #ffffff;
+  --bht-card-border: rgba(15, 23, 42, 0.10);
+  --bht-divider: rgba(15, 23, 42, 0.08);
+  --bht-control-bg: #ffffff;
+  --bht-control-bg-strong: #ffffff;
+  --bht-control-border: rgba(15, 23, 42, 0.15);
+  --bht-control-text: #334155;
+  --bht-text-strong: #0f172a;
+  --bht-input-bg: #f5f1ea;
+  --bht-input-scheme: light;
+  --bht-row-hover: rgba(15, 23, 42, 0.03);
+  --bht-row-active: rgba(15, 23, 42, 0.05);
+  --bht-detail-bg: rgba(15, 23, 42, 0.04);
+  --bht-detail-border: rgba(15, 23, 42, 0.15);
+  --bht-menu-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  --bht-page-active-text: #2563eb;
+  --bht-avatar-bg: #e2e8f0;
+}
+/* Strong (was white) text + muted/faint labels inside the table flip with theme.
+   Scoped to .bht-root so nested components (avatars, etc.) are untouched. */
+.bht-root .bht-strong { color: var(--bht-text-strong); }
+.bht-root .bht-hover-strong:hover { color: var(--bht-text-strong); }
+.bht-root .bht-row:hover { background: var(--bht-row-hover); }
+.bht-root .bht-row-m:active { background: var(--bht-row-active); }
+html.light .bht-root .text-gray-200 { color: #334155; }
+html.light .bht-root .text-gray-400 { color: #64748b; }
+html.light .bht-root .text-gray-500 { color: #94a3b8; }
+
+/* Desktop global search bar — CSS-var driven so its surface resolves from the
+   html.light/.dark class applied before paint (by the _document.js inline
+   script). This avoids the FOUC where a JS-derived inline style SSR'd dark and
+   flashed before hydration corrected it. */
+.piks-global-search {
+  --search-bar-bg: #0d0d0d;
+  --search-bar-border: rgba(255, 255, 255, 0.08);
+  --search-text: #f5f5f5;
+  --search-panel-bg: #0a0a0a;
+  --search-panel-border: rgba(255, 255, 255, 0.1);
+  --search-panel-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --search-divider: rgba(255, 255, 255, 0.06);
+}
+html.light .piks-global-search {
+  --search-bar-bg: #f1f5f9;
+  --search-bar-border: rgba(15, 23, 42, 0.12);
+  --search-text: #0f172a;
+  --search-panel-bg: #ffffff;
+  --search-panel-border: rgba(15, 23, 42, 0.12);
+  --search-panel-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+  --search-divider: rgba(15, 23, 42, 0.08);
+}
+
 /* User-menu dropdown in TopNavbar — picks up these overrides too. */
 html.light .bg-\[\#0a0a0a\],
 html.light .bg-\[\#111111\] {
@@ -1063,9 +1258,67 @@ html.light .border-\[\#1a1a1a\],
 html.light .border-\[\#1a1a1a\]\/50 {
   border-color: rgba(15, 23, 42, 0.1) !important;
 }
+
+/* Top-bar helper buttons ("My Piks" / "How it works") use an inline
+   `color:#d1d5db` (light gray for the dark nav). On the white light-mode
+   nav that's washed out / near-invisible — the existing nav text
+   overrides only catch class-based and inline-styled *links*, not
+   inline-styled buttons. Force them dark in light mode. */
+html.light nav button[style*="#d1d5db"],
+html.light nav button[style*="rgb(209, 213, 219)"] {
+  color: #475569 !important;
+}
+
+/* Active nav/menu rows paint a dark navy `bg-[#0f1d3a]` with white
+   text. In light mode our nav overrides force that text dark, so the
+   row becomes dark-on-dark navy — the "My Piks menu item is invisible
+   / black covers the menu" report. Repaint the active row a soft blue
+   tint so the (now dark) label is legible, keeping the blue accent. */
+html.light .bg-\[\#0f1d3a\] {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
 html.light .text-gray-300 { color: #475569; }
 html.light .text-gray-400 { color: #64748b; }
 html.light .text-gray-500 { color: #64748b; }
+
+/* User-menu row hover painted a dark #1a1a1a — the `lg:hover:bg-[#1a1a1a]`
+   variant isn't caught by the non-hover `.bg-[#1a1a1a]` override above, so in
+   light mode rows turned black-on-black on hover (unreadable). Repaint the
+   hover a pale yellow with dark text/icons so every label stays legible. The
+   red Sign-Out hover is intentionally left alone (it uses red, not #1a1a1a). */
+html.light [role="menu"] .lg\:hover\:bg-\[\#1a1a1a\]:hover {
+  background-color: #fdf3c4 !important;
+  color: #1f2937 !important;
+}
+html.light [role="menu"] .lg\:hover\:bg-\[\#1a1a1a\]:hover .lg\:hover\:text-blue-400,
+html.light [role="menu"] .lg\:hover\:text-blue-400:hover {
+  color: #1f2937 !important;
+}
+
+/* Notifications dropdown: the blue "View"/"Accept" action buttons + "View all"
+   link read as the dark-theme blue on the light surface. Rebrand them to the
+   light-theme gold so they match the Crowns palette; dark text for contrast on
+   the gold. Every primary action button across notification types carries a
+   stable `.notif-primary-action` class (Results "View" also keeps `.bg-blue-500`
+   and the battle-invite "Accept" keeps its inline blue→indigo gradient for dark
+   mode), so we target that class rather than fragile inline-style matching. */
+html.light [data-notifications-dropdown] .notif-primary-action {
+  background: #facc15 !important;
+  background-color: #facc15 !important;
+  color: #1f2937 !important;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.40) !important;
+}
+html.light [data-notifications-dropdown] .notif-primary-action:hover {
+  background: #eab308 !important;
+  background-color: #eab308 !important;
+}
+html.light [data-notifications-dropdown] .text-blue-300 {
+  color: #b8860b !important;
+}
+html.light [data-notifications-dropdown] .text-blue-300:hover {
+  color: #92710a !important;
+}
 
 /* ─── Inline-style black background overrides ────────────────────
    Many page roots (pages/index.js, pages/battle.js, my-picks, etc.)
@@ -1336,4 +1589,262 @@ html.light .piks-game-card [style*="border: 1px solid #141414" i] {
 /* Locked-cell SVG icons keep visible. */
 html.light .piks-game-card svg[stroke="#4b5563"] {
   stroke: #94a3b8 !important;
+}
+
+/* ===== Light theme — desktop shell, featured cards & game-detail page =======
+   The desktop right rail and horizontal scroll rows paint dark surfaces via
+   CSS variables (dark defaults below; light overrides flip them). The featured
+   battle cards (`.bc-surface`, `.youvs-card`) and the game-detail page were
+   previously left dark by design, but the product now wants them light in the
+   light theme. Every rule here is scoped to a component class so the dark
+   cartoon modals / hero flows elsewhere stay untouched. Colored accent chips
+   (mode badges, win/loss, coins) are intentionally NOT overridden. */
+
+/* --- Desktop right rail: CSS-variable palette (dark default + light) --- */
+.desktop-right-rail {
+  --rail-surface: #0d0d0d;
+  --rail-border: rgba(255, 255, 255, 0.06);
+  --rail-text: #f5f5f5;
+  --rail-text-2: #9ca3af;
+  --rail-text-3: #6b7280;
+  --rail-crown-amount: #facc15;
+  /* Friend quick-action icon accents (Battle = orange, Message = cyan).
+     Light theme uses deeper shades so the icons stay legible on white. */
+  --rail-battle-bg: rgba(251, 146, 60, 0.14);
+  --rail-battle-border: rgba(251, 146, 60, 0.4);
+  --rail-battle-icon: #fdba74;
+  --rail-msg-bg: rgba(34, 211, 238, 0.12);
+  --rail-msg-border: rgba(34, 211, 238, 0.4);
+  --rail-msg-icon: #67e8f9;
+}
+html.light .desktop-right-rail {
+  --rail-surface: #ffffff;
+  --rail-border: rgba(15, 23, 42, 0.12);
+  --rail-text: #0f172a;
+  --rail-text-2: #475569;
+  --rail-text-3: #64748b;
+  --rail-crown-amount: #111111;
+  --rail-battle-bg: rgba(234, 88, 12, 0.12);
+  --rail-battle-border: rgba(234, 88, 12, 0.45);
+  --rail-battle-icon: #c2410c;
+  --rail-msg-bg: rgba(8, 145, 178, 0.1);
+  --rail-msg-border: rgba(8, 145, 178, 0.45);
+  --rail-msg-icon: #0e7490;
+}
+/* When the sticky rail is taller than the viewport it scrolls internally
+   (see lg:overflow-y-auto on the root) — keep that scrollbar thin + themed
+   so the bottom card (Top cappers) is always reachable, never clipped. */
+.desktop-right-rail {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+.desktop-right-rail::-webkit-scrollbar { width: 6px; }
+.desktop-right-rail::-webkit-scrollbar-track { background: transparent; }
+.desktop-right-rail::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+}
+html.light .desktop-right-rail { scrollbar-color: rgba(15, 23, 42, 0.2) transparent; }
+html.light .desktop-right-rail::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.2); }
+/* Avatar separator rings + neutral hover tints flip on light. */
+html.light .desktop-right-rail [class*="ring-[#0d0d0d]"] { --tw-ring-color: #ffffff !important; }
+html.light .desktop-right-rail [class*="hover:bg-white/5"]:hover { background-color: rgba(15, 23, 42, 0.05) !important; }
+/* Subtle elevation on the rail cards in light theme — gives them a gentle
+   three-dimensional lift (deliberately softer than the My Piks panel). */
+html.light .desktop-right-rail .desktop-rail-card {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 6px 16px rgba(15, 23, 42, 0.07);
+}
+
+/* Team logos draw transparent (no white puck). In dark mode a faint light
+   rim traces the logo's shape so dark/navy marks (e.g. the Padres) stay
+   legible against black, plus a soft drop shadow gives a little lift. In
+   light mode a soft dark shadow provides the same lift. drop-shadow follows
+   the PNG's alpha so it outlines the mark itself, not a box. */
+.team-logo-img {
+  filter:
+    drop-shadow(0 0 1px rgba(255, 255, 255, 0.55))
+    drop-shadow(0 0 1px rgba(255, 255, 255, 0.4))
+    drop-shadow(0 1.5px 2px rgba(0, 0, 0, 0.55));
+}
+html.light .team-logo-img {
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.28));
+}
+
+/* Ticket logos: drop the heavy white-glow halo (which reads as blur on small
+   marks) for a single crisp shadow, and hint the browser to render sharply. */
+.mp-ticket-logos .team-logo-img {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+  image-rendering: -webkit-optimize-contrast;
+}
+html.light .mp-ticket-logos .team-logo-img {
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.3));
+}
+
+/* --- Horizontal scroll rows: fade colour + arrow-button palette --- */
+.desktop-scroll-row {
+  --scroll-fade: #000000;
+  --scroll-btn-bg: #141414;
+  --scroll-btn-border: rgba(255, 255, 255, 0.14);
+  --scroll-btn-color: #e5e7eb;
+}
+html.light .desktop-scroll-row {
+  --scroll-fade: #f5f1ea;
+  --scroll-btn-bg: #ffffff;
+  --scroll-btn-border: rgba(15, 23, 42, 0.14);
+  --scroll-btn-color: #0f172a;
+}
+html.light .desktop-scroll-row [class*="hover:bg-[#1f1f1f]"]:hover { background-color: #eef2f7 !important; }
+
+/* --- Featured battle cards (BattleCard `.bc-surface`) --- */
+html.light .bc-surface {
+  background-color: #ffffff !important;
+}
+/* Inline white text. Cover BOTH React serializations: SSR emits the literal
+   `color:#fff`, while client-rendered nodes are normalized by the CSSOM to
+   `color: rgb(255, 255, 255)`. Matching only one form silently misses the
+   other, so we list all three. */
+html.light .bc-surface [style*="color:#fff" i],
+html.light .bc-surface [style*="color: #fff" i],
+html.light .bc-surface [style*="color: rgb(255, 255, 255)" i],
+html.light .bc-surface .text-white {
+  color: #0f172a !important;
+}
+html.light .bc-surface .text-gray-400 { color: #475569 !important; }
+html.light .bc-surface .text-gray-500,
+html.light .bc-surface .text-gray-600,
+html.light .bc-surface .text-gray-700 { color: #64748b !important; }
+/* Inner locked / awaiting strips (inline `background:#111`, `border #1a1a1a`);
+   again cover SSR literal + CSSOM-normalized `rgb(17, 17, 17)`. */
+html.light .bc-surface [style*="background: #111" i],
+html.light .bc-surface [style*="background:#111" i],
+html.light .bc-surface [style*="background: rgb(17, 17, 17)" i] {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+}
+/* "BOTH PLAYERS LOCKED IN" parlay tickets: the ticket body is inline
+   `background:#0a0a0a` (keep its accent border) and the leg badge + "Total
+   wagered" footer are inline `background:#000`. Neither was matched by the
+   `#111` rule above, so they stayed pure black on the light theme. Cover the
+   SSR literal (`#0a0a0a` / `#000`), the 6-digit form (`#000000`), and the
+   CSSOM-normalized `rgb(...)` serializations. */
+html.light .bc-surface [style*="background: #0a0a0a" i],
+html.light .bc-surface [style*="background:#0a0a0a" i],
+html.light .bc-surface [style*="background: rgb(10, 10, 10)" i] {
+  background: #ffffff !important;
+}
+html.light .bc-surface [style*="background: #000" i],
+html.light .bc-surface [style*="background:#000" i],
+html.light .bc-surface [style*="background: rgb(0, 0, 0)" i] {
+  background: #f1f5f9 !important;
+}
+/* Ticket odds use inline `color:#e5e7eb` (near-white) for non-plus prices,
+   which is invisible on the now-white ticket. Darken it; the green `+` odds
+   (#34d399) and orange stakes (#fb923c) stay as-is. */
+html.light .bc-surface [style*="color: #e5e7eb" i],
+html.light .bc-surface [style*="color:#e5e7eb" i],
+html.light .bc-surface [style*="color: rgb(229, 231, 235)" i] {
+  color: #0f172a !important;
+}
+
+/* --- VS / PLAY NOW hero card (`.youvs-card`) --- */
+/* Light theme swaps the green/cyan hero tint for a warm red-orange tint that
+   matches the orange "COINS" CartoonChip. The orange border + glow themselves
+   are driven by the component's inline styles (which are `isLight`-aware and
+   carry the expanded/non-expanded variants), so we intentionally do NOT force
+   `border-color` here — that would override the inline expanded border. We only
+   force the background wash so the surface stays light regardless of the SSR
+   inline value. */
+html.light .youvs-card {
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.16) 0%, rgba(234, 88, 12, 0.08) 45%, #ffffff 100%), #ffffff !important;
+}
+/* Surface white text → dark, but EXCLUDE the cartoon "PLAY NOW" sticker, which
+   is intentionally white with a black text-stroke outline in both themes. The
+   `:not([style*="text-stroke"])` guard skips it (the inline style carries
+   `-webkit-text-stroke` in both SSR and CSSOM-normalized forms). Cover SSR +
+   client `rgb(255, 255, 255)` serializations. */
+html.light .youvs-card [style*="color:#fff" i]:not([style*="text-stroke" i]),
+html.light .youvs-card [style*="color: #fff" i]:not([style*="text-stroke" i]),
+html.light .youvs-card [style*="color: rgb(255, 255, 255)" i]:not([style*="text-stroke" i]),
+html.light .youvs-card .text-white {
+  color: #0f172a !important;
+}
+html.light .youvs-card .text-gray-400 { color: #475569 !important; }
+html.light .youvs-card .text-gray-500,
+html.light .youvs-card .text-gray-600 { color: #64748b !important; }
+/* Inner dark strips inside the hero. */
+html.light .youvs-card [style*="background: #111" i],
+html.light .youvs-card [style*="background:#111" i],
+html.light .youvs-card [style*="background: rgb(17, 17, 17)" i] {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+}
+
+/* --- Game-detail page (`.game-detail-page`, incl. inline DesktopGameDetail) --- */
+html.light .game-detail-page {
+  background-color: #f5f1ea !important;
+  color: #0f172a !important;
+}
+html.light .game-detail-page .bg-black { background-color: #f5f1ea !important; }
+html.light .game-detail-page [class*="bg-[#0a0a0a]"],
+html.light .game-detail-page [class*="bg-[#0d0d0d]"],
+html.light .game-detail-page [class*="bg-[#0f0f0f]"],
+html.light .game-detail-page [class*="bg-[#111]"],
+html.light .game-detail-page [class*="bg-[#111111]"] { background-color: #ffffff !important; }
+html.light .game-detail-page [class*="bg-[#141414]"],
+html.light .game-detail-page [class*="bg-[#161616]"],
+html.light .game-detail-page [class*="bg-[#1a1a1a]"] { background-color: #f1f5f9 !important; }
+/* Dark header gradient → flat white surface. */
+html.light .game-detail-page [class*="from-[#0d0d0d]"] {
+  background-image: none !important;
+  background-color: #ffffff !important;
+}
+html.light .game-detail-page [class*="border-[#1a1a1a]"],
+html.light .game-detail-page [class*="border-[#1f1f1f]"] { border-color: rgba(15, 23, 42, 0.10) !important; }
+html.light .game-detail-page .text-white,
+html.light .game-detail-page .text-gray-200 { color: #0f172a !important; }
+html.light .game-detail-page .text-gray-300 { color: #334155 !important; }
+html.light .game-detail-page .text-gray-400 { color: #475569 !important; }
+html.light .game-detail-page .text-gray-500,
+html.light .game-detail-page .text-gray-600,
+html.light .game-detail-page .text-gray-700 { color: #64748b !important; }
+html.light .game-detail-page [class*="hover:bg-[#111]"]:hover { background-color: #f1f5f9 !important; }
+
+/* ===== Social battle flow — shared design tokens ============================
+   Canonical mode identity + accents for the premium social-battle redesign,
+   consumed by the incoming-invite popup, Play-a-Friend modal, and the invite
+   surfaces in the notifications dropdown / page so every surface speaks one
+   visual language. Additive only — no existing rule above is modified, so the
+   light-theme cascade is unaffected. Canonical modes (approved):
+   RUSH amber · ORIGINAL blue · TOURNAMENT violet. */
+:root {
+  --sbf-rush: #fb923c;
+  --sbf-original: #3b82f6;
+  --sbf-tournament: #8b5cf6;
+  --sbf-accent: #3b82f6;
+  --sbf-go: #10b981;        /* accept / "go" peak */
+  --sbf-win: #22c55e;
+  --sbf-loss: #ef4444;
+  --sbf-money: #facc15;     /* coins / stakes */
+  --sbf-bg: #0a0a0a;
+  --sbf-surface: #0d0d0d;
+  --sbf-surface-2: #141414;
+  --sbf-hairline: rgba(255, 255, 255, 0.08);
+  --sbf-text: #fafafa;
+  --sbf-text-dim: #a1a1aa;
+  --sbf-text-mute: #6b7280;
+}
+
+/* Prevent iOS Safari from auto-zooming when a text field is focused.
+   Mobile Safari force-zooms whenever a focused input/select/textarea has a
+   font-size below 16px. Several inputs across the app use 14px, which caused
+   the viewport to zoom in (e.g. switching to the "Find Players" tab, whose
+   search field is autofocused). Forcing >=16px on coarse-pointer (touch)
+   devices stops the hijack while leaving the user's own pinch-zoom intact.
+   !important is required to override inline font-size styles. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }

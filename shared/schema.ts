@@ -69,6 +69,14 @@ export const profiles = pgTable("profiles", {
   lastBattleBuyIn: jsonb("last_battle_buy_in").$type<{ buyIn: number; gameMode: string }>(),
   oneTapPrefs: jsonb("one_tap_prefs").$type<{ buyIn: number; gameMode: string }>(),
   lastSeenAt: timestamp("last_seen_at"),
+  // AI-generated "battle character" derived from the user's profile photo.
+  // aiCharacterUrl: Vercel Blob URL of the generated character PNG.
+  // aiCharacterStatus: 'pending' | 'ready' | 'failed' (null = never attempted).
+  // aiCharacterSourceHash: hash of the source avatar URL the character was
+  //   generated from, so we regenerate only when the avatar actually changes.
+  aiCharacterUrl: text("ai_character_url"),
+  aiCharacterStatus: varchar("ai_character_status", { length: 20 }),
+  aiCharacterSourceHash: varchar("ai_character_source_hash", { length: 64 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -140,6 +148,12 @@ export const messages = pgTable("messages", {
   // (typically 36 entries between 0 and 1). Older messages predating this
   // column have NULL here and fall back to the on-demand decode path.
   attachmentPeaks: jsonb("attachment_peaks"),
+  // Per-user "delete for me" list. Holds the user IDs who have hidden this
+  // message from their own view (WhatsApp/Instagram-style). The row stays
+  // intact for the other participant; once everyone has hidden it the DELETE
+  // handler hard-deletes the row. NULL on rows predating this column is
+  // treated as an empty array everywhere it's read.
+  deletedFor: jsonb("deleted_for").default(sql`'[]'::jsonb`),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   senderIdIdx: index("messages_sender_id_idx").on(table.senderId),
@@ -1023,10 +1037,12 @@ export const socialPostComments = pgTable("social_post_comments", {
   postId: varchar("post_id").notNull(),
   userId: varchar("user_id").notNull(),
   body: text("body").notNull(),
+  parentId: varchar("parent_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   postIdIdx: index("social_post_comments_post_id_idx").on(table.postId),
   createdAtIdx: index("social_post_comments_created_at_idx").on(table.createdAt),
+  parentIdIdx: index("social_post_comments_parent_id_idx").on(table.parentId),
 }));
 
 export const socialPostLikes = pgTable("social_post_likes", {

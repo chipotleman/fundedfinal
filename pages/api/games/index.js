@@ -9,6 +9,19 @@ import {
 } from '../../../lib/goalserve';
 import { generateSimulatedGames } from '../../../lib/simulated-games';
 import { captureGamesSnapshots } from '../../../lib/oddsHistory';
+import { applySharpSportsOdds } from '../../../lib/sharpsports';
+
+// Overlay SharpSports betPrices odds onto Goalserve-sourced games. Goalserve
+// still owns the schedule/IDs/scores; only the odds come from SharpSports.
+// Never throws — on any failure the games keep their existing (Goalserve) odds.
+async function overlayOdds(games) {
+  try {
+    await applySharpSportsOdds(games);
+  } catch (err) {
+    console.error('[GAMES API] SharpSports overlay failed:', err?.message || err);
+  }
+  return games;
+}
 
 let globalCache = null;
 let globalCacheTimestamp = null;
@@ -192,7 +205,9 @@ export default async function handler(req, res) {
           game.scores = liveScore.scores;
         }
       });
-      
+
+      await overlayOdds(formattedGames);
+
       const response = {
         games: formattedGames,
         sport: sport,
@@ -334,7 +349,11 @@ export default async function handler(req, res) {
         });
       });
     }
-    
+
+    // Overlay SharpSports odds onto the full board before caching + snapshotting,
+    // so the cache and odds-history series both carry SharpSports prices.
+    await overlayOdds(formattedGames);
+
     if (formattedGames.length === 0) {
       console.log('[GAMES API] No games from Goalserve, falling back to simulated games');
       const simGames = generateSimulatedGames();
